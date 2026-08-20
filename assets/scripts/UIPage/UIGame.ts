@@ -166,8 +166,6 @@ export class UIGame extends UIBase {
         /**清除数据 */
         this.clearData();
 
-        this.rockerTouchNode.active = true;
-
         this.initPlayer();
 
         // this.initEnemy();
@@ -176,7 +174,6 @@ export class UIGame extends UIBase {
     clearData() {
         this.unscheduleAllCallbacks();
         this.gameCameraComp?.unlockCameraPos();
-        this.rockerTouchNode.active = false;
         this.isGamePause = false;
 
         ccTools.destroyAllChild(this.roleNode);
@@ -217,7 +214,6 @@ export class UIGame extends UIBase {
     /**响应全局游戏暂停 */
     private onGamePause() {
         this.isGamePause = true;
-        this.rockerTouchNode.active = false;
         this.rockerReset();
     }
 

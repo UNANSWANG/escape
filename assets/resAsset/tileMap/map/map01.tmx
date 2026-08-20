@@ -1,0 +1,519 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.4" tiledversion="1.4.3" orientation="orthogonal" renderorder="right-down" width="35" height="42" tilewidth="64" tileheight="64" infinite="0" nextlayerid="15" nextobjectid="298">
+ <tileset firstgid="1" source="../set/map3.tsx"/>
+ <tileset firstgid="13" source="../set/map1.tsx"/>
+ <layer id="1" name="map" width="35" height="42">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,13,14,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,13,14,14,14,14,14,14,14,14,14,14,14,14,14,22,26,21,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,15,0,
+0,18,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,20,0,
+0,18,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,20,0,
+0,18,26,26,13,14,14,14,14,15,26,26,26,26,26,13,14,14,14,14,14,15,26,26,26,26,13,14,14,14,15,26,26,20,0,
+0,18,26,26,18,19,19,19,19,20,26,26,26,26,13,22,19,19,19,19,19,20,26,26,26,26,18,19,19,19,20,26,26,20,0,
+0,18,26,26,18,19,19,19,19,20,26,26,26,26,18,19,19,19,19,19,19,20,26,26,26,26,18,19,19,19,20,26,26,20,0,
+0,18,26,26,18,19,19,19,19,20,26,26,26,26,18,19,19,16,24,24,24,25,26,26,26,26,18,19,19,19,20,26,26,20,0,
+0,18,26,26,18,19,19,19,19,20,26,26,26,26,18,19,19,19,26,26,26,26,26,26,26,26,18,19,19,19,20,26,26,20,0,
+0,18,26,26,18,19,19,19,19,20,26,26,26,26,18,19,19,21,14,14,14,15,26,26,26,26,18,19,19,19,20,26,26,20,0,
+0,18,26,26,23,24,19,24,24,25,26,26,26,26,18,19,19,19,19,19,19,20,26,26,26,26,23,24,19,24,25,26,26,20,0,
+0,18,26,26,26,26,26,26,26,26,26,26,26,26,23,24,24,24,24,24,24,25,26,26,26,26,26,26,26,26,26,26,26,20,0,
+0,18,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,20,0,
+0,18,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,20,0,
+0,18,26,26,13,14,14,15,26,13,14,14,15,26,26,26,13,14,19,14,15,26,26,26,13,14,14,15,13,14,15,26,26,20,0,
+0,18,26,26,18,19,19,20,26,18,19,19,20,26,26,26,18,19,19,19,20,26,26,26,18,19,19,20,18,19,20,26,26,20,0,
+0,18,26,26,18,19,19,20,26,18,19,19,20,26,26,26,18,19,19,19,21,15,26,26,18,19,19,21,22,19,20,26,26,20,0,
+0,18,26,26,18,19,19,21,19,22,19,19,20,26,26,13,22,19,19,19,19,20,26,26,18,19,19,19,19,19,20,26,26,20,0,
+0,18,26,26,18,19,19,19,19,19,19,19,20,26,26,18,19,19,19,19,19,20,26,26,18,19,19,19,19,19,20,26,26,20,0,
+0,18,26,26,18,19,19,19,19,19,19,19,20,26,26,18,19,19,19,19,19,20,26,26,23,17,19,19,19,16,25,26,26,20,0,
+13,22,26,26,23,24,24,24,24,24,24,24,25,26,26,23,24,24,24,24,24,25,26,26,26,23,19,24,24,25,26,26,26,21,15,
+18,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,20,
+23,17,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,16,25,
+0,18,26,26,26,26,13,14,19,14,15,26,26,13,14,14,14,14,14,15,26,26,26,26,13,19,15,13,14,14,15,26,26,20,0,
+0,18,26,26,13,14,22,19,19,19,20,26,26,18,19,19,19,19,19,20,26,26,26,26,18,19,20,18,19,19,20,26,26,20,0,
+0,18,26,26,18,19,19,19,19,19,20,26,26,19,19,19,19,19,19,20,26,26,26,26,18,19,20,18,19,19,20,26,26,20,0,
+0,18,26,26,18,19,19,19,19,19,20,26,26,18,19,19,19,19,19,20,26,26,26,26,18,19,20,18,19,19,20,26,26,20,0,
+0,18,26,26,18,19,19,19,19,19,20,26,26,18,19,19,19,19,19,20,26,26,26,26,18,19,20,18,19,19,20,26,26,20,0,
+0,18,26,26,18,19,19,19,19,19,20,26,26,23,24,17,19,19,19,20,26,26,26,26,18,19,21,22,19,19,20,26,26,20,0,
+0,18,26,26,23,24,24,24,24,24,25,26,26,26,26,18,19,19,16,25,26,26,26,26,18,19,19,19,19,19,20,26,26,20,0,
+0,18,26,26,26,26,26,26,26,26,26,26,26,26,26,23,24,24,25,26,26,26,26,26,23,24,24,24,24,24,25,26,26,20,0,
+0,18,26,26,13,14,14,14,14,15,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,20,0,
+0,18,26,26,18,19,19,19,19,20,26,26,13,14,14,14,14,15,26,26,26,26,26,26,26,13,14,14,14,19,15,26,26,20,0,
+0,18,26,26,18,19,19,19,19,20,26,26,18,19,19,19,19,20,26,26,26,26,26,26,26,18,19,19,19,19,20,26,26,20,0,
+0,18,26,26,18,19,19,19,19,20,26,26,18,19,19,19,19,20,26,26,26,26,26,26,26,18,19,19,19,19,20,26,26,20,0,
+0,18,26,26,18,19,19,19,19,20,26,26,23,17,19,19,16,25,26,26,26,26,26,26,26,23,17,19,19,19,20,26,26,20,0,
+0,18,26,26,18,19,19,19,19,20,26,26,26,18,19,19,21,15,26,26,26,26,26,26,26,13,22,19,19,19,20,26,26,20,0,
+0,18,26,26,18,19,19,19,19,20,26,26,26,18,19,19,19,20,26,26,26,26,26,26,26,18,19,19,19,19,20,26,26,20,0,
+0,18,26,26,23,24,19,24,24,25,26,26,26,23,24,19,24,25,26,26,26,26,26,26,26,23,24,24,24,24,25,26,26,20,0,
+0,18,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,20,0,
+0,23,24,24,24,24,24,24,24,24,24,24,24,24,24,17,26,16,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,25,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,23,24,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <objectgroup id="2" name="obj">
+  <object id="1" name="怪物出生点" x="1024" y="64" width="64" height="64">
+   <properties>
+    <property name="monsterBorn" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="2" name="怪物出生点" x="2112" y="1344" width="64" height="64">
+   <properties>
+    <property name="monsterBorn" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="3" name="怪物出生点" x="64" y="1344" width="64" height="64">
+   <properties>
+    <property name="monsterBorn" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="4" name="怪物出生点" x="1024" y="2560" width="64" height="64">
+   <properties>
+    <property name="monsterBorn" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="5" name="人物出生点" x="1280" y="1344" width="64" height="64">
+   <properties>
+    <property name="born" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="6" name="人物出生点" x="1344" y="1344" width="64" height="64">
+   <properties>
+    <property name="born" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="7" name="人物出生点" x="1408" y="1344" width="64" height="64">
+   <properties>
+    <property name="born" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="8" name="人物出生点" x="1280" y="1408" width="64" height="64">
+   <properties>
+    <property name="born" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="9" name="人物出生点" x="1344" y="1408" width="64" height="64">
+   <properties>
+    <property name="born" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="10" name="人物出生点" x="1408" y="1408" width="64" height="64">
+   <properties>
+    <property name="born" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="11" name="人物出生点" x="1280" y="1472" width="64" height="64">
+   <properties>
+    <property name="born" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="12" name="人物出生点" x="1344" y="1472" width="64" height="64">
+   <properties>
+    <property name="born" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="13" name="人物出生点" x="1408" y="1472" width="64" height="64">
+   <properties>
+    <property name="born" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="285" name="随机道具生成点位" x="1408" y="1216" width="64" height="64">
+   <properties>
+    <property name="randomProps" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="286" name="随机道具生成点位" x="1472" y="1152" width="64" height="64">
+   <properties>
+    <property name="randomProps" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="287" name="随机道具生成点位" x="1152" y="1344" width="64" height="64">
+   <properties>
+    <property name="randomProps" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="288" name="随机道具生成点位" x="960" y="1344" width="64" height="64">
+   <properties>
+    <property name="randomProps" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="289" name="随机道具生成点位" x="1024" y="1408" width="64" height="64">
+   <properties>
+    <property name="randomProps" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="290" name="随机道具生成点位" x="1600" y="1408" width="64" height="64">
+   <properties>
+    <property name="randomProps" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="291" name="随机道具生成点位" x="1728" y="1344" width="64" height="64">
+   <properties>
+    <property name="randomProps" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="292" name="随机道具生成点位" x="1344" y="1600" width="64" height="64">
+   <properties>
+    <property name="randomProps" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="293" name="随机道具生成点位" x="1408" y="1664" width="64" height="64">
+   <properties>
+    <property name="randomProps" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="294" name="随机道具生成点位" x="1472" y="1600" width="64" height="64">
+   <properties>
+    <property name="randomProps" type="bool" value="true"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <objectgroup id="3" name="room1">
+  <object id="14" name="door" x="384" y="640" width="64" height="64">
+   <properties>
+    <property name="direction" type="int" value="1"/>
+    <property name="offset" type="int" value="3"/>
+   </properties>
+  </object>
+  <object id="15" x="320" y="576" width="64" height="64"/>
+  <object id="16" x="384" y="576" width="64" height="64"/>
+  <object id="17" x="448" y="576" width="64" height="64"/>
+  <object id="18" x="512" y="576" width="64" height="64"/>
+  <object id="19" x="320" y="512" width="64" height="64"/>
+  <object id="20" x="384" y="512" width="64" height="64"/>
+  <object id="21" x="448" y="512" width="64" height="64"/>
+  <object id="23" x="512" y="512" width="64" height="64"/>
+  <object id="24" x="320" y="448" width="64" height="64"/>
+  <object id="25" x="384" y="448" width="64" height="64"/>
+  <object id="26" x="448" y="448" width="64" height="64"/>
+  <object id="27" x="512" y="448" width="64" height="64"/>
+  <object id="28" x="320" y="384" width="64" height="64"/>
+  <object id="29" name="bed" x="384" y="384" width="64" height="64"/>
+  <object id="30" x="448" y="384" width="64" height="64"/>
+  <object id="31" x="512" y="384" width="64" height="64"/>
+  <object id="32" x="320" y="320" width="64" height="64"/>
+  <object id="33" x="384" y="320" width="64" height="64"/>
+  <object id="34" x="448" y="320" width="64" height="64"/>
+  <object id="35" x="512" y="320" width="64" height="64"/>
+ </objectgroup>
+ <objectgroup id="4" name="room2">
+  <object id="36" name="door" x="1088" y="512" width="64" height="64">
+   <properties>
+    <property name="direction" type="int" value="2"/>
+    <property name="offset" type="int" value="0"/>
+   </properties>
+  </object>
+  <object id="37" x="1024" y="512" width="64" height="64"/>
+  <object id="38" x="960" y="512" width="64" height="64"/>
+  <object id="39" x="960" y="576" width="64" height="64"/>
+  <object id="40" x="1024" y="576" width="64" height="64"/>
+  <object id="41" x="960" y="640" width="64" height="64"/>
+  <object id="42" x="1024" y="640" width="64" height="64"/>
+  <object id="43" x="1088" y="640" width="64" height="64"/>
+  <object id="44" x="1152" y="640" width="64" height="64"/>
+  <object id="45" x="1216" y="640" width="64" height="64"/>
+  <object id="46" x="1280" y="640" width="64" height="64"/>
+  <object id="47" x="960" y="448" width="64" height="64"/>
+  <object id="48" x="1024" y="448" width="64" height="64"/>
+  <object id="49" x="960" y="384" width="64" height="64"/>
+  <object id="50" x="1024" y="384" width="64" height="64"/>
+  <object id="51" x="1024" y="320" width="64" height="64"/>
+  <object id="52" x="1152" y="384" width="64" height="64"/>
+  <object id="53" x="1152" y="320" width="64" height="64"/>
+  <object id="54" x="1216" y="320" width="64" height="64"/>
+  <object id="55" x="1216" y="384" width="64" height="64"/>
+  <object id="56" x="1280" y="384" width="64" height="64"/>
+  <object id="57" x="1280" y="320" width="64" height="64"/>
+  <object id="58" name="bed" x="1088" y="384" width="64" height="64"/>
+  <object id="59" x="1088" y="320" width="64" height="64"/>
+ </objectgroup>
+ <objectgroup id="5" name="room3">
+  <object id="60" name="door" x="1792" y="640" width="64" height="64">
+   <properties>
+    <property name="direction" type="int" value="0"/>
+    <property name="offset" type="int" value="2"/>
+   </properties>
+  </object>
+  <object id="61" x="1728" y="576" width="64" height="64"/>
+  <object id="62" x="1792" y="576" width="64" height="64"/>
+  <object id="63" x="1856" y="576" width="64" height="64"/>
+  <object id="64" x="1728" y="512" width="64" height="64"/>
+  <object id="65" x="1792" y="512" width="64" height="64"/>
+  <object id="66" x="1856" y="512" width="64" height="64"/>
+  <object id="67" x="1728" y="448" width="64" height="64"/>
+  <object id="68" x="1792" y="448" width="64" height="64"/>
+  <object id="69" x="1856" y="448" width="64" height="64"/>
+  <object id="70" x="1728" y="384" width="64" height="64"/>
+  <object id="71" x="1728" y="320" width="64" height="64"/>
+  <object id="72" x="1856" y="320" width="64" height="64"/>
+  <object id="73" x="1856" y="384" width="64" height="64"/>
+  <object id="74" name="bed" x="1792" y="384" width="64" height="64"/>
+  <object id="75" x="1792" y="320" width="64" height="64"/>
+ </objectgroup>
+ <objectgroup id="6" name="room4">
+  <object id="76" name="door" x="512" y="1088" width="64" height="64">
+   <properties>
+    <property name="direction" type="int" value="1"/>
+    <property name="offset" type="int" value="2"/>
+   </properties>
+  </object>
+  <object id="77" x="320" y="1152" width="64" height="64"/>
+  <object id="78" x="384" y="1152" width="64" height="64"/>
+  <object id="79" x="448" y="1152" width="64" height="64"/>
+  <object id="80" x="512" y="1152" width="64" height="64"/>
+  <object id="81" x="576" y="1152" width="64" height="64"/>
+  <object id="82" x="320" y="1216" width="64" height="64"/>
+  <object id="83" x="384" y="1216" width="64" height="64"/>
+  <object id="84" x="448" y="1216" width="64" height="64"/>
+  <object id="85" x="512" y="1216" width="64" height="64"/>
+  <object id="86" x="576" y="1216" width="64" height="64"/>
+  <object id="87" x="640" y="960" width="64" height="64"/>
+  <object id="88" x="704" y="960" width="64" height="64"/>
+  <object id="89" x="640" y="1024" width="64" height="64"/>
+  <object id="90" x="704" y="1024" width="64" height="64"/>
+  <object id="91" x="640" y="1088" width="64" height="64"/>
+  <object id="92" x="704" y="1088" width="64" height="64"/>
+  <object id="93" x="640" y="1152" width="64" height="64"/>
+  <object id="94" x="704" y="1152" width="64" height="64"/>
+  <object id="95" x="640" y="1216" width="64" height="64"/>
+  <object id="96" x="704" y="1216" width="64" height="64"/>
+  <object id="97" x="320" y="1088" width="64" height="64"/>
+  <object id="98" x="384" y="1088" width="64" height="64"/>
+  <object id="100" x="384" y="960" width="64" height="64"/>
+  <object id="101" x="384" y="1024" width="64" height="64"/>
+  <object id="102" x="320" y="960" width="64" height="64"/>
+  <object id="103" name="bed" x="320" y="1024" width="64" height="64"/>
+ </objectgroup>
+ <objectgroup id="7" name="room5">
+  <object id="105" name="door" x="1152" y="896" width="64" height="64">
+   <properties>
+    <property name="direction" type="int" value="1"/>
+    <property name="offset" type="int" value="3"/>
+   </properties>
+  </object>
+  <object id="106" x="1088" y="960" width="64" height="64"/>
+  <object id="107" x="1152" y="960" width="64" height="64"/>
+  <object id="108" x="1216" y="960" width="64" height="64"/>
+  <object id="109" x="1088" y="1024" width="64" height="64"/>
+  <object id="110" x="1152" y="1024" width="64" height="64"/>
+  <object id="111" x="1216" y="1024" width="64" height="64"/>
+  <object id="112" x="1088" y="1088" width="64" height="64"/>
+  <object id="113" x="1152" y="1088" width="64" height="64"/>
+  <object id="114" x="1216" y="1088" width="64" height="64"/>
+  <object id="115" x="1280" y="1088" width="64" height="64"/>
+  <object id="116" x="1024" y="1152" width="64" height="64"/>
+  <object id="117" x="1024" y="1216" width="64" height="64"/>
+  <object id="118" x="1088" y="1152" width="64" height="64"/>
+  <object id="119" x="1088" y="1216" width="64" height="64"/>
+  <object id="120" x="1216" y="1152" width="64" height="64"/>
+  <object id="121" x="1216" y="1216" width="64" height="64"/>
+  <object id="122" x="1280" y="1152" width="64" height="64"/>
+  <object id="123" x="1280" y="1216" width="64" height="64"/>
+  <object id="124" x="1152" y="1216" width="64" height="64"/>
+  <object id="125" name="bed" x="1152" y="1152" width="64" height="64"/>
+ </objectgroup>
+ <objectgroup id="8" name="room6">
+  <object id="126" name="door" x="1664" y="1280" width="64" height="64">
+   <properties>
+    <property name="direction" type="int" value="0"/>
+    <property name="offset" type="int" value="3"/>
+   </properties>
+  </object>
+  <object id="127" x="1664" y="1216" width="64" height="64"/>
+  <object id="128" x="1600" y="1152" width="64" height="64"/>
+  <object id="129" x="1664" y="1152" width="64" height="64"/>
+  <object id="130" x="1728" y="1152" width="64" height="64"/>
+  <object id="131" x="1728" y="1216" width="64" height="64"/>
+  <object id="132" x="1792" y="1216" width="64" height="64"/>
+  <object id="133" x="1792" y="1152" width="64" height="64"/>
+  <object id="134" x="1856" y="1152" width="64" height="64"/>
+  <object id="135" x="1600" y="1088" width="64" height="64"/>
+  <object id="136" x="1664" y="1088" width="64" height="64"/>
+  <object id="137" x="1728" y="1088" width="64" height="64"/>
+  <object id="138" x="1792" y="1088" width="64" height="64"/>
+  <object id="139" x="1856" y="1088" width="64" height="64"/>
+  <object id="140" x="1856" y="960" width="64" height="64"/>
+  <object id="141" x="1856" y="1024" width="64" height="64"/>
+  <object id="142" x="1600" y="960" width="64" height="64"/>
+  <object id="143" x="1600" y="1024" width="64" height="64"/>
+  <object id="144" x="1664" y="960" width="64" height="64"/>
+  <object id="145" name="bed" x="1664" y="1024" width="64" height="64"/>
+ </objectgroup>
+ <objectgroup id="9" name="room7">
+  <object id="146" name="door" x="512" y="1472" width="64" height="64">
+   <properties>
+    <property name="direction" type="int" value="1"/>
+    <property name="offset" type="int" value="2"/>
+   </properties>
+  </object>
+  <object id="147" x="448" y="1536" width="64" height="64"/>
+  <object id="148" x="512" y="1536" width="64" height="64"/>
+  <object id="149" x="576" y="1536" width="64" height="64"/>
+  <object id="150" x="320" y="1600" width="64" height="64"/>
+  <object id="151" x="384" y="1600" width="64" height="64"/>
+  <object id="152" x="448" y="1600" width="64" height="64"/>
+  <object id="153" x="512" y="1600" width="64" height="64"/>
+  <object id="154" x="576" y="1600" width="64" height="64"/>
+  <object id="155" x="320" y="1664" width="64" height="64"/>
+  <object id="156" x="384" y="1664" width="64" height="64"/>
+  <object id="157" x="448" y="1664" width="64" height="64"/>
+  <object id="158" x="512" y="1664" width="64" height="64"/>
+  <object id="159" x="576" y="1664" width="64" height="64"/>
+  <object id="160" x="320" y="1728" width="64" height="64"/>
+  <object id="161" x="384" y="1728" width="64" height="64"/>
+  <object id="162" name="bed" x="448" y="1728" width="64" height="64"/>
+  <object id="163" x="512" y="1728" width="64" height="64"/>
+  <object id="164" x="576" y="1728" width="64" height="64"/>
+  <object id="165" x="320" y="1792" width="64" height="64"/>
+  <object id="166" x="384" y="1792" width="64" height="64"/>
+  <object id="167" x="448" y="1792" width="64" height="64"/>
+  <object id="168" x="512" y="1792" width="64" height="64"/>
+  <object id="169" x="576" y="1792" width="64" height="64"/>
+ </objectgroup>
+ <objectgroup id="10" name="room8">
+  <object id="170" name="door" x="832" y="1600" width="64" height="64">
+   <properties>
+    <property name="direction" type="int" value="3"/>
+    <property name="offset" type="int" value="0"/>
+   </properties>
+  </object>
+  <object id="171" x="896" y="1536" width="64" height="64"/>
+  <object id="172" x="896" y="1600" width="64" height="64"/>
+  <object id="173" x="896" y="1664" width="64" height="64"/>
+  <object id="174" x="896" y="1728" width="64" height="64"/>
+  <object id="175" x="960" y="1536" width="64" height="64"/>
+  <object id="176" x="960" y="1600" width="64" height="64"/>
+  <object id="177" x="960" y="1664" width="64" height="64"/>
+  <object id="178" x="960" y="1728" width="64" height="64"/>
+  <object id="179" x="1024" y="1536" width="64" height="64"/>
+  <object id="180" x="1024" y="1600" width="64" height="64"/>
+  <object id="181" x="1024" y="1664" width="64" height="64"/>
+  <object id="182" x="1024" y="1728" width="64" height="64"/>
+  <object id="183" x="1024" y="1792" width="64" height="64"/>
+  <object id="184" x="1024" y="1856" width="64" height="64"/>
+  <object id="185" x="1088" y="1664" width="64" height="64"/>
+  <object id="186" x="1088" y="1728" width="64" height="64"/>
+  <object id="187" x="1088" y="1792" width="64" height="64"/>
+  <object id="188" x="1088" y="1856" width="64" height="64"/>
+  <object id="189" x="1152" y="1536" width="64" height="64"/>
+  <object id="190" x="1152" y="1600" width="64" height="64"/>
+  <object id="191" x="1152" y="1664" width="64" height="64"/>
+  <object id="192" x="1152" y="1728" width="64" height="64"/>
+  <object id="193" x="1152" y="1792" width="64" height="64"/>
+  <object id="194" name="bed" x="1088" y="1600" width="64" height="64"/>
+  <object id="195" x="1088" y="1536" width="64" height="64"/>
+ </objectgroup>
+ <objectgroup id="11" name="room9">
+  <object id="196" name="door" x="1600" y="1472" width="64" height="64">
+   <properties>
+    <property name="direction" type="int" value="1"/>
+    <property name="offset" type="int" value="3"/>
+   </properties>
+  </object>
+  <object id="197" x="1600" y="1536" width="64" height="64"/>
+  <object id="198" x="1600" y="1600" width="64" height="64"/>
+  <object id="199" x="1600" y="1664" width="64" height="64"/>
+  <object id="200" x="1600" y="1728" width="64"/>
+  <object id="202" x="1600" y="1728" width="64" height="64"/>
+  <object id="203" x="1600" y="1792" width="64" height="64"/>
+  <object id="204" x="1600" y="1856" width="64" height="64"/>
+  <object id="205" x="1664" y="1856" width="64" height="64"/>
+  <object id="206" x="1728" y="1856" width="64" height="64"/>
+  <object id="207" x="1792" y="1856" width="64" height="64"/>
+  <object id="208" x="1856" y="1856" width="64" height="64"/>
+  <object id="209" x="1792" y="1792" width="64" height="64"/>
+  <object id="210" x="1856" y="1792" width="64" height="64"/>
+  <object id="211" x="1792" y="1728" width="64" height="64"/>
+  <object id="212" x="1856" y="1728" width="64" height="64"/>
+  <object id="213" x="1792" y="1664" width="64" height="64"/>
+  <object id="214" x="1856" y="1664" width="64" height="64"/>
+  <object id="215" name="bed" x="1792" y="1600" width="64" height="64"/>
+  <object id="216" x="1856" y="1600" width="64" height="64"/>
+  <object id="217" x="1792" y="1536" width="64" height="64"/>
+  <object id="218" x="1856" y="1536" width="64" height="64"/>
+ </objectgroup>
+ <objectgroup id="12" name="room10">
+  <object id="219" name="door" x="384" y="2432" width="64" height="64">
+   <properties>
+    <property name="direction" type="int" value="0"/>
+    <property name="offset" type="int" value="3"/>
+   </properties>
+  </object>
+  <object id="220" x="320" y="2368" width="64" height="64"/>
+  <object id="221" x="384" y="2368" width="64" height="64"/>
+  <object id="222" x="448" y="2368" width="64" height="64"/>
+  <object id="223" x="512" y="2368" width="64" height="64"/>
+  <object id="224" x="320" y="2304" width="64" height="64"/>
+  <object id="225" x="384" y="2304" width="64" height="64"/>
+  <object id="226" x="448" y="2304" width="64" height="64"/>
+  <object id="227" x="512" y="2304" width="64" height="64"/>
+  <object id="228" x="320" y="2240" width="64" height="64"/>
+  <object id="229" x="384" y="2240" width="64" height="64"/>
+  <object id="230" x="448" y="2240" width="64" height="64"/>
+  <object id="231" x="512" y="2240" width="64" height="64"/>
+  <object id="232" x="320" y="2176" width="64" height="64"/>
+  <object id="233" x="384" y="2176" width="64" height="64"/>
+  <object id="234" x="448" y="2176" width="64" height="64"/>
+  <object id="235" x="512" y="2176" width="64" height="64"/>
+  <object id="236" x="320" y="2112" width="64" height="64"/>
+  <object id="237" name="bed" x="384" y="2112" width="64" height="64"/>
+  <object id="238" x="448" y="2112" width="64" height="64"/>
+  <object id="239" x="512" y="2112" width="64" height="64"/>
+  <object id="240" x="320" y="2048" width="64" height="64"/>
+  <object id="241" x="384" y="2048" width="64" height="64"/>
+  <object id="242" x="448" y="2048" width="64" height="64"/>
+  <object id="243" x="512" y="2048" width="64" height="64"/>
+ </objectgroup>
+ <objectgroup id="13" name="room11">
+  <object id="244" name="door" x="960" y="2432" width="64" height="64">
+   <properties>
+    <property name="direction" type="int" value="0"/>
+    <property name="offset" type="int" value="3"/>
+   </properties>
+  </object>
+  <object id="246" x="896" y="2368" width="64" height="64"/>
+  <object id="248" x="960" y="2368" width="64" height="64"/>
+  <object id="249" x="1024" y="2368" width="64" height="64"/>
+  <object id="250" x="896" y="2304" width="64" height="64"/>
+  <object id="251" x="960" y="2304" width="64" height="64"/>
+  <object id="252" x="896" y="2240" width="64" height="64"/>
+  <object id="253" x="960" y="2240" width="64" height="64"/>
+  <object id="254" x="832" y="2176" width="64" height="64"/>
+  <object id="256" x="832" y="2112" width="64" height="64"/>
+  <object id="257" x="960" y="2112" width="64" height="64"/>
+  <object id="258" x="960" y="2176" width="64" height="64"/>
+  <object id="259" x="1024" y="2112" width="64" height="64"/>
+  <object id="260" x="1024" y="2176" width="64" height="64"/>
+  <object id="261" name="bed" x="896" y="2176" width="64" height="64"/>
+  <object id="262" x="896" y="2112" width="64" height="64"/>
+ </objectgroup>
+ <objectgroup id="14" name="room12">
+  <object id="263" name="door" x="1856" y="2048" width="64" height="64" visible="0">
+   <properties>
+    <property name="direction" type="int" value="1"/>
+    <property name="offset" type="int" value="2"/>
+   </properties>
+  </object>
+  <object id="264" x="1856" y="2112" width="64" height="64"/>
+  <object id="265" x="1856" y="2176" width="64" height="64"/>
+  <object id="267" x="1856" y="2240" width="64" height="64"/>
+  <object id="268" x="1856" y="2304" width="64" height="64"/>
+  <object id="269" x="1856" y="2368" width="64" height="64"/>
+  <object id="270" x="1792" y="2112" width="64" height="64"/>
+  <object id="271" x="1792" y="2176" width="64" height="64"/>
+  <object id="272" x="1792" y="2240" width="64" height="64"/>
+  <object id="273" x="1792" y="2304" width="64" height="64"/>
+  <object id="274" x="1792" y="2368" width="64" height="64"/>
+  <object id="275" x="1664" y="2368" width="64" height="64"/>
+  <object id="276" x="1728" y="2368" width="64" height="64"/>
+  <object id="277" x="1728" y="2304" width="64" height="64"/>
+  <object id="278" x="1728" y="2240" width="64" height="64"/>
+  <object id="279" x="1664" y="2176" width="64" height="64"/>
+  <object id="280" x="1664" y="2112" width="64" height="64"/>
+  <object id="281" name="bed" x="1728" y="2176" width="64" height="64"/>
+  <object id="282" x="1728" y="2112" width="64" height="64"/>
+  <object id="297" name="door" x="1856" y="2048" width="64" height="64">
+   <properties>
+    <property name="direction" type="int" value="1"/>
+    <property name="offset" type="int" value="2"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>

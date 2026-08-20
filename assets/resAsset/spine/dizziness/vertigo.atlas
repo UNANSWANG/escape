@@ -1,0 +1,27 @@
+
+vertigo.png
+size: 496,496
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+2
+  rotate: false
+  xy: 373, 373
+  size: 121, 121
+  orig: 121, 121
+  offset: 0, 0
+  index: -1
+gq1
+  rotate: false
+  xy: 2, 387
+  size: 369, 107
+  orig: 379, 111
+  offset: 5, 1
+  index: -1
+gq2
+  rotate: false
+  xy: 2, 294
+  size: 364, 91
+  orig: 373, 92
+  offset: 5, 1
+  index: -1

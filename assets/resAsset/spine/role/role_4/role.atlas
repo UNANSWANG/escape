@@ -1,0 +1,62 @@
+
+role.png
+size: 753,753
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+kudou
+  rotate: false
+  xy: 2, 2
+  size: 209, 189
+  orig: 209, 189
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: true
+  xy: 158, 473
+  size: 278, 418
+  orig: 278, 435
+  offset: 0, 8
+  index: -1
+tou
+  rotate: false
+  xy: 578, 562
+  size: 169, 189
+  orig: 169, 189
+  offset: 0, 0
+  index: -1
+youxiaotui
+  rotate: true
+  xy: 213, 169
+  size: 150, 526
+  orig: 150, 534
+  offset: 0, 0
+  index: -1
+youxiaotui+
+  rotate: true
+  xy: 158, 321
+  size: 150, 534
+  orig: 150, 534
+  offset: 0, 0
+  index: -1
+zuodatui
+  rotate: false
+  xy: 2, 193
+  size: 154, 558
+  orig: 162, 576
+  offset: 0, 9
+  index: -1
+zuoshangbi
+  rotate: true
+  xy: 213, 7
+  size: 74, 367
+  orig: 81, 385
+  offset: 0, 9
+  index: -1
+zuoshou
+  rotate: true
+  xy: 213, 83
+  size: 84, 387
+  orig: 100, 405
+  offset: 8, 9
+  index: -1

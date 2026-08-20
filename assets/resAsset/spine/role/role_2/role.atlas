@@ -1,0 +1,55 @@
+
+role.png
+size: 814,814
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+handwear-l
+  rotate: false
+  xy: 652, 382
+  size: 160, 430
+  orig: 160, 430
+  offset: 0, 0
+  index: -1
+handwear-r
+  rotate: true
+  xy: 2, 4
+  size: 128, 410
+  orig: 128, 411
+  offset: 0, 1
+  index: -1
+neck
+  rotate: false
+  xy: 2, 325
+  size: 407, 487
+  orig: 415, 496
+  offset: 0, 1
+  index: -1
+objects
+  rotate: false
+  xy: 620, 102
+  size: 170, 261
+  orig: 170, 261
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 427, 131
+  size: 191, 232
+  orig: 191, 232
+  offset: 0, 0
+  index: -1
+youjiao
+  rotate: false
+  xy: 411, 365
+  size: 239, 447
+  orig: 239, 448
+  offset: 0, 0
+  index: -1
+zuojiao
+  rotate: true
+  xy: 2, 134
+  size: 189, 423
+  orig: 262, 425
+  offset: 73, 2
+  index: -1

@@ -1,0 +1,55 @@
+
+Loding_ja.png
+size: 99,99
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+JC1
+  rotate: false
+  xy: 66, 40
+  size: 30, 33
+  orig: 32, 36
+  offset: 1, 2
+  index: -1
+JC2
+  rotate: false
+  xy: 34, 49
+  size: 22, 48
+  orig: 23, 49
+  offset: 1, 1
+  index: -1
+JC3
+  rotate: false
+  xy: 2, 2
+  size: 31, 42
+  orig: 31, 42
+  offset: 0, 0
+  index: -1
+JC4
+  rotate: false
+  xy: 35, 2
+  size: 29, 45
+  orig: 29, 47
+  offset: 0, 0
+  index: -1
+JC5
+  rotate: false
+  xy: 66, 20
+  size: 25, 18
+  orig: 25, 19
+  offset: 0, 0
+  index: -1
+JC6
+  rotate: false
+  xy: 2, 46
+  size: 30, 51
+  orig: 32, 52
+  offset: 0, 0
+  index: -1
+JC7
+  rotate: true
+  xy: 58, 75
+  size: 22, 38
+  orig: 23, 41
+  offset: 0, 1
+  index: -1

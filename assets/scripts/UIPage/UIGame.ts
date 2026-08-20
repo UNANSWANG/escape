@@ -282,7 +282,7 @@ export class UIGame extends UIBase {
 
     /**摇杆区域移动 */
     onTouchRockerMove(event: EventTouch) {
-        const maxDistance = 96;
+        const maxDistance = 86;
         const moveMultiplier = 4; // 移动倍数，可以根据需要调整
         let rockerNode = this.rockerTouchNode.getChildByName("rockerNode");
         let rockerPoint = rockerNode.getChildByName("rockerPoint");

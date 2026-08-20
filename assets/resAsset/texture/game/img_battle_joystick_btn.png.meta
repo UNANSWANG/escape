@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "4c34d178-862b-4d0a-8fdc-b5f10de55a3f",
+  "uuid": "f0c462d3-2ef3-4e60-bbdd-825767c30fc3",
   "files": [
     ".json",
     ".png"
@@ -10,14 +10,14 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "4c34d178-862b-4d0a-8fdc-b5f10de55a3f@6c48a",
+      "uuid": "f0c462d3-2ef3-4e60-bbdd-825767c30fc3@6c48a",
       "displayName": "img_battle_joystick_btn",
       "id": "6c48a",
       "name": "texture",
       "userData": {
         "wrapModeS": "clamp-to-edge",
         "wrapModeT": "clamp-to-edge",
-        "imageUuidOrDatabaseUri": "4c34d178-862b-4d0a-8fdc-b5f10de55a3f",
+        "imageUuidOrDatabaseUri": "f0c462d3-2ef3-4e60-bbdd-825767c30fc3",
         "isUuid": true,
         "visible": false,
         "minfilter": "linear",
@@ -34,7 +34,7 @@
     },
     "f9941": {
       "importer": "sprite-frame",
-      "uuid": "4c34d178-862b-4d0a-8fdc-b5f10de55a3f@f9941",
+      "uuid": "f0c462d3-2ef3-4e60-bbdd-825767c30fc3@f9941",
       "displayName": "img_battle_joystick_btn",
       "id": "f9941",
       "name": "spriteFrame",
@@ -45,10 +45,10 @@
         "offsetY": 0,
         "trimX": 0,
         "trimY": 0,
-        "width": 64,
-        "height": 64,
-        "rawWidth": 64,
-        "rawHeight": 64,
+        "width": 100,
+        "height": 100,
+        "rawWidth": 100,
+        "rawHeight": 100,
         "borderTop": 0,
         "borderBottom": 0,
         "borderLeft": 0,
@@ -60,17 +60,17 @@
         "meshType": 0,
         "vertices": {
           "rawPosition": [
-            -32,
-            -32,
+            -50,
+            -50,
             0,
-            32,
-            -32,
+            50,
+            -50,
             0,
-            -32,
-            32,
+            -50,
+            50,
             0,
-            32,
-            32,
+            50,
+            50,
             0
           ],
           "indexes": [
@@ -83,12 +83,12 @@
           ],
           "uv": [
             0,
-            64,
-            64,
-            64,
+            100,
+            100,
+            100,
             0,
             0,
-            64,
+            100,
             0
           ],
           "nuv": [
@@ -102,18 +102,18 @@
             1
           ],
           "minPos": [
-            -32,
-            -32,
+            -50,
+            -50,
             0
           ],
           "maxPos": [
-            32,
-            32,
+            50,
+            50,
             0
           ]
         },
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "4c34d178-862b-4d0a-8fdc-b5f10de55a3f@6c48a",
+        "imageUuidOrDatabaseUri": "f0c462d3-2ef3-4e60-bbdd-825767c30fc3@6c48a",
         "atlasUuid": "",
         "trimType": "auto"
       },
@@ -129,10 +129,6 @@
     "type": "sprite-frame",
     "fixAlphaTransparencyArtifacts": false,
     "hasAlpha": true,
-    "redirect": "4c34d178-862b-4d0a-8fdc-b5f10de55a3f@6c48a",
-    "compressSettings": {
-      "useCompressTexture": true,
-      "presetId": "60ZiqfUpZLWYVoaiuYJMD0"
-    }
+    "redirect": "f0c462d3-2ef3-4e60-bbdd-825767c30fc3@6c48a"
   }
 }

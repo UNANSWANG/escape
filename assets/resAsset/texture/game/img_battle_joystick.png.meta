@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "aa08754b-6cef-4204-bd68-15d30898e346",
+  "uuid": "fcc257d8-9665-43e5-ba47-8c1c222b6c2a",
   "files": [
     ".json",
     ".png"
@@ -10,14 +10,14 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "aa08754b-6cef-4204-bd68-15d30898e346@6c48a",
+      "uuid": "fcc257d8-9665-43e5-ba47-8c1c222b6c2a@6c48a",
       "displayName": "img_battle_joystick",
       "id": "6c48a",
       "name": "texture",
       "userData": {
         "wrapModeS": "clamp-to-edge",
         "wrapModeT": "clamp-to-edge",
-        "imageUuidOrDatabaseUri": "aa08754b-6cef-4204-bd68-15d30898e346",
+        "imageUuidOrDatabaseUri": "fcc257d8-9665-43e5-ba47-8c1c222b6c2a",
         "isUuid": true,
         "visible": false,
         "minfilter": "linear",
@@ -34,19 +34,19 @@
     },
     "f9941": {
       "importer": "sprite-frame",
-      "uuid": "aa08754b-6cef-4204-bd68-15d30898e346@f9941",
+      "uuid": "fcc257d8-9665-43e5-ba47-8c1c222b6c2a@f9941",
       "displayName": "img_battle_joystick",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {
         "trimThreshold": 1,
         "rotated": false,
-        "offsetX": -0.5,
+        "offsetX": 0.5,
         "offsetY": 0,
-        "trimX": 1,
-        "trimY": 1,
+        "trimX": 2,
+        "trimY": 2,
         "width": 317,
-        "height": 319,
+        "height": 317,
         "rawWidth": 320,
         "rawHeight": 321,
         "borderTop": 0,
@@ -61,16 +61,16 @@
         "vertices": {
           "rawPosition": [
             -158.5,
-            -159.5,
+            -158.5,
             0,
             158.5,
-            -159.5,
+            -158.5,
             0,
             -158.5,
-            159.5,
+            158.5,
             0,
             158.5,
-            159.5,
+            158.5,
             0
           ],
           "indexes": [
@@ -82,38 +82,38 @@
             3
           ],
           "uv": [
-            1,
-            320,
-            318,
-            320,
-            1,
-            1,
-            318,
-            1
+            2,
+            319,
+            319,
+            319,
+            2,
+            2,
+            319,
+            2
           ],
           "nuv": [
-            0.003125,
-            0.003115264797507788,
-            0.99375,
-            0.003115264797507788,
-            0.003125,
-            0.9968847352024922,
-            0.99375,
-            0.9968847352024922
+            0.00625,
+            0.006230529595015576,
+            0.996875,
+            0.006230529595015576,
+            0.00625,
+            0.9937694704049844,
+            0.996875,
+            0.9937694704049844
           ],
           "minPos": [
             -158.5,
-            -159.5,
+            -158.5,
             0
           ],
           "maxPos": [
             158.5,
-            159.5,
+            158.5,
             0
           ]
         },
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "aa08754b-6cef-4204-bd68-15d30898e346@6c48a",
+        "imageUuidOrDatabaseUri": "fcc257d8-9665-43e5-ba47-8c1c222b6c2a@6c48a",
         "atlasUuid": "",
         "trimType": "auto"
       },
@@ -129,10 +129,6 @@
     "type": "sprite-frame",
     "fixAlphaTransparencyArtifacts": false,
     "hasAlpha": true,
-    "redirect": "aa08754b-6cef-4204-bd68-15d30898e346@6c48a",
-    "compressSettings": {
-      "useCompressTexture": true,
-      "presetId": "60ZiqfUpZLWYVoaiuYJMD0"
-    }
+    "redirect": "fcc257d8-9665-43e5-ba47-8c1c222b6c2a@6c48a"
   }
 }

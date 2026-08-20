@@ -81,7 +81,6 @@ export class UIMatch extends UIBase {
     }
 
     onUI_Open() {
-        pData.getSelectedDifficultyIndex();
         let anim = this.getComponent(Animation);
         anim.play();
         this.initData();
@@ -104,10 +103,7 @@ export class UIMatch extends UIBase {
 
         this.readyBtn.active = true;
         this.readyedBtn.active = false;
-        if (this.titleLab) {
-            //直接使用当前选择模式的下一关名称，如“初学-1”
-            this.titleLab.string = pData.getSelectedModeLevelName();
-        }
+        
         this.refreshTimeLab();
 
         let roleNodes = this.roleLayout.children;

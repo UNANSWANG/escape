@@ -62,8 +62,8 @@ export class platformManager extends Component {
         }
 
         //TODO 暂时不需要登录
-        // gm.isLogin = true;
-        // return;
+        gm.isLogin = true;
+        return;
 
         httpMgr.post(urlConfig.login, { type: tempType, code: userMgr.code }, (data) => {
             gm.isLogin = true;
@@ -71,9 +71,7 @@ export class platformManager extends Component {
             userMgr.params.openId = data.openid;
             userMgr.params.token = data.token;
             userMgr.params.uid = +data.uid || 0;
-            pData.modeLevels = data.level_values || [];
-            pData.level = pData.getLevelNums();
-            pData.initGameData(data.gold, data.ext);
+            pData.level = +data.level || 0;
 
             // console.warn("------------->用户关卡数:", pData.level);
 

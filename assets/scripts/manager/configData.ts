@@ -66,8 +66,6 @@ export enum GameEvent {
     revisitSidebar = "revisitSidebar",
     /**刷新游戏摄像机视角 */
     refreshGameCamera = "refreshGameCamera",
-    /**刷新游戏内货币（场内） */
-    refreshGameMonetary = "refreshGameMonetary",
     /**刷新游戏外货币（场外） */
     refreshPlayerMonetary = "refreshPlayerMonetary",
     /**通用配置表加载完成 */
@@ -84,10 +82,8 @@ export enum GameEvent {
 export enum SaveKey {
     /**关卡数据 */
     level = "level",
-    /**关卡模式通关数据，格式 [[模式ID, 该模式已通关关卡数], ...] */
-    modeLevels = "modeLevels",
-    /**难度选择 */
-    difficulty = "difficulty",
+    /**道具存储 */
+    props = "props",
     /**引导 */
     guide = "guide",
     /**音效开关 */
@@ -102,14 +98,8 @@ export enum SaveKey {
     vibrat = "vibrat",
     /**今日是否领取过侧边栏奖励 */
     isGetRevisit = "isGetRevisit",
-    /**今日是否通过分享领取过感染币 */
-    isGetMoneyShare = "isGetMoneyShare",
-    /**今日是否通过分享领取过每日礼包 */
-    isGetDailyGift = "isGetDailyGift",
     /**用户头像 */
     avatarUrl = "avatarUrl",
-    /**今日是否弹出过温馨提示 */
-    isShowWarm = "isShowWarm",
     /**敌人是否只攻击自身（gm配置） */
     onlyAttackSelf = "onlyAttackSelf",
     /**是否免广告（gm配置） */

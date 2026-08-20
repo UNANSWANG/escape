@@ -57,7 +57,7 @@ export class CameraController extends Component {
     }
 
     private limitCameraPos(cameraPos: Vec3): Vec3 {
-        if (!this.camera || !pData.mapSize || pData.mapSize.width <= 0 || pData.mapSize.height <= 0) {
+        if (!this.camera) {
             return cameraPos;
         }
 

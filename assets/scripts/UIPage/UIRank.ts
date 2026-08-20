@@ -133,8 +133,8 @@ export class UIRank extends UIBase {
         nameLab.string = data.name;
 
         if (this.pageIdx == 0) {
-            //总榜的value为关卡上报的rank值，反解成关卡名称显示，如 400002 => “进阶-3”
-            scoreLab.string = levelConfig.getRankLevelName(data.score) || `${data.score}`;
+            //总榜的value为关卡上报的rank值
+            scoreLab.string = `${data.score}`;
         } else if (this.pageIdx == 1) {
             scoreLab.string = `通过${data.score}关`;
         } else {

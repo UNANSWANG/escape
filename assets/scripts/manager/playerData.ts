@@ -43,7 +43,7 @@ export class playerData {
 
     levelInit() {
         pData.adNum = 0;
-        pData.mapHalfSize = new Vec2(1080/2, 2500/2);
+        pData.mapHalfSize = new Vec2(2680/2, 1500/2);
         this.isGuide = ccStorageTools.getNumberData(SaveKey.guide) != 1 || gmConfig.forceGuide;
         this.gameStartTime = ccTimeTools.getTime();
 

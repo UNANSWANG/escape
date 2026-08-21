@@ -43,8 +43,6 @@ export class UIGame extends UIBase {
     ///
     ///属性
     ///
-    /**摇杆跟左边的距离 */
-    private rockerLeftOffset = 250;
 
 
     /**当前移动方向 */
@@ -52,7 +50,7 @@ export class UIGame extends UIBase {
     /**是否正在移动 */
     private isMoving = false;
     /**摇杆初始位置 */
-    private rockerInitPos: Vec3 = new Vec3(-354, -150, 0);
+    private rockerInitPos: Vec3 = new Vec3(200, -56, 0);
     /**所有房间信息 */
     roomMap: any = {};
     /**地图层相机，用于把瓦片世界坐标转成屏幕坐标 */
@@ -81,7 +79,6 @@ export class UIGame extends UIBase {
     protected onLoad(): void {
         this.bindBtn();
         this.initCamera();
-        this.initRockerPos();
         audioMgr.initSceneAudio(this.node);
     }
 
@@ -147,12 +144,6 @@ export class UIGame extends UIBase {
         this.setBtn.addComponent(zoomButton).onClick = this.clickSetBtn.bind(this);
     }
 
-    /**初始化摇杆位置 */
-    initRockerPos() {
-        let viewPortSize = view.getVisibleSize();
-        this.rockerInitPos.x = -(viewPortSize.width / 2 - this.rockerLeftOffset);
-        this.rockerTouchNode.setPosition(this.rockerInitPos);
-    }
     /**初始化游戏摄像机 */
     initCamera() {
         let gameCamera = this.node.getChildByName("gameCamera");
@@ -282,7 +273,7 @@ export class UIGame extends UIBase {
 
     /**摇杆区域移动 */
     onTouchRockerMove(event: EventTouch) {
-        const maxDistance = 86;
+        const maxDistance = 34;
         const moveMultiplier = 4; // 移动倍数，可以根据需要调整
         let rockerNode = this.rockerTouchNode.getChildByName("rockerNode");
         let rockerPoint = rockerNode.getChildByName("rockerPoint");

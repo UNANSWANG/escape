@@ -85,6 +85,7 @@ export class enemyBaseController extends Component {
             return;
         }
 
+        this.roleAnim.setAnimation(0, enemyAnim.idle, true);
     }
 
     /**生命值百分比 */

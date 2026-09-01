@@ -36,6 +36,7 @@ export class roleController extends Component {
     ///
     /**角色spine节点 */
     roleAnim: sp.Skeleton = null;
+    /**枪节点 */
     /**角色名称 */
     roleNameLab: Label = null;
     /**挂在 Spine bone16 挂点上的枪节点 */
@@ -46,6 +47,7 @@ export class roleController extends Component {
     protected onLoad(): void {
         this.roleAnim = this.node.getChildByName("roleAnim").getComponent(sp.Skeleton);
         this.roleNameLab = this.node.getChildByName("roleNameLab").getComponent(Label);
+        this.gunNode = this.node.getChildByName("gun");
     }
 
     init(comp: UIGame, id: number, skinId: number, nickname = "") {
@@ -79,7 +81,6 @@ export class roleController extends Component {
 
     /**将 roleAnim 下的 gun 节点绑定到 Spine 的 bone16 挂点，仅跟随位置 */
     bindGunToSocket() {
-        this.gunNode = this.roleAnim?.node.getChildByName("gun");
         this.gunSocketBone = this.roleAnim?.findBone("g") ?? null;
 
         if (!this.gunNode || !this.gunSocketBone) {

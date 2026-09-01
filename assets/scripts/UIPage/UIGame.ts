@@ -55,6 +55,8 @@ export class UIGame extends UIBase {
     private pressedMoveKeys: Set<KeyCode> = new Set();
     /**摇杆初始位置 */
     private rockerInitPos: Vec3 = new Vec3(200, -56, 0);
+    /**临时敌人与玩家的水平间距 */
+    private readonly tempEnemyOffsetX = 300;
     /**所有房间信息 */
     roomMap: any = {};
     /**地图层相机，用于把瓦片世界坐标转成屏幕坐标 */
@@ -177,8 +179,7 @@ export class UIGame extends UIBase {
 
         this.initRockerArea();
         this.initPlayer();
-
-        // this.initEnemy();
+        this.initEnemy();
     }
 
     clearData() {
@@ -204,15 +205,27 @@ export class UIGame extends UIBase {
         playerMgr.playerComp.init(this, 0, pData.skinId);
     }
 
-    /**初始化敌人 */
-    initEnemy() {
+    /**在玩家右侧生成一个仅播放待机动画的临时敌人 */
+    private initEnemy() {
+        if (!this.enemyPre || !playerMgr.player) {
+            return;
+        }
+
         let enemyNode = instantiate(this.enemyPre);
         this.roleNode.addChild(enemyNode);
         let enemyComp: enemyBaseController = enemyNode.getComponent(enemyBaseController);
-        enemyMgr.enemyArr.push(enemyComp);
-        enemyMgr.enemyId++;
+        const enemyId = enemyMgr.enemyId++;
 
-        enemyNode.setPosition(Vec3.ZERO);
+        // 敌人不添加 AI；仅初始化外观、名称和满血状态。
+        if (enemyComp) {
+            enemyComp.maxHp = 1;
+            enemyComp.hp = 1;
+            enemyComp.init(this, enemyId, 0);
+            enemyMgr.enemyArr.push(enemyComp);
+        }
+
+        const playerPos = playerMgr.player.position;
+        enemyNode.setPosition(playerPos.x + this.tempEnemyOffsetX, playerPos.y, playerPos.z);
     }
 
     /**初始化角色位置 */

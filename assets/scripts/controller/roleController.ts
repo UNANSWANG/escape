@@ -1,4 +1,4 @@
-import { _decorator, Component, Label, sp } from 'cc';
+import { _decorator, Component, Label, Node, sp } from 'cc';
 import { ccTools } from '../extention/generalTools';
 import type { UIGame } from '../UIPage/UIGame';
 import { spinePath, UIPath } from '../manager/pathConfig';
@@ -38,6 +38,10 @@ export class roleController extends Component {
     roleAnim: sp.Skeleton = null;
     /**角色名称 */
     roleNameLab: Label = null;
+    /**挂在 Spine bone16 挂点上的枪节点 */
+    private gunNode: Node = null;
+    /**Spine 中路径为 root/.../g/bone16 的挂点骨骼 */
+    private gunSocketBone: any = null;
 
     protected onLoad(): void {
         this.roleAnim = this.node.getChildByName("roleAnim").getComponent(sp.Skeleton);
@@ -69,7 +73,36 @@ export class roleController extends Component {
         }
 
         this.curRoleAnimName = "";
+        // this.bindGunToSocket();
         this.playRoleAnim(roleAnimName.idle, true);
+    }
+
+    /**将 roleAnim 下的 gun 节点绑定到 Spine 的 bone16 挂点，仅跟随位置 */
+    bindGunToSocket() {
+        this.gunNode = this.roleAnim?.node.getChildByName("gun");
+        this.gunSocketBone = this.roleAnim?.findBone("g") ?? null;
+
+        if (!this.gunNode || !this.gunSocketBone) {
+            console.warn("绑定枪械挂点失败：请确认 roleAnim/gun 节点和 Spine 的 bone16 挂点存在");
+            return false;
+        }
+
+        this.syncGunToSocket();
+        return true;
+    }
+
+    /**同步 gun 到 bone16 挂点的位置，不改变 gun 自身旋转和缩放 */
+    private syncGunToSocket() {
+        if (!this.gunNode || !this.gunSocketBone) {
+            return;
+        }
+
+        const bone = this.gunSocketBone;
+        this.gunNode.setPosition(bone.worldX, bone.worldY, 0);
+    }
+
+    protected lateUpdate(): void {
+        this.syncGunToSocket();
     }
 
     /**播放角色动画 */

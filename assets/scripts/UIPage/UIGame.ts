@@ -252,7 +252,7 @@ export class UIGame extends UIBase {
             let roleAnimNode = playerMgr.playerComp?.roleAnim?.node;
             //人物左右反向
             if (roleAnimNode) {
-                roleAnimNode.setScale(this.currentMoveDirection.x < 0 ? -1 : 1, 1, 1);
+                roleAnimNode.setScale((this.currentMoveDirection.x < 0 ? -1 : 1) * Math.abs(roleAnimNode.scale.x), roleAnimNode.scale.y, 1);
             }
             playerMgr.player.setPosition(playerPos);
         }
@@ -329,6 +329,8 @@ export class UIGame extends UIBase {
             case KeyCode.KEY_R:
                 //重新开始游戏
                 this.restartGame();
+            case KeyCode.SPACE:
+                playerMgr.playerComp?.playRoleAnim("appear", false);
                 break;
         }
     }

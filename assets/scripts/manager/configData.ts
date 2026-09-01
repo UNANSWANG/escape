@@ -18,7 +18,7 @@ export const configData = {
 
 /**玩家通用配置（赞不读表） */
 export const playerCommonConfig = {
-    /**自动攻击检测范围 */
+    /**自动瞄准检测范围 */
     autoAttackRange: 200,
 }
 

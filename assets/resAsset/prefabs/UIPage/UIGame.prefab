@@ -8070,6 +8070,9 @@
       "__uuid__": "324b7f9e-7b84-4053-a6d9-e60cbf3dca9d",
       "__expectedType__": "cc.Prefab"
     },
+    "shootBtn": {
+      "__id__": 233
+    },
     "_id": ""
   },
   {

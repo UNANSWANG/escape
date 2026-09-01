@@ -35,6 +35,9 @@ export class UIGame extends UIBase {
     @property(Prefab)
     enemyPre: Prefab;
 
+    @property(Node)
+    shootBtn: Node;
+
     ///
     ///需要获取的节点
     ///
@@ -146,6 +149,7 @@ export class UIGame extends UIBase {
 
     bindBtn() {
         this.setBtn.addComponent(zoomButton).onClick = this.clickSetBtn.bind(this);
+        this.shootBtn.addComponent(zoomButton).onClick = this.clickShootBtn.bind(this);
     }
 
     /**初始化游戏摄像机 */
@@ -366,6 +370,11 @@ export class UIGame extends UIBase {
         this.updateGameToUICameraScale();
     }
 
+    /**射击敌人  */
+    shootEnemy() {
+
+    }
+
     ///
     ///点击函数
     ///
@@ -379,6 +388,10 @@ export class UIGame extends UIBase {
             case KeyCode.KEY_D:
                 this.pressedMoveKeys.add(event.keyCode);
                 this.refreshKeyboardMove();
+                break;
+            case KeyCode.KEY_J:
+                //射击敌人
+                this.shootEnemy();
                 break;
             case KeyCode.KEY_R:
                 //重新开始游戏
@@ -403,6 +416,11 @@ export class UIGame extends UIBase {
                 }
                 break;
         }
+    }
+
+    /**点击射击按钮 */
+    clickShootBtn() {
+        this.shootEnemy();
     }
 
     /**点击设置按钮 */

@@ -3,7 +3,7 @@ import { uiMgr } from '../manager/UIManager';
 import { pData } from '../manager/playerData';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
-import { configData, GameEvent } from '../manager/configData';
+import { configData, GameEvent, playerCommonConfig } from '../manager/configData';
 import { gm } from '../manager/gm';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
@@ -56,8 +56,16 @@ export class UIGame extends UIBase {
     private pressedMoveKeys: Set<KeyCode> = new Set();
     /**摇杆初始位置 */
     private rockerInitPos: Vec3 = new Vec3(200, -56, 0);
-    /**临时敌人与玩家的水平间距 */
-    private readonly tempEnemyOffsetX = 300;
+    /**临时敌人与玩家的水平间距，保持在自动瞄准范围内以便测试 */
+    private readonly tempEnemyOffsetX = 150;
+    /**攻击瞄准状态持续时间（当前没有完整射击流程时的临时表现） */
+    private readonly attackAimDuration = 0.2;
+    /**当前是否正在攻击瞄准 */
+    private isAttackAiming = false;
+    /**当前自动瞄准目标 */
+    private autoAttackTarget: enemyBaseController = null;
+    /**非攻击状态下的角色朝向 */
+    private normalFacingRight = false;
     /**地图层相机，用于把瓦片世界坐标转成屏幕坐标 */
     private gameCamera: Camera = null;
     /**地图层相机控制器 */
@@ -186,6 +194,7 @@ export class UIGame extends UIBase {
         this.unscheduleAllCallbacks();
         this.gameCameraComp?.unlockCameraPos();
         this.isGamePause = false;
+        this.stopAutoAim();
 
         ccTools.destroyAllChild(this.roleNode);
 
@@ -243,6 +252,7 @@ export class UIGame extends UIBase {
     /**响应全局游戏暂停 */
     private onGamePause() {
         this.isGamePause = true;
+        this.stopAutoAim();
         this.rockerReset(true);
     }
 
@@ -283,12 +293,16 @@ export class UIGame extends UIBase {
             this.tempPlayerMoveOffset.set(this.currentMoveDirection.x * speed * dt, this.currentMoveDirection.y * speed * dt, 0);
             let playerPos = new Vec3(playerMgr.player.position.x + this.tempPlayerMoveOffset.x, playerMgr.player.position.y + this.tempPlayerMoveOffset.y, 0);
 
-            let roleAnimNode = playerMgr.playerComp?.roleAnim?.node;
-            //人物左右反向
-            if (roleAnimNode) {
-                roleAnimNode.setScale((this.currentMoveDirection.x < 0 ? 1 : -1) * Math.abs(roleAnimNode.scale.x), roleAnimNode.scale.y, 1);
+            // 攻击瞄准期间由目标决定人物朝向；其余时间跟随移动方向。
+            if (!this.isAttackAiming && this.currentMoveDirection.x !== 0) {
+                this.normalFacingRight = this.currentMoveDirection.x > 0;
+                playerMgr.playerComp?.setFacingByHorizontal(this.normalFacingRight ? 1 : -1);
             }
             playerMgr.player.setPosition(playerPos);
+        }
+
+        if (this.isAttackAiming) {
+            this.refreshAutoAim();
         }
     }
 
@@ -365,6 +379,58 @@ export class UIGame extends UIBase {
         return true;
     }
 
+    /**查找自动攻击范围内最近的有效敌人 */
+    private findNearestEnemyInAutoAttackRange() {
+        if (!playerMgr.player) {
+            return null;
+        }
+
+        const playerPos = playerMgr.player.position;
+        const range = playerCommonConfig.autoAttackRange;
+        const rangeSquared = range * range;
+        let nearestEnemy: enemyBaseController = null;
+        let nearestDistanceSquared = rangeSquared;
+
+        for (const enemy of enemyMgr.enemyArr) {
+            if (!enemy || !enemy.node?.isValid || !enemy.node.activeInHierarchy || enemy.hp <= 0) {
+                continue;
+            }
+
+            const enemyPos = enemy.node.position;
+            const offsetX = enemyPos.x - playerPos.x;
+            const offsetY = enemyPos.y - playerPos.y;
+            const distanceSquared = offsetX * offsetX + offsetY * offsetY;
+            if (distanceSquared <= nearestDistanceSquared) {
+                nearestEnemy = enemy;
+                nearestDistanceSquared = distanceSquared;
+            }
+        }
+
+        return nearestEnemy;
+    }
+
+    /**攻击期间始终瞄准范围内最近的敌人 */
+    private refreshAutoAim() {
+        this.autoAttackTarget = this.findNearestEnemyInAutoAttackRange();
+        if (!this.autoAttackTarget || !playerMgr.player) {
+            this.stopAutoAim();
+            return;
+        }
+
+        playerMgr.playerComp?.aimGunAt(this.autoAttackTarget.node);
+    }
+
+    /**结束瞄准并恢复移动朝向；保留枪最后一次瞄准角度 */
+    private stopAutoAim() {
+        this.unschedule(this.stopAutoAim);
+        this.isAttackAiming = false;
+        this.autoAttackTarget = null;
+        if (this.isMoving && this.currentMoveDirection.x !== 0) {
+            this.normalFacingRight = this.currentMoveDirection.x > 0;
+        }
+        playerMgr.playerComp?.setFacingByHorizontal(this.normalFacingRight ? 1 : -1);
+    }
+
     /**刷新游戏摄像机视角 */
     refreshGameCamera() {
         this.updateGameToUICameraScale();
@@ -372,7 +438,14 @@ export class UIGame extends UIBase {
 
     /**射击敌人  */
     shootEnemy() {
+        if (!this.findNearestEnemyInAutoAttackRange()) {
+            return;
+        }
 
+        this.isAttackAiming = true;
+        this.refreshAutoAim();
+        this.unschedule(this.stopAutoAim);
+        this.scheduleOnce(this.stopAutoAim, this.attackAimDuration);
     }
 
     ///

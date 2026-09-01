@@ -65,14 +65,14 @@ export class roleController extends Component {
 
     /**根据皮肤id刷新角色spine */
     private async refreshRoleSpine() {
-        if (this.roleAnim) {
-            this.roleAnim.skeletonData = null;
-        }
+        // if (this.roleAnim) {
+        //     this.roleAnim.skeletonData = null;
+        // }
 
-        let isLoaded = await ccTools.loadSpine(this.roleAnim, spinePath.role + this.skinId);
-        if (!isLoaded) {
-            return;
-        }
+        // let isLoaded = await ccTools.loadSpine(this.roleAnim, spinePath.role + this.skinId);
+        // if (!isLoaded) {
+        //     return;
+        // }
 
         this.curRoleAnimName = "";
         // this.bindGunToSocket();

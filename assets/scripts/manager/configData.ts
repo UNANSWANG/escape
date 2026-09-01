@@ -16,6 +16,12 @@ export const configData = {
     rankModeFactor: 100000,
 }
 
+/**玩家通用配置（赞不读表） */
+export const playerCommonConfig = {
+    /**自动攻击检测范围 */
+    autoAttackRange: 200,
+}
+
 /**敌人通用配置 */
 export const enemyCommonConfig = {
    

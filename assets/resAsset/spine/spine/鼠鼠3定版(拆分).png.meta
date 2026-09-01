@@ -1,0 +1,134 @@
+{
+  "ver": "1.0.27",
+  "importer": "image",
+  "imported": true,
+  "uuid": "2bd78bc8-9dca-47b2-8c08-7af616bf0cf9",
+  "files": [
+    ".json",
+    ".png"
+  ],
+  "subMetas": {
+    "6c48a": {
+      "importer": "texture",
+      "uuid": "2bd78bc8-9dca-47b2-8c08-7af616bf0cf9@6c48a",
+      "displayName": "鼠鼠3定版(拆分)",
+      "id": "6c48a",
+      "name": "texture",
+      "userData": {
+        "wrapModeS": "clamp-to-edge",
+        "wrapModeT": "clamp-to-edge",
+        "imageUuidOrDatabaseUri": "2bd78bc8-9dca-47b2-8c08-7af616bf0cf9",
+        "isUuid": true,
+        "visible": false,
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "f9941": {
+      "importer": "sprite-frame",
+      "uuid": "2bd78bc8-9dca-47b2-8c08-7af616bf0cf9@f9941",
+      "displayName": "鼠鼠3定版(拆分)",
+      "id": "f9941",
+      "name": "spriteFrame",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": -18,
+        "offsetY": 0,
+        "trimX": 2,
+        "trimY": 2,
+        "width": 472,
+        "height": 508,
+        "rawWidth": 512,
+        "rawHeight": 512,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [
+            -236,
+            -254,
+            0,
+            236,
+            -254,
+            0,
+            -236,
+            254,
+            0,
+            236,
+            254,
+            0
+          ],
+          "indexes": [
+            0,
+            1,
+            2,
+            2,
+            1,
+            3
+          ],
+          "uv": [
+            2,
+            510,
+            474,
+            510,
+            2,
+            2,
+            474,
+            2
+          ],
+          "nuv": [
+            0.00390625,
+            0.00390625,
+            0.92578125,
+            0.00390625,
+            0.00390625,
+            0.99609375,
+            0.92578125,
+            0.99609375
+          ],
+          "minPos": [
+            -236,
+            -254,
+            0
+          ],
+          "maxPos": [
+            236,
+            254,
+            0
+          ]
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "2bd78bc8-9dca-47b2-8c08-7af616bf0cf9@6c48a",
+        "atlasUuid": "",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "type": "sprite-frame",
+    "fixAlphaTransparencyArtifacts": false,
+    "hasAlpha": true,
+    "redirect": "2bd78bc8-9dca-47b2-8c08-7af616bf0cf9@6c48a"
+  }
+}

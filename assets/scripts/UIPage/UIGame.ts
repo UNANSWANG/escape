@@ -43,8 +43,6 @@ export class UIGame extends UIBase {
     ///
     ///属性
     ///
-
-
     /**当前移动方向 */
     private currentMoveDirection: Vec3 = new Vec3();
     /**是否正在移动 */
@@ -57,8 +55,6 @@ export class UIGame extends UIBase {
     private rockerInitPos: Vec3 = new Vec3(200, -56, 0);
     /**临时敌人与玩家的水平间距 */
     private readonly tempEnemyOffsetX = 300;
-    /**所有房间信息 */
-    roomMap: any = {};
     /**地图层相机，用于把瓦片世界坐标转成屏幕坐标 */
     private gameCamera: Camera = null;
     /**地图层相机控制器 */
@@ -286,7 +282,7 @@ export class UIGame extends UIBase {
             let roleAnimNode = playerMgr.playerComp?.roleAnim?.node;
             //人物左右反向
             if (roleAnimNode) {
-                roleAnimNode.setScale((this.currentMoveDirection.x < 0 ? -1 : 1) * Math.abs(roleAnimNode.scale.x), roleAnimNode.scale.y, 1);
+                roleAnimNode.setScale((this.currentMoveDirection.x < 0 ? 1 : -1) * Math.abs(roleAnimNode.scale.x), roleAnimNode.scale.y, 1);
             }
             playerMgr.player.setPosition(playerPos);
         }

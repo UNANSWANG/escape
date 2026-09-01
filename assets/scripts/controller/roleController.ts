@@ -40,17 +40,21 @@ export class roleController extends Component {
     roleNameLab: Label = null;
     /**挂在 Spine bone16 挂点上的枪节点 */
     private gunNode: Node = null;
+    /**枪口发射点 */
+    private shootRoot: Node = null;
     /**Spine 中路径为 root/.../g/bone16 的挂点骨骼 */
     private gunSocketBone: any = null;
     /**瞄准计算用的临时世界坐标 */
     private tempRoleWorldPos = new Vec3();
     private tempGunWorldPos = new Vec3();
+    private tempShootRootWorldPos = new Vec3();
     private tempTargetWorldPos = new Vec3();
 
     protected onLoad(): void {
         this.roleAnim = this.node.getChildByName("roleAnim").getComponent(sp.Skeleton);
         this.roleNameLab = this.node.getChildByName("roleNameLab").getComponent(Label);
         this.gunNode = this.node.getChildByName("gun");
+        this.shootRoot = this.gunNode?.getChildByName("shootRoot");
     }
 
     init(comp: UIGame, id: number, skinId: number, nickname = "") {
@@ -156,6 +160,30 @@ export class roleController extends Component {
         const baseAngle = Math.atan2(gunOffsetY, Math.abs(gunOffsetX)) * 180 / Math.PI;
         const angle = offsetX >= 0 ? baseAngle : -baseAngle;
         this.gunNode.angle = Math.max(-90, Math.min(90, angle));
+        return true;
+    }
+
+    /**获取枪口世界坐标及枪管当前指向，用于生成不锁定目标的子弹 */
+    getGunShootData(outPosition: Vec3, outDirection: Vec3) {
+        if (!this.gunNode || !this.shootRoot) {
+            return false;
+        }
+
+        // 当前帧刚调整过枪角度时，主动刷新变换后再读取枪口位置。
+        this.gunNode.updateWorldTransform();
+        this.shootRoot.updateWorldTransform();
+        this.gunNode.getWorldPosition(this.tempGunWorldPos);
+        this.shootRoot.getWorldPosition(this.tempShootRootWorldPos);
+
+        const directionX = this.tempShootRootWorldPos.x - this.tempGunWorldPos.x;
+        const directionY = this.tempShootRootWorldPos.y - this.tempGunWorldPos.y;
+        const directionLength = Math.sqrt(directionX * directionX + directionY * directionY);
+        if (directionLength <= 0) {
+            return false;
+        }
+
+        outPosition.set(this.tempShootRootWorldPos);
+        outDirection.set(directionX / directionLength, directionY / directionLength, 0);
         return true;
     }
 

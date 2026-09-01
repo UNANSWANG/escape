@@ -117,6 +117,7 @@ export class UILoading extends Component {
         this.loadTable();
 
         this.preLoadPage();
+        uiMgr.preLoadGame();
     }
 
     /**预加载bundle */
@@ -204,8 +205,6 @@ export class UILoading extends Component {
     /**通用配置表加载完成 */
     commonTableFinish() {
         //通用
-        
-
         console.log("------------>公共配置表数据同步完毕");
     }
 

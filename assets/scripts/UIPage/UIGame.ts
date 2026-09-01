@@ -1,4 +1,4 @@
-import { _decorator, AnimationClip, Camera, Canvas, EventKeyboard, EventTouch, Input, input, instantiate, KeyCode, Label, Layout, Node, UITransform, Vec2, Vec3, NodeEventType, director, TiledMap, TiledObjectGroup, Prefab, view, Sprite, Tween, TiledMapAsset, UIOpacity, tween, sp } from 'cc';
+import { _decorator, AnimationClip, Camera, Canvas, EventKeyboard, EventTouch, Input, input, instantiate, KeyCode, Label, Layout, Node, UITransform, Vec2, Vec3, NodeEventType, director, TiledMap, TiledObjectGroup, Prefab, Sprite, Tween, UIOpacity, tween, sp, view, Size } from 'cc';
 import { uiMgr } from '../manager/UIManager';
 import { pData } from '../manager/playerData';
 import { UIBase } from './UIBase';
@@ -49,6 +49,10 @@ export class UIGame extends UIBase {
     private currentMoveDirection: Vec3 = new Vec3();
     /**是否正在移动 */
     private isMoving = false;
+    /**摇杆触摸是否正在控制移动；摇杆优先于键盘 */
+    private isRockerControlling = false;
+    /**当前按住的移动按键（W、A、S、D） */
+    private pressedMoveKeys: Set<KeyCode> = new Set();
     /**摇杆初始位置 */
     private rockerInitPos: Vec3 = new Vec3(200, -56, 0);
     /**所有房间信息 */
@@ -118,6 +122,7 @@ export class UIGame extends UIBase {
         gm.Event.on(GameEvent.gameResume, this.onGameResume, this);
         // 监听键盘按下
         input.on(Input.EventType.KEY_DOWN, this.onKeyDown, this);
+        input.on(Input.EventType.KEY_UP, this.onKeyUp, this);
         // 监听触摸事件
         this.rockerTouchNode.on(NodeEventType.TOUCH_START, this.onTouchRockerStart, this);
         this.rockerTouchNode.on(NodeEventType.TOUCH_MOVE, this.onTouchRockerMove, this);
@@ -133,6 +138,7 @@ export class UIGame extends UIBase {
         gm.Event.off(GameEvent.gameResume, this.onGameResume, this);
         // 监听键盘按下
         input.off(Input.EventType.KEY_DOWN, this.onKeyDown, this);
+        input.off(Input.EventType.KEY_UP, this.onKeyUp, this);
         // 监听触摸事件
         this.rockerTouchNode.off(NodeEventType.TOUCH_START, this.onTouchRockerStart, this);
         this.rockerTouchNode.off(NodeEventType.TOUCH_MOVE, this.onTouchRockerMove, this);
@@ -169,6 +175,7 @@ export class UIGame extends UIBase {
         /**清除数据 */
         this.clearData();
 
+        this.initRockerArea();
         this.initPlayer();
 
         // this.initEnemy();
@@ -185,9 +192,8 @@ export class UIGame extends UIBase {
         enemyMgr.enemyArr = [];
         enemyMgr.enemyId = 0;
         enemyMgr.enemyBornPosArr = [];
-        this.rockerReset();
+        this.rockerReset(true);
     }
-
 
     /**初始化玩家 */
     initPlayer() {
@@ -214,10 +220,17 @@ export class UIGame extends UIBase {
         node.setPosition(Vec3.ZERO);
     }
 
+    /**初始化摇杆区域 */
+    initRockerArea() {
+        let visibleSize = view.getVisibleSize();
+        let rockerTrans = this.rockerTouchNode.getComponent(UITransform);
+        rockerTrans.setContentSize(visibleSize.width / 2 - 320, rockerTrans.height);
+    }
+
     /**响应全局游戏暂停 */
     private onGamePause() {
         this.isGamePause = true;
-        this.rockerReset();
+        this.rockerReset(true);
     }
 
     /**响应全局游戏继续 */
@@ -226,14 +239,22 @@ export class UIGame extends UIBase {
     }
 
     /**摇杆归位 */
-    rockerReset() {
+    rockerReset(clearKeyboard = false) {
+        if (clearKeyboard) {
+            this.pressedMoveKeys.clear();
+        }
+        this.isRockerControlling = false;
+
         let rockerNode = this.rockerTouchNode.getChildByName("rockerNode");
         let rockerPoint = rockerNode.getChildByName("rockerPoint");
         rockerNode.setPosition(this.rockerInitPos);
         rockerPoint.position = Vec3.ZERO;
 
-        this.isMoving = false;
-        playerMgr.playerComp?.playRoleAnim(roleAnimName.idle, true);
+        if (!this.refreshKeyboardMove()) {
+            this.isMoving = false;
+            this.currentMoveDirection.set(0, 0, 0);
+            playerMgr.playerComp?.playRoleAnim(roleAnimName.idle, true);
+        }
     }
 
     protected update(dt: number): void {
@@ -263,6 +284,8 @@ export class UIGame extends UIBase {
         let rockerNode = this.rockerTouchNode.getChildByName("rockerNode");
         let rockerPoint = rockerNode.getChildByName("rockerPoint");
 
+        this.isRockerControlling = true;
+        this.isMoving = false;
         this.currentMoveDirection.set(0, 0, 0);
         let worldPos = event.getUILocation();
         this.tempTouchWorldPos.set(worldPos.x, worldPos.y, 0);
@@ -303,6 +326,32 @@ export class UIGame extends UIBase {
         this.rockerReset();
     }
 
+    /**将当前 W/A/S/D 按键状态转换为最大幅度的摇杆方向 */
+    private refreshKeyboardMove() {
+        if (this.isRockerControlling) {
+            return false;
+        }
+
+        const directionX = (this.pressedMoveKeys.has(KeyCode.KEY_D) ? 1 : 0) - (this.pressedMoveKeys.has(KeyCode.KEY_A) ? 1 : 0);
+        const directionY = (this.pressedMoveKeys.has(KeyCode.KEY_W) ? 1 : 0) - (this.pressedMoveKeys.has(KeyCode.KEY_S) ? 1 : 0);
+        const directionLength = Math.sqrt(directionX * directionX + directionY * directionY);
+        if (directionLength === 0) {
+            return false;
+        }
+
+        const normalizedX = directionX / directionLength;
+        const normalizedY = directionY / directionLength;
+        this.currentMoveDirection.set(normalizedX, normalizedY, 0);
+        this.isMoving = true;
+
+        // 键盘输入时将摇杆点直接推至该方向的最边缘。
+        const rockerNode = this.rockerTouchNode.getChildByName("rockerNode");
+        const rockerPoint = rockerNode.getChildByName("rockerPoint");
+        rockerNode.setPosition(this.rockerInitPos);
+        rockerPoint.setPosition(normalizedX * 34, normalizedY * 34, 0);
+        return true;
+    }
+
     /**刷新游戏摄像机视角 */
     refreshGameCamera() {
         this.updateGameToUICameraScale();
@@ -314,23 +363,35 @@ export class UIGame extends UIBase {
 
     /**监听按钮点击事件 */
     onKeyDown(event: EventKeyboard) {
-        if (!gm.isDebug) {
-            return;
-        }
         switch (event.keyCode) {
+            case KeyCode.KEY_W:
             case KeyCode.KEY_A:
-                //增加通关次数
-                pData.addLevel();
-                break;
-            case KeyCode.KEY_P:
-                //打开控制台
-                uiMgr.openPage(UIPath.UIConsole);
+            case KeyCode.KEY_S:
+            case KeyCode.KEY_D:
+                this.pressedMoveKeys.add(event.keyCode);
+                this.refreshKeyboardMove();
                 break;
             case KeyCode.KEY_R:
                 //重新开始游戏
                 this.restartGame();
+                break;
             case KeyCode.SPACE:
                 playerMgr.playerComp?.playRoleAnim("appear", false);
+                break;
+        }
+    }
+
+    /**监听键盘松开，恢复剩余按键的方向或停止移动 */
+    onKeyUp(event: EventKeyboard) {
+        switch (event.keyCode) {
+            case KeyCode.KEY_W:
+            case KeyCode.KEY_A:
+            case KeyCode.KEY_S:
+            case KeyCode.KEY_D:
+                this.pressedMoveKeys.delete(event.keyCode);
+                if (!this.isRockerControlling && !this.refreshKeyboardMove()) {
+                    this.rockerReset();
+                }
                 break;
         }
     }

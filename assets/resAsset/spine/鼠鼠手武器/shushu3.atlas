@@ -1,0 +1,62 @@
+
+shushu3.png
+size: 158,243
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biaoqing1
+  rotate: false
+  xy: 93, 94
+  size: 65, 34
+  orig: 65, 44
+  offset: 0, 10
+  index: -1
+biaoqing1_1
+  rotate: true
+  xy: 140, 178
+  size: 65, 17
+  orig: 65, 44
+  offset: 0, 0
+  index: -1
+maozi
+  rotate: false
+  xy: 0, 130
+  size: 138, 113
+  orig: 138, 113
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: true
+  xy: 93, 34
+  size: 58, 62
+  orig: 58, 62
+  offset: 0, 0
+  index: -1
+tou
+  rotate: true
+  xy: 0, 32
+  size: 96, 91
+  orig: 96, 91
+  offset: 0, 0
+  index: -1
+touyin
+  rotate: false
+  xy: 57, 5
+  size: 75, 25
+  orig: 75, 25
+  offset: 0, 0
+  index: -1
+youjiao
+  rotate: false
+  xy: 0, 0
+  size: 27, 30
+  orig: 27, 30
+  offset: 0, 0
+  index: -1
+zuojiao
+  rotate: true
+  xy: 29, 3
+  size: 27, 26
+  orig: 27, 26
+  offset: 0, 0
+  index: -1

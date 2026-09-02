@@ -66,11 +66,11 @@ export class UIGame extends UIBase {
     private rockerInitPos: Vec3 = new Vec3(200, -56, 0);
     /**临时敌人与玩家的水平间距，保持在自动瞄准范围内以便测试 */
     private readonly tempEnemyOffsetX = 150;
-    /**攻击瞄准状态持续时间（当前没有完整射击流程时的临时表现） */
-    private readonly attackAimDuration = 0.2;
+    /**第二个临时敌人相对第一个敌人的垂直间距 */
+    private readonly tempEnemyOffsetY = 150;
     /**当前是否正在攻击瞄准 */
     private isAttackAiming = false;
-    /**当前自动瞄准目标 */
+    /**本轮持续攻击锁定的目标；离开检测范围后仍保留至松开攻击键 */
     private autoAttackTarget: enemyBaseController = null;
     /**非攻击状态下的角色朝向 */
     private normalFacingRight = false;
@@ -240,12 +240,19 @@ export class UIGame extends UIBase {
         playerMgr.playerComp.init(this, 0, pData.skinId);
     }
 
-    /**在玩家右侧生成一个仅播放待机动画的临时敌人 */
+    /**在玩家右侧生成两个仅播放待机动画的临时敌人，第二个在第一个上方 */
     private initEnemy() {
         if (!this.enemyPre || !playerMgr.player) {
             return;
         }
 
+        const playerPos = playerMgr.player.position;
+        this.createTestEnemy(playerPos.x + this.tempEnemyOffsetX, playerPos.y);
+        this.createTestEnemy(playerPos.x + this.tempEnemyOffsetX, playerPos.y + this.tempEnemyOffsetY);
+    }
+
+    /**创建并登记一个测试敌人 */
+    private createTestEnemy(x: number, y: number) {
         let enemyNode = instantiate(this.enemyPre);
         this.roleNode.addChild(enemyNode);
         let enemyComp: enemyBaseController = enemyNode.getComponent(enemyBaseController);
@@ -259,8 +266,7 @@ export class UIGame extends UIBase {
             enemyMgr.enemyArr.push(enemyComp);
         }
 
-        const playerPos = playerMgr.player.position;
-        enemyNode.setPosition(playerPos.x + this.tempEnemyOffsetX, playerPos.y, playerPos.z);
+        enemyNode.setPosition(x, y, 0);
     }
 
     /**初始化角色位置 */
@@ -331,11 +337,8 @@ export class UIGame extends UIBase {
             playerMgr.player.setPosition(playerPos);
         }
 
-        if (this.isAttackAiming) {
-            this.refreshAutoAim();
-        }
-
         if (this.isAttacking()) {
+            this.refreshAutoAim();
             this.shootEnemy();
         }
     }
@@ -443,15 +446,26 @@ export class UIGame extends UIBase {
         return nearestEnemy;
     }
 
-    /**攻击期间始终瞄准范围内最近的敌人 */
+    /**攻击期间优先锁定范围内最近的敌人；范围为空时保留本轮原锁定 */
     private refreshAutoAim() {
-        this.autoAttackTarget = this.findNearestEnemyInAutoAttackRange();
-        if (!this.autoAttackTarget || !playerMgr.player) {
-            this.stopAutoAim();
+        const nearestTarget = this.findNearestEnemyInAutoAttackRange();
+        if (nearestTarget) {
+            this.autoAttackTarget = nearestTarget;
+        }
+
+        if (!this.autoAttackTarget || !this.isValidAttackTarget(this.autoAttackTarget) || !playerMgr.player) {
+            this.autoAttackTarget = null;
+            this.isAttackAiming = false;
             return;
         }
 
+        this.isAttackAiming = true;
         playerMgr.playerComp?.aimGunAt(this.autoAttackTarget.node);
+    }
+
+    /**锁定目标是否仍可攻击；锁定后不再受自动瞄准范围限制 */
+    private isValidAttackTarget(target: enemyBaseController) {
+        return !!target && target.node?.isValid && target.node.activeInHierarchy && target.hp > 0;
     }
 
     /**结束瞄准；仅在主动移动时恢复移动朝向，保留枪最后一次瞄准角度 */
@@ -476,19 +490,12 @@ export class UIGame extends UIBase {
             return;
         }
 
-        if (!this.findNearestEnemyInAutoAttackRange()) {
-            return;
-        }
-
-        this.isAttackAiming = true;
         this.refreshAutoAim();
         if (!this.fireBullet()) {
             return;
         }
 
         this.shootCooldownRemaining = playerCommonConfig.shootInterval;
-        this.unschedule(this.stopAutoAim);
-        this.scheduleOnce(this.stopAutoAim, this.attackAimDuration);
     }
 
     /**从枪口发射一个固定方向飞行、不锁定目标的子弹 */
@@ -539,13 +546,20 @@ export class UIGame extends UIBase {
 
     /**射击按钮按下：立即尝试射击，按住期间由 update 持续射击 */
     private onShootButtonStart() {
+        const wasAttacking = this.isAttacking();
         this.isShootButtonPressed = true;
+        if (!wasAttacking) {
+            this.refreshAutoAim();
+        }
         this.shootEnemy();
     }
 
     /**射击按钮松开或取消：停止持续射击 */
     private onShootButtonEnd() {
         this.isShootButtonPressed = false;
+        if (!this.isAttacking()) {
+            this.stopAutoAim();
+        }
     }
 
     ///
@@ -562,10 +576,15 @@ export class UIGame extends UIBase {
                 this.pressedMoveKeys.add(event.keyCode);
                 this.refreshKeyboardMove();
                 break;
-            case KeyCode.KEY_J:
+            case KeyCode.KEY_J: {
+                const wasAttacking = this.isAttacking();
                 this.isKeyboardAttackPressed = true;
+                if (!wasAttacking) {
+                    this.refreshAutoAim();
+                }
                 this.shootEnemy();
                 break;
+            }
             case KeyCode.KEY_R:
                 //重新开始游戏
                 this.restartGame();
@@ -590,6 +609,9 @@ export class UIGame extends UIBase {
                 break;
             case KeyCode.KEY_J:
                 this.isKeyboardAttackPressed = false;
+                if (!this.isAttacking()) {
+                    this.stopAutoAim();
+                }
                 break;
         }
     }

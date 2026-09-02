@@ -1,4 +1,4 @@
-import { _decorator, Component, Label, Node, sp, Vec3 } from 'cc';
+import { _decorator, Component, Label, Node, sp, UITransform, Vec3 } from 'cc';
 import { ccTools } from '../extention/generalTools';
 import type { UIGame } from '../UIPage/UIGame';
 import { spinePath, UIPath } from '../manager/pathConfig';
@@ -49,6 +49,7 @@ export class roleController extends Component {
     private tempGunWorldPos = new Vec3();
     private tempShootRootWorldPos = new Vec3();
     private tempTargetWorldPos = new Vec3();
+    private tempTargetWorldScale = new Vec3();
 
     protected onLoad(): void {
         this.roleAnim = this.node.getChildByName("roleAnim").getComponent(sp.Skeleton);
@@ -142,8 +143,14 @@ export class roleController extends Component {
             return false;
         }
 
-        this.node.getWorldPosition(this.tempRoleWorldPos);
         target.getWorldPosition(this.tempTargetWorldPos);
+        // 敌人根节点位于脚底，瞄准其角色显示节点高度的一半，使子弹指向身体中部。
+        const targetBody = target.getChildByName("roleAnim") || target;
+        const targetHeight = targetBody.getComponent(UITransform)?.height || 0;
+        targetBody.getWorldScale(this.tempTargetWorldScale);
+        this.tempTargetWorldPos.y += targetHeight * Math.abs(this.tempTargetWorldScale.y) * 0.5;
+
+        this.node.getWorldPosition(this.tempRoleWorldPos);
         const offsetX = this.tempTargetWorldPos.x - this.tempRoleWorldPos.x;
         const offsetY = this.tempTargetWorldPos.y - this.tempRoleWorldPos.y;
         this.setFacingByHorizontal(offsetX || 1);

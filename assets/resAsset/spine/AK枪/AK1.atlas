@@ -6,15 +6,15 @@ filter: Linear,Linear
 repeat: none
 AK
   rotate: false
-  xy: 2, 537
-  size: 757, 222
-  orig: 757, 222
+  xy: 2, 596
+  size: 841, 247
+  orig: 841, 247
   offset: 0, 0
   index: -1
 AKdanjia
   rotate: true
-  xy: 2, 210
-  size: 325, 339
-  orig: 325, 339
+  xy: 2, 233
+  size: 361, 377
+  orig: 361, 377
   offset: 0, 0
   index: -1

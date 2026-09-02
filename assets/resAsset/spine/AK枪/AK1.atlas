@@ -1,0 +1,20 @@
+
+AK1.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+AK
+  rotate: false
+  xy: 2, 537
+  size: 757, 222
+  orig: 757, 222
+  offset: 0, 0
+  index: -1
+AKdanjia
+  rotate: true
+  xy: 2, 210
+  size: 325, 339
+  orig: 325, 339
+  offset: 0, 0
+  index: -1

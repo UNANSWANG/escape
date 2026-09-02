@@ -1,4 +1,4 @@
-import { _decorator, Component, Label, Node, sp, UITransform, Vec3 } from 'cc';
+import { _decorator, Component, Label, Mat4, Node, sp, UITransform, Vec3 } from 'cc';
 import { ccTools } from '../extention/generalTools';
 import type { UIGame } from '../UIPage/UIGame';
 import { spinePath, UIPath } from '../manager/pathConfig';
@@ -40,8 +40,14 @@ export class roleController extends Component {
     roleNameLab: Label = null;
     /**挂在 Spine bone16 挂点上的枪节点 */
     private gunNode: Node = null;
+    /**枪械 Spine，用于手部节点的手动跟随 */
+    private gunSkeleton: sp.Skeleton = null;
     /**枪口发射点 */
     private shootRoot: Node = null;
+    /**右手显示节点 */
+    private rightHandNode: Node = null;
+    /**左手显示节点 */
+    private leftHandNode: Node = null;
     /**Spine 中路径为 root/.../g/bone16 的挂点骨骼 */
     private gunSocketBone: any = null;
     /**瞄准计算用的临时世界坐标 */
@@ -50,12 +56,20 @@ export class roleController extends Component {
     private tempShootRootWorldPos = new Vec3();
     private tempTargetWorldPos = new Vec3();
     private tempTargetWorldScale = new Vec3();
+    /**手部骨骼同步使用的二维变换矩阵 */
+    private tempHandBoneMatrix = new Mat4();
+    /**枪械 Spine 中的右手、左手骨骼 */
+    private rightHandBone: any = null;
+    private leftHandBone: any = null;
 
     protected onLoad(): void {
         this.roleAnim = this.node.getChildByName("roleAnim").getComponent(sp.Skeleton);
         this.roleNameLab = this.node.getChildByName("roleNameLab").getComponent(Label);
         this.gunNode = this.node.getChildByName("gun");
+        this.gunSkeleton = this.gunNode?.getComponent(sp.Skeleton);
         this.shootRoot = this.gunNode?.getChildByName("shootRoot");
+        this.rightHandNode = this.gunNode?.getChildByName("youshou");
+        this.leftHandNode = this.gunNode?.getChildByName("zuoshou");
     }
 
     init(comp: UIGame, id: number, skinId: number, nickname = "") {
@@ -83,13 +97,13 @@ export class roleController extends Component {
         // }
 
         this.curRoleAnimName = "";
-        // this.bindGunToSocket();
+        this.bindGunToSocket();
         this.playRoleAnim(roleAnimName.idle, true);
     }
 
     /**将 roleAnim 下的 gun 节点绑定到 Spine 的 bone16 挂点，仅跟随位置 */
     bindGunToSocket() {
-        this.gunSocketBone = this.roleAnim?.findBone("g") ?? null;
+        this.gunSocketBone = this.roleAnim?.findBone("G") ?? null;
 
         if (!this.gunNode || !this.gunSocketBone) {
             console.warn("绑定枪械挂点失败：请确认 roleAnim/gun 节点和 Spine 的 bone16 挂点存在");
@@ -112,6 +126,52 @@ export class roleController extends Component {
 
     protected lateUpdate(): void {
         this.syncGunToSocket();
+        this.syncHandsToGunBones();
+    }
+
+    /**手部节点不使用 Socket 覆盖，改由脚本按骨骼完整变换矩阵跟随。 */
+    private syncHandsToGunBones() {
+        if (!this.rightHandBone || !this.leftHandBone) {
+            if (!this.bindHandsToGunBones()) {
+                return;
+            }
+        }
+
+        this.syncNodeToBone2D(this.rightHandNode, this.rightHandBone);
+        this.syncNodeToBone2D(this.leftHandNode, this.leftHandBone);
+    }
+
+    /**绑定枪械 Spine 中的手部骨骼，并关闭原有 Socket 覆盖 */
+    private bindHandsToGunBones() {
+        if (!this.gunSkeleton?.skeletonData || !this.rightHandNode || !this.leftHandNode) {
+            return false;
+        }
+
+        // Socket 会每帧写入完整变换矩阵；改由本脚本使用相同的二维矩阵同步。
+        this.gunSkeleton.sockets = [];
+        this.rightHandBone = this.gunSkeleton.findBone("youshou");
+        this.leftHandBone = this.gunSkeleton.findBone("zuoshou");
+        return !!this.rightHandBone && !!this.leftHandBone;
+    }
+
+    /**
+     * 先使用 Socket 同样的矩阵生成节点四元数，再取 Creator 分解出的 Z 角度重设为纯二维旋转。
+     * 这与 Inspector 中保留 Z、清除 X/Y 的效果一致。
+     */
+    private syncNodeToBone2D(node: Node, bone: any) {
+        if (!node || !bone) {
+            return;
+        }
+
+        const matrix = this.tempHandBoneMatrix;
+        matrix.m00 = bone.a;
+        matrix.m01 = bone.c;
+        matrix.m04 = bone.b;
+        matrix.m05 = bone.d;
+        matrix.m12 = bone.worldX;
+        matrix.m13 = bone.worldY;
+        node.matrix = matrix;
+        node.setRotationFromEuler(0, 0, node.eulerAngles.z);
     }
 
     /**按水平方向翻转人物和枪；当前资源未翻转时均朝左 */

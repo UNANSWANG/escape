@@ -434,15 +434,15 @@ export class UIGame extends UIBase {
         playerMgr.playerComp?.aimGunAt(this.autoAttackTarget.node);
     }
 
-    /**结束瞄准并恢复移动朝向；保留枪最后一次瞄准角度 */
+    /**结束瞄准；仅在主动移动时恢复移动朝向，保留枪最后一次瞄准角度 */
     private stopAutoAim() {
         this.unschedule(this.stopAutoAim);
         this.isAttackAiming = false;
         this.autoAttackTarget = null;
         if (this.isMoving && this.currentMoveDirection.x !== 0) {
             this.normalFacingRight = this.currentMoveDirection.x > 0;
+            playerMgr.playerComp?.setFacingByHorizontal(this.normalFacingRight ? 1 : -1);
         }
-        playerMgr.playerComp?.setFacingByHorizontal(this.normalFacingRight ? 1 : -1);
     }
 
     /**刷新游戏摄像机视角 */

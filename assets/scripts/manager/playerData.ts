@@ -115,7 +115,7 @@ export class playerData {
 
         //TODO 测试
         // console.warn("上报关卡给后端", levelReprotData);
-        httpMgr.post(urlConfig.levelReport, levelReprotData);
+        // httpMgr.post(urlConfig.levelReport, levelReprotData);
     }
 
     /**增加用户关卡数 */

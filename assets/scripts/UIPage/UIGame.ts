@@ -56,6 +56,12 @@ export class UIGame extends UIBase {
     private isRockerControlling = false;
     /**当前按住的移动按键（W、A、S、D） */
     private pressedMoveKeys: Set<KeyCode> = new Set();
+    /**键盘攻击键是否按住 */
+    private isKeyboardAttackPressed = false;
+    /**射击按钮是否按住 */
+    private isShootButtonPressed = false;
+    /**距离下一发子弹的剩余冷却时间（秒） */
+    private shootCooldownRemaining = 0;
     /**摇杆初始位置 */
     private rockerInitPos: Vec3 = new Vec3(200, -56, 0);
     /**临时敌人与玩家的水平间距，保持在自动瞄准范围内以便测试 */
@@ -171,7 +177,10 @@ export class UIGame extends UIBase {
 
     bindBtn() {
         this.setBtn.addComponent(zoomButton).onClick = this.clickSetBtn.bind(this);
-        this.shootBtn.addComponent(zoomButton).onClick = this.clickShootBtn.bind(this);
+        this.shootBtn.addComponent(zoomButton);
+        this.shootBtn.on(NodeEventType.TOUCH_START, this.onShootButtonStart, this);
+        this.shootBtn.on(NodeEventType.TOUCH_END, this.onShootButtonEnd, this);
+        this.shootBtn.on(NodeEventType.TOUCH_CANCEL, this.onShootButtonEnd, this);
     }
 
     /**初始化游戏摄像机 */
@@ -208,6 +217,9 @@ export class UIGame extends UIBase {
         this.unscheduleAllCallbacks();
         this.gameCameraComp?.unlockCameraPos();
         this.isGamePause = false;
+        this.isKeyboardAttackPressed = false;
+        this.isShootButtonPressed = false;
+        this.shootCooldownRemaining = 0;
         this.stopAutoAim();
 
         ccTools.destroyAllChild(this.roleNode);
@@ -266,6 +278,8 @@ export class UIGame extends UIBase {
     /**响应全局游戏暂停 */
     private onGamePause() {
         this.isGamePause = true;
+        this.isKeyboardAttackPressed = false;
+        this.isShootButtonPressed = false;
         this.stopAutoAim();
         this.rockerReset(true);
     }
@@ -299,6 +313,8 @@ export class UIGame extends UIBase {
             return;
         }
 
+        this.shootCooldownRemaining = Math.max(0, this.shootCooldownRemaining - dt);
+
         // 移动玩家（不使用vec3计算）
         if (this.isMoving) {
             let speed = configData.moveSpeed;
@@ -317,6 +333,10 @@ export class UIGame extends UIBase {
 
         if (this.isAttackAiming) {
             this.refreshAutoAim();
+        }
+
+        if (this.isAttacking()) {
+            this.shootEnemy();
         }
     }
 
@@ -452,13 +472,21 @@ export class UIGame extends UIBase {
 
     /**射击敌人  */
     shootEnemy() {
+        if (this.shootCooldownRemaining > 0) {
+            return;
+        }
+
         if (!this.findNearestEnemyInAutoAttackRange()) {
             return;
         }
 
         this.isAttackAiming = true;
         this.refreshAutoAim();
-        this.fireBullet();
+        if (!this.fireBullet()) {
+            return;
+        }
+
+        this.shootCooldownRemaining = playerCommonConfig.shootInterval;
         this.unschedule(this.stopAutoAim);
         this.scheduleOnce(this.stopAutoAim, this.attackAimDuration);
     }
@@ -468,7 +496,7 @@ export class UIGame extends UIBase {
         const playerComp = playerMgr.playerComp;
         if (!playerComp || !this.gameUINode || !uiMgr.bulletPrefab ||
             !playerComp.getGunShootData(this.tempBulletSpawnWorldPos, this.tempBulletWorldDirection)) {
-            return;
+            return false;
         }
 
         const bulletNode = poolMgr.getBulletNode(uiMgr.bulletPrefab);
@@ -497,9 +525,27 @@ export class UIGame extends UIBase {
         const bulletComp = bulletNode.getComponent(bulletController);
         if (bulletComp) {
             bulletComp.initStraight(this.tempBulletLocalDirection);
+            return true;
         } else {
             poolMgr.putBulletNode(bulletNode);
+            return false;
         }
+    }
+
+    /**是否正通过键盘或射击按钮持续攻击 */
+    private isAttacking() {
+        return this.isKeyboardAttackPressed || this.isShootButtonPressed;
+    }
+
+    /**射击按钮按下：立即尝试射击，按住期间由 update 持续射击 */
+    private onShootButtonStart() {
+        this.isShootButtonPressed = true;
+        this.shootEnemy();
+    }
+
+    /**射击按钮松开或取消：停止持续射击 */
+    private onShootButtonEnd() {
+        this.isShootButtonPressed = false;
     }
 
     ///
@@ -517,7 +563,7 @@ export class UIGame extends UIBase {
                 this.refreshKeyboardMove();
                 break;
             case KeyCode.KEY_J:
-                //射击敌人
+                this.isKeyboardAttackPressed = true;
                 this.shootEnemy();
                 break;
             case KeyCode.KEY_R:
@@ -542,12 +588,10 @@ export class UIGame extends UIBase {
                     this.rockerReset();
                 }
                 break;
+            case KeyCode.KEY_J:
+                this.isKeyboardAttackPressed = false;
+                break;
         }
-    }
-
-    /**点击射击按钮 */
-    clickShootBtn() {
-        this.shootEnemy();
     }
 
     /**点击设置按钮 */

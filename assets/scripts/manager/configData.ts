@@ -22,6 +22,8 @@ export const playerCommonConfig = {
     autoAttackRange: 400,
     /**射击间隔（秒）（临时） */
     shootInterval: 0.2,
+    /**子弹消失距离 */
+    bulletDisappearDistance: 800,
 }
 
 /**敌人通用配置 */

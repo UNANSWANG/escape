@@ -68,8 +68,11 @@ export class roleController extends Component {
         this.gunNode = this.node.getChildByName("gun");
         this.gunSkeleton = this.gunNode?.getComponent(sp.Skeleton);
         this.shootRoot = this.gunNode?.getChildByName("shootRoot");
-        this.rightHandNode = this.gunNode?.getChildByName("youshou");
-        this.leftHandNode = this.gunNode?.getChildByName("zuoshou");
+        this.rightHandNode = this.gunNode?.getChildByName("hand").getChildByName("right");
+        this.leftHandNode = this.gunNode?.getChildByName("hand").getChildByName("left");
+
+        this.rightHandNode.active = true;
+        this.leftHandNode.active = true;
     }
 
     init(comp: UIGame, id: number, skinId: number, nickname = "") {

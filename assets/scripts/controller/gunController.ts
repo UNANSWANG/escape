@@ -38,6 +38,10 @@ export class gunController extends Component {
     private hasAimTarget = false;
     /** 瞄准和弹道计算复用的临时坐标，避免运行时频繁创建 Vec3。 */
     private tempRoleWorldPos = new Vec3();
+    private tempSocketLocalPos = new Vec3();
+    private tempSocketWorldPos = new Vec3();
+    private tempSocketParentLocalPos = new Vec3();
+    private tempTargetParentLocalPos = new Vec3();
     private tempGunWorldPos = new Vec3();
     private tempShootRootWorldPos = new Vec3();
     private tempTargetWorldPos = new Vec3();
@@ -90,15 +94,29 @@ export class gunController extends Component {
 
     /** 仅同步挂点位置，保留瞄准产生的旋转和水平翻转。 */
     private syncToRoleSocket() {
-        if (this.gunSocketBone) this.node.setPosition(this.gunSocketBone.worldX, this.gunSocketBone.worldY, 0);
+        if (!this.gunSocketBone || !this.roleAnim?.node || !this.node.parent) return;
+
+        // Spine 骨骼坐标属于 roleAnim 本地空间。转换到枪节点父级空间后，
+        // 角色根节点的水平翻转才会正确反映到枪械挂点上。
+        this.roleAnim.node.updateWorldTransform();
+        this.tempSocketLocalPos.set(this.gunSocketBone.worldX, this.gunSocketBone.worldY, 0);
+        Vec3.transformMat4(this.tempSocketWorldPos, this.tempSocketLocalPos, this.roleAnim.node.worldMatrix);
+        const parentTransform = this.node.parent.getComponent(UITransform);
+        if (parentTransform) {
+            parentTransform.convertToNodeSpaceAR(this.tempSocketWorldPos, this.tempSocketParentLocalPos);
+            this.node.setPosition(this.tempSocketParentLocalPos);
+        } else {
+            this.node.setWorldPosition(this.tempSocketWorldPos);
+        }
     }
 
-    /** 根据水平方向同步翻转角色显示和枪械显示。 */
+    /** 根据水平方向翻转角色根节点，所有子节点（枪、手部、Spine）自然跟随。 */
     setFacingByHorizontal(directionX: number) {
         if (directionX === 0) return;
         const facingRight = directionX > 0;
-        if (this.roleAnim?.node) this.roleAnim.node.setScale((facingRight ? -1 : 1) * Math.abs(this.roleAnim.node.scale.x), this.roleAnim.node.scale.y, this.roleAnim.node.scale.z);
-        this.node.setScale((facingRight ? -1 : 1) * Math.abs(this.node.scale.x), this.node.scale.y, this.node.scale.z);
+        const roleNode = this.roleAnim?.node?.parent || this.node.parent;
+        if (!roleNode) return;
+        roleNode.setScale((facingRight ? -1 : 1) * Math.abs(roleNode.scale.x), roleNode.scale.y, roleNode.scale.z);
     }
 
     /**
@@ -116,10 +134,33 @@ export class gunController extends Component {
         this.node.parent?.getWorldPosition(this.tempRoleWorldPos);
         const offsetX = this.tempTargetWorldPos.x - this.tempRoleWorldPos.x;
         this.setFacingByHorizontal(offsetX || 1);
-        this.node.getWorldPosition(this.tempGunWorldPos);
-        const baseAngle = Math.atan2(this.tempTargetWorldPos.y - this.tempGunWorldPos.y, Math.abs(this.tempTargetWorldPos.x - this.tempGunWorldPos.x)) * 180 / Math.PI;
-        this.node.angle = Math.max(-90, Math.min(90, offsetX >= 0 ? baseAngle : -baseAngle));
+        this.syncToRoleSocket();
+        this.setGunAngleToTarget();
         return true;
+    }
+
+    /**
+     * 在枪节点父级（角色根节点）的本地坐标系中计算旋转。
+     * 角色根节点翻转后，世界坐标中的左右方向会镜像；使用本地坐标可避免该镜像再次影响枪口角度。
+     */
+    private setGunAngleToTarget() {
+        const parentTransform = this.node.parent?.getComponent(UITransform);
+        if (!parentTransform || !this.gunSkeleton) return;
+
+        this.shootBone ??= this.gunSkeleton.findBone('kaihuo');
+        if (!this.shootBone) return;
+
+        parentTransform.convertToNodeSpaceAR(this.tempTargetWorldPos, this.tempTargetParentLocalPos);
+        const targetOffsetX = this.tempTargetParentLocalPos.x - this.node.position.x;
+        const targetOffsetY = this.tempTargetParentLocalPos.y - this.node.position.y;
+        const targetAngle = Math.atan2(targetOffsetY, targetOffsetX) * 180 / Math.PI;
+        const muzzleBaseAngle = Math.atan2(this.shootBone.worldY, this.shootBone.worldX) * 180 / Math.PI;
+        let localAngle = targetAngle - muzzleBaseAngle;
+        // 归一化后再限制仰角，避免枪械绕过背面旋转。
+        localAngle = (localAngle + 180) % 360;
+        if (localAngle < 0) localAngle += 360;
+        localAngle -= 180;
+        this.node.angle = Math.max(-90, Math.min(90, localAngle));
     }
 
     /** 解除目标锁定；后续子弹沿当前枪口方向飞行。 */

@@ -20,6 +20,8 @@ export const configData = {
 export const playerCommonConfig = {
     /**子弹消失距离 */
     bulletDisappearDistance: 800,
+    /**枪口回正时间（秒） */
+    gunResetTime: 1,
 }
 
 /**敌人通用配置 */

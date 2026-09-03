@@ -1,4 +1,4 @@
-import { _decorator, Component, Mat4, Node, sp, UITransform, Vec3 } from 'cc';
+import { _decorator, Component, Mat4, Node, sp, Tween, tween, UITransform, Vec3 } from 'cc';
 import { uiMgr } from '../manager/UIManager';
 import { poolMgr } from '../manager/poolManager';
 import { bulletController } from './bulletController';
@@ -53,6 +53,8 @@ export class gunController extends Component {
     private tempBulletDirectionEndWorldPos = new Vec3();
     private tempBulletDirectionEndLocalPos = new Vec3();
     private tempHandBoneMatrix = new Mat4();
+    /**枪口回正动画。 */
+    private resetRotationTween: Tween<Node> = null;
 
     /** 缓存枪械 Spine 与手部节点。 */
     protected onLoad(): void {
@@ -165,6 +167,24 @@ export class gunController extends Component {
 
     /** 解除目标锁定；后续子弹沿当前枪口方向飞行。 */
     clearAimTarget() { this.hasAimTarget = false; }
+
+    /**
+     * 将枪口恢复为默认角度。
+     * @param isImmediate 是否强制立即复位；开局初始化时使用。
+     */
+    resetRotation(isImmediate = false) {
+        this.resetRotationTween?.stop();
+        this.resetRotationTween = null;
+        if (isImmediate) {
+            this.node.angle = -10;
+            return;
+        }
+
+        this.resetRotationTween = tween(this.node)
+            .to(0.1, { angle: -10 })
+            .call(() => this.resetRotationTween = null)
+            .start();
+    }
 
     /**
      * 从枪口取出子弹并初始化直线飞行。

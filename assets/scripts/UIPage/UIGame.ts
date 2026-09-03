@@ -287,6 +287,7 @@ export class UIGame extends UIBase {
         this.isGamePause = true;
         this.isKeyboardAttackPressed = false;
         this.isShootButtonPressed = false;
+        this.syncPlayerAttackHeldState();
         this.stopAutoAim();
         this.rockerReset(true);
     }
@@ -480,10 +481,16 @@ export class UIGame extends UIBase {
         return this.isKeyboardAttackPressed || this.isShootButtonPressed;
     }
 
+    /**攻击按键状态变化时通知角色；不在 update 中重复刷新。 */
+    private syncPlayerAttackHeldState() {
+        playerMgr.playerComp?.setAttackHeld(this.isAttacking());
+    }
+
     /**射击按钮按下：立即尝试射击，按住期间由 update 持续射击 */
     private onShootButtonStart() {
         const wasAttacking = this.isAttacking();
         this.isShootButtonPressed = true;
+        this.syncPlayerAttackHeldState();
         if (!wasAttacking) {
             this.refreshAutoAim();
         }
@@ -493,6 +500,7 @@ export class UIGame extends UIBase {
     /**射击按钮松开或取消：停止持续射击 */
     private onShootButtonEnd() {
         this.isShootButtonPressed = false;
+        this.syncPlayerAttackHeldState();
         if (!this.isAttacking()) {
             this.stopAutoAim();
         }
@@ -515,6 +523,7 @@ export class UIGame extends UIBase {
             case KeyCode.KEY_J: {
                 const wasAttacking = this.isAttacking();
                 this.isKeyboardAttackPressed = true;
+                this.syncPlayerAttackHeldState();
                 if (!wasAttacking) {
                     this.refreshAutoAim();
                 }
@@ -545,6 +554,7 @@ export class UIGame extends UIBase {
                 break;
             case KeyCode.KEY_J:
                 this.isKeyboardAttackPressed = false;
+                this.syncPlayerAttackHeldState();
                 if (!this.isAttacking()) {
                     this.stopAutoAim();
                 }

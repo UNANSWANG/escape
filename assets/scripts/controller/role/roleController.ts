@@ -1,6 +1,7 @@
 import { _decorator, Component, Label, Node, sp } from 'cc';
 import { enemyMgr } from '../../manager/enemyManager';
 import { UIGame } from '../../UIPage/UIGame';
+import { playerCommonConfig } from '../../manager/configData';
 import { enemyBaseController } from '../enemy/enemyBaseController';
 import { gunController } from '../gunController';
 const { ccclass } = _decorator;
@@ -25,6 +26,14 @@ export enum roleType {
     function = 'function',
 }
 
+/** 角色战斗状态。 */
+export enum roleBattleState {
+    /**非战斗状态 */
+    nonCombat = 'nonCombat',
+    /**战斗状态 */
+    combat = 'combat',
+}
+
 @ccclass('roleController')
 export class roleController extends Component {
     /**角色当前游戏内 id */
@@ -44,6 +53,12 @@ export class roleController extends Component {
     roleNameLab: Label = null;
     /** 枪节点上的枪械控制器。 */
     private gunComp: gunController = null;
+    /**当前战斗状态。 */
+    private battleState: roleBattleState = roleBattleState.nonCombat;
+    /**战斗状态剩余时间，攻击松开或成功开火时刷新。 */
+    private combatRemainTime = 0;
+    /**是否正在按住攻击键。按住期间保持战斗状态，但不逐帧刷新计时。 */
+    private isAttackHeld = false;
 
     /** 缓存角色自身与子节点组件。 */
     protected onLoad(): void {
@@ -55,6 +70,48 @@ export class roleController extends Component {
     /**当前装备的枪械组件 */
     get gunController() {
         return this.gunComp;
+    }
+
+    /**当前是否处于战斗状态。 */
+    get isInCombat() {
+        return this.battleState === roleBattleState.combat;
+    }
+
+    /**当前战斗状态。 */
+    get currentBattleState() {
+        return this.battleState;
+    }
+
+    /**进入或刷新战斗状态。 */
+    refreshCombatState() {
+        this.battleState = roleBattleState.combat;
+        this.combatRemainTime = Math.max(0, playerCommonConfig.gunResetTime);
+    }
+
+    /**设置攻击键是否按住；松开后才开始退出战斗的倒计时。 */
+    setAttackHeld(isHeld: boolean) {
+        if (this.isAttackHeld === isHeld) return;
+        this.isAttackHeld = isHeld;
+        if (isHeld) {
+            this.refreshCombatState();
+        } else if (this.battleState === roleBattleState.combat) {
+            this.combatRemainTime = Math.max(0, playerCommonConfig.gunResetTime);
+        }
+    }
+
+    protected update(dt: number): void {
+        this.updateBattleState(dt);
+    }
+
+    /**更新战斗状态；超时后将枪口复位。 */
+    private updateBattleState(dt: number) {
+        if (this.battleState !== roleBattleState.combat || this.isAttackHeld) return;
+        this.combatRemainTime -= dt;
+        if (this.combatRemainTime > 0) return;
+
+        this.combatRemainTime = 0;
+        this.battleState = roleBattleState.nonCombat;
+        this.gunComp?.resetRotation();
     }
 
     /**查找当前枪械自动攻击范围内最近的有效敌人 */
@@ -90,6 +147,7 @@ export class roleController extends Component {
     private async refreshRoleSpine() {
         this.curRoleAnimName = '';
         this.gunComp?.bindToRole(this.roleAnim);
+        this.gunComp?.resetRotation(true);
         this.playRoleAnim(roleAnimName.idle, true);
         this.gunComp?.playIdleAnim();
     }
@@ -111,7 +169,9 @@ export class roleController extends Component {
 
     /** 由当前枪械从游戏 UI 节点中生成子弹。 */
     fireBullet() {
-        return this.gunComp?.fireBullet(this.gameComp?.gameUINode) ?? false;
+        const isFired = this.gunComp?.fireBullet(this.gameComp?.gameUINode) ?? false;
+        if (isFired) this.refreshCombatState();
+        return isFired;
     }
 
     /** 播放角色本体 Spine 动画。 */

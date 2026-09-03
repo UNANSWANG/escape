@@ -5902,7 +5902,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "switchBtn",
+    "_name": "reloadBtn",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -8072,6 +8072,9 @@
     },
     "shootBtn": {
       "__id__": 233
+    },
+    "reloadBtn": {
+      "__id__": 245
     },
     "_id": ""
   },

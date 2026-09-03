@@ -4,20 +4,20 @@ import type { UIGame } from '../UIPage/UIGame';
 import { spinePath, UIPath } from '../manager/pathConfig';
 const { ccclass, property } = _decorator;
 
-export enum roleState {
-    /**正常 */
-    normal = 0,
-    /**床上 */
-    bed = 1,
-    /**死亡 */
-    dead = 2,
-}
-
 export enum roleAnimName {
     /**静止 */
     idle = "idle",
     /**移动 */
     move = "move",
+}
+
+export enum gunAnimName {
+    /**静止 */
+    idle = "idle",
+    /**开枪 */
+    attack = "attack_ak",
+    /**换弹 */
+    reload = "reload",
 }
 
 @ccclass('roleController')

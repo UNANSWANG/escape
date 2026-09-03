@@ -9,7 +9,7 @@ import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
 import { playerMgr } from '../manager/playerManager';
 import { CameraController } from '../controller/CameraController';
-import { roleAnimName, roleState } from '../controller/roleController';
+import { roleAnimName } from '../controller/roleController';
 import { enemyMgr } from '../manager/enemyManager';
 import { enemyBaseController } from '../controller/enemy/enemyBaseController';
 import { bulletController } from '../controller/bulletController';

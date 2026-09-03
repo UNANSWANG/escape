@@ -5,7 +5,7 @@ import { bulletController } from './bulletController';
 const { ccclass } = _decorator;
 
 /** 枪械 Spine 使用的动画名称。 */
-export enum gunAnimName { idle = 'idle', attack = 'attack_ak', reload = 'reload' }
+export enum gunAnimName { idle = 'idle', attack = 'attack', reload = 'reload' }
 
 @ccclass('gunController')
 export class gunController extends Component {

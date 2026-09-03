@@ -6178,7 +6178,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "speedBtn",
+    "_name": "skillBtn1",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -6454,7 +6454,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "skillBtn",
+    "_name": "skillBtn2",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -8075,6 +8075,12 @@
     },
     "reloadBtn": {
       "__id__": 245
+    },
+    "skillBtn1": {
+      "__id__": 257
+    },
+    "skillBtn2": {
+      "__id__": 269
     },
     "_id": ""
   },

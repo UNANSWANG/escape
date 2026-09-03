@@ -41,6 +41,12 @@ export class UIGame extends UIBase {
     @property(Node)
     reloadBtn: Node;
 
+    @property(Node)
+    skillBtn1: Node;
+
+    @property(Node)
+    skillBtn2: Node;
+
     ///
     ///需要获取的节点
     ///
@@ -171,6 +177,8 @@ export class UIGame extends UIBase {
         this.shootBtn.on(NodeEventType.TOUCH_END, this.onShootButtonEnd, this);
         this.shootBtn.on(NodeEventType.TOUCH_CANCEL, this.onShootButtonEnd, this);
         this.reloadBtn.addComponent(zoomButton).onClick = this.clickReloadBtn.bind(this);
+        this.skillBtn1.addComponent(zoomButton).onClick = this.clickSkillBtn1.bind(this);
+        this.skillBtn2.addComponent(zoomButton).onClick = this.clickSkillBtn2.bind(this);
     }
 
     /**初始化游戏摄像机 */
@@ -515,7 +523,7 @@ export class UIGame extends UIBase {
                 playerMgr.playerComp?.gunController?.reload();
                 break;
             case KeyCode.SPACE:
-                playerMgr.playerComp?.playRoleAnim("appear", false);
+                this.clickSkillBtn1();
                 break;
         }
     }
@@ -545,6 +553,16 @@ export class UIGame extends UIBase {
     clickReloadBtn() {
         // 主动换弹；枪械组件会自行拦截满弹或换弹中的重复请求。
         playerMgr.playerComp?.gunController?.reload();
+    }
+
+    /**点击技能按钮1 */
+    clickSkillBtn1() {
+        
+    }
+
+    /**点击技能按钮2 */
+    clickSkillBtn2() {
+         
     }
 
     /**点击设置按钮 */

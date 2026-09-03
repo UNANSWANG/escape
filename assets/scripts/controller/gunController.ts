@@ -167,9 +167,17 @@ export class gunController extends Component {
     /**
      * 开始换弹。换弹动画播放完成后，弹夹恢复为满弹状态。
      * 外部可调用此方法主动换弹；弹夹已满或正在换弹时不会重复执行。
-     * @returns 是否实际开始了本次换弹。
+    * @returns 是否实际开始了本次换弹。
      */
     reload() {
+        if (this.isReloading) {
+            uiMgr.showTips('正在换弹中...');
+            return false;
+        }
+        if (this.currentAmmo >= this.bulletNum) {
+            uiMgr.showTips('弹夹已满');
+            return false;
+        }
         return this.startReload(false);
     }
 

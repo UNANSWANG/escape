@@ -2,6 +2,9 @@ import { _decorator, Component, Label, Mat4, Node, sp, UITransform, Vec3 } from 
 import { ccTools } from '../extention/generalTools';
 import type { UIGame } from '../UIPage/UIGame';
 import { spinePath, UIPath } from '../manager/pathConfig';
+import { bulletController } from './bulletController';
+import { uiMgr } from '../manager/UIManager';
+import { poolMgr } from '../manager/poolManager';
 const { ccclass, property } = _decorator;
 
 export enum roleAnimName {
@@ -58,6 +61,18 @@ export class roleController extends Component {
     private tempShootRootWorldPos = new Vec3();
     private tempTargetWorldPos = new Vec3();
     private tempTargetWorldScale = new Vec3();
+    /**子弹发射点世界坐标 */
+    private tempBulletSpawnWorldPos = new Vec3();
+    /**子弹世界飞行方向 */
+    private tempBulletWorldDirection = new Vec3();
+    /**子弹父节点本地坐标 */
+    private tempBulletLocalPos = new Vec3();
+    /**子弹父节点本地飞行方向 */
+    private tempBulletLocalDirection = new Vec3();
+    /**换算子弹方向时使用的世界终点 */
+    private tempBulletDirectionEndWorldPos = new Vec3();
+    /**换算子弹方向时使用的本地终点 */
+    private tempBulletDirectionEndLocalPos = new Vec3();
     /**最近一次瞄准的目标世界坐标，用于从实际枪口计算弹道。 */
     private hasGunAimTarget = false;
     /**手部骨骼同步使用的二维变换矩阵 */
@@ -282,6 +297,48 @@ export class roleController extends Component {
 
         outPosition.set(this.tempShootRootWorldPos);
         outDirection.set(directionX / directionLength, directionY / directionLength, 0);
+        return true;
+    }
+
+    /**从枪口发射一颗固定方向飞行、不锁定目标的子弹。 */
+    fireBullet() {
+        const bulletParent = this.gameComp?.gameUINode;
+        if (!bulletParent || !uiMgr.bulletPrefab ||
+            !this.getGunShootData(this.tempBulletSpawnWorldPos, this.tempBulletWorldDirection)) {
+            return false;
+        }
+
+        const bulletNode = poolMgr.getBulletNode(uiMgr.bulletPrefab);
+        bulletParent.addChild(bulletNode);
+
+        const parentTransform = bulletParent.getComponent(UITransform);
+        if (parentTransform) {
+            parentTransform.convertToNodeSpaceAR(this.tempBulletSpawnWorldPos, this.tempBulletLocalPos);
+            this.tempBulletDirectionEndWorldPos.set(
+                this.tempBulletSpawnWorldPos.x + this.tempBulletWorldDirection.x,
+                this.tempBulletSpawnWorldPos.y + this.tempBulletWorldDirection.y,
+                this.tempBulletSpawnWorldPos.z,
+            );
+            parentTransform.convertToNodeSpaceAR(this.tempBulletDirectionEndWorldPos, this.tempBulletDirectionEndLocalPos);
+            this.tempBulletLocalDirection.set(
+                this.tempBulletDirectionEndLocalPos.x - this.tempBulletLocalPos.x,
+                this.tempBulletDirectionEndLocalPos.y - this.tempBulletLocalPos.y,
+                0,
+            );
+            bulletNode.setPosition(this.tempBulletLocalPos);
+        } else {
+            bulletNode.setWorldPosition(this.tempBulletSpawnWorldPos);
+            this.tempBulletLocalDirection.set(this.tempBulletWorldDirection);
+        }
+
+        const bulletComp = bulletNode.getComponent(bulletController);
+        if (!bulletComp) {
+            poolMgr.putBulletNode(bulletNode);
+            return false;
+        }
+
+        bulletComp.initStraight(this.tempBulletLocalDirection);
+        this.playGunShootAnim();
         return true;
     }
 

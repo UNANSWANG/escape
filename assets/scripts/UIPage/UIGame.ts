@@ -12,9 +12,7 @@ import { CameraController } from '../controller/CameraController';
 import { roleAnimName } from '../controller/roleController';
 import { enemyMgr } from '../manager/enemyManager';
 import { enemyBaseController } from '../controller/enemy/enemyBaseController';
-import { bulletController } from '../controller/bulletController';
 import { audioMgr } from '../manager/audioManager';
-import { poolMgr } from '../manager/poolManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIGame')
@@ -92,18 +90,6 @@ export class UIGame extends UIBase {
     private tempTouchMapLocalPos: Vec3 = new Vec3();
     /**玩家每帧移动偏移 */
     private tempPlayerMoveOffset: Vec3 = new Vec3();
-    /**子弹发射点世界坐标 */
-    private tempBulletSpawnWorldPos: Vec3 = new Vec3();
-    /**子弹世界飞行方向 */
-    private tempBulletWorldDirection: Vec3 = new Vec3();
-    /**子弹父节点本地坐标 */
-    private tempBulletLocalPos: Vec3 = new Vec3();
-    /**子弹父节点本地飞行方向 */
-    private tempBulletLocalDirection: Vec3 = new Vec3();
-    /**换算子弹方向时使用的世界终点 */
-    private tempBulletDirectionEndWorldPos: Vec3 = new Vec3();
-    /**换算子弹方向时使用的本地终点 */
-    private tempBulletDirectionEndLocalPos: Vec3 = new Vec3();
     /**游戏是否暂停 */
     private isGamePause = false;
     /**当前游戏局序号，用于避免异步加载回写旧局 */
@@ -491,54 +477,11 @@ export class UIGame extends UIBase {
         }
 
         this.refreshAutoAim();
-        if (!this.fireBullet()) {
+        if (!playerMgr.playerComp?.fireBullet()) {
             return;
         }
 
         this.shootCooldownRemaining = playerCommonConfig.shootInterval;
-    }
-
-    /**从枪口发射一个固定方向飞行、不锁定目标的子弹 */
-    private fireBullet() {
-        const playerComp = playerMgr.playerComp;
-        if (!playerComp || !this.gameUINode || !uiMgr.bulletPrefab ||
-            !playerComp.getGunShootData(this.tempBulletSpawnWorldPos, this.tempBulletWorldDirection)) {
-            return false;
-        }
-
-        const bulletNode = poolMgr.getBulletNode(uiMgr.bulletPrefab);
-        this.gameUINode.addChild(bulletNode);
-
-        const parentTransform = this.gameUINode.getComponent(UITransform);
-        if (parentTransform) {
-            parentTransform.convertToNodeSpaceAR(this.tempBulletSpawnWorldPos, this.tempBulletLocalPos);
-            this.tempBulletDirectionEndWorldPos.set(
-                this.tempBulletSpawnWorldPos.x + this.tempBulletWorldDirection.x,
-                this.tempBulletSpawnWorldPos.y + this.tempBulletWorldDirection.y,
-                this.tempBulletSpawnWorldPos.z,
-            );
-            parentTransform.convertToNodeSpaceAR(this.tempBulletDirectionEndWorldPos, this.tempBulletDirectionEndLocalPos);
-            this.tempBulletLocalDirection.set(
-                this.tempBulletDirectionEndLocalPos.x - this.tempBulletLocalPos.x,
-                this.tempBulletDirectionEndLocalPos.y - this.tempBulletLocalPos.y,
-                0,
-            );
-            bulletNode.setPosition(this.tempBulletLocalPos);
-        } else {
-            bulletNode.setWorldPosition(this.tempBulletSpawnWorldPos);
-            this.tempBulletLocalDirection.set(this.tempBulletWorldDirection);
-        }
-
-        const bulletComp = bulletNode.getComponent(bulletController);
-        if (bulletComp) {
-            bulletComp.initStraight(this.tempBulletLocalDirection);
-            // 仅在子弹确实生成并开始飞行时播放一次开火动画。
-            playerComp.playGunShootAnim();
-            return true;
-        } else {
-            poolMgr.putBulletNode(bulletNode);
-            return false;
-        }
     }
 
     /**是否正通过键盘或射击按钮持续攻击 */

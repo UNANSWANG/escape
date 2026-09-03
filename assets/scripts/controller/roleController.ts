@@ -68,8 +68,8 @@ export class roleController extends Component {
         this.gunNode = this.node.getChildByName("gun");
         this.gunSkeleton = this.gunNode?.getComponent(sp.Skeleton);
         this.shootRoot = this.gunNode?.getChildByName("shootRoot");
-        this.rightHandNode = this.gunNode?.getChildByName("hand").getChildByName("right");
-        this.leftHandNode = this.gunNode?.getChildByName("hand").getChildByName("left");
+        this.rightHandNode = this.gunNode?.getChildByName("right");
+        this.leftHandNode = this.gunNode?.getChildByName("left");
 
         this.rightHandNode.active = true;
         this.leftHandNode.active = true;
@@ -129,7 +129,7 @@ export class roleController extends Component {
 
     protected lateUpdate(): void {
         this.syncGunToSocket();
-        this.syncHandsToGunBones();
+        // this.syncHandsToGunBones();
     }
 
     /**手部节点不使用 Socket 覆盖，改由脚本按骨骼完整变换矩阵跟随。 */
@@ -158,8 +158,9 @@ export class roleController extends Component {
     }
 
     /**
-     * 先使用 Socket 同样的矩阵生成节点四元数，再取 Creator 分解出的 Z 角度重设为纯二维旋转。
-     * 这与 Inspector 中保留 Z、清除 X/Y 的效果一致。
+     * 使用 Spine 的世界二维仿射矩阵同步手部。
+     * Spine: x' = a * x + b * y + worldX，y' = c * x + d * y + worldY。
+     * 因此映射到 Creator Mat4 时，第一列必须是 (a, c)，第二列必须是 (b, d)。
      */
     private syncNodeToBone2D(node: Node, bone: any) {
         if (!node || !bone) {
@@ -167,6 +168,8 @@ export class roleController extends Component {
         }
 
         const matrix = this.tempHandBoneMatrix;
+        // 清除上一帧可能遗留的 3D 分量，再写入当前骨骼的完整 2D 变换。
+        Mat4.identity(matrix);
         matrix.m00 = bone.a;
         matrix.m01 = bone.c;
         matrix.m04 = bone.b;
@@ -174,6 +177,9 @@ export class roleController extends Component {
         matrix.m12 = bone.worldX;
         matrix.m13 = bone.worldY;
         node.matrix = matrix;
+
+        // Node.matrix 会将二维仿射矩阵分解为 3D SRT。骨骼存在镜像或剪切时，
+        // 分解结果可能混入 X/Y 轴旋转；保留其已同步的位置和缩放，仅重设为 Z 轴旋转。
         node.setRotationFromEuler(0, 0, node.eulerAngles.z);
     }
 

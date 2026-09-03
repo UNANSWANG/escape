@@ -84,8 +84,10 @@ export class roleController extends Component {
 
     /**进入或刷新战斗状态。 */
     refreshCombatState() {
+        const isEnterCombat = this.battleState === roleBattleState.nonCombat;
         this.battleState = roleBattleState.combat;
         this.combatRemainTime = Math.max(0, playerCommonConfig.gunResetTime);
+        if (isEnterCombat) this.gunComp?.stopResetRotationTween();
     }
 
     /**设置攻击键是否按住；松开后才开始退出战斗的倒计时。 */

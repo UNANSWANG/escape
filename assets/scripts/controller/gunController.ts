@@ -173,8 +173,7 @@ export class gunController extends Component {
      * @param isImmediate 是否强制立即复位；开局初始化时使用。
      */
     resetRotation(isImmediate = false) {
-        this.resetRotationTween?.stop();
-        this.resetRotationTween = null;
+        this.stopResetRotationTween();
         if (isImmediate) {
             this.node.angle = -10;
             return;
@@ -184,6 +183,12 @@ export class gunController extends Component {
             .to(0.1, { angle: -10 })
             .call(() => this.resetRotationTween = null)
             .start();
+    }
+
+    /**停止枪口回正动画，保留当前角度。 */
+    stopResetRotationTween() {
+        this.resetRotationTween?.stop();
+        this.resetRotationTween = null;
     }
 
     /**

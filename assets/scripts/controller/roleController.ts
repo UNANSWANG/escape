@@ -42,8 +42,8 @@ export class roleController extends Component {
     private gunNode: Node = null;
     /**枪械 Spine，用于手部节点的手动跟随 */
     private gunSkeleton: sp.Skeleton = null;
-    /**枪口发射点 */
-    private shootRoot: Node = null;
+    /**枪口发射点骨骼 */
+    private shootBone: any = null;
     /**右手显示节点 */
     private rightHandNode: Node = null;
     /**左手显示节点 */
@@ -56,6 +56,8 @@ export class roleController extends Component {
     private tempShootRootWorldPos = new Vec3();
     private tempTargetWorldPos = new Vec3();
     private tempTargetWorldScale = new Vec3();
+    /**最近一次瞄准的目标世界坐标，用于从实际枪口计算弹道。 */
+    private hasGunAimTarget = false;
     /**手部骨骼同步使用的二维变换矩阵 */
     private tempHandBoneMatrix = new Mat4();
     /**枪械 Spine 中的右手、左手骨骼 */
@@ -67,7 +69,6 @@ export class roleController extends Component {
         this.roleNameLab = this.node.getChildByName("roleNameLab").getComponent(Label);
         this.gunNode = this.node.getChildByName("gun");
         this.gunSkeleton = this.gunNode?.getComponent(sp.Skeleton);
-        this.shootRoot = this.gunNode?.getChildByName("shootRoot");
         this.rightHandNode = this.gunNode?.getChildByName("right");
         this.leftHandNode = this.gunNode?.getChildByName("left");
 
@@ -213,11 +214,12 @@ export class roleController extends Component {
         }
 
         target.getWorldPosition(this.tempTargetWorldPos);
-        // 敌人根节点位于脚底，瞄准其角色显示节点高度的一半，使子弹指向身体中部。
+        // 敌人根节点位于脚底；将瞄准点提升到角色显示区域的中部。
         const targetBody = target.getChildByName("roleAnim") || target;
         const targetHeight = targetBody.getComponent(UITransform)?.height || 0;
         targetBody.getWorldScale(this.tempTargetWorldScale);
         this.tempTargetWorldPos.y += targetHeight * Math.abs(this.tempTargetWorldScale.y) * 0.5;
+        this.hasGunAimTarget = true;
 
         this.node.getWorldPosition(this.tempRoleWorldPos);
         const offsetX = this.tempTargetWorldPos.x - this.tempRoleWorldPos.x;
@@ -239,20 +241,36 @@ export class roleController extends Component {
         return true;
     }
 
-    /**获取枪口世界坐标及枪管当前指向，用于生成不锁定目标的子弹 */
+    /**获取 kaihuo 骨骼的世界坐标及枪口方向，用于生成不锁定目标的子弹 */
     getGunShootData(outPosition: Vec3, outDirection: Vec3) {
-        if (!this.gunNode || !this.shootRoot) {
+        if (!this.gunNode || !this.gunSkeleton) {
             return false;
         }
 
-        // 当前帧刚调整过枪角度时，主动刷新变换后再读取枪口位置。
-        this.gunNode.updateWorldTransform();
-        this.shootRoot.updateWorldTransform();
-        this.gunNode.getWorldPosition(this.tempGunWorldPos);
-        this.shootRoot.getWorldPosition(this.tempShootRootWorldPos);
+        // SkeletonData 可能在 onLoad 后才完成赋值，因此延迟获取骨骼。
+        this.shootBone ??= this.gunSkeleton.findBone("kaihuo");
+        if (!this.shootBone) {
+            return false;
+        }
 
-        const directionX = this.tempShootRootWorldPos.x - this.tempGunWorldPos.x;
-        const directionY = this.tempShootRootWorldPos.y - this.tempGunWorldPos.y;
+        // 当前帧刚调整过枪角度时，主动刷新枪节点世界变换。
+        this.gunNode.updateWorldTransform();
+        const gunWorldMatrix = this.gunNode.worldMatrix;
+        this.tempShootRootWorldPos.set(this.shootBone.worldX, this.shootBone.worldY, 0);
+        Vec3.transformMat4(this.tempShootRootWorldPos, this.tempShootRootWorldPos, gunWorldMatrix);
+
+        // 枪口位置改变后，方向也必须从实际枪口指向目标，弹道才能经过目标位置。
+        // 没有目标时，则沿当前枪口朝向发射。
+        let directionX: number;
+        let directionY: number;
+        if (this.hasGunAimTarget) {
+            directionX = this.tempTargetWorldPos.x - this.tempShootRootWorldPos.x;
+            directionY = this.tempTargetWorldPos.y - this.tempShootRootWorldPos.y;
+        } else {
+            this.gunNode.getWorldPosition(this.tempGunWorldPos);
+            directionX = this.tempShootRootWorldPos.x - this.tempGunWorldPos.x;
+            directionY = this.tempShootRootWorldPos.y - this.tempGunWorldPos.y;
+        }
         const directionLength = Math.sqrt(directionX * directionX + directionY * directionY);
         if (directionLength <= 0) {
             return false;

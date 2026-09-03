@@ -9,9 +9,9 @@ import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
 import { videoMgr } from '../manager/videoManager';
 import { loop_anim, loopAnimation } from '../controller/loopAnimation';
-import { roleAnimName } from '../controller/roleController';
 import { ccStorageTools } from '../extention/storageTools';
 import { SaveKey } from '../manager/configData';
+import { roleAnimName } from '../controller/role/roleController';
 const { ccclass, property } = _decorator;
 
 @ccclass('UISuccess')

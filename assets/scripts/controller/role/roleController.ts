@@ -1,8 +1,8 @@
 import { _decorator, Component, Label, Node, sp } from 'cc';
-import type { UIGame } from '../UIPage/UIGame';
-import { enemyMgr } from '../manager/enemyManager';
-import { enemyBaseController } from './enemy/enemyBaseController';
-import { gunController } from './gunController';
+import { enemyMgr } from '../../manager/enemyManager';
+import { UIGame } from '../../UIPage/UIGame';
+import { enemyBaseController } from '../enemy/enemyBaseController';
+import { gunController } from '../gunController';
 const { ccclass } = _decorator;
 
 export enum roleAnimName {

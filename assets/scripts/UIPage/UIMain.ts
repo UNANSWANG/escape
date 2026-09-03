@@ -12,7 +12,7 @@ import { loopAnimation } from '../controller/loopAnimation';
 import { userMgr } from '../manager/userManager';
 import { WXManager } from '../sdk/plat/wx/WXManager';
 import { ccTools } from '../extention/generalTools';
-import { roleAnimName } from '../controller/roleController';
+import { roleAnimName } from '../controller/role/roleController';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIMain')

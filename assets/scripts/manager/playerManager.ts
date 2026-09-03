@@ -1,5 +1,5 @@
 import { _decorator, Component, Node } from 'cc';
-import { roleController } from '../controller/roleController';
+import { roleController } from '../controller/role/roleController';
 const { ccclass, property } = _decorator;
 
 @ccclass('playerManager')

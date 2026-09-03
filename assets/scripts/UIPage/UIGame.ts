@@ -9,10 +9,10 @@ import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
 import { playerMgr } from '../manager/playerManager';
 import { CameraController } from '../controller/CameraController';
-import { roleAnimName } from '../controller/roleController';
 import { enemyMgr } from '../manager/enemyManager';
 import { enemyBaseController } from '../controller/enemy/enemyBaseController';
 import { audioMgr } from '../manager/audioManager';
+import { roleAnimName } from '../controller/role/roleController';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIGame')

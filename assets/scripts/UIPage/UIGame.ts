@@ -532,6 +532,8 @@ export class UIGame extends UIBase {
         const bulletComp = bulletNode.getComponent(bulletController);
         if (bulletComp) {
             bulletComp.initStraight(this.tempBulletLocalDirection);
+            // 仅在子弹确实生成并开始飞行时播放一次开火动画。
+            playerComp.playGunShootAnim();
             return true;
         } else {
             poolMgr.putBulletNode(bulletNode);

@@ -30,6 +30,8 @@ export class roleController extends Component {
     gameComp: UIGame = null;
     /**当前播放的角色动画名称 */
     private curRoleAnimName: string = "";
+    /**当前播放的枪械动画名称 */
+    private curGunAnimName: string = "";
 
     ///
     ///节点
@@ -101,8 +103,10 @@ export class roleController extends Component {
         // }
 
         this.curRoleAnimName = "";
+        this.curGunAnimName = "";
         this.bindGunToSocket();
         this.playRoleAnim(roleAnimName.idle, true);
+        this.playGunAnim(gunAnimName.idle, true);
     }
 
     /**将 roleAnim 下的 gun 节点绑定到 Spine 的 bone16 挂点，仅跟随位置 */
@@ -289,5 +293,29 @@ export class roleController extends Component {
 
         this.curRoleAnimName = animName;
         this.roleAnim.setAnimation(0, animName, loop);
+    }
+
+    /**播放枪械动画；待机动画会持续循环。 */
+    private playGunAnim(animName: gunAnimName, loop: boolean = true) {
+        if (!this.gunSkeleton || !this.gunSkeleton.skeletonData ||
+            (loop && this.curGunAnimName === animName)) {
+            return;
+        }
+
+        this.curGunAnimName = animName;
+        this.gunSkeleton.setAnimation(0, animName, loop);
+    }
+
+    /**枪械开火：每发子弹播放一次 attack，完成后自动回到 idle。 */
+    playGunShootAnim() {
+        if (!this.gunSkeleton || !this.gunSkeleton.skeletonData) {
+            return;
+        }
+
+        // setAnimation 会清除上一发尚未完成的队列，确保每颗子弹都从 attack 起始帧播放。
+        this.curGunAnimName = gunAnimName.attack;
+        this.gunSkeleton.setAnimation(0, gunAnimName.attack, false);
+        this.gunSkeleton.addAnimation(0, gunAnimName.idle, true, 0);
+        this.curGunAnimName = gunAnimName.idle;
     }
 }

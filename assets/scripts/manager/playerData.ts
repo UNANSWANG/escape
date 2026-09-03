@@ -19,11 +19,12 @@ export class playerData {
     propsNums = {};
     /**地图半宽高 */
     mapHalfSize: Vec2 = Vec2.ZERO;
-    /**感染币（场外） */
+    /**鼠鼠币 */
     money = 0;
-
     /**当前关卡所看广告数 */
     adNum = 0;
+    /**角色id */
+    roleId = 0;
     /**当前皮肤id */
     skinId = 0;
     /**已解锁角色皮肤 */
@@ -173,7 +174,7 @@ export class playerData {
     }
 
 
-    /**修改感染币（场外） */
+    /**修改鼠鼠币*/
     fixMoney(money: number) {
         this.money += money;
         if (this.money < 0) {

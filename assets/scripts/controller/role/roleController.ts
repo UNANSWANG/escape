@@ -10,6 +10,17 @@ export enum roleAnimName {
     move = 'move',
 }
 
+export enum roleType {
+    /**突进 */
+    advance = 'advance',
+    /**治疗 */
+    heal = 'heal',
+    /**肉盾 */
+    shield = 'shield',
+    /**功能 */
+    function = 'function',
+}
+
 @ccclass('roleController')
 export class roleController extends Component {
     /**角色当前游戏内 id */
@@ -21,6 +32,8 @@ export class roleController extends Component {
     /**角色当前播放的动画名 */
     private curRoleAnimName = '';
 
+    /**角色类型 */
+    roleType: roleType = roleType.advance;
     /** 角色本体 Spine。 */
     roleAnim: sp.Skeleton = null;
     /** 角色头顶名称文本。 */
@@ -102,5 +115,15 @@ export class roleController extends Component {
         if (!this.roleAnim || !this.roleAnim.skeletonData || this.curRoleAnimName === animName) return;
         this.curRoleAnimName = animName;
         this.roleAnim.setAnimation(0, animName, loop);
+    }
+
+    /** 使用技能1 */
+    useSkill1() {
+        
+    }
+
+    /** 使用技能2 */
+    useSkill2() {
+        
     }
 }

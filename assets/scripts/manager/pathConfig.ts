@@ -74,7 +74,7 @@ export enum imgPath {
     bulletSkin = "texture/game/bullet/bullet_",
     /**角色全身 */
     roleBodyFull = "texture/role/all/all_",
-    /**感染币 */
+    /**鼠鼠币 */
     money = "texture/common/money",
     /**排行榜底 */
     rankItemBg = "texture/rank/bg/bg_",

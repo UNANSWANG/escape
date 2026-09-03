@@ -235,7 +235,7 @@ export class UIGame extends UIBase {
         this.roleNode.addChild(playerMgr.player);
         playerMgr.cameraFollow = true;
         this.initRolePos(playerMgr.player);
-        playerMgr.playerComp.init(this, 0, pData.skinId);
+        playerMgr.playerComp.init(this, 0, pData.roleId);
     }
 
     /**在玩家右侧生成两个仅播放待机动画的临时敌人，第二个在第一个上方 */

@@ -442,6 +442,8 @@ export class UIGame extends UIBase {
         if (!this.autoAttackTarget || !this.isValidAttackTarget(this.autoAttackTarget) || !playerMgr.player) {
             this.autoAttackTarget = null;
             this.isAttackAiming = false;
+            // 本轮攻击未锁定目标时，不能沿用上一次攻击留下的目标坐标。
+            playerMgr.playerComp?.clearGunAimTarget();
             return;
         }
 
@@ -459,6 +461,7 @@ export class UIGame extends UIBase {
         this.unschedule(this.stopAutoAim);
         this.isAttackAiming = false;
         this.autoAttackTarget = null;
+        playerMgr.playerComp?.clearGunAimTarget();
         if (this.isMoving && this.currentMoveDirection.x !== 0) {
             this.normalFacingRight = this.currentMoveDirection.x > 0;
             playerMgr.playerComp?.setFacingByHorizontal(this.normalFacingRight ? 1 : -1);

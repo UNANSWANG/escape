@@ -9,7 +9,7 @@ export const configData = {
     /**怪物皮肤数量 */
     enemySkinCount: 5,
     /**子弹速度 */
-    bulletSpeed: 1000,
+    bulletSpeed: 2000,
     /**人机匹配显示时间区间（秒） */
     roleMatchTime: [0.5, 1.2],
     /**上报排名值的模式系数（rank = 模式ID * 系数 + 该模式关卡数） */

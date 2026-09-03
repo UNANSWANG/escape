@@ -260,6 +260,11 @@ export class roleController extends Component {
         return true;
     }
 
+    /**清除锁定目标；之后发射的子弹会沿当前枪口朝向飞行。 */
+    clearGunAimTarget() {
+        this.hasGunAimTarget = false;
+    }
+
     /**获取 kaihuo 骨骼的世界坐标及枪口方向，用于生成不锁定目标的子弹 */
     getGunShootData(outPosition: Vec3, outDirection: Vec3) {
         if (!this.gunNode || !this.gunSkeleton) {

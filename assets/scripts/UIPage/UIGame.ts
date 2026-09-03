@@ -507,8 +507,8 @@ export class UIGame extends UIBase {
                 break;
             }
             case KeyCode.KEY_R:
-                //重新开始游戏
-                this.restartGame();
+                // 主动换弹；枪械组件会自行拦截满弹或换弹中的重复请求。
+                playerMgr.playerComp?.gunController?.reload();
                 break;
             case KeyCode.SPACE:
                 playerMgr.playerComp?.playRoleAnim("appear", false);

@@ -13,6 +13,12 @@ export class gunController extends Component {
     autoAttackRange = 400;
     /** 两发子弹之间的冷却时间，单位：秒。 */
     shootInterval = 0.2;
+    /** 当前弹夹中剩余的子弹数。 */
+    private currentAmmo = 0;
+    /** 是否正处于换弹阶段；该阶段内不能开枪。 */
+    private isReloading = false;
+    /** 每个弹夹可容纳的子弹数量。 */
+    bulletNum = 20;
     /** 持枪角色的 Spine，用于读取枪械挂点和翻转角色显示。 */
     private roleAnim: sp.Skeleton = null;
     /** 当前枪械节点上的 Spine 组件。 */
@@ -51,6 +57,17 @@ export class gunController extends Component {
         this.leftHandNode = this.node.getChildByName('left');
         if (this.rightHandNode) this.rightHandNode.active = true;
         if (this.leftHandNode) this.leftHandNode.active = true;
+        this.currentAmmo = this.bulletNum;
+    }
+
+    /** 当前弹夹中的剩余子弹数。 */
+    get ammo() {
+        return this.currentAmmo;
+    }
+
+    /** 当前是否正在换弹。 */
+    get reloading() {
+        return this.isReloading;
     }
 
     /**
@@ -113,6 +130,12 @@ export class gunController extends Component {
      * @param bulletParent 子弹加入的 UI/游戏父节点。
      */
     fireBullet(bulletParent: Node) {
+        // 弹夹打空时自动开始换弹；换弹期间的所有开火请求均无效。
+        if (this.isReloading) return false;
+        if (this.currentAmmo <= 0) {
+            this.reload();
+            return false;
+        }
         if (!bulletParent || !uiMgr.bulletPrefab || !this.getShootData(this.tempBulletSpawnWorldPos, this.tempBulletWorldDirection)) return false;
         const bulletNode = poolMgr.getBulletNode(uiMgr.bulletPrefab);
         bulletParent.addChild(bulletNode);
@@ -130,8 +153,45 @@ export class gunController extends Component {
         const bulletComp = bulletNode.getComponent(bulletController);
         if (!bulletComp) { poolMgr.putBulletNode(bulletNode); return false; }
         bulletComp.initStraight(this.tempBulletLocalDirection);
-        this.playShootAnim();
+        this.currentAmmo--;
+        if (this.currentAmmo <= 0) {
+            // 保留最后一发的开火动画，动画结束后再接换弹动画。
+            this.playShootAnim(true);
+            this.startReload(true);
+        } else {
+            this.playShootAnim();
+        }
         return true;
+    }
+
+    /**
+     * 开始换弹。换弹动画播放完成后，弹夹恢复为满弹状态。
+     * 外部可调用此方法主动换弹；弹夹已满或正在换弹时不会重复执行。
+     * @returns 是否实际开始了本次换弹。
+     */
+    reload() {
+        return this.startReload(false);
+    }
+
+    /** 启动换弹流程；最后一发自动换弹时可选择追加到当前开火动画之后。 */
+    private startReload(afterCurrentAnimation: boolean) {
+        if (this.isReloading || this.currentAmmo >= this.bulletNum) return false;
+        this.isReloading = true;
+        const reloadEntry = afterCurrentAnimation ? this.queueReloadAnim() : this.playReloadAnim();
+        if (reloadEntry && this.gunSkeleton) {
+            this.gunSkeleton.setTrackCompleteListener(reloadEntry, () => this.finishReload());
+        } else {
+            // 没有可播放的换弹动画时立即完成，避免枪械永久处于换弹锁定。
+            this.finishReload();
+        }
+        return true;
+    }
+
+    /** 完成换弹，恢复满弹并回到待机动画。 */
+    private finishReload() {
+        this.currentAmmo = this.bulletNum;
+        this.isReloading = false;
+        this.playIdleAnim();
     }
 
     /** 获取实际枪口的世界坐标，以及归一化后的世界发射方向。 */
@@ -166,13 +226,32 @@ export class gunController extends Component {
         this.gunSkeleton.setAnimation(0, gunAnimName.idle, true);
     }
 
-    /** 播放一次开火动画，然后无缝回到待机。 */
-    private playShootAnim() {
+    /**
+     * 播放一次开火动画。
+     * @param reloadAfter 是否在本次开火动画结束后衔接换弹动画。
+     */
+    private playShootAnim(reloadAfter = false) {
         if (!this.gunSkeleton?.skeletonData) return;
         this.curGunAnimName = gunAnimName.attack;
         this.gunSkeleton.setAnimation(0, gunAnimName.attack, false);
-        this.gunSkeleton.addAnimation(0, gunAnimName.idle, true, 0);
-        this.curGunAnimName = gunAnimName.idle;
+        if (!reloadAfter) {
+            this.gunSkeleton.addAnimation(0, gunAnimName.idle, true, 0);
+            this.curGunAnimName = gunAnimName.idle;
+        }
+    }
+
+    /** 播放一次换弹动画，并返回其动画轨道以监听播放完成事件。 */
+    private playReloadAnim() {
+        if (!this.gunSkeleton?.skeletonData) return null;
+        this.curGunAnimName = gunAnimName.reload;
+        return this.gunSkeleton.setAnimation(0, gunAnimName.reload, false);
+    }
+
+    /** 将换弹动画追加到当前动画队列末尾，用于最后一发射出后的自动换弹。 */
+    private queueReloadAnim() {
+        if (!this.gunSkeleton?.skeletonData) return null;
+        this.curGunAnimName = gunAnimName.reload;
+        return this.gunSkeleton.addAnimation(0, gunAnimName.reload, false, 0);
     }
 
     /** 按枪械 Spine 骨骼的完整二维变换同步手部节点。当前按需启用。 */
@@ -202,5 +281,3 @@ export class gunController extends Component {
         node.setRotationFromEuler(0, 0, node.eulerAngles.z);
     }
 }
-
-

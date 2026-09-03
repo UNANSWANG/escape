@@ -3,7 +3,7 @@ import { uiMgr } from '../manager/UIManager';
 import { pData } from '../manager/playerData';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
-import { configData, GameEvent, playerCommonConfig } from '../manager/configData';
+import { configData, GameEvent } from '../manager/configData';
 import { gm } from '../manager/gm';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
@@ -402,39 +402,9 @@ export class UIGame extends UIBase {
         return true;
     }
 
-    /**查找自动攻击范围内最近的有效敌人 */
-    private findNearestEnemyInAutoAttackRange() {
-        if (!playerMgr.player) {
-            return null;
-        }
-
-        const playerPos = playerMgr.player.position;
-        const range = playerCommonConfig.autoAttackRange;
-        const rangeSquared = range * range;
-        let nearestEnemy: enemyBaseController = null;
-        let nearestDistanceSquared = rangeSquared;
-
-        for (const enemy of enemyMgr.enemyArr) {
-            if (!enemy || !enemy.node?.isValid || !enemy.node.activeInHierarchy || enemy.hp <= 0) {
-                continue;
-            }
-
-            const enemyPos = enemy.node.position;
-            const offsetX = enemyPos.x - playerPos.x;
-            const offsetY = enemyPos.y - playerPos.y;
-            const distanceSquared = offsetX * offsetX + offsetY * offsetY;
-            if (distanceSquared <= nearestDistanceSquared) {
-                nearestEnemy = enemy;
-                nearestDistanceSquared = distanceSquared;
-            }
-        }
-
-        return nearestEnemy;
-    }
-
     /**攻击期间优先锁定范围内最近的敌人；范围为空时保留本轮原锁定 */
     private refreshAutoAim() {
-        const nearestTarget = this.findNearestEnemyInAutoAttackRange();
+        const nearestTarget = playerMgr.playerComp?.findNearestEnemyInAutoAttackRange();
         if (nearestTarget) {
             this.autoAttackTarget = nearestTarget;
         }
@@ -484,7 +454,10 @@ export class UIGame extends UIBase {
             return;
         }
 
-        this.shootCooldownRemaining = playerCommonConfig.shootInterval;
+        const gunComp = playerMgr.playerComp?.gunController;
+        if (gunComp) {
+            this.shootCooldownRemaining = gunComp.shootInterval;
+        }
     }
 
     /**是否正通过键盘或射击按钮持续攻击 */

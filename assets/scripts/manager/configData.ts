@@ -16,12 +16,8 @@ export const configData = {
     rankModeFactor: 100000,
 }
 
-/**玩家通用配置（赞不读表） */
+/**玩家通用配置（暂不读表） */
 export const playerCommonConfig = {
-    /**自动瞄准检测范围 */
-    autoAttackRange: 400,
-    /**射击间隔（秒）（临时） */
-    shootInterval: 0.2,
     /**子弹消失距离 */
     bulletDisappearDistance: 800,
 }

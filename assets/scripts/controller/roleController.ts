@@ -3,8 +3,11 @@ import { ccTools } from '../extention/generalTools';
 import type { UIGame } from '../UIPage/UIGame';
 import { spinePath, UIPath } from '../manager/pathConfig';
 import { bulletController } from './bulletController';
+import { gunController } from './gunController';
 import { uiMgr } from '../manager/UIManager';
 import { poolMgr } from '../manager/poolManager';
+import { enemyMgr } from '../manager/enemyManager';
+import { enemyBaseController } from './enemy/enemyBaseController';
 const { ccclass, property } = _decorator;
 
 export enum roleAnimName {
@@ -45,6 +48,8 @@ export class roleController extends Component {
     roleNameLab: Label = null;
     /**挂在 Spine bone16 挂点上的枪节点 */
     private gunNode: Node = null;
+    /**枪械配置与行为组件 */
+    private gunComp: gunController = null;
     /**枪械 Spine，用于手部节点的手动跟随 */
     private gunSkeleton: sp.Skeleton = null;
     /**枪口发射点骨骼 */
@@ -85,12 +90,48 @@ export class roleController extends Component {
         this.roleAnim = this.node.getChildByName("roleAnim").getComponent(sp.Skeleton);
         this.roleNameLab = this.node.getChildByName("roleNameLab").getComponent(Label);
         this.gunNode = this.node.getChildByName("gun");
+        this.gunComp = this.gunNode?.getComponent(gunController);
         this.gunSkeleton = this.gunNode?.getComponent(sp.Skeleton);
         this.rightHandNode = this.gunNode?.getChildByName("right");
         this.leftHandNode = this.gunNode?.getChildByName("left");
 
         this.rightHandNode.active = true;
         this.leftHandNode.active = true;
+    }
+
+    /**当前装备的枪械组件 */
+    get gunController() {
+        return this.gunComp;
+    }
+
+    /**查找当前枪械自动攻击范围内最近的有效敌人 */
+    findNearestEnemyInAutoAttackRange() {
+        if (!this.gunComp) {
+            return null;
+        }
+
+        const rolePos = this.node.position;
+        const range = this.gunComp.autoAttackRange;
+        const rangeSquared = range * range;
+        let nearestEnemy: enemyBaseController = null;
+        let nearestDistanceSquared = rangeSquared;
+
+        for (const enemy of enemyMgr.enemyArr) {
+            if (!enemy || !enemy.node?.isValid || !enemy.node.activeInHierarchy || enemy.hp <= 0) {
+                continue;
+            }
+
+            const enemyPos = enemy.node.position;
+            const offsetX = enemyPos.x - rolePos.x;
+            const offsetY = enemyPos.y - rolePos.y;
+            const distanceSquared = offsetX * offsetX + offsetY * offsetY;
+            if (distanceSquared <= nearestDistanceSquared) {
+                nearestEnemy = enemy;
+                nearestDistanceSquared = distanceSquared;
+            }
+        }
+
+        return nearestEnemy;
     }
 
     init(comp: UIGame, id: number, skinId: number, nickname = "") {

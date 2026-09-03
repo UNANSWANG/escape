@@ -232,6 +232,7 @@ export class roleController extends Component {
             return false;
         }
 
+        //目标点暂存世界坐标
         target.getWorldPosition(this.tempTargetWorldPos);
         // 敌人根节点位于脚底；将瞄准点提升到角色显示区域的中部。
         const targetBody = target.getChildByName("roleAnim") || target;

@@ -13,6 +13,7 @@ import { enemyMgr } from '../manager/enemyManager';
 import { enemyBaseController } from '../controller/enemy/enemyBaseController';
 import { audioMgr } from '../manager/audioManager';
 import { roleAnimName } from '../controller/role/roleController';
+import { addRoleScript } from '../controller/role/roleScriptFactory';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIGame')
@@ -222,7 +223,7 @@ export class UIGame extends UIBase {
 
         ccTools.destroyAllChild(this.roleNode);
 
-        playerMgr.player = null;
+        playerMgr.clearPlayer();
         enemyMgr.enemyArr = [];
         enemyMgr.enemyId = 0;
         enemyMgr.enemyBornPosArr = [];
@@ -235,7 +236,9 @@ export class UIGame extends UIBase {
         this.roleNode.addChild(playerMgr.player);
         playerMgr.cameraFollow = true;
         this.initRolePos(playerMgr.player);
-        playerMgr.playerComp.init(this, 0, pData.roleId);
+        const roleComp = addRoleScript(playerMgr.player, pData.roleId);
+        playerMgr.setPlayerComp(roleComp);
+        roleComp.init(this, 0, pData.roleId);
     }
 
     /**在玩家右侧生成两个仅播放待机动画的临时敌人，第二个在第一个上方 */

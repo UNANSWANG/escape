@@ -8,6 +8,10 @@ const { ccclass } = _decorator;
 export enum roleAnimName {
     idle = 'idle',
     move = 'move',
+    /**使用技能1 */
+    useSkill1 = 'useSkill1',
+    /**使用技能2 */
+    useSkill2 = 'useSkill2',
 }
 
 export enum roleType {

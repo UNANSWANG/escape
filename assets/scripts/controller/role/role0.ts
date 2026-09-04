@@ -16,6 +16,10 @@ export class role0 extends roleController {
     private isUsingSkill1 = false;
     /**释放技能前的移速，用于动画结束后恢复。 */
     private moveSpeedBeforeSkill1 = 0;
+    /**技能1冷却时间 */
+    skill1Cooldown = 15;
+    /**技能2冷却时间 */
+    skill2Cooldown = 50;
 
     get isMoveDirectionLocked() { return this.isUsingSkill1; }
 

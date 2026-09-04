@@ -72,6 +72,10 @@ export class roleController extends Component {
     private commonSkill1RemainTime = 0;
     /**释放通用技能1前的移速，用于效果结束后恢复。 */
     private moveSpeedBeforeCommonSkill1 = 0;
+    /**技能1冷却时间 */
+    skill1Cooldown = 15;
+    /**技能2冷却时间 */
+    skill2Cooldown = 30;
 
     /** 缓存角色自身与子节点组件。 */
     protected onLoad(): void {

@@ -99,7 +99,7 @@ export class gunController extends Component {
         if (!this.gunSocketBone || !this.roleAnim?.node || !this.node.parent) return;
 
         // Spine 骨骼坐标属于 roleAnim 本地空间。转换到枪节点父级空间后，
-        // 角色根节点的水平翻转才会正确反映到枪械挂点上。
+        // roleAnim 节点自身的水平翻转会正确反映到枪械挂点上。
         this.roleAnim.node.updateWorldTransform();
         this.tempSocketLocalPos.set(this.gunSocketBone.worldX, this.gunSocketBone.worldY, 0);
         Vec3.transformMat4(this.tempSocketWorldPos, this.tempSocketLocalPos, this.roleAnim.node.worldMatrix);
@@ -112,13 +112,20 @@ export class gunController extends Component {
         }
     }
 
-    /** 根据水平方向翻转角色根节点，所有子节点（枪、手部、Spine）自然跟随。 */
+    /** 根据水平方向翻转角色 Spine 与枪节点，不修改角色根节点。 */
     setFacingByHorizontal(directionX: number) {
         if (directionX === 0) return;
         const facingRight = directionX > 0;
-        const roleNode = this.roleAnim?.node?.parent || this.node.parent;
-        if (!roleNode) return;
-        roleNode.setScale((facingRight ? -1 : 1) * Math.abs(roleNode.scale.x), roleNode.scale.y, roleNode.scale.z);
+        const scaleX = facingRight ? -1 : 1;
+        const roleAnimNode = this.roleAnim?.node;
+        if (roleAnimNode) {
+            roleAnimNode.setScale(scaleX * Math.abs(roleAnimNode.scale.x), roleAnimNode.scale.y, roleAnimNode.scale.z);
+        }
+        // 未锁定目标时枪会保留当前角度。水平翻转会同时镜像上下方向，
+        // 因此仅在朝向实际切换时取反角度，使左上镜像后仍为右上。
+        const isGunFacingChanged = (this.node.scale.x < 0) !== (scaleX < 0);
+        this.node.setScale(scaleX * Math.abs(this.node.scale.x), this.node.scale.y, this.node.scale.z);
+        if (isGunFacingChanged) this.node.angle = -this.node.angle;
     }
 
     /**
@@ -143,7 +150,7 @@ export class gunController extends Component {
 
     /**
      * 在枪节点父级（角色根节点）的本地坐标系中计算旋转。
-     * 角色根节点翻转后，世界坐标中的左右方向会镜像；使用本地坐标可避免该镜像再次影响枪口角度。
+     * 枪节点水平翻转后，先按节点缩放镜像枪口骨骼方向，再计算瞄准角度。
      */
     private setGunAngleToTarget() {
         const parentTransform = this.node.parent?.getComponent(UITransform);
@@ -156,8 +163,12 @@ export class gunController extends Component {
         const targetOffsetX = this.tempTargetParentLocalPos.x - this.node.position.x;
         const targetOffsetY = this.tempTargetParentLocalPos.y - this.node.position.y;
         const targetAngle = Math.atan2(targetOffsetY, targetOffsetX) * 180 / Math.PI;
-        const muzzleBaseAngle = Math.atan2(this.shootBone.worldY, this.shootBone.worldX) * 180 / Math.PI;
-        let localAngle = targetAngle - muzzleBaseAngle;
+        // 节点缩放会先作用于枪口骨骼向量；scale.x 为负时，
+        // 此处得到的就是水平翻转后的枪口基础方向。
+        const scaledMuzzleX = this.shootBone.worldX * this.node.scale.x;
+        const scaledMuzzleY = this.shootBone.worldY * this.node.scale.y;
+        const mirroredMuzzleAngle = Math.atan2(scaledMuzzleY, scaledMuzzleX) * 180 / Math.PI;
+        let localAngle = targetAngle - mirroredMuzzleAngle;
         // 归一化后再限制仰角，避免枪械绕过背面旋转。
         localAngle = (localAngle + 180) % 360;
         if (localAngle < 0) localAngle += 360;

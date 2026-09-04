@@ -76,6 +76,10 @@ export class roleController extends Component {
     skill1Cooldown = 15;
     /**技能2冷却时间 */
     skill2Cooldown = 30;
+    /**技能1剩余冷却时间。 */
+    private skill1CooldownRemaining = 0;
+    /**技能2剩余冷却时间。 */
+    private skill2CooldownRemaining = 0;
 
     /** 缓存角色自身与子节点组件。 */
     protected onLoad(): void {
@@ -121,6 +125,7 @@ export class roleController extends Component {
     protected update(dt: number): void {
         this.updateBattleState(dt);
         this.updateCommonSkill1(dt);
+        this.updateSkillCooldown(dt);
     }
 
     /**组件停用时终止通用技能1，避免加速状态遗留到下次启用。 */
@@ -144,6 +149,28 @@ export class roleController extends Component {
         if (!this.isUsingCommonSkill1) return;
         this.commonSkill1RemainTime -= dt;
         if (this.commonSkill1RemainTime <= 0) this.finishCommonSkill1();
+    }
+
+    /**更新两个技能的冷却状态。 */
+    private updateSkillCooldown(dt: number) {
+        this.skill1CooldownRemaining = Math.max(0, this.skill1CooldownRemaining - dt);
+        this.skill2CooldownRemaining = Math.max(0, this.skill2CooldownRemaining - dt);
+    }
+
+    /**技能是否仍处于冷却中。 */
+    protected isSkillCooling(skillIndex: 1 | 2) {
+        return skillIndex === 1 ? this.skill1CooldownRemaining > 0 : this.skill2CooldownRemaining > 0;
+    }
+
+    /**成功使用技能后启动其冷却，并通知 UI 播放对应遮罩。 */
+    protected startSkillCooldown(skillIndex: 1 | 2) {
+        const cooldown = Math.max(0, skillIndex === 1 ? this.skill1Cooldown : this.skill2Cooldown);
+        if (skillIndex === 1) {
+            this.skill1CooldownRemaining = cooldown;
+        } else {
+            this.skill2CooldownRemaining = cooldown;
+        }
+        this.node.emit('skill-cooldown-start', skillIndex, cooldown);
     }
 
     /**结束通用技能1并恢复释放前的移速。 */
@@ -228,12 +255,13 @@ export class roleController extends Component {
      * 有专属技能逻辑的角色（如 role0）可重写此方法。
      */
     useSkill1() {
-        if (this.isUsingCommonSkill1 || this.skill1Duration <= 0) return false;
+        if (this.isUsingCommonSkill1 || this.skill1Duration <= 0 || this.isSkillCooling(1)) return false;
 
         this.isUsingCommonSkill1 = true;
         this.commonSkill1RemainTime = this.skill1Duration;
         this.moveSpeedBeforeCommonSkill1 = this.moveSpeed;
         this.moveSpeed *= this.skill1SpeedScale;
+        this.startSkillCooldown(1);
         return true;
     }
 
@@ -242,6 +270,9 @@ export class roleController extends Component {
 
     /** 使用技能2 */
     useSkill2() {
-        
+        if (this.isSkillCooling(2)) return false;
+        // 技能效果尚未实现，当前先完成使用与冷却流程。
+        this.startSkillCooldown(2);
+        return true;
     }
 }

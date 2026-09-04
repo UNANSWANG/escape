@@ -27,7 +27,7 @@ export class role0 extends roleController {
     useSkill1() {
         // 突进需要已有方向，通用技能不受此限制。
         if (!this.gameComp?.hasMoveDirectionInput()) return false;
-        if (this.isUsingSkill1 || !this.roleAnim?.skeletonData) return false;
+        if (this.isUsingSkill1 || this.isSkillCooling(1) || !this.roleAnim?.skeletonData) return false;
 
         const entry = this.roleAnim.setAnimation(0, roleAnimName.useSkill1, false);
         if (!entry) return false;
@@ -38,6 +38,7 @@ export class role0 extends roleController {
         entry.timeScale = Math.max(0.01, this.skill1TimeScale);
         this.curRoleAnimName = roleAnimName.useSkill1;
         this.roleAnim.setTrackCompleteListener(entry, () => this.finishSkill1());
+        this.startSkillCooldown(1);
         return true;
     }
 

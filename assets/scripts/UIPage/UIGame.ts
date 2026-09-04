@@ -79,6 +79,10 @@ export class UIGame extends UIBase {
     private shootCooldownRemaining = 0;
     /**换弹按钮遮罩。 */
     private reloadMask: Sprite = null;
+    /**技能1按钮遮罩。 */
+    private skill1Mask: Sprite = null;
+    /**技能2按钮遮罩。 */
+    private skill2Mask: Sprite = null;
     /**摇杆初始位置 */
     private rockerInitPos: Vec3 = new Vec3(200, -56, 0);
     /**临时敌人与玩家的水平间距，保持在自动瞄准范围内以便测试 */
@@ -231,6 +235,7 @@ export class UIGame extends UIBase {
         this.isShootButtonPressed = false;
         this.shootCooldownRemaining = 0;
         this.stopReloadMaskCooldown();
+        this.stopSkillMaskCooldown();
         this.stopAutoAim();
 
         ccTools.destroyAllChild(this.roleNode);
@@ -251,6 +256,7 @@ export class UIGame extends UIBase {
         const roleComp = addRoleScript(playerMgr.player, pData.roleId);
         playerMgr.setPlayerComp(roleComp);
         roleComp.gunController?.node.on('reload-start', this.playReloadMaskCooldown, this);
+        roleComp.node.on('skill-cooldown-start', this.playSkillMaskCooldown, this);
         roleComp.init(this, 0, pData.roleId);
     }
 
@@ -513,6 +519,30 @@ export class UIGame extends UIBase {
             Tween.stopAllByTarget(mask);
             mask.fillRange = 0;
             if (button === this.reloadBtn) this.reloadMask = mask;
+            if (button === this.skillBtn1) this.skill1Mask = mask;
+            if (button === this.skillBtn2) this.skill2Mask = mask;
+        }
+    }
+
+    /**按角色技能配置的冷却时间播放对应按钮遮罩。 */
+    private playSkillMaskCooldown(skillIndex: 1 | 2, cooldown: number) {
+        const mask = skillIndex === 1 ? this.skill1Mask : this.skill2Mask;
+        if (!mask) return;
+        Tween.stopAllByTarget(mask);
+        mask.fillRange = 1;
+        if (cooldown > 0) {
+            tween(mask).to(cooldown, { fillRange: 0 }).start();
+        } else {
+            mask.fillRange = 0;
+        }
+    }
+
+    /**停止技能冷却补间并清空两个技能遮罩。 */
+    private stopSkillMaskCooldown() {
+        for (const mask of [this.skill1Mask, this.skill2Mask]) {
+            if (!mask) continue;
+            Tween.stopAllByTarget(mask);
+            mask.fillRange = 0;
         }
     }
 
@@ -657,12 +687,12 @@ export class UIGame extends UIBase {
 
     /**点击技能按钮2 */
     clickSkillBtn2() {
-         
+        playerMgr.playerComp?.useSkill2();
     }
 
     /**点击刀按钮 */
-    clickKnifeBtn() {
-        playerMgr.playerComp?.useSkill2();
+    clickKnifeBtn() { 
+        
     }
 
     /**点击设置按钮 */

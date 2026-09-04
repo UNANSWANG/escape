@@ -4,6 +4,7 @@ import { UIGame } from '../../UIPage/UIGame';
 import { configData, playerCommonConfig } from '../../manager/configData';
 import { enemyBaseController } from '../enemy/enemyBaseController';
 import { gunController } from '../gunController';
+import { uiMgr } from '../../manager/UIManager';
 const { ccclass } = _decorator;
 
 export enum roleAnimName {
@@ -62,9 +63,15 @@ export class roleController extends Component {
     /**是否正在按住攻击键。按住期间保持战斗状态，但不逐帧刷新计时。 */
     private isAttackHeld = false;
     /**技能1的持续时长（秒）。 */
-    skill1Duration = 0;
+    skill1Duration = 3;
     /**技能1的速度倍率 */
-    skill1SpeedScale = 2;
+    skill1SpeedScale = 1.2;
+    /**通用技能1是否正在生效。专属角色重写 useSkill1 时不使用此状态。 */
+    private isUsingCommonSkill1 = false;
+    /**通用技能1剩余持续时间（秒）。 */
+    private commonSkill1RemainTime = 0;
+    /**释放通用技能1前的移速，用于效果结束后恢复。 */
+    private moveSpeedBeforeCommonSkill1 = 0;
 
     /** 缓存角色自身与子节点组件。 */
     protected onLoad(): void {
@@ -109,6 +116,12 @@ export class roleController extends Component {
 
     protected update(dt: number): void {
         this.updateBattleState(dt);
+        this.updateCommonSkill1(dt);
+    }
+
+    /**组件停用时终止通用技能1，避免加速状态遗留到下次启用。 */
+    protected onDisable(): void {
+        this.finishCommonSkill1();
     }
 
     /**更新战斗状态；超时后将枪口复位。 */
@@ -120,6 +133,22 @@ export class roleController extends Component {
         this.combatRemainTime = 0;
         this.battleState = roleBattleState.nonCombat;
         this.gunComp?.resetRotation();
+    }
+
+    /**更新通用技能1的持续时间。 */
+    private updateCommonSkill1(dt: number) {
+        if (!this.isUsingCommonSkill1) return;
+        this.commonSkill1RemainTime -= dt;
+        if (this.commonSkill1RemainTime <= 0) this.finishCommonSkill1();
+    }
+
+    /**结束通用技能1并恢复释放前的移速。 */
+    private finishCommonSkill1() {
+        if (!this.isUsingCommonSkill1) return;
+        this.isUsingCommonSkill1 = false;
+        this.commonSkill1RemainTime = 0;
+        this.moveSpeed = this.moveSpeedBeforeCommonSkill1;
+        this.moveSpeedBeforeCommonSkill1 = 0;
     }
 
     /**查找当前枪械自动攻击范围内最近的有效敌人 */
@@ -190,8 +219,19 @@ export class roleController extends Component {
         this.roleAnim.setAnimation(0, animName, loop);
     }
 
-    /** 使用技能1 */
-    useSkill1() { return false; }
+    /**
+     * 使用通用技能1：在配置的持续时间内提高移速。
+     * 有专属技能逻辑的角色（如 role0）可重写此方法。
+     */
+    useSkill1() {
+        if (this.isUsingCommonSkill1 || this.skill1Duration <= 0) return false;
+
+        this.isUsingCommonSkill1 = true;
+        this.commonSkill1RemainTime = this.skill1Duration;
+        this.moveSpeedBeforeCommonSkill1 = this.moveSpeed;
+        this.moveSpeed *= this.skill1SpeedScale;
+        return true;
+    }
 
     /**技能是否正在锁定移动方向。 */
     get isMoveDirectionLocked() { return false; }

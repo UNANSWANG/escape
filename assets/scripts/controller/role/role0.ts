@@ -21,6 +21,8 @@ export class role0 extends roleController {
 
     /**使用技能1；移动方向由 UIGame 在技能期间锁定。 */
     useSkill1() {
+        // 突进需要已有方向，通用技能不受此限制。
+        if (!this.gameComp?.hasMoveDirectionInput()) return false;
         if (this.isUsingSkill1 || !this.roleAnim?.skeletonData) return false;
 
         const entry = this.roleAnim.setAnimation(0, roleAnimName.useSkill1, false);

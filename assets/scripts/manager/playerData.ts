@@ -24,7 +24,7 @@ export class playerData {
     /**当前关卡所看广告数 */
     adNum = 0;
     /**角色id */
-    roleId = 1;
+    roleId = 0;
     /**当前皮肤id */
     skinId = 0;
     /**已解锁角色皮肤 */

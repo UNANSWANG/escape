@@ -589,12 +589,11 @@ export class UIGame extends UIBase {
 
     /**点击技能按钮1 */
     clickSkillBtn1() {
-        if (!this.hasMoveDirectionInput()) return;
         playerMgr.playerComp?.useSkill1();
     }
 
-    /**是否正在通过摇杆或方向键提供有效移动方向。 */
-    private hasMoveDirectionInput() {
+    /**供角色技能查询：当前是否正通过摇杆或方向键提供有效移动方向。 */
+    hasMoveDirectionInput() {
         if (this.isRockerControlling) {
             return this.inputMoveDirection.x !== 0 || this.inputMoveDirection.y !== 0;
         }

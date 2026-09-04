@@ -1,5 +1,6 @@
 import { _decorator, Component, instantiate, Node, NodePool, Prefab, sp, Sprite, Tween, UIOpacity, UITransform, Vec3 } from 'cc';
 import { gameAnimController } from '../controller/gameAnimController';
+import { bulletController } from '../controller/bulletController';
 const { ccclass, property } = _decorator;
 const PRODUCE_TIPS_POOL_LIMIT = 48;
 const BULLET_POOL_LIMIT = 128;
@@ -210,7 +211,9 @@ export class poolManager extends Component {
             node.setPosition(Vec3.ZERO);
             node.setScale(Vec3.ONE);
             node.angle = 0;
-            node.getComponent(UITransform)?.setAnchorPoint(0.5, 0.5);
+            // 子弹以图片底部作为发射基准；其余通用节点仍保持居中锚点。
+            const anchorY = node.getComponent(bulletController) ? 0 : 0.5;
+            node.getComponent(UITransform)?.setAnchorPoint(0.5, anchorY);
         }
 
         let comps = node.getComponents(Component) || [];

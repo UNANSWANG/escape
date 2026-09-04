@@ -124,8 +124,13 @@ export class gunController extends Component {
         // 未锁定目标时枪会保留当前角度。水平翻转会同时镜像上下方向，
         // 因此仅在朝向实际切换时取反角度，使左上镜像后仍为右上。
         const isGunFacingChanged = (this.node.scale.x < 0) !== (scaleX < 0);
+        const isResettingRotation = !!this.resetRotationTween;
         this.node.setScale(scaleX * Math.abs(this.node.scale.x), this.node.scale.y, this.node.scale.z);
-        if (isGunFacingChanged) this.node.angle = -this.node.angle;
+        if (isGunFacingChanged) {
+            this.node.angle = -this.node.angle;
+            // 回正补间过程中切换方向时，使用新朝向对应的回正角度继续补间。
+            if (isResettingRotation) this.resetRotation();
+        }
     }
 
     /**
@@ -185,13 +190,14 @@ export class gunController extends Component {
      */
     resetRotation(isImmediate = false) {
         this.stopResetRotationTween();
+        const resetAngle = this.node.scale.x < 0 ? 10 : -10;
         if (isImmediate) {
-            this.node.angle = -10;
+            this.node.angle = resetAngle;
             return;
         }
 
         this.resetRotationTween = tween(this.node)
-            .to(0.1, { angle: -10 })
+            .to(0.1, { angle: resetAngle })
             .call(() => this.resetRotationTween = null)
             .start();
     }

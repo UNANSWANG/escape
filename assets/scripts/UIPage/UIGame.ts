@@ -48,6 +48,9 @@ export class UIGame extends UIBase {
     @property(Node)
     skillBtn2: Node;
 
+    @property(Node)
+    knifeBtn: Node;
+
     ///
     ///需要获取的节点
     ///
@@ -184,6 +187,7 @@ export class UIGame extends UIBase {
         this.reloadBtn.addComponent(zoomButton).onClick = this.clickReloadBtn.bind(this);
         this.skillBtn1.addComponent(zoomButton).onClick = this.clickSkillBtn1.bind(this);
         this.skillBtn2.addComponent(zoomButton).onClick = this.clickSkillBtn2.bind(this);
+        this.knifeBtn.addComponent(zoomButton).onClick = this.clickKnifeBtn.bind(this);
     }
 
     /**初始化游戏摄像机 */
@@ -618,6 +622,11 @@ export class UIGame extends UIBase {
     /**点击技能按钮2 */
     clickSkillBtn2() {
          
+    }
+
+    /**点击刀按钮 */
+    clickKnifeBtn() {
+        playerMgr.playerComp?.useSkill2();
     }
 
     /**点击设置按钮 */

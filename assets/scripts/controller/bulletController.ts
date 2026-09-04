@@ -1,5 +1,6 @@
-import { _decorator, Component, Vec3 } from 'cc';
+import { _decorator, Component, UITransform, Vec3 } from 'cc';
 import { configData, playerCommonConfig } from '../manager/configData';
+import { enemyMgr } from '../manager/enemyManager';
 import { poolMgr } from '../manager/poolManager';
 const { ccclass, property } = _decorator;
 
@@ -9,9 +10,11 @@ export class bulletController extends Component {
     private moveDirection = new Vec3();
     /**直线飞行的剩余距离 */
     private straightMoveRemainDistance = 0;
+    /**本发子弹命中敌人时造成的伤害 */
+    private damage = 0;
 
     /**初始化为不锁定目标的直线飞行子弹 */
-    initStraight(direction: Vec3) {
+    initStraight(direction: Vec3, damage: number) {
         const directionLength = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
         if (directionLength <= 0) {
             this.recycle();
@@ -25,6 +28,7 @@ export class bulletController extends Component {
         }
 
         this.moveDirection.set(direction.x / directionLength, direction.y / directionLength, 0);
+        this.damage = Math.max(0, damage);
         // 子弹图片默认朝上。
         this.node.angle = Math.atan2(this.moveDirection.y, this.moveDirection.x) * 180 / Math.PI - 90;
     }
@@ -33,6 +37,7 @@ export class bulletController extends Component {
     onPoolPut() {
         this.moveDirection.set(0, 0, 0);
         this.straightMoveRemainDistance = 0;
+        this.damage = 0;
     }
 
     protected update(dt: number): void {
@@ -50,9 +55,35 @@ export class bulletController extends Component {
             curPos.z,
         );
         this.straightMoveRemainDistance -= moveDistance;
+        if (this.checkHitEnemy()) {
+            return;
+        }
         if (this.straightMoveRemainDistance <= 0) {
             this.recycle();
         }
+    }
+
+    /**
+     * 以 UITransform 的世界包围盒进行 AABB 数学相交检测，不依赖物理碰撞组件。
+     * 命中第一个存活敌人后立即回收子弹，确保一发子弹只造成一次伤害。
+     */
+    private checkHitEnemy() {
+        const bulletTransform = this.getComponent(UITransform);
+        if (!bulletTransform) return false;
+        const bulletBounds = bulletTransform.getBoundingBoxToWorld();
+
+        for (const enemy of enemyMgr.enemyArr) {
+            if (!enemy?.node?.isValid || !enemy.node.activeInHierarchy || enemy.hp <= 0) continue;
+            // 只用角色本体作为受击范围，避免血条和名字也触发命中。
+            const hitNode = enemy.roleAnim?.node || enemy.node;
+            const enemyTransform = hitNode.getComponent(UITransform);
+            if (!enemyTransform || !bulletBounds.intersects(enemyTransform.getBoundingBoxToWorld())) continue;
+
+            enemy.takeDamage(this.damage);
+            this.recycle();
+            return true;
+        }
+        return false;
     }
 
     /**回收子弹 */

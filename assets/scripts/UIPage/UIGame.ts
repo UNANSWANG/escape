@@ -284,8 +284,6 @@ export class UIGame extends UIBase {
 
         // 敌人不添加 AI；仅初始化外观、名称和满血状态。
         if (enemyComp) {
-            enemyComp.maxHp = 1;
-            enemyComp.hp = 1;
             enemyComp.init(this, enemyId, 0);
             enemyMgr.enemyArr.push(enemyComp);
         }

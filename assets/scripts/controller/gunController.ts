@@ -246,7 +246,7 @@ export class gunController extends Component {
         }
         const bulletComp = bulletNode.getComponent(bulletController);
         if (!bulletComp) { poolMgr.putBulletNode(bulletNode); return false; }
-        bulletComp.initStraight(this.tempBulletLocalDirection);
+        bulletComp.initStraight(this.tempBulletLocalDirection, this.damage);
         this.currentAmmo--;
         if (this.currentAmmo <= 0) {
             // 保留最后一发的开火动画，动画结束后再接换弹动画。

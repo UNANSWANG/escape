@@ -64,8 +64,10 @@ export class enemyBaseController extends Component {
 
     /**初始化 */
     init(comp: UIGame, id: number, skinId: number, nickname = "") {
+        this.hp = this.maxHp;
+        
         this.refreshHp();
-
+        
         this.gameComp = comp;
         this.roleId = id;
         this.skinId = skinId;
@@ -91,6 +93,14 @@ export class enemyBaseController extends Component {
     /**生命值百分比 */
     get hpPercent() {
         return this.hp / this.maxHp;
+    }
+
+    /**受到伤害并刷新血条；死亡状态由 hp 为 0 表示。 */
+    takeDamage(damage: number) {
+        if (!Number.isFinite(damage) || damage <= 0 || this.hp <= 0) return false;
+        this.hp = Math.max(0, this.hp - damage);
+        this.refreshHp();
+        return true;
     }
 
     /**刷新血量 */

@@ -325,7 +325,7 @@ export class UIGame extends UIBase {
 
         // 移动玩家（不使用vec3计算）
         if (this.isMoving) {
-            let speed = configData.moveSpeed;
+            let speed = playerMgr.playerComp.moveSpeed;
             playerMgr.playerComp?.playRoleAnim(roleAnimName.move, true);
             //玩家移动
             this.tempPlayerMoveOffset.set(this.currentMoveDirection.x * speed * dt, this.currentMoveDirection.y * speed * dt, 0);

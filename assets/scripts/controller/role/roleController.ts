@@ -1,7 +1,7 @@
 import { _decorator, Component, Label, Node, sp } from 'cc';
 import { enemyMgr } from '../../manager/enemyManager';
 import { UIGame } from '../../UIPage/UIGame';
-import { playerCommonConfig } from '../../manager/configData';
+import { configData, playerCommonConfig } from '../../manager/configData';
 import { enemyBaseController } from '../enemy/enemyBaseController';
 import { gunController } from '../gunController';
 const { ccclass } = _decorator;
@@ -40,6 +40,8 @@ export class roleController extends Component {
     roleId = 0;
     /**角色皮肤 id */
     skinId = 0;
+    /**当前移速 */
+    moveSpeed = 0;
     /**游戏界面脚本 */
     gameComp: UIGame = null;
     /**角色当前播放的动画名 */
@@ -141,6 +143,7 @@ export class roleController extends Component {
         this.gameComp = comp;
         this.roleId = id;
         this.skinId = skinId;
+        this.moveSpeed = configData.moveSpeed;
         this.refreshRoleSpine();
         if (this.roleNameLab) this.roleNameLab.string = this.roleId === 0 ? '你' : (nickname || `人机${this.roleId}`);
     }

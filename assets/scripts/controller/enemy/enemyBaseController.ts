@@ -22,7 +22,7 @@ export class enemyBaseController extends Component {
     /**游戏脚本 */
     gameComp: UIGame = null;
     /**最大血量 */
-    maxHp: number = 0;
+    maxHp: number = 100;
     /**当前血量 */
     hp: number = 0;
     /**攻击伤害 */

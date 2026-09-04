@@ -19,6 +19,8 @@ export class gunController extends Component {
     private isReloading = false;
     /** 每个弹夹可容纳的子弹数量。 */
     bulletNum = 20;
+    /**伤害值 */
+    damage = 5;
     /** 持枪角色的 Spine，用于读取枪械挂点和翻转角色显示。 */
     private roleAnim: sp.Skeleton = null;
     /** 当前枪械节点上的 Spine 组件。 */

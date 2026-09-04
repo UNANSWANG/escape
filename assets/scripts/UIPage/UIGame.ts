@@ -51,6 +51,9 @@ export class UIGame extends UIBase {
     @property(Node)
     knifeBtn: Node;
 
+    @property(Node)
+    bagBtn: Node;
+
     ///
     ///需要获取的节点
     ///
@@ -195,6 +198,7 @@ export class UIGame extends UIBase {
         this.skillBtn1.addComponent(zoomButton).onClick = this.clickSkillBtn1.bind(this);
         this.skillBtn2.addComponent(zoomButton).onClick = this.clickSkillBtn2.bind(this);
         this.knifeBtn.addComponent(zoomButton).onClick = this.clickKnifeBtn.bind(this);
+        this.bagBtn.addComponent(zoomButton).onClick = this.clickBagBtn.bind(this);
     }
 
     /**初始化游戏摄像机 */
@@ -693,6 +697,11 @@ export class UIGame extends UIBase {
     /**点击刀按钮 */
     clickKnifeBtn() { 
         
+    }
+
+    /**点击背包按钮 */
+    clickBagBtn() {
+        uiMgr.showTips("打开背包");
     }
 
     /**点击设置按钮 */

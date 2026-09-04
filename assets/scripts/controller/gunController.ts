@@ -10,7 +10,7 @@ export enum gunAnimName { idle = 'idle', attack = 'attack', reload = 'reload' }
 @ccclass('gunController')
 export class gunController extends Component {
     /** 自动瞄准检测范围。 */
-    autoAttackRange = 400;
+    autoAttackRange = 600;
     /** 两发子弹之间的冷却时间，单位：秒。 */
     shootInterval = 0.2;
     /** 当前弹夹中剩余的子弹数。 */
@@ -55,6 +55,8 @@ export class gunController extends Component {
     private tempHandBoneMatrix = new Mat4();
     /**枪口回正动画。 */
     private resetRotationTween: Tween<Node> = null;
+    /** 换弹动画时长（秒），在枪械初始化时从 Spine 动画数据读取。 */
+    reloadTime = 0;
 
     /** 缓存枪械 Spine 与手部节点。 */
     protected onLoad(): void {
@@ -64,6 +66,7 @@ export class gunController extends Component {
         if (this.rightHandNode) this.rightHandNode.active = true;
         if (this.leftHandNode) this.leftHandNode.active = true;
         this.currentAmmo = this.bulletNum;
+        this.updateReloadTime();
     }
 
     /** 当前弹夹中的剩余子弹数。 */
@@ -74,6 +77,12 @@ export class gunController extends Component {
     /** 当前是否正在换弹。 */
     get reloading() {
         return this.isReloading;
+    }
+
+    /** 从 Spine 的 reload 动画中读取实际播放时长。 */
+    private updateReloadTime() {
+        const reloadAnimation = this.gunSkeleton?.findAnimation(gunAnimName.reload);
+        this.reloadTime = reloadAnimation?.duration ?? 0;
     }
 
     /**
@@ -268,6 +277,7 @@ export class gunController extends Component {
     private startReload(afterCurrentAnimation: boolean) {
         if (this.isReloading || this.currentAmmo >= this.bulletNum) return false;
         this.isReloading = true;
+        this.node.emit('reload-start', this.reloadTime);
         const reloadEntry = afterCurrentAnimation ? this.queueReloadAnim() : this.playReloadAnim();
         if (reloadEntry && this.gunSkeleton) {
             this.gunSkeleton.setTrackCompleteListener(reloadEntry, () => this.finishReload());

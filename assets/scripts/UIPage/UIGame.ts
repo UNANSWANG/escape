@@ -77,6 +77,8 @@ export class UIGame extends UIBase {
     private isShootButtonPressed = false;
     /**距离下一发子弹的剩余冷却时间（秒） */
     private shootCooldownRemaining = 0;
+    /**换弹按钮遮罩。 */
+    private reloadMask: Sprite = null;
     /**摇杆初始位置 */
     private rockerInitPos: Vec3 = new Vec3(200, -56, 0);
     /**临时敌人与玩家的水平间距，保持在自动瞄准范围内以便测试 */
@@ -114,6 +116,7 @@ export class UIGame extends UIBase {
 
     protected onLoad(): void {
         this.bindBtn();
+        this.initButtonMasks();
         this.initCamera();
         audioMgr.initSceneAudio(this.node);
     }
@@ -227,6 +230,7 @@ export class UIGame extends UIBase {
         this.isKeyboardAttackPressed = false;
         this.isShootButtonPressed = false;
         this.shootCooldownRemaining = 0;
+        this.stopReloadMaskCooldown();
         this.stopAutoAim();
 
         ccTools.destroyAllChild(this.roleNode);
@@ -246,6 +250,7 @@ export class UIGame extends UIBase {
         this.initRolePos(playerMgr.player);
         const roleComp = addRoleScript(playerMgr.player, pData.roleId);
         playerMgr.setPlayerComp(roleComp);
+        roleComp.gunController?.node.on('reload-start', this.playReloadMaskCooldown, this);
         roleComp.init(this, 0, pData.roleId);
     }
 
@@ -497,6 +502,37 @@ export class UIGame extends UIBase {
         if (gunComp) {
             this.shootCooldownRemaining = gunComp.shootInterval;
         }
+    }
+
+    /**初始化四个功能按钮的遮罩，开局不显示冷却状态。 */
+    private initButtonMasks() {
+        const buttons = [this.reloadBtn, this.skillBtn1, this.skillBtn2, this.knifeBtn];
+        for (const button of buttons) {
+            const mask = button?.getChildByName('mask')?.getComponent(Sprite) ?? null;
+            if (!mask) continue;
+            Tween.stopAllByTarget(mask);
+            mask.fillRange = 0;
+            if (button === this.reloadBtn) this.reloadMask = mask;
+        }
+    }
+
+    /**使用换弹动画时长，让遮罩从满值直接补间至空值。 */
+    private playReloadMaskCooldown(reloadTime: number) {
+        if (!this.reloadMask) return;
+        Tween.stopAllByTarget(this.reloadMask);
+        this.reloadMask.fillRange = 1;
+        if (reloadTime > 0) {
+            tween(this.reloadMask).to(reloadTime, { fillRange: 0 }).start();
+        } else {
+            this.reloadMask.fillRange = 0;
+        }
+    }
+
+    /**停止冷却补间并清空遮罩。 */
+    private stopReloadMaskCooldown() {
+        if (!this.reloadMask) return;
+        Tween.stopAllByTarget(this.reloadMask);
+        this.reloadMask.fillRange = 0;
     }
 
     /**是否正通过键盘或射击按钮持续攻击 */

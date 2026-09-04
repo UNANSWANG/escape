@@ -61,6 +61,10 @@ export class roleController extends Component {
     private combatRemainTime = 0;
     /**是否正在按住攻击键。按住期间保持战斗状态，但不逐帧刷新计时。 */
     private isAttackHeld = false;
+    /**技能1的持续时长（秒）。 */
+    skill1Duration = 0;
+    /**技能1的速度倍率 */
+    skill1SpeedScale = 2;
 
     /** 缓存角色自身与子节点组件。 */
     protected onLoad(): void {

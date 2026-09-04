@@ -24,7 +24,7 @@ export class playerData {
     /**当前关卡所看广告数 */
     adNum = 0;
     /**角色id */
-    roleId = 0;
+    roleId = 1;
     /**当前皮肤id */
     skinId = 0;
     /**已解锁角色皮肤 */
@@ -44,6 +44,7 @@ export class playerData {
 
     levelInit() {
         pData.adNum = 0;
+        //TODO 临时写地图半宽高，后续根据配置加载
         pData.mapHalfSize = new Vec2(2680/2, 1500/2);
         this.isGuide = ccStorageTools.getNumberData(SaveKey.guide) != 1 || gmConfig.forceGuide;
         this.gameStartTime = ccTimeTools.getTime();

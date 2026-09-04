@@ -60,6 +60,10 @@ export class UIGame extends UIBase {
     private currentMoveDirection: Vec3 = new Vec3();
     /**是否正在移动 */
     private isMoving = false;
+    /**玩家本次输入请求的方向；技能锁定结束后用它恢复控制。 */
+    private inputMoveDirection: Vec3 = new Vec3();
+    /**上一帧是否由技能锁定移动方向。 */
+    private wasMoveDirectionLocked = false;
     /**摇杆触摸是否正在控制移动；摇杆优先于键盘 */
     private isRockerControlling = false;
     /**当前按住的移动按键（W、A、S、D） */
@@ -303,12 +307,14 @@ export class UIGame extends UIBase {
             this.pressedMoveKeys.clear();
         }
         this.isRockerControlling = false;
+        this.inputMoveDirection.set(0, 0, 0);
 
         let rockerNode = this.rockerTouchNode.getChildByName("rockerNode");
         let rockerPoint = rockerNode.getChildByName("rockerPoint");
         rockerNode.setPosition(this.rockerInitPos);
         rockerPoint.position = Vec3.ZERO;
 
+        if (this.isMoveDirectionLocked()) return;
         if (!this.refreshKeyboardMove()) {
             this.isMoving = false;
             this.currentMoveDirection.set(0, 0, 0);
@@ -323,10 +329,16 @@ export class UIGame extends UIBase {
 
         this.shootCooldownRemaining = Math.max(0, this.shootCooldownRemaining - dt);
 
+        const moveDirectionLocked = this.isMoveDirectionLocked();
+        if (this.wasMoveDirectionLocked && !moveDirectionLocked) {
+            this.restoreMoveInputAfterDirectionUnlock();
+        }
+        this.wasMoveDirectionLocked = moveDirectionLocked;
+
         // 移动玩家（不使用vec3计算）
         if (this.isMoving) {
             let speed = playerMgr.playerComp.moveSpeed;
-            playerMgr.playerComp?.playRoleAnim(roleAnimName.move, true);
+            if (!moveDirectionLocked) playerMgr.playerComp?.playRoleAnim(roleAnimName.move, true);
             //玩家移动
             this.tempPlayerMoveOffset.set(this.currentMoveDirection.x * speed * dt, this.currentMoveDirection.y * speed * dt, 0);
             let playerPos = new Vec3(playerMgr.player.position.x + this.tempPlayerMoveOffset.x, playerMgr.player.position.y + this.tempPlayerMoveOffset.y, 0);
@@ -351,6 +363,8 @@ export class UIGame extends UIBase {
         let rockerPoint = rockerNode.getChildByName("rockerPoint");
 
         this.isRockerControlling = true;
+        this.inputMoveDirection.set(0, 0, 0);
+        if (this.isMoveDirectionLocked()) return;
         this.isMoving = false;
         this.currentMoveDirection.set(0, 0, 0);
         let worldPos = event.getUILocation();
@@ -380,8 +394,11 @@ export class UIGame extends UIBase {
         let clampedScale = directionLength > 0 ? Math.min(moveMultiplier, maxDistance / directionLength) : 0;
 
         let dirVec = ccTools.GetDir(0, 0, directionX, directionY);
-        this.isMoving = true;
-        this.currentMoveDirection.set(dirVec.x * currentRatio, dirVec.y * currentRatio, 0);
+        this.inputMoveDirection.set(dirVec.x * currentRatio, dirVec.y * currentRatio, 0);
+        if (!this.isMoveDirectionLocked()) {
+            this.isMoving = true;
+            this.currentMoveDirection.set(this.inputMoveDirection);
+        }
 
         // 设置摇杆点的位置
         rockerPoint.setPosition(directionX * clampedScale, directionY * clampedScale, 0);
@@ -407,6 +424,8 @@ export class UIGame extends UIBase {
 
         const normalizedX = directionX / directionLength;
         const normalizedY = directionY / directionLength;
+        this.inputMoveDirection.set(normalizedX, normalizedY, 0);
+        if (this.isMoveDirectionLocked()) return true;
         this.currentMoveDirection.set(normalizedX, normalizedY, 0);
         this.isMoving = true;
 
@@ -570,7 +589,31 @@ export class UIGame extends UIBase {
 
     /**点击技能按钮1 */
     clickSkillBtn1() {
-        
+        if (!this.hasMoveDirectionInput()) return;
+        playerMgr.playerComp?.useSkill1();
+    }
+
+    /**是否正在通过摇杆或方向键提供有效移动方向。 */
+    private hasMoveDirectionInput() {
+        if (this.isRockerControlling) {
+            return this.inputMoveDirection.x !== 0 || this.inputMoveDirection.y !== 0;
+        }
+        return this.pressedMoveKeys.size > 0 && (this.currentMoveDirection.x !== 0 || this.currentMoveDirection.y !== 0);
+    }
+
+    /**技能方向锁定结束后，立即按当前仍按住的输入恢复可控移动。 */
+    private restoreMoveInputAfterDirectionUnlock() {
+        if (this.isRockerControlling) {
+            this.currentMoveDirection.set(this.inputMoveDirection);
+            this.isMoving = this.inputMoveDirection.x !== 0 || this.inputMoveDirection.y !== 0;
+            return;
+        }
+        if (!this.refreshKeyboardMove()) this.rockerReset();
+    }
+
+    /**当前角色是否正在锁定移动方向。 */
+    private isMoveDirectionLocked() {
+        return playerMgr.playerComp?.isMoveDirectionLocked ?? false;
     }
 
     /**点击技能按钮2 */

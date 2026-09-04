@@ -10,7 +10,7 @@ export enum roleAnimName {
     idle = 'idle',
     move = 'move',
     /**使用技能1 */
-    useSkill1 = 'useSkill1',
+    useSkill1 = 'skill1',
     /**使用技能2 */
     useSkill2 = 'useSkill2',
 }
@@ -45,7 +45,7 @@ export class roleController extends Component {
     /**游戏界面脚本 */
     gameComp: UIGame = null;
     /**角色当前播放的动画名 */
-    private curRoleAnimName = '';
+    protected curRoleAnimName = '';
 
     /**角色类型 */
     roleType: roleType = roleType.advance;
@@ -187,9 +187,10 @@ export class roleController extends Component {
     }
 
     /** 使用技能1 */
-    useSkill1() {
-        
-    }
+    useSkill1() { return false; }
+
+    /**技能是否正在锁定移动方向。 */
+    get isMoveDirectionLocked() { return false; }
 
     /** 使用技能2 */
     useSkill2() {

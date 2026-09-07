@@ -71,7 +71,7 @@ export class role0 extends roleController {
         this.skill1Cooldown = 1//this.roleData?.passiveCd ?? 15;
         this.skill2Cooldown = this.roleData?.initiativeCd ?? 50;
         const values = this.getInitiativeValues();
-        this.skill2MoveSpeedPercent = 100//values[0] ?? 0;
+        this.skill2MoveSpeedPercent = values[0] ?? 0;
         this.skill2KillHealPercent = values[1] ?? 0;
         this.skill2KillExtendTime = values[2] ?? 0;
     }

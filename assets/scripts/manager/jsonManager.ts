@@ -3,6 +3,7 @@ import { gm } from './gm';
 import { GameEvent } from './configData';
 import { commonConfig } from '../json/jsonCommon';
 import { levelConfig } from '../json/jsonLevel';
+import { roleConfig } from '../json/jsonRole';
 const { ccclass, property } = _decorator;
 
 @ccclass('jsonManager')
@@ -20,6 +21,7 @@ export class jsonManager  {
         }
         commonConfig.initTable();
         // levelConfig.initTable();
+        roleConfig.initTable();
     }
 
     loadCall(name: string){

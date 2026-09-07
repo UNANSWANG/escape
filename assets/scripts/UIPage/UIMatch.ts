@@ -6,7 +6,7 @@ import { zoomButton } from '../extention/zoomButton';
 import { configData } from '../manager/configData';
 import { pData } from '../manager/playerData';
 import { ccTools } from '../extention/generalTools';
-import { roleSkinConfig } from '../json/jsonRoleSkin';
+import { roleConfig } from '../json/jsonRole';
 import { nicknameConfig } from '../json/jsonNickname';
 import { audioMgr } from '../manager/audioManager';
 const { ccclass, property } = _decorator;
@@ -288,14 +288,14 @@ export class UIMatch extends UIBase {
             return;
         }
 
-        let skinData = roleSkinConfig.roleSkinAllData || [];
-        let skinId = skinData.length > 0
-            ? skinData[ccTools.getRandomNum(0, skinData.length)].skinId
+        let roleData = roleConfig.roleAllData || [];
+        let roleId = roleData.length > 0
+            ? roleData[ccTools.getRandomNum(0, roleData.length)].roleId
             : ccTools.getRandomNum(0, configData.roleSkinCount);
-        this.roleSkinIds[target.roleIndex] = skinId;
+        this.roleSkinIds[target.roleIndex] = roleId;
         this.roleNicknames[target.roleIndex] = nickname;
         roleImg.node.setScale(0.7, 0.7, 1);
-        ccTools.loadImg(roleImg, imgPath.roleBodyFull + skinId);
+        ccTools.loadImg(roleImg, imgPath.roleBodyFull + roleId);
     }
 
     /**Boss匹配完成后隐藏图片并播放待机动画 */

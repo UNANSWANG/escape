@@ -33,8 +33,8 @@ export class playerData {
     limitTimeData: { [key: string]: any } = {};
     /**是否为引导关 */
     isGuide = false;
-    /**角色默认皮肤id，角色皮肤表加载后赋值 */
-    private defaultSkinId: number = null;
+    /**角色默认id，角色皮肤表加载后赋值 */
+    private defaultRoleId: number = null;
     /**游戏数据上报状态，避免连续修改产生乱序覆盖 */
     private isReportingGame = false;
     /**是否存在尚未上报的游戏数据修改 */
@@ -185,8 +185,8 @@ export class playerData {
     }
 
     /**初始化当前穿戴皮肤 */
-    initSkinData(defaultSkinId: number) {
-        this.defaultSkinId = defaultSkinId;
+    initRoleData(defaultRoleId: number) {
+        this.defaultRoleId = defaultRoleId;
     }
 
     /**设置当前穿戴皮肤 */

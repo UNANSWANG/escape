@@ -17,7 +17,7 @@ export class role0 extends roleController {
     /**释放技能前的移速，用于动画结束后恢复。 */
     private moveSpeedBeforeSkill1 = 0;
     /**技能1冷却时间 */
-    skill1Cooldown = 15;
+    skill1Cooldown = 1;
     /**技能2冷却时间 */
     skill2Cooldown = 50;
 

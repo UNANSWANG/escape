@@ -628,6 +628,9 @@ export class UIGame extends UIBase {
             case KeyCode.SPACE:
                 this.clickSkillBtn1();
                 break;
+            case KeyCode.KEY_K:
+                this.clickSkillBtn2();
+                break;
         }
     }
 

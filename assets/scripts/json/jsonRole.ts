@@ -69,7 +69,7 @@ export interface JsonRoleData {
     /**主动冷却时间 */
     initiativeCd: number;
     /**主动数值 */
-    initiativeValue: string;
+    initiativeValue: number[] | string;
     /**被动描述 */
     passiveDesc: string;
     /**主动描述 */

@@ -42,8 +42,8 @@ export class roleController extends Component {
     roleId = 0;
     /**角色皮肤 id */
     skinId = 0;
-    /**当前移速 */
-    moveSpeed = 0;
+    /**基础移速。角色专属技能可重写 moveSpeed，在读取时按自身状态计算最终速度。 */
+    protected baseMoveSpeed = 0;
     /**游戏界面脚本 */
     gameComp: UIGame = null;
     /**角色当前播放的动画名 */
@@ -71,8 +71,6 @@ export class roleController extends Component {
     private isUsingCommonSkill1 = false;
     /**通用技能1剩余持续时间（秒）。 */
     private commonSkill1RemainTime = 0;
-    /**释放通用技能1前的移速，用于效果结束后恢复。 */
-    private moveSpeedBeforeCommonSkill1 = 0;
     /**技能1冷却时间 */
     skill1Cooldown = 15;
     /**技能2冷却时间 */
@@ -96,6 +94,11 @@ export class roleController extends Component {
     /**当前装备的枪械组件 */
     get gunController() {
         return this.gunComp;
+    }
+
+    /**当前移速。基类仅处理通用技能1的加速，专属角色可按自身状态重写。 */
+    get moveSpeed() {
+        return this.baseMoveSpeed * (this.isUsingCommonSkill1 ? this.skill1SpeedScale : 1);
     }
 
     /**当前是否处于战斗状态。 */
@@ -183,8 +186,6 @@ export class roleController extends Component {
         if (!this.isUsingCommonSkill1) return;
         this.isUsingCommonSkill1 = false;
         this.commonSkill1RemainTime = 0;
-        this.moveSpeed = this.moveSpeedBeforeCommonSkill1;
-        this.moveSpeedBeforeCommonSkill1 = 0;
     }
 
     /**查找当前枪械自动攻击范围内最近的有效敌人 */
@@ -216,7 +217,7 @@ export class roleController extends Component {
         if (!this.roleData) return;
 
         this.hp = this.roleData?.hp ?? 0;
-        this.moveSpeed = configData.moveSpeed;
+        this.baseMoveSpeed = configData.moveSpeed;
         this.refreshRoleSpine();
         this.initData();
         if (this.roleNameLab) this.roleNameLab.string = this.roleId === 0 ? '你' : (nickname || `人机${this.roleId}`);
@@ -274,8 +275,6 @@ export class roleController extends Component {
 
         this.isUsingCommonSkill1 = true;
         this.commonSkill1RemainTime = this.skill1Duration;
-        this.moveSpeedBeforeCommonSkill1 = this.moveSpeed;
-        this.moveSpeed *= this.skill1SpeedScale;
         this.startSkillCooldown(1);
         return true;
     }

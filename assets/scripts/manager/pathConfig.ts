@@ -38,6 +38,8 @@ export enum ItemPath {
     gameItem = "prefabs/Item/gameItem",
     /**游戏图片物体 */
     gameSpriteItem = "prefabs/Item/gameSpriteItem",
+    /**游戏文本物体 */
+    gameLabelItem = "prefabs/Item/gameLabelItem",
     /**游戏spine物体 */
     gameSpineItem = "prefabs/Item/gameSpineItem",
     /**游戏animation物体 */

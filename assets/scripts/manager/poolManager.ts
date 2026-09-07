@@ -1,4 +1,4 @@
-import { _decorator, Component, instantiate, Node, NodePool, Prefab, sp, Sprite, Tween, UIOpacity, UITransform, Vec3 } from 'cc';
+import { _decorator, Component, instantiate, Label, Node, NodePool, Prefab, sp, Sprite, Tween, UIOpacity, UITransform, Vec3 } from 'cc';
 import { gameAnimController } from '../controller/gameAnimController';
 import { bulletController } from '../controller/bulletController';
 const { ccclass, property } = _decorator;
@@ -6,6 +6,7 @@ const PRODUCE_TIPS_POOL_LIMIT = 48;
 const BULLET_POOL_LIMIT = 128;
 const GAME_NODE_POOL_LIMIT = 64;
 const GAME_SPRITE_POOL_LIMIT = 64;
+const GAME_LABEL_POOL_LIMIT = 64;
 const GAME_SPINE_POOL_LIMIT = 32;
 const TILE_ITEM_POOL_LIMIT = 256;
 const PROPS_NODE_POOL_LIMIT = 32;
@@ -22,6 +23,8 @@ export class poolManager extends Component {
     gameNodePool: NodePool = new NodePool();
     /**游戏图片节点对象池 */
     gameSpriteNodePool: NodePool = new NodePool();
+    /**游戏文本节点对象池 */
+    gameLabelNodePool: NodePool = new NodePool();
     /**游戏Spine节点对象池 */
     gameSpineNodePool: NodePool = new NodePool();
     /**瓦片对象池 */
@@ -83,6 +86,19 @@ export class poolManager extends Component {
         this.putNodeWithLimit(this.gameSpriteNodePool, node, GAME_SPRITE_POOL_LIMIT);
     }
 
+    /**获取游戏文本节点 */
+    getGameLabelNode(prefab: Prefab) {
+        return this.getNode(this.gameLabelNodePool, prefab);
+    }
+
+    /**回收游戏文本节点，并清空上次显示的文本。 */
+    putGameLabelNode(node: Node) {
+        this.resetNode(node);
+        const label = node.getComponent(Label);
+        if (label) label.string = '';
+        this.putNodeWithLimit(this.gameLabelNodePool, node, GAME_LABEL_POOL_LIMIT);
+    }
+
     /**获取游戏Spine节点 */
     getGameSpineNode(prefab: Prefab) {
         let node = this.getNode(this.gameSpineNodePool, prefab);
@@ -121,6 +137,15 @@ export class poolManager extends Component {
         }
 
         return node.getComponent(Sprite);
+    }
+
+    /**获取游戏文本节点 Label 组件 */
+    getGameNodeLabel(node: Node) {
+        if (!node || !node.isValid) {
+            return null;
+        }
+
+        return node.getComponent(Label);
     }
 
     /**获取游戏Spine节点Skeleton组件 */

@@ -4,6 +4,9 @@ import { enemyBaseController } from '../enemy/enemyBaseController';
 import { enemyMgr } from '../../manager/enemyManager';
 const { ccclass, property } = _decorator;
 
+/**技能2倒计时变更事件，参数依次为剩余秒数和是否显示。 */
+export const role0Skill2RemainEvent = 'role0-skill2-remain-update';
+
 @ccclass('role0')
 export class role0 extends roleController {
     /**角色类型 */
@@ -87,6 +90,7 @@ export class role0 extends roleController {
         this.skill2RemainTime = this.skill2Duration;
         // 技能开始前已死亡的敌人不能触发本次技能效果。
         this.rememberDefeatedEnemies();
+        this.emitSkill2Remain();
         this.startSkillCooldown(2);
         return true;
     }
@@ -124,7 +128,11 @@ export class role0 extends roleController {
 
         this.checkSkill2EnemyDefeats();
         this.skill2RemainTime = Math.max(0, this.skill2RemainTime - dt);
-        if (this.skill2RemainTime <= 0) this.finishSkill2();
+        if (this.skill2RemainTime <= 0) {
+            this.finishSkill2();
+            return;
+        }
+        this.emitSkill2Remain();
     }
 
     /**记录当前已死亡的敌人，或结算技能期间首次死亡的敌人。 */
@@ -159,9 +167,16 @@ export class role0 extends roleController {
 
     /**结束技能2并清理本次生效状态。 */
     private finishSkill2() {
+        const wasUsingSkill2 = this.isUsingSkill2 || this.skill2RemainTime > 0;
         this.isUsingSkill2 = false;
         this.skill2RemainTime = 0;
         this.defeatedEnemies.clear();
+        if (wasUsingSkill2) this.emitSkill2Remain();
+    }
+
+    /**派发技能2的实时剩余时间，由游戏界面负责显示或隐藏倒计时。 */
+    private emitSkill2Remain() {
+        this.node.emit(role0Skill2RemainEvent, this.skill2RemainTime, this.isUsingSkill2);
     }
 
     /**技能1动画结束，恢复普通动画控制权。 */

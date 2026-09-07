@@ -13,6 +13,7 @@ import { enemyMgr } from '../manager/enemyManager';
 import { enemyBaseController } from '../controller/enemy/enemyBaseController';
 import { audioMgr } from '../manager/audioManager';
 import { roleAnimName } from '../controller/role/roleController';
+import { role0Skill2RemainEvent } from '../controller/role/role0';
 import { addRoleScript } from '../controller/role/roleScriptFactory';
 const { ccclass, property } = _decorator;
 
@@ -53,6 +54,9 @@ export class UIGame extends UIBase {
 
     @property(Node)
     bagBtn: Node;
+
+    @property(Label)
+    skill2RemainLab: Label;
 
     ///
     ///需要获取的节点
@@ -124,6 +128,7 @@ export class UIGame extends UIBase {
     protected onLoad(): void {
         this.bindBtn();
         this.initButtonMasks();
+        this.updateSkill2RemainLab(0, false);
         this.initCamera();
         audioMgr.initSceneAudio(this.node);
     }
@@ -240,6 +245,7 @@ export class UIGame extends UIBase {
         this.shootCooldownRemaining = 0;
         this.stopReloadMaskCooldown();
         this.stopSkillMaskCooldown();
+        this.updateSkill2RemainLab(0, false);
         this.stopAutoAim();
 
         ccTools.destroyAllChild(this.roleNode);
@@ -261,6 +267,7 @@ export class UIGame extends UIBase {
         playerMgr.setPlayerComp(roleComp);
         roleComp.gunController?.node.on('reload-start', this.playReloadMaskCooldown, this);
         roleComp.node.on('skill-cooldown-start', this.playSkillMaskCooldown, this);
+        roleComp.node.on(role0Skill2RemainEvent, this.updateSkill2RemainLab, this);
         roleComp.init(this, pData.roleId, 0);
     }
 
@@ -524,6 +531,13 @@ export class UIGame extends UIBase {
             if (button === this.skillBtn1) this.skill1Mask = mask;
             if (button === this.skillBtn2) this.skill2Mask = mask;
         }
+    }
+
+    /**根据角色技能2事件实时刷新倒计时；非 role0 或技能未生效时保持隐藏。 */
+    private updateSkill2RemainLab(remainTime: number, isVisible: boolean) {
+        if (!this.skill2RemainLab) return;
+        this.skill2RemainLab.node.active = isVisible;
+        if (isVisible) this.skill2RemainLab.string = `${Math.ceil(Math.max(0, remainTime))}`;
     }
 
     /**按角色技能配置的冷却时间播放对应按钮遮罩。 */

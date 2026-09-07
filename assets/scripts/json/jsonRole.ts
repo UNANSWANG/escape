@@ -47,7 +47,7 @@ export class jsonRole extends jsonBase {
 }
 export let roleConfig = new jsonRole();
 
-interface JsonRoleData {
+export interface JsonRoleData {
     /**角色id */
     roleId: number;
     /**名称 */

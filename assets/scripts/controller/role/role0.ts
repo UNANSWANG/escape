@@ -42,6 +42,11 @@ export class role0 extends roleController {
         return true;
     }
 
+    initData(): void {
+        this.skill1Cooldown = this.roleData?.passiveCd ?? 15;
+        this.skill2Cooldown = this.roleData?.initiativeCd ?? 50;
+    }
+
     /**技能1动画结束，恢复移动速度和普通动画控制权。 */
     private finishSkill1() {
         if (!this.isUsingSkill1) return;

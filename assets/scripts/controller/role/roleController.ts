@@ -5,7 +5,7 @@ import { configData, playerCommonConfig } from '../../manager/configData';
 import { enemyBaseController } from '../enemy/enemyBaseController';
 import { gunController } from '../gunController';
 import { uiMgr } from '../../manager/UIManager';
-import { roleConfig } from '../../json/jsonRole';
+import { JsonRoleData, roleConfig } from '../../json/jsonRole';
 const { ccclass } = _decorator;
 
 export enum roleAnimName {
@@ -83,6 +83,8 @@ export class roleController extends Component {
     private skill2CooldownRemaining = 0;
     /**角色血量 */
     hp = 0;
+    /**角色数据 */
+    roleData: JsonRoleData = null;
 
     /** 缓存角色自身与子节点组件。 */
     protected onLoad(): void {
@@ -210,10 +212,19 @@ export class roleController extends Component {
         this.gameComp = comp;
         this.roleId = id;
         this.skinId = skinId;
-        this.hp = roleConfig.getRoleDataById(this.roleId)?.hp ?? 0;
+        this.roleData = roleConfig.getRoleDataById(this.roleId);
+        if (!this.roleData) return;
+
+        this.hp = this.roleData?.hp ?? 0;
         this.moveSpeed = configData.moveSpeed;
         this.refreshRoleSpine();
+        this.initData();
         if (this.roleNameLab) this.roleNameLab.string = this.roleId === 0 ? '你' : (nickname || `人机${this.roleId}`);
+    }
+
+    /**初始化数据 */
+    initData(){
+        
     }
 
     /** 刷新角色初始状态，同时通知枪械重新绑定角色挂点。 */

@@ -789,7 +789,7 @@ export class UIGame extends UIBase {
 
     /**点击背包按钮 */
     clickBagBtn() {
-        uiMgr.showTips("打开背包");
+        uiMgr.openPage(UIPath.UIBackpack);
     }
 
     /**点击设置按钮 */

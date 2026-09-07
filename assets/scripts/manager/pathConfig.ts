@@ -26,6 +26,10 @@ export enum UIPath {
     UIConsole = "prefabs/UIPage/UIConsole",
     /**匹配页面 */
     UIMatch = "prefabs/UIPage/UIMatch",
+    /**背包页面 */
+    UIBackpack = "prefabs/UIPage/UIBackpack",
+    /**搜索页面 */
+    UISearch = "prefabs/UIPage/UISearch",
 }
 
 /**物品路径 */

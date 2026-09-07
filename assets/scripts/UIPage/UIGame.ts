@@ -261,7 +261,7 @@ export class UIGame extends UIBase {
         playerMgr.setPlayerComp(roleComp);
         roleComp.gunController?.node.on('reload-start', this.playReloadMaskCooldown, this);
         roleComp.node.on('skill-cooldown-start', this.playSkillMaskCooldown, this);
-        roleComp.init(this, 0, pData.roleId);
+        roleComp.init(this, pData.roleId, 0);
     }
 
     /**在玩家右侧生成两个仅播放待机动画的临时敌人，第二个在第一个上方 */
@@ -693,8 +693,8 @@ export class UIGame extends UIBase {
     }
 
     /**点击刀按钮 */
-    clickKnifeBtn() { 
-        
+    clickKnifeBtn() {
+
     }
 
     /**点击背包按钮 */

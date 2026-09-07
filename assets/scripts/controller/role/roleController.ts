@@ -259,6 +259,15 @@ export class roleController extends Component {
         return isFired;
     }
 
+    /**受到伤害时扣除生命值，并在角色头顶显示实际伤害数值。 */
+    takeDamage(damage: number) {
+        if (!Number.isFinite(damage) || damage <= 0 || this.hp <= 0) return false;
+        const actualDamage = Math.min(this.hp, damage);
+        this.hp -= actualDamage;
+        this.gameComp?.showDamageFloat(this.node, actualDamage);
+        return true;
+    }
+
     /** 播放角色本体 Spine 动画。 */
     playRoleAnim(animName: string, loop = true) {
         if (!this.roleAnim || !this.roleAnim.skeletonData || this.curRoleAnimName === animName) return;

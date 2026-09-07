@@ -98,8 +98,10 @@ export class enemyBaseController extends Component {
     /**受到伤害并刷新血条；死亡状态由 hp 为 0 表示。 */
     takeDamage(damage: number) {
         if (!Number.isFinite(damage) || damage <= 0 || this.hp <= 0) return false;
-        this.hp = Math.max(0, this.hp - damage);
+        const actualDamage = Math.min(this.hp, damage);
+        this.hp -= actualDamage;
         this.refreshHp();
+        this.gameComp?.showDamageFloat(this.node, actualDamage);
         return true;
     }
 

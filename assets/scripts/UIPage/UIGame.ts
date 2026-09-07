@@ -15,6 +15,7 @@ import { audioMgr } from '../manager/audioManager';
 import { roleAnimName } from '../controller/role/roleController';
 import { role0Skill2RemainEvent } from '../controller/role/role0';
 import { addRoleScript } from '../controller/role/roleScriptFactory';
+import { poolMgr } from '../manager/poolManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIGame')
@@ -124,6 +125,12 @@ export class UIGame extends UIBase {
     private isGamePause = false;
     /**当前游戏局序号，用于避免异步加载回写旧局 */
     private openVersion = 0;
+    /**当前播放中的伤害飘字节点。 */
+    private damageFloatNodes: Set<Node> = new Set();
+    /**伤害飘字坐标转换复用对象。 */
+    private tempDamageFloatWorldPos: Vec3 = new Vec3();
+    private tempDamageFloatLocalPos: Vec3 = new Vec3();
+    private tempDamageFloatWorldScale: Vec3 = new Vec3();
 
     protected onLoad(): void {
         this.bindBtn();
@@ -247,6 +254,7 @@ export class UIGame extends UIBase {
         this.stopSkillMaskCooldown();
         this.updateSkill2RemainLab(0, false);
         this.stopAutoAim();
+        this.clearDamageFloats();
 
         ccTools.destroyAllChild(this.roleNode);
 
@@ -301,6 +309,71 @@ export class UIGame extends UIBase {
     /**初始化角色位置 */
     initRolePos(node) {
         node.setPosition(Vec3.ZERO);
+    }
+
+    /**在受击目标头顶播放伤害飘字，动画结束后回收至标签对象池。 */
+    showDamageFloat(targetNode: Node, damage: number) {
+        if (!targetNode?.isValid || !Number.isFinite(damage) || damage <= 0
+            || !this.gameUINode?.isValid || !uiMgr.gameLabelItemPrefab) {
+            return;
+        }
+
+        const uiTransform = this.gameUINode.getComponent(UITransform);
+        if (!uiTransform) return;
+
+        const targetBodyNode = targetNode.getChildByName('roleAnim') || targetNode;
+        targetBodyNode.updateWorldTransform();
+        targetBodyNode.getWorldPosition(this.tempDamageFloatWorldPos);
+        targetBodyNode.getWorldScale(this.tempDamageFloatWorldScale);
+        const targetTransform = targetBodyNode.getComponent(UITransform);
+        const targetHeight = targetTransform?.height ?? 100;
+        const topOffset = targetHeight * (1 - (targetTransform?.anchorY ?? 0.5));
+        // 以人物顶部向下 10 像素为飘字基准高度。
+        this.tempDamageFloatWorldPos.y += topOffset * Math.abs(this.tempDamageFloatWorldScale.y) - 10;
+        uiTransform.convertToNodeSpaceAR(this.tempDamageFloatWorldPos, this.tempDamageFloatLocalPos);
+
+        const floatNode = poolMgr.getGameLabelNode(uiMgr.gameLabelItemPrefab);
+        const label = poolMgr.getGameNodeLabel(floatNode);
+        if (!label) {
+            poolMgr.putGameLabelNode(floatNode);
+            return;
+        }
+
+        this.gameUINode.addChild(floatNode);
+        // 在人物中心横向 ±30 像素内生成；生成位置所在一侧决定后续斜飞方向。
+        const spawnOffsetX = (Math.random() * 2 - 1) * 30;
+        const flyDirection = spawnOffsetX < 0 ? -1 : 1;
+        const flyOffsetX = flyDirection * (24 + Math.random() * 40);
+        floatNode.setPosition(this.tempDamageFloatLocalPos.x + spawnOffsetX, this.tempDamageFloatLocalPos.y, 0);
+        floatNode.setScale(0.8, 0.8, 1);
+        label.string = `${Math.ceil(damage)}`;
+
+        const opacity = floatNode.getComponent(UIOpacity) || floatNode.addComponent(UIOpacity);
+        opacity.opacity = 255;
+        this.damageFloatNodes.add(floatNode);
+        tween(floatNode)
+            .by(0.1, { position: new Vec3(flyOffsetX * 0.2, 16, 0), scale: new Vec3(0.3, 0.3, 0) })
+            .by(0.5, { position: new Vec3(flyOffsetX * 0.8, 64, 0) }, { easing: 'quadOut' })
+            .call(() => this.recycleDamageFloat(floatNode))
+            .start();
+        tween(opacity)
+            .delay(0.1)
+            .to(0.5, { opacity: 0 })
+            .start();
+    }
+
+    /**回收单个伤害飘字。 */
+    private recycleDamageFloat(floatNode: Node) {
+        if (!this.damageFloatNodes.delete(floatNode)) return;
+        poolMgr.putGameLabelNode(floatNode);
+    }
+
+    /**清理当前局尚未结束的伤害飘字。 */
+    private clearDamageFloats() {
+        for (const floatNode of this.damageFloatNodes) {
+            poolMgr.putGameLabelNode(floatNode);
+        }
+        this.damageFloatNodes.clear();
     }
 
     /**初始化摇杆区域 */

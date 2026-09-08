@@ -6,71 +6,78 @@ filter: Linear,Linear
 repeat: none
 biaoqing1
   rotate: true
-  xy: 816, 169
-  size: 291, 150
-  orig: 291, 197
-  offset: 0, 47
+  xy: 231, 315
+  size: 162, 84
+  orig: 162, 110
+  offset: 0, 26
   index: -1
 biaoqing1_1
   rotate: false
-  xy: 2, 2
-  size: 291, 76
-  orig: 291, 197
+  xy: 317, 373
+  size: 162, 42
+  orig: 162, 110
   offset: 0, 0
   index: -1
 biaoqing2
-  rotate: false
-  xy: 626, 711
-  size: 317, 289
-  orig: 317, 289
+  rotate: true
+  xy: 421, 195
+  size: 176, 161
+  orig: 176, 161
   offset: 0, 0
   index: -1
 biaoqing3
-  rotate: false
-  xy: 626, 462
-  size: 329, 247
-  orig: 329, 248
-  offset: 0, 1
+  rotate: true
+  xy: 149, 51
+  size: 183, 138
+  orig: 183, 138
+  offset: 0, 0
   index: -1
 maozi
+  rotate: true
+  xy: 350, 417
+  size: 346, 284
+  orig: 346, 284
+  offset: 0, 0
+  index: -1
+maozi2
   rotate: false
-  xy: 2, 490
-  size: 622, 510
-  orig: 622, 510
+  xy: 2, 479
+  size: 346, 284
+  orig: 346, 284
   offset: 0, 0
   index: -1
 shenti
   rotate: false
-  xy: 553, 181
-  size: 261, 279
-  orig: 261, 279
+  xy: 2, 79
+  size: 145, 155
+  orig: 145, 155
   offset: 0, 0
   index: -1
 tou
-  rotate: false
-  xy: 2, 80
-  size: 433, 408
-  orig: 433, 408
+  rotate: true
+  xy: 2, 236
+  size: 241, 227
+  orig: 241, 227
   offset: 0, 0
   index: -1
 touyin
-  rotate: true
-  xy: 437, 150
-  size: 338, 114
-  orig: 338, 114
+  rotate: false
+  xy: 231, 249
+  size: 188, 64
+  orig: 188, 64
   offset: 0, 0
   index: -1
 youjiao
   rotate: false
-  xy: 437, 13
-  size: 120, 135
-  orig: 120, 135
+  xy: 2, 2
+  size: 67, 75
+  orig: 67, 75
   offset: 0, 0
   index: -1
 zuojiao
-  rotate: false
-  xy: 559, 64
-  size: 123, 115
-  orig: 123, 115
+  rotate: true
+  xy: 71, 8
+  size: 69, 64
+  orig: 69, 64
   offset: 0, 0
   index: -1

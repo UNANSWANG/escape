@@ -16,8 +16,6 @@ export class UIBackpack extends UIBase {
     }
 
     onUI_Open() {
-        let anim = this.getComponent(Animation);
-        anim.play();
         this.initData();
     }
 
@@ -27,6 +25,7 @@ export class UIBackpack extends UIBase {
 
     bindBtn() {
         this.closeBtn.addComponent(zoomButton).onClick = this.clickCloseBtn.bind(this);
+        this.node.on(Node.EventType.TOUCH_END, this.clickCloseBtn.bind(this));
     }
 
     ///

@@ -1,83 +1,83 @@
 
 shushu00.png
-size: 1024,1024
+size: 256,256
 format: RGBA8888
 filter: Linear,Linear
 repeat: none
 biaoqing1
   rotate: true
-  xy: 231, 315
-  size: 162, 84
-  orig: 162, 110
-  offset: 0, 26
+  xy: 231, 216
+  size: 32, 17
+  orig: 32, 22
+  offset: 0, 5
   index: -1
 biaoqing1_1
-  rotate: false
-  xy: 317, 373
-  size: 162, 42
-  orig: 162, 110
+  rotate: true
+  xy: 177, 169
+  size: 32, 9
+  orig: 32, 22
   offset: 0, 0
   index: -1
 biaoqing2
-  rotate: true
-  xy: 421, 195
-  size: 176, 161
-  orig: 176, 161
+  rotate: false
+  xy: 194, 216
+  size: 35, 32
+  orig: 35, 32
   offset: 0, 0
   index: -1
 biaoqing3
-  rotate: true
-  xy: 149, 51
-  size: 183, 138
-  orig: 183, 138
+  rotate: false
+  xy: 194, 186
+  size: 37, 28
+  orig: 37, 28
   offset: 0, 0
   index: -1
 maozi
-  rotate: true
-  xy: 350, 417
-  size: 346, 284
-  orig: 346, 284
+  rotate: false
+  xy: 73, 191
+  size: 69, 57
+  orig: 69, 57
   offset: 0, 0
   index: -1
 maozi2
   rotate: false
-  xy: 2, 479
-  size: 346, 284
-  orig: 346, 284
+  xy: 2, 191
+  size: 69, 57
+  orig: 69, 57
   offset: 0, 0
   index: -1
 shenti
-  rotate: false
-  xy: 2, 79
-  size: 145, 155
-  orig: 145, 155
+  rotate: true
+  xy: 144, 172
+  size: 29, 31
+  orig: 29, 31
   offset: 0, 0
   index: -1
 tou
-  rotate: true
-  xy: 2, 236
-  size: 241, 227
-  orig: 241, 227
+  rotate: false
+  xy: 144, 203
+  size: 48, 45
+  orig: 48, 45
   offset: 0, 0
   index: -1
 touyin
-  rotate: false
-  xy: 231, 249
-  size: 188, 64
-  orig: 188, 64
+  rotate: true
+  xy: 233, 176
+  size: 38, 13
+  orig: 38, 13
   offset: 0, 0
   index: -1
 youjiao
-  rotate: false
-  xy: 2, 2
-  size: 67, 75
-  orig: 67, 75
+  rotate: true
+  xy: 188, 171
+  size: 13, 15
+  orig: 13, 15
   offset: 0, 0
   index: -1
 zuojiao
-  rotate: true
-  xy: 71, 8
-  size: 69, 64
-  orig: 69, 64
+  rotate: false
+  xy: 205, 171
+  size: 14, 13
+  orig: 14, 13
   offset: 0, 0
   index: -1

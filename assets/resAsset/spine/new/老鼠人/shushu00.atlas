@@ -1,0 +1,83 @@
+
+shushu00.png
+size: 512,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biaoqing1
+  rotate: false
+  xy: 248, 284
+  size: 97, 51
+  orig: 97, 66
+  offset: 0, 15
+  index: -1
+biaoqing1_1
+  rotate: true
+  xy: 387, 238
+  size: 97, 26
+  orig: 97, 66
+  offset: 0, 0
+  index: -1
+biaoqing2
+  rotate: false
+  xy: 140, 239
+  size: 106, 96
+  orig: 106, 96
+  offset: 0, 0
+  index: -1
+biaoqing3
+  rotate: true
+  xy: 420, 397
+  size: 110, 83
+  orig: 110, 83
+  offset: 0, 0
+  index: -1
+maozi
+  rotate: false
+  xy: 211, 337
+  size: 207, 170
+  orig: 207, 170
+  offset: 0, 0
+  index: -1
+maozi2
+  rotate: false
+  xy: 2, 337
+  size: 207, 170
+  orig: 207, 170
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: false
+  xy: 420, 302
+  size: 87, 93
+  orig: 87, 93
+  offset: 0, 0
+  index: -1
+tou
+  rotate: true
+  xy: 2, 191
+  size: 144, 136
+  orig: 144, 136
+  offset: 0, 0
+  index: -1
+touyin
+  rotate: true
+  xy: 347, 222
+  size: 113, 38
+  orig: 113, 38
+  offset: 0, 0
+  index: -1
+youjiao
+  rotate: true
+  xy: 248, 242
+  size: 40, 45
+  orig: 40, 45
+  offset: 0, 0
+  index: -1
+zuojiao
+  rotate: false
+  xy: 295, 244
+  size: 41, 38
+  orig: 41, 38
+  offset: 0, 0
+  index: -1

@@ -43,18 +43,18 @@
   },
   "splash-setting": {
     "background": {
-      "type": "custom",
+      "type": "color",
       "image": "project://settings/BG.jpg",
       "color": {
-        "x": 1,
-        "y": 1,
-        "z": 1,
+        "x": 0.788235294117647,
+        "y": 0.7764705882352941,
+        "z": 0.6666666666666666,
         "w": 1
       }
     },
     "totalTime": 500,
     "logo": {
-      "type": "none"
+      "type": "default"
     }
   },
   "textureCompressConfig": {

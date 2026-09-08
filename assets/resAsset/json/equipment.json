@@ -1,0 +1,1 @@
+{"1":{"itemId":100001,"type":0,"name":"背包1","capacity":50},"2":{"itemId":100002,"type":0,"name":"背包2","capacity":60},"3":{"itemId":100003,"type":1,"name":"头盔1","damageImmunity":10},"4":{"itemId":100004,"type":1,"name":"头盔2","damageImmunity":15},"5":{"itemId":100005,"type":2,"name":"护甲1","defenseValue":60},"6":{"itemId":100006,"type":2,"name":"护甲2","defenseValue":80}}

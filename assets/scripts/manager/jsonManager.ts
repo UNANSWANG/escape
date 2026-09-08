@@ -4,6 +4,9 @@ import { GameEvent } from './configData';
 import { commonConfig } from '../json/jsonCommon';
 import { levelConfig } from '../json/jsonLevel';
 import { roleConfig } from '../json/jsonRole';
+import { itemConfig } from '../json/jsonItem';
+import { equipmentConfig } from '../json/jsonEquipment';
+import { weaponsConfig } from '../json/jsonWeapons';
 const { ccclass, property } = _decorator;
 
 @ccclass('jsonManager')
@@ -22,6 +25,9 @@ export class jsonManager  {
         commonConfig.initTable();
         // levelConfig.initTable();
         roleConfig.initTable();
+        itemConfig.initTable();
+        equipmentConfig.initTable();
+        weaponsConfig.initTable();
     }
 
     loadCall(name: string){

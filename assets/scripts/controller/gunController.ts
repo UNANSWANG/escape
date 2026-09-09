@@ -35,6 +35,19 @@ export class gunController extends weaponsController {
     get ammo() { return this.currentAmmo; }
     get reloading() { return this.isReloading; }
 
+    /** 切走该枪时中断当前换弹，避免隐藏节点的动画回调使换弹状态遗留。 */
+    onWeaponUnequipped() {
+        if (!this.isReloading) return;
+        this.isReloading = false;
+        this.playIdleAnim();
+    }
+
+    /** 切入该枪后，空弹匣立即重新开始换弹。 */
+    onWeaponEquipped() {
+        if (this.isReloading) return;
+        if (this.currentAmmo <= 0) this.startReload(false);
+    }
+
     /** 枪械在应用配置后，以新的弹匣容量重新装填。 */
     applyStats(stats: WeaponStats) {
         super.applyStats(stats);

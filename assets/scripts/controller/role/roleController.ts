@@ -130,6 +130,8 @@ export class roleController extends Component {
     equipWeapon(slotIndex: number) {
         const targetNode = this.weaponNodes[slotIndex];
         if (!targetNode) return false;
+        const isWeaponChanged = targetNode !== this.currentWeaponComp?.node;
+        if (isWeaponChanged) this.gunComp?.onWeaponUnequipped();
 
         this.weaponNodes.forEach((node, index) => {
             if (node) node.active = index === slotIndex;
@@ -142,6 +144,11 @@ export class roleController extends Component {
             this.currentWeaponComp.playIdleAnim();
         }
         return true;
+    }
+
+    /** UI 完成换弹事件绑定后调用，处理当前枪械的切入状态。 */
+    onCurrentWeaponEquipped() {
+        this.gunComp?.onWeaponEquipped();
     }
 
     /**

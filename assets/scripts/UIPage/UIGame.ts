@@ -286,6 +286,7 @@ export class UIGame extends UIBase {
         roleComp.node.on(role0Skill2RemainEvent, this.updateSkill2RemainLab, this);
         roleComp.init(this, pData.roleId, 0);
         this.bindCurrentGunReloadEvent();
+        roleComp.onCurrentWeaponEquipped();
     }
 
     /** 武器切换后，将换弹 UI 事件绑定到当前枪械，并移除旧枪监听。 */
@@ -715,6 +716,7 @@ export class UIGame extends UIBase {
             roleComp.syncCurrentWeaponDefaultPose();
         }
         this.bindCurrentGunReloadEvent();
+        roleComp.onCurrentWeaponEquipped();
     }
 
     /**供角色技能查询：当前是否正通过摇杆或方向键提供有效移动方向。 */

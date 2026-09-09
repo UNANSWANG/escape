@@ -4,6 +4,7 @@ import { UIGame } from '../../UIPage/UIGame';
 import { configData, playerCommonConfig } from '../../manager/configData';
 import { enemyBaseController } from '../enemy/enemyBaseController';
 import { gunController } from '../gunController';
+import { weaponsController } from '../weaponsController';
 import { uiMgr } from '../../manager/UIManager';
 import { JsonRoleData, roleConfig } from '../../json/jsonRole';
 const { ccclass } = _decorator;
@@ -56,6 +57,11 @@ export class roleController extends Component {
     /** 角色头顶名称文本。 */
     roleNameLab: Label = null;
     /** 枪节点上的枪械控制器。 */
+    /** 武器根节点下的全部武器控制器：主武器、副武器、近战武器。 */
+    private weaponComps: Array<weaponsController | null> = [];
+    /** 当前激活的武器控制器。 */
+    private currentWeaponComp: weaponsController = null;
+    /** 当前装备为枪械时的专用控制器，供既有射击和换弹逻辑使用。 */
     private gunComp: gunController = null;
     /**当前战斗状态。 */
     private battleState: roleBattleState = roleBattleState.nonCombat;
@@ -88,12 +94,22 @@ export class roleController extends Component {
     protected onLoad(): void {
         this.roleAnim = this.node.getChildByName('roleAnim')?.getComponent(sp.Skeleton);
         this.roleNameLab = this.node.getChildByName('roleNameLab')?.getComponent(Label);
-        this.gunComp = this.node.getChildByName('gun')?.getComponent(gunController);
+        const weaponRoot = this.node.getChildByName('weapons');
+        const weaponNodes = ['weapons_0', 'weapons_1', 'weapons_2'];
+        this.weaponComps = weaponNodes
+            .map((name) => weaponRoot?.getChildByName(name)?.getComponent(weaponsController) ?? null);
+        this.currentWeaponComp = this.weaponComps.find((weapon) => weapon?.node.activeInHierarchy) ?? null;
+        this.gunComp = this.currentWeaponComp?.node.getComponent(gunController) ?? null;
     }
 
     /**当前装备的枪械组件 */
     get gunController() {
         return this.gunComp;
+    }
+
+    /** 当前激活的通用武器控制器；近战武器和枪械均通过此入口访问共同行为。 */
+    get weaponsController() {
+        return this.currentWeaponComp;
     }
 
     /**当前移速。基类仅处理通用技能1的加速，专属角色可按自身状态重写。 */
@@ -116,7 +132,7 @@ export class roleController extends Component {
         const isEnterCombat = this.battleState === roleBattleState.nonCombat;
         this.battleState = roleBattleState.combat;
         this.combatRemainTime = Math.max(0, playerCommonConfig.gunResetTime);
-        if (isEnterCombat) this.gunComp?.stopResetRotationTween();
+        if (isEnterCombat) this.currentWeaponComp?.stopResetRotationTween();
     }
 
     /**设置攻击键是否按住；松开后才开始退出战斗的倒计时。 */
@@ -149,7 +165,7 @@ export class roleController extends Component {
 
         this.combatRemainTime = 0;
         this.battleState = roleBattleState.nonCombat;
-        this.gunComp?.resetRotation();
+        this.currentWeaponComp?.resetRotation();
     }
 
     /**更新通用技能1的持续时间。 */
@@ -189,10 +205,10 @@ export class roleController extends Component {
     }
 
     /**查找当前枪械自动攻击范围内最近的有效敌人 */
-    findNearestEnemyInAutoAttackRange() {
-        if (!this.gunComp) return null;
+    findNearestEnemyInAttackRange() {
+        if (!this.currentWeaponComp) return null;
         const rolePos = this.node.position;
-        const rangeSquared = this.gunComp.autoAttackRange ** 2;
+        const rangeSquared = this.currentWeaponComp.attackRange ** 2;
         let nearestEnemy: enemyBaseController = null;
         let nearestDistanceSquared = rangeSquared;
         for (const enemy of enemyMgr.enemyArr) {
@@ -231,25 +247,25 @@ export class roleController extends Component {
     /** 刷新角色初始状态，同时通知枪械重新绑定角色挂点。 */
     private async refreshRoleSpine() {
         this.curRoleAnimName = '';
-        this.gunComp?.bindToRole(this.roleAnim);
-        this.gunComp?.resetRotation(true);
+        this.currentWeaponComp?.bindToRole(this.roleAnim);
+        this.currentWeaponComp?.resetRotation(true);
         this.playRoleAnim(roleAnimName.idle, true);
-        this.gunComp?.playIdleAnim();
+        this.currentWeaponComp?.playIdleAnim();
     }
 
     /**角色朝向仍从角色控制器入口调用，具体人物与枪械翻转由枪械控制器处理。 */
     setFacingByHorizontal(directionX: number) {
-        this.gunComp?.setFacingByHorizontal(directionX);
+        this.currentWeaponComp?.setFacingByHorizontal(directionX);
     }
 
     /** 将瞄准请求转交给当前装备的枪械。 */
     aimGunAt(target: Node) {
-        return this.gunComp?.aimAt(target) ?? false;
+        return this.currentWeaponComp?.aimAt(target) ?? false;
     }
 
     /** 清除枪械锁定目标。 */
     clearGunAimTarget() {
-        this.gunComp?.clearAimTarget();
+        this.currentWeaponComp?.clearAimTarget();
     }
 
     /** 由当前枪械从游戏 UI 节点中生成子弹。 */

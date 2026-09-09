@@ -1,5 +1,5 @@
 import { _decorator, Component, UITransform, Vec3 } from 'cc';
-import { configData, playerCommonConfig } from '../manager/configData';
+import { configData } from '../manager/configData';
 import { enemyMgr } from '../manager/enemyManager';
 import { poolMgr } from '../manager/poolManager';
 const { ccclass, property } = _decorator;
@@ -14,14 +14,14 @@ export class bulletController extends Component {
     private damage = 0;
 
     /**初始化为不锁定目标的直线飞行子弹 */
-    initStraight(direction: Vec3, damage: number) {
+    initStraight(direction: Vec3, damage: number, attackRange: number) {
         const directionLength = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
         if (directionLength <= 0) {
             this.recycle();
             return;
         }
 
-        this.straightMoveRemainDistance = Math.max(0, playerCommonConfig.bulletDisappearDistance);
+        this.straightMoveRemainDistance = Math.max(0, attackRange);
         if (this.straightMoveRemainDistance <= 0) {
             this.recycle();
             return;

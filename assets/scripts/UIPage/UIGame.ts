@@ -543,7 +543,7 @@ export class UIGame extends UIBase {
 
     /**攻击期间优先锁定范围内最近的敌人；范围为空时保留本轮原锁定 */
     private refreshAutoAim() {
-        const nearestTarget = playerMgr.playerComp?.findNearestEnemyInAutoAttackRange();
+        const nearestTarget = playerMgr.playerComp?.findNearestEnemyInAttackRange();
         if (nearestTarget) {
             this.autoAttackTarget = nearestTarget;
         }

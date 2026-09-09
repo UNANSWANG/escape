@@ -6,6 +6,7 @@ import { gm } from '../../manager/gm';
 import { enemyBaseController } from '../enemy/enemyBaseController';
 import { gunController } from '../gunController';
 import { knifeController } from '../knifeController';
+import { shotgunController } from '../shotgunController';
 import { weaponsController } from '../weaponsController';
 import { uiMgr } from '../../manager/UIManager';
 import { JsonRoleData, roleConfig } from '../../json/jsonRole';
@@ -325,7 +326,7 @@ export class roleController extends Component {
     }
 
     /**
-     * 按 weapons 表的类型给武器节点挂载控制脚本：0 为刀，其余为枪械。
+     * 按 weapons 表的类型给武器节点挂载控制脚本：0 为刀、4 为霰弹枪，其余为普通枪械。
      * 切换装备数据时会移除旧类型组件，避免同一节点同时存在刀和枪两个控制器。
      */
     private assignWeaponController(node: Node, weaponType: number) {
@@ -340,6 +341,14 @@ export class roleController extends Component {
 
         const weapon = node.getComponent(weaponsController);
         if (weapon && !gun) node.removeComponent(weapon);
+        if (weaponType === 4) {
+            const shotgun = node.getComponent(shotgunController);
+            if (gun && !shotgun) node.removeComponent(gun);
+            return shotgun ?? node.addComponent(shotgunController);
+        }
+
+        const shotgun = node.getComponent(shotgunController);
+        if (shotgun) node.removeComponent(shotgun);
         return node.getComponent(gunController) ?? node.addComponent(gunController);
     }
 

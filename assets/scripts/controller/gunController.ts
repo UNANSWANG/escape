@@ -82,22 +82,36 @@ export class gunController extends weaponsController {
 
     /** 从枪口创建一枚直线飞行的子弹。 */
     fireBullet(bulletParent: Node) {
+        if (!this.prepareFire()) return false;
+        if (!this.getShootData(this.tempBulletSpawnWorldPos, this.tempBulletWorldDirection)) return false;
+        if (!this.spawnBullet(bulletParent, this.tempBulletSpawnWorldPos, this.tempBulletWorldDirection)) return false;
+        this.finishFire();
+        return true;
+    }
+
+    /** 检查本次开火是否可执行；子类生成全部弹丸后调用 finishFire 统一扣除 1 发弹药。 */
+    protected prepareFire() {
         if (this.isReloading) return false;
         if (this.currentAmmo <= 0) {
             this.reload();
             return false;
         }
-        if (!bulletParent || !uiMgr.bulletPrefab || !this.getShootData(this.tempBulletSpawnWorldPos, this.tempBulletWorldDirection)) return false;
+        return true;
+    }
+
+    /** 在指定枪口位置和世界方向创建一枚子弹，不处理弹药、动画或换弹。 */
+    protected spawnBullet(bulletParent: Node, spawnWorldPos: Vec3, worldDirection: Vec3) {
+        if (!bulletParent || !uiMgr.bulletPrefab) return false;
 
         const bulletNode = poolMgr.getBulletNode(uiMgr.bulletPrefab);
         bulletParent.addChild(bulletNode);
         const parentTransform = bulletParent.getComponent(UITransform);
         if (parentTransform) {
-            parentTransform.convertToNodeSpaceAR(this.tempBulletSpawnWorldPos, this.tempBulletLocalPos);
+            parentTransform.convertToNodeSpaceAR(spawnWorldPos, this.tempBulletLocalPos);
             this.tempBulletDirectionEndWorldPos.set(
-                this.tempBulletSpawnWorldPos.x + this.tempBulletWorldDirection.x,
-                this.tempBulletSpawnWorldPos.y + this.tempBulletWorldDirection.y,
-                this.tempBulletSpawnWorldPos.z,
+                spawnWorldPos.x + worldDirection.x,
+                spawnWorldPos.y + worldDirection.y,
+                spawnWorldPos.z,
             );
             parentTransform.convertToNodeSpaceAR(this.tempBulletDirectionEndWorldPos, this.tempBulletDirectionEndLocalPos);
             this.tempBulletLocalDirection.set(
@@ -107,8 +121,8 @@ export class gunController extends weaponsController {
             );
             bulletNode.setPosition(this.tempBulletLocalPos);
         } else {
-            bulletNode.setWorldPosition(this.tempBulletSpawnWorldPos);
-            this.tempBulletLocalDirection.set(this.tempBulletWorldDirection);
+            bulletNode.setWorldPosition(spawnWorldPos);
+            this.tempBulletLocalDirection.set(worldDirection);
         }
 
         const bulletComp = bulletNode.getComponent(bulletController);
@@ -117,6 +131,11 @@ export class gunController extends weaponsController {
             return false;
         }
         bulletComp.initStraight(this.tempBulletLocalDirection, this.attack, this.attackRange, this.flightSpeed);
+        return true;
+    }
+
+    /** 完成本次开火。无论本次生成几枚分裂子弹，均只在此扣除 1 发弹药。 */
+    protected finishFire() {
         this.currentAmmo--;
         if (this.currentAmmo <= 0) {
             this.playShootAnim(true);
@@ -124,7 +143,6 @@ export class gunController extends weaponsController {
         } else {
             this.playShootAnim();
         }
-        return true;
     }
 
     reload() {
@@ -158,7 +176,7 @@ export class gunController extends weaponsController {
         this.playIdleAnim();
     }
 
-    private getShootData(outPosition: Vec3, outDirection: Vec3) {
+    protected getShootData(outPosition: Vec3, outDirection: Vec3) {
         if (!this.weaponSkeleton) return false;
         this.shootBone ??= this.weaponSkeleton.findBone('kaihuo');
         if (!this.shootBone) return false;
@@ -182,7 +200,7 @@ export class gunController extends weaponsController {
         return true;
     }
 
-    private playShootAnim(reloadAfter = false) {
+    protected playShootAnim(reloadAfter = false) {
         if (!this.weaponSkeleton?.skeletonData) return;
         this.curWeaponAnimName = weaponsAnimName.attack;
         this.weaponSkeleton.setAnimation(0, gunAnimName.attack, false);

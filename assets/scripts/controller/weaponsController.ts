@@ -11,6 +11,8 @@ export interface WeaponStats {
     attack: number;
     capacity: number;
     attackRange: number;
+    /** 单次攻击生成的子弹数；仅霰弹枪等多弹丸武器使用。 */
+    bulletNum?: number;
 }
 
 /**

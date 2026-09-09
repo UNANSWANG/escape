@@ -13,6 +13,7 @@ export class UIManager {
     resBundle: AssetManager.Bundle = null;
     tipsPrefab: Prefab = null;
     bulletPrefab: Prefab = null;
+    gameLinePrefab: Prefab = null;
     effectItemPrefab: Prefab = null;
     gameSpriteItemPrefab: Prefab = null;
     gameLabelItemPrefab: Prefab = null;
@@ -99,6 +100,7 @@ export class UIManager {
     private async loadGamePrefab() {
         let prefabs = await Promise.all([
             ccResTools.loadPrefab(this.resBundle, ItemPath.bullet, false),
+            ccResTools.loadPrefab(this.resBundle, ItemPath.gameLine, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.gameSpriteItem, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.gameLabelItem, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.gameSpineItem, false),
@@ -110,10 +112,11 @@ export class UIManager {
         }
 
         this.bulletPrefab = prefabs[0];
-        this.gameSpriteItemPrefab = prefabs[1];
-        this.gameLabelItemPrefab = prefabs[2];
-        this.gameSpineItemPrefab = prefabs[3];
-        this.gameAnimItemPrefab = prefabs[4];
+        this.gameLinePrefab = prefabs[1];
+        this.gameSpriteItemPrefab = prefabs[2];
+        this.gameLabelItemPrefab = prefabs[3];
+        this.gameSpineItemPrefab = prefabs[4];
+        this.gameAnimItemPrefab = prefabs[5];
     }
 
     /**加载游戏动画 */

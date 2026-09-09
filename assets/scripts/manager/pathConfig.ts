@@ -38,6 +38,8 @@ export enum ItemPath {
     tips = "prefabs/notice/tips",
     /**子弹 */
     bullet = "prefabs/Item/bullet",
+    /**游戏内连线 */
+    gameLine = "prefabs/Item/gameLine",
     /**游戏通用物体 */
     gameItem = "prefabs/Item/gameItem",
     /**游戏图片物体 */

@@ -4,6 +4,7 @@ import { bulletController } from '../controller/bulletController';
 const { ccclass, property } = _decorator;
 const PRODUCE_TIPS_POOL_LIMIT = 48;
 const BULLET_POOL_LIMIT = 128;
+const GAME_LINE_POOL_LIMIT = 64;
 const GAME_NODE_POOL_LIMIT = 64;
 const GAME_SPRITE_POOL_LIMIT = 64;
 const GAME_LABEL_POOL_LIMIT = 64;
@@ -19,6 +20,8 @@ export class poolManager extends Component {
     produceTipsPool: NodePool = new NodePool();
     /**子弹对象池 */
     bulletPool: NodePool = new NodePool();
+    /**游戏内连线对象池 */
+    gameLinePool: NodePool = new NodePool();
     /**游戏节点对象池 */
     gameNodePool: NodePool = new NodePool();
     /**游戏图片节点对象池 */
@@ -58,6 +61,17 @@ export class poolManager extends Component {
     putBulletNode(node: Node) {
         this.resetNode(node);
         this.putNodeWithLimit(this.bulletPool, node, BULLET_POOL_LIMIT);
+    }
+
+    /**获取游戏内连线节点 */
+    getGameLineNode(prefab: Prefab) {
+        return this.getNode(this.gameLinePool, prefab);
+    }
+
+    /**回收游戏内连线节点 */
+    putGameLineNode(node: Node) {
+        this.resetNode(node);
+        this.putNodeWithLimit(this.gameLinePool, node, GAME_LINE_POOL_LIMIT);
     }
 
     /**获取游戏通用节点 */

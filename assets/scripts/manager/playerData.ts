@@ -39,7 +39,7 @@ export class playerData {
     /**游戏开始的时间戳 */
     gameStartTime = 0;
     /**装备id数组[主武器（weapons），副武器（weapons），近战武器（weapons），头盔（equipment），护甲（equipment），背包（equipment）] */
-    equipmentIds: number[] = [-1, -1, 0, -1, -1, 0];
+    equipmentIds: number[] = [1, 2, 0, -1, -1, 0];
 
     levelInit() {
         pData.adNum = 0;

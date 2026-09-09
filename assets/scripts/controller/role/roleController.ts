@@ -280,16 +280,46 @@ export class roleController extends Component {
 
     /** 将游戏外装备栏前三项（主武器、副武器、近战武器）应用到对应武器节点。 */
     private applyEquippedWeaponStats() {
-        this.weaponComps.forEach((weapon, slotIndex) => {
-            if (!weapon) return;
+        this.weaponNodes.forEach((node, slotIndex) => {
+            if (!node) return;
             const weaponId = pData.equipmentIds[slotIndex];
             const weaponData = weaponsConfig.getDataById(weaponId);
             if (!weaponData) {
                 console.warn(`未找到装备栏第 ${slotIndex + 1} 格的武器配置，id: ${weaponId}`);
                 return;
             }
+
+            const weapon = this.assignWeaponController(node, weaponData.type);
+            if (!weapon) return;
             weapon.applyStats(weaponData);
         });
+
+        // 配置表可能在角色创建后才加载；重新缓存以保证切换武器时拿到新挂载的组件。
+        this.weaponComps = this.weaponNodes.map((node) => node?.getComponent(weaponsController) ?? null);
+        const activeSlotIndex = this.weaponNodes.findIndex((node) => node?.active);
+        if (activeSlotIndex >= 0) {
+            this.currentWeaponComp = this.weaponComps[activeSlotIndex];
+            this.gunComp = this.currentWeaponComp?.node.getComponent(gunController) ?? null;
+            this.currentWeaponComp?.bindToRole(this.roleAnim);
+            this.currentWeaponComp?.resetRotation(true);
+            this.currentWeaponComp?.playIdleAnim();
+        }
+    }
+
+    /**
+     * 按 weapons 表的类型给武器节点挂载控制脚本：0 为刀（通用近战控制器），其余为枪械。
+     * 切换装备数据时会移除旧类型组件，避免同一节点同时存在刀和枪两个控制器。
+     */
+    private assignWeaponController(node: Node, weaponType: number) {
+        const gun = node.getComponent(gunController);
+        if (weaponType === 0) {
+            if (gun) node.removeComponent(gun);
+            return node.getComponent(weaponsController) ?? node.addComponent(weaponsController);
+        }
+
+        const weapon = node.getComponent(weaponsController);
+        if (weapon && !gun) node.removeComponent(weapon);
+        return node.getComponent(gunController) ?? node.addComponent(gunController);
     }
 
     /** weapons 表异步加载完成后，为已创建的角色补充装备数值。 */

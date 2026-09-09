@@ -762,6 +762,15 @@ export class UIGame extends UIBase {
                 // 主动换弹；枪械组件会自行拦截满弹或换弹中的重复请求。
                 playerMgr.playerComp?.gunController?.reload();
                 break;
+            case KeyCode.DIGIT_1:
+                this.switchWeapon(0);
+                break;
+            case KeyCode.DIGIT_2:
+                this.switchWeapon(1);
+                break;
+            case KeyCode.DIGIT_3:
+                this.switchWeapon(2);
+                break;
             case KeyCode.SPACE:
                 this.clickSkillBtn1();
                 break;

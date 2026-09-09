@@ -11,8 +11,6 @@ export enum gunAnimName { idle = 'idle', attack = 'attack', reload = 'reload' }
 /** 远程武器控制器：处理弹匣、换弹和子弹生成。 */
 @ccclass('gunController')
 export class gunController extends weaponsController {
-    /** 两发子弹间隔，单位为秒。 */
-    shootInterval = 0.2;
     /** 换弹动画时长。 */
     reloadTime = 0;
 

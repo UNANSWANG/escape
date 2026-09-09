@@ -6,6 +6,7 @@ export enum weaponsAnimName { idle = 'idle', attack = 'attack' }
 
 /** 从 weapons 表读取并应用到武器控制器的基础数值。 */
 export interface WeaponStats {
+    attackInterval: number;
     flightSpeed: number;
     attack: number;
     capacity: number;
@@ -19,6 +20,8 @@ export interface WeaponStats {
  */
 @ccclass('weaponsController')
 export class weaponsController extends Component {
+    /** 攻击间隔（秒），由 weapons 表 attackInterval 配置。 */
+    attackInterval = 0.2;
     /** 子弹飞行速度；远程武器会逐发传给子弹控制器。 */
     flightSpeed = 2000;
     /** 攻击力。 */
@@ -57,6 +60,7 @@ export class weaponsController extends Component {
 
     /** 应用 weapons 表中的基础数值；非法值保留当前默认值。 */
     applyStats(stats: WeaponStats) {
+        if (Number.isFinite(stats.attackInterval)) this.attackInterval = Math.max(0, stats.attackInterval);
         if (Number.isFinite(stats.flightSpeed)) this.flightSpeed = Math.max(0, stats.flightSpeed);
         if (Number.isFinite(stats.attack)) this.attack = Math.max(0, stats.attack);
         if (Number.isFinite(stats.capacity)) this.capacity = Math.max(0, Math.floor(stats.capacity));

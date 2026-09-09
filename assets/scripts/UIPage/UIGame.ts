@@ -606,7 +606,7 @@ export class UIGame extends UIBase {
 
         const gunComp = playerMgr.playerComp?.gunController;
         if (gunComp) {
-            this.shootCooldownRemaining = gunComp.shootInterval;
+            this.shootCooldownRemaining = gunComp.attackInterval;
         }
     }
 

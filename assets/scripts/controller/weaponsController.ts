@@ -4,6 +4,14 @@ const { ccclass } = _decorator;
 /** 所有手持武器共用的动画名称。 */
 export enum weaponsAnimName { idle = 'idle', attack = 'attack' }
 
+/** 从 weapons 表读取并应用到武器控制器的基础数值。 */
+export interface WeaponStats {
+    flightSpeed: number;
+    attack: number;
+    capacity: number;
+    attackRange: number;
+}
+
 /**
  * 手持武器基类。
  *
@@ -11,10 +19,14 @@ export enum weaponsAnimName { idle = 'idle', attack = 'attack' }
  */
 @ccclass('weaponsController')
 export class weaponsController extends Component {
+    /** 子弹飞行速度；远程武器会逐发传给子弹控制器。 */
+    flightSpeed = 2000;
+    /** 攻击力。 */
+    attack = 5;
+    /** 弹匣容量；近战武器可配置为 1。 */
+    capacity = 20;
     /** 攻击距离：用于自动索敌，并限制远程子弹的最大飞行距离。 */
     attackRange = 600;
-    /** 基础伤害，枪械与近战武器均可复用。 */
-    damage = 5;
 
     protected roleAnim: sp.Skeleton = null;
     protected weaponSkeleton: sp.Skeleton = null;
@@ -41,6 +53,14 @@ export class weaponsController extends Component {
         this.leftHandNode = this.node.getChildByName('left');
         if (this.rightHandNode) this.rightHandNode.active = true;
         if (this.leftHandNode) this.leftHandNode.active = true;
+    }
+
+    /** 应用 weapons 表中的基础数值；非法值保留当前默认值。 */
+    applyStats(stats: WeaponStats) {
+        if (Number.isFinite(stats.flightSpeed)) this.flightSpeed = Math.max(0, stats.flightSpeed);
+        if (Number.isFinite(stats.attack)) this.attack = Math.max(0, stats.attack);
+        if (Number.isFinite(stats.capacity)) this.capacity = Math.max(0, Math.floor(stats.capacity));
+        if (Number.isFinite(stats.attackRange)) this.attackRange = Math.max(0, stats.attackRange);
     }
 
     /** 绑定到角色 Spine 的 G 挂点。 */

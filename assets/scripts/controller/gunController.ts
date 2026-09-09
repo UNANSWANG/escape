@@ -2,7 +2,7 @@ import { _decorator, Node, UITransform, Vec3 } from 'cc';
 import { uiMgr } from '../manager/UIManager';
 import { poolMgr } from '../manager/poolManager';
 import { bulletController } from './bulletController';
-import { weaponsAnimName, weaponsController } from './weaponsController';
+import { weaponsAnimName, weaponsController, WeaponStats } from './weaponsController';
 const { ccclass } = _decorator;
 
 /** 枪械 Spine 使用的动画名称。 */
@@ -13,8 +13,6 @@ export enum gunAnimName { idle = 'idle', attack = 'attack', reload = 'reload' }
 export class gunController extends weaponsController {
     /** 两发子弹间隔，单位为秒。 */
     shootInterval = 0.2;
-    /** 每个弹匣的容量。 */
-    bulletNum = 20;
     /** 换弹动画时长。 */
     reloadTime = 0;
 
@@ -32,12 +30,18 @@ export class gunController extends weaponsController {
 
     protected onLoad(): void {
         super.onLoad();
-        this.currentAmmo = this.bulletNum;
+        this.currentAmmo = this.capacity;
         this.updateReloadTime();
     }
 
     get ammo() { return this.currentAmmo; }
     get reloading() { return this.isReloading; }
+
+    /** 枪械在应用配置后，以新的弹匣容量重新装填。 */
+    applyStats(stats: WeaponStats) {
+        super.applyStats(stats);
+        this.currentAmmo = this.capacity;
+    }
 
     private updateReloadTime() {
         const reloadAnimation = this.weaponSkeleton?.findAnimation(gunAnimName.reload);
@@ -101,7 +105,7 @@ export class gunController extends weaponsController {
             poolMgr.putBulletNode(bulletNode);
             return false;
         }
-        bulletComp.initStraight(this.tempBulletLocalDirection, this.damage, this.attackRange);
+        bulletComp.initStraight(this.tempBulletLocalDirection, this.attack, this.attackRange, this.flightSpeed);
         this.currentAmmo--;
         if (this.currentAmmo <= 0) {
             this.playShootAnim(true);
@@ -117,7 +121,7 @@ export class gunController extends weaponsController {
             uiMgr.showTips('正在换弹中...');
             return false;
         }
-        if (this.currentAmmo >= this.bulletNum) {
+        if (this.currentAmmo >= this.capacity) {
             uiMgr.showTips('弹夹已满');
             return false;
         }
@@ -125,7 +129,7 @@ export class gunController extends weaponsController {
     }
 
     private startReload(afterCurrentAnimation: boolean) {
-        if (this.isReloading || this.currentAmmo >= this.bulletNum) return false;
+        if (this.isReloading || this.currentAmmo >= this.capacity) return false;
         this.isReloading = true;
         this.node.emit('reload-start', this.reloadTime);
         const reloadEntry = afterCurrentAnimation ? this.queueReloadAnim() : this.playReloadAnim();
@@ -138,7 +142,7 @@ export class gunController extends weaponsController {
     }
 
     private finishReload() {
-        this.currentAmmo = this.bulletNum;
+        this.currentAmmo = this.capacity;
         this.isReloading = false;
         this.playIdleAnim();
     }

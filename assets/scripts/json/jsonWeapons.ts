@@ -15,10 +15,17 @@ export class jsonWeapons extends jsonBase {
         super.processTableData();
 
     }
+
+    /** 根据 weapons 表的 id 获取一条武器配置。 */
+    getDataById(id: number): JsonWeaponsData | null {
+        if (!Number.isFinite(id) || !this.data) return null;
+        const rows = Array.isArray(this.data) ? this.data : Object.values(this.data);
+        return rows.find((row: JsonWeaponsData) => row?.id === id) ?? null;
+    }
 }
 export let weaponsConfig = new jsonWeapons();
 
-interface JsonWeaponsData {
+export interface JsonWeaponsData {
     /**编号*/
     id: number;
     /**类型 */

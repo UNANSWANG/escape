@@ -92,6 +92,8 @@ export class UIGame extends UIBase {
     private shootCooldownRemaining = 0;
     /**换弹按钮遮罩。 */
     private reloadMask: Sprite = null;
+    /** 当前绑定 reload-start 事件的枪械节点。 */
+    private reloadEventGunNode: Node = null;
     /**技能1按钮遮罩。 */
     private skill1Mask: Sprite = null;
     /**技能2按钮遮罩。 */
@@ -280,10 +282,19 @@ export class UIGame extends UIBase {
         this.initRolePos(playerMgr.player);
         const roleComp = addRoleScript(playerMgr.player, pData.roleId);
         playerMgr.setPlayerComp(roleComp);
-        roleComp.gunController?.node.on('reload-start', this.playReloadMaskCooldown, this);
         roleComp.node.on('skill-cooldown-start', this.playSkillMaskCooldown, this);
         roleComp.node.on(role0Skill2RemainEvent, this.updateSkill2RemainLab, this);
         roleComp.init(this, pData.roleId, 0);
+        this.bindCurrentGunReloadEvent();
+    }
+
+    /** 武器切换后，将换弹 UI 事件绑定到当前枪械，并移除旧枪监听。 */
+    private bindCurrentGunReloadEvent() {
+        this.reloadEventGunNode?.off('reload-start', this.playReloadMaskCooldown, this);
+        const gunNode = playerMgr.playerComp?.gunController?.node ?? null;
+        gunNode?.on('reload-start', this.playReloadMaskCooldown, this);
+        this.reloadEventGunNode = gunNode;
+        if (this.reloadBtn) this.reloadBtn.active = !!gunNode;
     }
 
     /**在玩家右侧生成两个仅播放待机动画的临时敌人，第二个在第一个上方 */
@@ -691,6 +702,38 @@ export class UIGame extends UIBase {
         }
     }
 
+    /** 切换角色武器，并清除旧武器的瞄准和冷却状态。 */
+    private switchWeapon(slotIndex: number) {
+        const roleComp = playerMgr.playerComp;
+        if (!roleComp?.equipWeapon(slotIndex)) return;
+        this.shootCooldownRemaining = 0;
+        this.stopAutoAim();
+        this.bindCurrentGunReloadEvent();
+    }
+
+    /**供角色技能查询：当前是否正通过摇杆或方向键提供有效移动方向。 */
+    hasMoveDirectionInput() {
+        if (this.isRockerControlling) {
+            return this.inputMoveDirection.x !== 0 || this.inputMoveDirection.y !== 0;
+        }
+        return this.pressedMoveKeys.size > 0 && (this.currentMoveDirection.x !== 0 || this.currentMoveDirection.y !== 0);
+    }
+
+    /**技能方向锁定结束后，立即按当前仍按住的输入恢复可控移动。 */
+    private restoreMoveInputAfterDirectionUnlock() {
+        if (this.isRockerControlling) {
+            this.currentMoveDirection.set(this.inputMoveDirection);
+            this.isMoving = this.inputMoveDirection.x !== 0 || this.inputMoveDirection.y !== 0;
+            return;
+        }
+        if (!this.refreshKeyboardMove()) this.rockerReset();
+    }
+
+    /**当前角色是否正在锁定移动方向。 */
+    private isMoveDirectionLocked() {
+        return playerMgr.playerComp?.isMoveDirectionLocked ?? false;
+    }
+
     ///
     ///点击函数
     ///
@@ -761,29 +804,6 @@ export class UIGame extends UIBase {
         playerMgr.playerComp?.useSkill1();
     }
 
-    /**供角色技能查询：当前是否正通过摇杆或方向键提供有效移动方向。 */
-    hasMoveDirectionInput() {
-        if (this.isRockerControlling) {
-            return this.inputMoveDirection.x !== 0 || this.inputMoveDirection.y !== 0;
-        }
-        return this.pressedMoveKeys.size > 0 && (this.currentMoveDirection.x !== 0 || this.currentMoveDirection.y !== 0);
-    }
-
-    /**技能方向锁定结束后，立即按当前仍按住的输入恢复可控移动。 */
-    private restoreMoveInputAfterDirectionUnlock() {
-        if (this.isRockerControlling) {
-            this.currentMoveDirection.set(this.inputMoveDirection);
-            this.isMoving = this.inputMoveDirection.x !== 0 || this.inputMoveDirection.y !== 0;
-            return;
-        }
-        if (!this.refreshKeyboardMove()) this.rockerReset();
-    }
-
-    /**当前角色是否正在锁定移动方向。 */
-    private isMoveDirectionLocked() {
-        return playerMgr.playerComp?.isMoveDirectionLocked ?? false;
-    }
-
     /**点击技能按钮2 */
     clickSkillBtn2() {
         playerMgr.playerComp?.useSkill2();
@@ -791,7 +811,7 @@ export class UIGame extends UIBase {
 
     /**点击刀按钮 */
     clickKnifeBtn() {
-
+        this.switchWeapon(2);
     }
 
     /**点击背包按钮 */
@@ -801,12 +821,14 @@ export class UIGame extends UIBase {
 
     /**点击武器框0 */
     onClickWeaponBox_0() {
-        uiMgr.showTips("点击了武器框0");
+        this.switchWeapon(0);
+        return;
     }
 
     /**点击武器框1 */
     onClickWeaponBox_1() {
-        uiMgr.showTips("点击了武器框1");
+        this.switchWeapon(1);
+        return;
     }
 
     /**点击设置按钮 */

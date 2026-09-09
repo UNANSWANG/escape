@@ -1,5 +1,4 @@
 import { _decorator, Component, UITransform, Vec3 } from 'cc';
-import { configData } from '../manager/configData';
 import { enemyMgr } from '../manager/enemyManager';
 import { poolMgr } from '../manager/poolManager';
 const { ccclass, property } = _decorator;
@@ -10,11 +9,13 @@ export class bulletController extends Component {
     private moveDirection = new Vec3();
     /**直线飞行的剩余距离 */
     private straightMoveRemainDistance = 0;
+    /** 本发子弹的飞行速度，由发射武器决定。 */
+    private flightSpeed = 0;
     /**本发子弹命中敌人时造成的伤害 */
     private damage = 0;
 
     /**初始化为不锁定目标的直线飞行子弹 */
-    initStraight(direction: Vec3, damage: number, attackRange: number) {
+    initStraight(direction: Vec3, damage: number, attackRange: number, flightSpeed: number) {
         const directionLength = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
         if (directionLength <= 0) {
             this.recycle();
@@ -29,6 +30,11 @@ export class bulletController extends Component {
 
         this.moveDirection.set(direction.x / directionLength, direction.y / directionLength, 0);
         this.damage = Math.max(0, damage);
+        this.flightSpeed = Math.max(0, flightSpeed);
+        if (this.flightSpeed <= 0) {
+            this.recycle();
+            return;
+        }
         // 子弹图片默认朝上。
         this.node.angle = Math.atan2(this.moveDirection.y, this.moveDirection.x) * 180 / Math.PI - 90;
     }
@@ -38,6 +44,7 @@ export class bulletController extends Component {
         this.moveDirection.set(0, 0, 0);
         this.straightMoveRemainDistance = 0;
         this.damage = 0;
+        this.flightSpeed = 0;
     }
 
     protected update(dt: number): void {
@@ -47,7 +54,7 @@ export class bulletController extends Component {
         }
 
         // 最后一帧只移动剩余距离，确保子弹不会飞过配置的消失距离。
-        const moveDistance = Math.min(configData.bulletSpeed * dt, this.straightMoveRemainDistance);
+        const moveDistance = Math.min(this.flightSpeed * dt, this.straightMoveRemainDistance);
         const curPos = this.node.position;
         this.node.setPosition(
             curPos.x + this.moveDirection.x * moveDistance,

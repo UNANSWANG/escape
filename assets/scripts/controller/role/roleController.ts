@@ -1,12 +1,15 @@
 import { _decorator, Component, Label, Node, sp } from 'cc';
 import { enemyMgr } from '../../manager/enemyManager';
 import { UIGame } from '../../UIPage/UIGame';
-import { configData, playerCommonConfig } from '../../manager/configData';
+import { configData, GameEvent, playerCommonConfig } from '../../manager/configData';
+import { gm } from '../../manager/gm';
 import { enemyBaseController } from '../enemy/enemyBaseController';
 import { gunController } from '../gunController';
 import { weaponsController } from '../weaponsController';
 import { uiMgr } from '../../manager/UIManager';
 import { JsonRoleData, roleConfig } from '../../json/jsonRole';
+import { weaponsConfig } from '../../json/jsonWeapons';
+import { pData } from '../../manager/playerData';
 const { ccclass } = _decorator;
 
 export enum roleAnimName {
@@ -59,6 +62,8 @@ export class roleController extends Component {
     /** 枪节点上的枪械控制器。 */
     /** 武器根节点下的全部武器控制器：主武器、副武器、近战武器。 */
     private weaponComps: Array<weaponsController | null> = [];
+    /** 主武器、副武器、近战武器的显示节点，索引与 equipmentIds 前三项一致。 */
+    private weaponNodes: Array<Node | null> = [];
     /** 当前激活的武器控制器。 */
     private currentWeaponComp: weaponsController = null;
     /** 当前装备为枪械时的专用控制器，供既有射击和换弹逻辑使用。 */
@@ -96,10 +101,15 @@ export class roleController extends Component {
         this.roleNameLab = this.node.getChildByName('roleNameLab')?.getComponent(Label);
         const weaponRoot = this.node.getChildByName('weapons');
         const weaponNodes = ['weapons_0', 'weapons_1', 'weapons_2'];
-        this.weaponComps = weaponNodes
-            .map((name) => weaponRoot?.getChildByName(name)?.getComponent(weaponsController) ?? null);
+        this.weaponNodes = weaponNodes.map((name) => weaponRoot?.getChildByName(name) ?? null);
+        this.weaponComps = this.weaponNodes.map((node) => node?.getComponent(weaponsController) ?? null);
         this.currentWeaponComp = this.weaponComps.find((weapon) => weapon?.node.activeInHierarchy) ?? null;
         this.gunComp = this.currentWeaponComp?.node.getComponent(gunController) ?? null;
+        gm.Event.on(GameEvent.loadTable, this.onTableLoad, this);
+    }
+
+    protected onDestroy(): void {
+        gm.Event.off(GameEvent.loadTable, this.onTableLoad, this);
     }
 
     /**当前装备的枪械组件 */
@@ -110,6 +120,28 @@ export class roleController extends Component {
     /** 当前激活的通用武器控制器；近战武器和枪械均通过此入口访问共同行为。 */
     get weaponsController() {
         return this.currentWeaponComp;
+    }
+
+    /**
+     * 切换当前装备槽位：0 为主武器、1 为副武器、2 为近战武器。
+     * 即使近战控制器尚未实现，也会正确切换武器节点显示。
+     */
+    equipWeapon(slotIndex: number) {
+        const targetNode = this.weaponNodes[slotIndex];
+        if (!targetNode) return false;
+
+        this.weaponNodes.forEach((node, index) => {
+            if (node) node.active = index === slotIndex;
+        });
+        this.currentWeaponComp = this.weaponComps[slotIndex] ?? null;
+        this.gunComp = this.currentWeaponComp?.node.getComponent(gunController) ?? null;
+
+        if (this.currentWeaponComp) {
+            this.currentWeaponComp.bindToRole(this.roleAnim);
+            this.currentWeaponComp.resetRotation(true);
+            this.currentWeaponComp.playIdleAnim();
+        }
+        return true;
     }
 
     /**当前移速。基类仅处理通用技能1的加速，专属角色可按自身状态重写。 */
@@ -234,6 +266,8 @@ export class roleController extends Component {
 
         this.hp = this.roleData?.hp ?? 0;
         this.baseMoveSpeed = configData.moveSpeed;
+        this.equipWeapon(0);
+        this.applyEquippedWeaponStats();
         this.refreshRoleSpine();
         this.initData();
         if (this.roleNameLab) this.roleNameLab.string = this.roleId === 0 ? '你' : (nickname || `人机${this.roleId}`);
@@ -242,6 +276,25 @@ export class roleController extends Component {
     /**初始化数据 */
     initData(){
         
+    }
+
+    /** 将游戏外装备栏前三项（主武器、副武器、近战武器）应用到对应武器节点。 */
+    private applyEquippedWeaponStats() {
+        this.weaponComps.forEach((weapon, slotIndex) => {
+            if (!weapon) return;
+            const weaponId = pData.equipmentIds[slotIndex];
+            const weaponData = weaponsConfig.getDataById(weaponId);
+            if (!weaponData) {
+                console.warn(`未找到装备栏第 ${slotIndex + 1} 格的武器配置，id: ${weaponId}`);
+                return;
+            }
+            weapon.applyStats(weaponData);
+        });
+    }
+
+    /** weapons 表异步加载完成后，为已创建的角色补充装备数值。 */
+    private onTableLoad(tableName: string) {
+        if (tableName === 'weapons') this.applyEquippedWeaponStats();
     }
 
     /** 刷新角色初始状态，同时通知枪械重新绑定角色挂点。 */

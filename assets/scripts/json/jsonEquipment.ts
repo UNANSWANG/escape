@@ -18,6 +18,8 @@ export class jsonEquipment extends jsonBase {
 export let equipmentConfig = new jsonEquipment();
 
 interface JsonEquipmentData {
+    /**编号*/
+    id: number;
     /**类型 */
     type: number;
     /**物品id */

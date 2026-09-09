@@ -19,6 +19,8 @@ export class jsonWeapons extends jsonBase {
 export let weaponsConfig = new jsonWeapons();
 
 interface JsonWeaponsData {
+    /**编号*/
+    id: number;
     /**类型 */
     type: number;
     /**物品id */

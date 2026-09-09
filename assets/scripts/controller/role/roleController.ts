@@ -379,6 +379,14 @@ export class roleController extends Component {
         return isFired;
     }
 
+    /** 当前武器执行一次攻击：刀使用扇形近战攻击，枪械发射子弹。 */
+    attack() {
+        const knife = this.currentWeaponComp?.node.getComponent(knifeController);
+        const isAttacked = knife?.attackInFacingDirection() ?? this.fireBullet();
+        if (isAttacked && knife) this.refreshCombatState();
+        return isAttacked;
+    }
+
     /**受到伤害时扣除生命值，并在角色头顶显示实际伤害数值。 */
     takeDamage(damage: number) {
         if (!Number.isFinite(damage) || damage <= 0 || this.hp <= 0) return false;

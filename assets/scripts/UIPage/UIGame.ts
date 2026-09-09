@@ -601,13 +601,14 @@ export class UIGame extends UIBase {
         }
 
         this.refreshAutoAim();
-        if (!playerMgr.playerComp?.fireBullet()) {
+        const roleComp = playerMgr.playerComp;
+        if (!roleComp?.attack()) {
             return;
         }
 
-        const gunComp = playerMgr.playerComp?.gunController;
-        if (gunComp) {
-            this.shootCooldownRemaining = gunComp.attackInterval;
+        const weaponComp = roleComp.weaponsController;
+        if (weaponComp) {
+            this.shootCooldownRemaining = weaponComp.attackInterval;
         }
     }
 

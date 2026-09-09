@@ -567,8 +567,8 @@ export class UIGame extends UIBase {
             return;
         }
 
-        this.isAttackAiming = true;
-        playerMgr.playerComp?.aimGunAt(this.autoAttackTarget.node);
+        // 刀等不支持目标瞄准的武器会返回 false，继续按移动方向保持默认朝向。
+        this.isAttackAiming = playerMgr.playerComp?.aimGunAt(this.autoAttackTarget.node) ?? false;
     }
 
     /**锁定目标是否仍可攻击；锁定后不再受自动瞄准范围限制 */
@@ -707,7 +707,13 @@ export class UIGame extends UIBase {
         const roleComp = playerMgr.playerComp;
         if (!roleComp?.equipWeapon(slotIndex)) return;
         this.shootCooldownRemaining = 0;
-        this.stopAutoAim();
+        if (this.isAttacking()) {
+            // 枪械立即重算到目标的朝向和角度；刀会保留 equipWeapon 中同步的默认姿态。
+            this.refreshAutoAim();
+        } else {
+            this.stopAutoAim();
+            roleComp.syncCurrentWeaponDefaultPose();
+        }
         this.bindCurrentGunReloadEvent();
     }
 

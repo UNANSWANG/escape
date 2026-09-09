@@ -140,7 +140,7 @@ export class weaponsController extends Component {
 
     resetRotation(isImmediate = false) {
         this.stopResetRotationTween();
-        const resetAngle = this.node.scale.x < 0 ? 10 : -10;
+        const resetAngle = this.getDefaultAngle();
         if (isImmediate) {
             this.node.angle = resetAngle;
             return;
@@ -149,6 +149,11 @@ export class weaponsController extends Component {
             .to(0.1, { angle: resetAngle })
             .call(() => this.resetRotationTween = null)
             .start();
+    }
+
+    /** 默认待机角度；子类可按各自武器类型覆盖。 */
+    protected getDefaultAngle(): number {
+        return this.node.scale.x < 0 ? 10 : -10;
     }
 
     stopResetRotationTween() {

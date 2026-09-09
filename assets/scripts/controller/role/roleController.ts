@@ -5,6 +5,7 @@ import { configData, GameEvent, playerCommonConfig } from '../../manager/configD
 import { gm } from '../../manager/gm';
 import { enemyBaseController } from '../enemy/enemyBaseController';
 import { gunController } from '../gunController';
+import { knifeController } from '../knifeController';
 import { weaponsController } from '../weaponsController';
 import { uiMgr } from '../../manager/UIManager';
 import { JsonRoleData, roleConfig } from '../../json/jsonRole';
@@ -137,11 +138,22 @@ export class roleController extends Component {
         this.gunComp = this.currentWeaponComp?.node.getComponent(gunController) ?? null;
 
         if (this.currentWeaponComp) {
-            this.currentWeaponComp.bindToRole(this.roleAnim);
-            this.currentWeaponComp.resetRotation(true);
+            this.syncCurrentWeaponDefaultPose();
             this.currentWeaponComp.playIdleAnim();
         }
         return true;
+    }
+
+    /**
+     * 立即同步当前武器到角色挂点，并按角色当前朝向设置默认角度。
+     * 枪械在攻击时会在此基础上被 aimAt 覆盖为瞄准角度；刀始终保持该默认角度。
+     */
+    syncCurrentWeaponDefaultPose() {
+        if (!this.currentWeaponComp) return;
+        this.currentWeaponComp.bindToRole(this.roleAnim);
+        const directionX = this.roleAnim?.node?.scale.x < 0 ? 1 : -1;
+        this.currentWeaponComp.setFacingByHorizontal(directionX);
+        this.currentWeaponComp.resetRotation(true);
     }
 
     /**当前移速。基类仅处理通用技能1的加速，专属角色可按自身状态重写。 */
@@ -300,21 +312,23 @@ export class roleController extends Component {
         if (activeSlotIndex >= 0) {
             this.currentWeaponComp = this.weaponComps[activeSlotIndex];
             this.gunComp = this.currentWeaponComp?.node.getComponent(gunController) ?? null;
-            this.currentWeaponComp?.bindToRole(this.roleAnim);
-            this.currentWeaponComp?.resetRotation(true);
+            this.syncCurrentWeaponDefaultPose();
             this.currentWeaponComp?.playIdleAnim();
         }
     }
 
     /**
-     * 按 weapons 表的类型给武器节点挂载控制脚本：0 为刀（通用近战控制器），其余为枪械。
+     * 按 weapons 表的类型给武器节点挂载控制脚本：0 为刀，其余为枪械。
      * 切换装备数据时会移除旧类型组件，避免同一节点同时存在刀和枪两个控制器。
      */
     private assignWeaponController(node: Node, weaponType: number) {
         const gun = node.getComponent(gunController);
+        const knife = node.getComponent(knifeController);
         if (weaponType === 0) {
             if (gun) node.removeComponent(gun);
-            return node.getComponent(weaponsController) ?? node.addComponent(weaponsController);
+            const weapon = node.getComponent(weaponsController);
+            if (weapon && !knife) node.removeComponent(weapon);
+            return knife ?? node.addComponent(knifeController);
         }
 
         const weapon = node.getComponent(weaponsController);

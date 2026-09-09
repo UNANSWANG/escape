@@ -8806,6 +8806,12 @@
     "bagBtn": {
       "__id__": 81
     },
+    "weaponBox_0": {
+      "__id__": 184
+    },
+    "weaponBox_1": {
+      "__id__": 208
+    },
     "skill2RemainLab": {
       "__id__": 363
     },

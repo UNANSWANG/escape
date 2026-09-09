@@ -1,12 +1,9 @@
 import { _decorator, math, Vec2, Vec3 } from 'cc';
-import { levelConfig } from '../json/jsonLevel';
 import { ccStorageTools } from '../extention/storageTools';
 import { configData, GameEvent, gmConfig, PropsName, SaveKey } from './configData';
 import { gm, PlatType } from './gm';
 import { httpMgr } from '../sdk/network/httpManager';
 import { urlConfig } from '../sdk/network/netConfig';
-import { propsConfig } from '../json/jsonProps';
-import { enemyMgr } from './enemyManager';
 import { ccTimeTools } from '../extention/timeTools';
 const { ccclass, property } = _decorator;
 
@@ -41,11 +38,13 @@ export class playerData {
     private isGameReportDirty = false;
     /**游戏开始的时间戳 */
     gameStartTime = 0;
+    /**装备id数组[主武器（weapons），副武器（weapons），近战武器（weapons），头盔（equipment），护甲（equipment），背包（equipment）] */
+    equipmentIds: number[] = [-1, -1, 0, -1, -1, 0];
 
     levelInit() {
         pData.adNum = 0;
         //TODO 临时写地图半宽高，后续根据配置加载
-        pData.mapHalfSize = new Vec2(2680/2, 1500/2);
+        pData.mapHalfSize = new Vec2(2680 / 2, 1500 / 2);
         this.isGuide = ccStorageTools.getNumberData(SaveKey.guide) != 1 || gmConfig.forceGuide;
         this.gameStartTime = ccTimeTools.getTime();
 
@@ -212,7 +211,7 @@ export class playerData {
 
     /**没有云端道具数据时，按商城配置初始化每种道具数量 */
     initPropsNum() {
-        
+
     }
 
     /**串行上报，避免旧请求后返回并覆盖新数据 */

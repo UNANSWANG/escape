@@ -56,13 +56,18 @@ export class UIGame extends UIBase {
     @property(Node)
     bagBtn: Node;
 
+    @property(Node)
+    weaponBox_0: Node;
+
+    @property(Node)
+    weaponBox_1: Node;
+
     @property(Label)
     skill2RemainLab: Label;
 
     ///
     ///需要获取的节点
     ///
-
 
     ///
     ///属性
@@ -211,6 +216,8 @@ export class UIGame extends UIBase {
         this.skillBtn2.addComponent(zoomButton).onClick = this.clickSkillBtn2.bind(this);
         this.knifeBtn.addComponent(zoomButton).onClick = this.clickKnifeBtn.bind(this);
         this.bagBtn.addComponent(zoomButton).onClick = this.clickBagBtn.bind(this);
+        this.weaponBox_0.on(NodeEventType.TOUCH_END, this.onClickWeaponBox_0, this);
+        this.weaponBox_1.on(NodeEventType.TOUCH_END, this.onClickWeaponBox_1, this);
     }
 
     /**初始化游戏摄像机 */
@@ -790,6 +797,16 @@ export class UIGame extends UIBase {
     /**点击背包按钮 */
     clickBagBtn() {
         uiMgr.openPage(UIPath.UIBackpack);
+    }
+
+    /**点击武器框0 */
+    onClickWeaponBox_0() {
+        uiMgr.showTips("点击了武器框0");
+    }
+
+    /**点击武器框1 */
+    onClickWeaponBox_1() {
+        uiMgr.showTips("点击了武器框1");
     }
 
     /**点击设置按钮 */

@@ -24,10 +24,14 @@ export class knifeController extends weaponsController {
         return false;
     }
 
-    /**刀不响应手动枪械瞄准方向。 */
-    aimInDirection(_direction: Vec3) {
+    /**持刀手动瞄准时只改变人物朝向，不旋转刀去指向目标。 */
+    aimInDirection(direction: Vec3) {
+        if (direction.x === 0 && direction.y === 0) return false;
         this.clearAimTarget();
-        return false;
+        this.setFacingByHorizontal(direction.x);
+        this.resetRotation(true);
+        // 返回 true，使移动期间的人物朝向继续由攻击摇杆控制。
+        return true;
     }
 
     /**

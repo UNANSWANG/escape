@@ -15,13 +15,20 @@ export class knifeController extends weaponsController {
     @property({ tooltip: '刀的默认角度（绝对值）' })
     defaultAngle = 10;
 
-    /**
-     * 刀不使用目标瞄准角度，只保留由角色朝向决定的默认角度。
-     * 近战攻击表现后续在专属攻击逻辑中处理。
-     */
-    aimAt(_target: Node) {
+    /**自动攻击时根据最近敌人的方向改变人物朝向，刀保持默认角度。 */
+    aimAt(target: Node) {
+        if (!target?.isValid) return false;
+
         this.clearAimTarget();
-        return false;
+        const originNode = this.roleAnim?.node ?? this.node.parent;
+        if (!originNode) return false;
+
+        originNode.getWorldPosition(this.tempRoleWorldPos);
+        target.getWorldPosition(this.tempTargetWorldPos);
+        this.setFacingByHorizontal(this.tempTargetWorldPos.x - this.tempRoleWorldPos.x);
+        this.resetRotation(true);
+        // 返回 true，攻击期间人物朝向不会被移动方向覆盖。
+        return true;
     }
 
     /**持刀手动瞄准时只改变人物朝向，不旋转刀去指向目标。 */

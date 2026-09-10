@@ -603,7 +603,7 @@ export class UIGame extends UIBase {
             return;
         }
 
-        // 刀等不支持目标瞄准的武器会返回 false，继续按移动方向保持默认朝向。
+        // 枪械对准目标坐标；刀只根据目标的左右方向调整人物朝向。
         this.isAttackAiming = playerMgr.playerComp?.aimGunAt(this.autoAttackTarget.node) ?? false;
     }
 

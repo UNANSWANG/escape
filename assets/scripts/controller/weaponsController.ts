@@ -131,6 +131,26 @@ export class weaponsController extends Component {
         return true;
     }
 
+    /**按世界方向瞄准；手动瞄准摇杆使用此入口。 */
+    aimInDirection(direction: Vec3) {
+        const length = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
+        if (length === 0) return false;
+
+        this.node.parent?.getWorldPosition(this.tempRoleWorldPos);
+        // 使用角色前方的虚拟目标点，沿用目标瞄准的枪口旋转和子弹方向计算。
+        const aimDistance = 1000;
+        this.tempTargetWorldPos.set(
+            this.tempRoleWorldPos.x + direction.x / length * aimDistance,
+            this.tempRoleWorldPos.y + direction.y / length * aimDistance,
+            this.tempRoleWorldPos.z,
+        );
+        this.hasAimTarget = true;
+        this.setFacingByHorizontal(direction.x || 1);
+        this.syncToRoleSocket();
+        this.updateAimRotation();
+        return true;
+    }
+
     /** 默认按武器节点中心对准，枪械子类会按枪口骨骼修正。 */
     protected updateAimRotation() {
         const parentTransform = this.node.parent?.getComponent(UITransform);

@@ -91,6 +91,8 @@ export class UIGame extends UIBase {
     private isKeyboardAttackPressed = false;
     /**射击按钮是否按住 */
     private isShootButtonPressed = false;
+    /**手动瞄准摇杆是否正在控制 */
+    private isManualAimControlling = false;
     /**距离下一发子弹的剩余冷却时间（秒） */
     private shootCooldownRemaining = 0;
     /**换弹按钮遮罩。 */
@@ -131,6 +133,8 @@ export class UIGame extends UIBase {
     private tempTouchMapLocalPos: Vec3 = new Vec3();
     /**玩家每帧移动偏移 */
     private tempPlayerMoveOffset: Vec3 = new Vec3();
+    /**手动瞄准摇杆当前方向。 */
+    private manualAimDirection: Vec3 = new Vec3();
     /**游戏是否暂停 */
     private isGamePause = false;
     /**当前游戏局序号，用于避免异步加载回写旧局 */
@@ -213,10 +217,17 @@ export class UIGame extends UIBase {
 
     bindBtn() {
         this.setBtn.addComponent(zoomButton).onClick = this.clickSetBtn.bind(this);
-        this.shootBtn.addComponent(zoomButton);
-        this.shootBtn.on(NodeEventType.TOUCH_START, this.onShootButtonStart, this);
-        this.shootBtn.on(NodeEventType.TOUCH_END, this.onShootButtonEnd, this);
-        this.shootBtn.on(NodeEventType.TOUCH_CANCEL, this.onShootButtonEnd, this);
+        const autoAimBtn = this.shootBtn.getChildByName("btn");
+        autoAimBtn?.addComponent(zoomButton);
+        autoAimBtn?.on(NodeEventType.TOUCH_START, this.onShootButtonStart, this);
+        autoAimBtn?.on(NodeEventType.TOUCH_END, this.onShootButtonEnd, this);
+        autoAimBtn?.on(NodeEventType.TOUCH_CANCEL, this.onShootButtonEnd, this);
+
+        const aimingRocker = this.shootBtn.getChildByName("rocker");
+        aimingRocker?.on(NodeEventType.TOUCH_START, this.onManualAimRockerStart, this);
+        aimingRocker?.on(NodeEventType.TOUCH_MOVE, this.onManualAimRockerMove, this);
+        aimingRocker?.on(NodeEventType.TOUCH_END, this.onManualAimRockerEnd, this);
+        aimingRocker?.on(NodeEventType.TOUCH_CANCEL, this.onManualAimRockerEnd, this);
         this.reloadBtn.addComponent(zoomButton).onClick = this.clickReloadBtn.bind(this);
         this.skillBtn1.addComponent(zoomButton).onClick = this.clickSkillBtn1.bind(this);
         this.skillBtn2.addComponent(zoomButton).onClick = this.clickSkillBtn2.bind(this);
@@ -265,6 +276,9 @@ export class UIGame extends UIBase {
         this.isGamePause = false;
         this.isKeyboardAttackPressed = false;
         this.isShootButtonPressed = false;
+        this.isManualAimControlling = false;
+        this.manualAimDirection.set(0, 0, 0);
+        this.resetManualAimRocker();
         this.shootCooldownRemaining = 0;
         this.clearCurrentGunReloadEvent();
         this.stopReloadMaskCooldown();
@@ -423,6 +437,9 @@ export class UIGame extends UIBase {
         this.isGamePause = true;
         this.isKeyboardAttackPressed = false;
         this.isShootButtonPressed = false;
+        this.isManualAimControlling = false;
+        this.manualAimDirection.set(0, 0, 0);
+        this.resetManualAimRocker();
         this.syncPlayerAttackHeldState();
         this.stopAutoAim();
         this.rockerReset(true);
@@ -623,7 +640,9 @@ export class UIGame extends UIBase {
             return;
         }
 
-        this.refreshAutoAim();
+        if (pData.isAutoAiming) {
+            this.refreshAutoAim();
+        }
         const roleComp = playerMgr.playerComp;
         if (!roleComp?.attack(deltaTime)) {
             return;
@@ -725,7 +744,7 @@ export class UIGame extends UIBase {
         const wasAttacking = this.isAttacking();
         this.isShootButtonPressed = true;
         this.syncPlayerAttackHeldState();
-        if (!wasAttacking) {
+        if (!wasAttacking && pData.isAutoAiming) {
             this.refreshAutoAim();
         }
         this.shootEnemy();
@@ -740,6 +759,59 @@ export class UIGame extends UIBase {
         }
     }
 
+    /**手动瞄准摇杆按下：确定方向后开始持续攻击。 */
+    private onManualAimRockerStart(event: EventTouch) {
+        if (pData.isAutoAiming) return;
+        this.isManualAimControlling = true;
+        this.updateManualAimDirection(event);
+        this.onShootButtonStart();
+    }
+
+    /**手动瞄准摇杆移动：更新摇杆点和枪口方向。 */
+    private onManualAimRockerMove(event: EventTouch) {
+        if (!this.isManualAimControlling || pData.isAutoAiming) return;
+        this.updateManualAimDirection(event);
+    }
+
+    /**手动瞄准摇杆松开：归位并停止攻击。 */
+    private onManualAimRockerEnd() {
+        if (!this.isManualAimControlling) return;
+        this.isManualAimControlling = false;
+        this.manualAimDirection.set(0, 0, 0);
+        this.resetManualAimRocker();
+        this.onShootButtonEnd();
+    }
+
+    /**根据手动瞄准摇杆触点更新枪口朝向。 */
+    private updateManualAimDirection(event: EventTouch) {
+        const aimingRocker = this.shootBtn?.getChildByName("rocker");
+        const rockerPoint = aimingRocker?.getChildByName("rockerPoint");
+        const rockerTransform = aimingRocker?.getComponent(UITransform);
+        if (!aimingRocker || !rockerPoint || !rockerTransform) return;
+
+        const touchPos = event.getUILocation();
+        this.tempTouchWorldPos.set(touchPos.x, touchPos.y, 0);
+        rockerTransform.convertToNodeSpaceAR(this.tempTouchWorldPos, this.tempTouchMapLocalPos);
+
+        const directionX = this.tempTouchMapLocalPos.x;
+        const directionY = this.tempTouchMapLocalPos.y;
+        const directionLength = Math.sqrt(directionX * directionX + directionY * directionY);
+        // 与移动摇杆保持一致的圆点最大偏移，摇杆本体不添加缩放效果。
+        const maxDistance = 34;
+        const positionScale = directionLength > 0 ? Math.min(1, maxDistance / directionLength) : 0;
+        rockerPoint.setPosition(directionX * positionScale, directionY * positionScale, 0);
+        if (directionLength === 0) return;
+
+        this.manualAimDirection.set(directionX / directionLength, directionY / directionLength, 0);
+        this.isAttackAiming = playerMgr.playerComp?.aimGunInDirection(this.manualAimDirection) ?? false;
+    }
+
+    /**将手动瞄准摇杆的摇杆点归位。 */
+    private resetManualAimRocker() {
+        const rockerPoint = this.shootBtn?.getChildByName("rocker")?.getChildByName("rockerPoint");
+        rockerPoint?.setPosition(0, 0, 0);
+    }
+
     /** 切换角色武器，并清除旧武器的瞄准和冷却状态。 */
     private switchWeapon(slotIndex: number) {
         const roleComp = playerMgr.playerComp;
@@ -747,7 +819,11 @@ export class UIGame extends UIBase {
         this.shootCooldownRemaining = 0;
         if (this.isAttacking()) {
             // 枪械立即重算到目标的朝向和角度；刀会保留 equipWeapon 中同步的默认姿态。
-            this.refreshAutoAim();
+            if (pData.isAutoAiming) {
+                this.refreshAutoAim();
+            } else if (this.isManualAimControlling) {
+                this.isAttackAiming = roleComp.aimGunInDirection(this.manualAimDirection);
+            }
         } else {
             this.stopAutoAim();
             roleComp.syncCurrentWeaponDefaultPose();
@@ -789,7 +865,7 @@ export class UIGame extends UIBase {
             aimingSelect.setPosition(pData.isAutoAiming ? -25 : 25, position.y, position.z);
         }
 
-        // 自动瞄准使用普通射击按钮；手动瞄准时先只显示摇杆，交互后续再实现。
+        // 自动瞄准使用普通射击按钮；手动瞄准时显示瞄准摇杆。
         const autoAimBtn = this.shootBtn?.getChildByName("btn");
         const aimingRocker = this.shootBtn?.getChildByName("rocker");
         if (autoAimBtn) {
@@ -818,7 +894,7 @@ export class UIGame extends UIBase {
                 const wasAttacking = this.isAttacking();
                 this.isKeyboardAttackPressed = true;
                 this.syncPlayerAttackHeldState();
-                if (!wasAttacking) {
+                if (!wasAttacking && pData.isAutoAiming) {
                     this.refreshAutoAim();
                 }
                 this.shootEnemy();
@@ -909,10 +985,11 @@ export class UIGame extends UIBase {
     /**点击自动瞄准按钮 */
     clickAimingBtn() {
         pData.setAutoAiming(!pData.isAutoAiming);
+        this.isManualAimControlling = false;
+        this.manualAimDirection.set(0, 0, 0);
+        this.resetManualAimRocker();
         this.refreshAimingBtnDisplay();
-        if (!pData.isAutoAiming) {
-            this.stopAutoAim();
-        }
+        this.stopAutoAim();
     }
 
     /**点击设置按钮 */

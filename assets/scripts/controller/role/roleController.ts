@@ -1,4 +1,4 @@
-import { _decorator, Component, Label, Node, sp } from 'cc';
+import { _decorator, Component, Label, Node, sp, Vec3 } from 'cc';
 import { enemyMgr } from '../../manager/enemyManager';
 import { UIGame } from '../../UIPage/UIGame';
 import { configData, GameEvent, playerCommonConfig } from '../../manager/configData';
@@ -376,6 +376,11 @@ export class roleController extends Component {
     /** 将瞄准请求转交给当前装备的枪械。 */
     aimGunAt(target: Node) {
         return this.currentWeaponComp?.aimAt(target) ?? false;
+    }
+
+    /** 将手动瞄准方向转交给当前装备的武器。 */
+    aimGunInDirection(direction: Vec3) {
+        return this.currentWeaponComp?.aimInDirection(direction) ?? false;
     }
 
     /** 清除枪械锁定目标。 */

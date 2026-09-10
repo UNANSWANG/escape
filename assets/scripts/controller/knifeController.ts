@@ -1,4 +1,4 @@
-import { _decorator, Node } from 'cc';
+import { _decorator, Node, Vec3 } from 'cc';
 import { enemyMgr } from '../manager/enemyManager';
 import { weaponsAnimName, weaponsController } from './weaponsController';
 const { ccclass, property } = _decorator;
@@ -20,6 +20,12 @@ export class knifeController extends weaponsController {
      * 近战攻击表现后续在专属攻击逻辑中处理。
      */
     aimAt(_target: Node) {
+        this.clearAimTarget();
+        return false;
+    }
+
+    /**刀不响应手动枪械瞄准方向。 */
+    aimInDirection(_direction: Vec3) {
         this.clearAimTarget();
         return false;
     }

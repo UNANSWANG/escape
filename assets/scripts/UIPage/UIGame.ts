@@ -260,6 +260,7 @@ export class UIGame extends UIBase {
         this.isKeyboardAttackPressed = false;
         this.isShootButtonPressed = false;
         this.shootCooldownRemaining = 0;
+        this.clearCurrentGunReloadEvent();
         this.stopReloadMaskCooldown();
         this.stopSkillMaskCooldown();
         this.updateSkill2RemainLab(0, false);
@@ -292,11 +293,19 @@ export class UIGame extends UIBase {
 
     /** 武器切换后，将换弹 UI 事件绑定到当前枪械，并移除旧枪监听。 */
     private bindCurrentGunReloadEvent() {
-        this.reloadEventGunNode?.off('reload-start', this.playReloadMaskCooldown, this);
+        this.clearCurrentGunReloadEvent();
         const gunNode = playerMgr.playerComp?.gunController?.node ?? null;
         gunNode?.on('reload-start', this.playReloadMaskCooldown, this);
         this.reloadEventGunNode = gunNode;
         if (this.reloadBtn) this.reloadBtn.active = !!gunNode;
+    }
+
+    /** 安全移除旧枪的换弹事件；节点已销毁时不能再调用其 off。 */
+    private clearCurrentGunReloadEvent() {
+        if (this.reloadEventGunNode?.isValid) {
+            this.reloadEventGunNode.off('reload-start', this.playReloadMaskCooldown, this);
+        }
+        this.reloadEventGunNode = null;
     }
 
     /**在玩家右侧生成两个仅播放待机动画的临时敌人，第二个在第一个上方 */

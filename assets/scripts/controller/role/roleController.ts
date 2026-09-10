@@ -330,37 +330,16 @@ export class roleController extends Component {
 
     /**
      * 按 weapons 表的类型给武器节点挂载控制脚本：0 为刀、4 为霰弹枪、5 为狙击枪，其余为普通枪械。
-     * 切换装备数据时会移除旧类型组件，避免同一节点同时存在刀和枪两个控制器。
+     * 切换装备数据时统一移除旧的武器基类组件，避免同一节点同时存在多个武器控制器。
      */
     private assignWeaponController(node: Node, weaponType: number) {
-        const gun = node.getComponent(gunController);
-        const knife = node.getComponent(knifeController);
-        if (weaponType === 0) {
-            if (gun) node.removeComponent(gun);
-            const weapon = node.getComponent(weaponsController);
-            if (weapon && !knife) node.removeComponent(weapon);
-            return knife ?? node.addComponent(knifeController);
-        }
+        const oldWeapon = node.getComponent(weaponsController);
+        if (oldWeapon) node.removeComponent(oldWeapon);
 
-        const weapon = node.getComponent(weaponsController);
-        if (weapon && !gun) node.removeComponent(weapon);
-        if (weaponType === 4) {
-            const shotgun = node.getComponent(shotgunController);
-            if (gun && !shotgun) node.removeComponent(gun);
-            return shotgun ?? node.addComponent(shotgunController);
-        }
-
-        if (weaponType === 5) {
-            const sniper = node.getComponent(sniperController);
-            if (gun && !sniper) node.removeComponent(gun);
-            return sniper ?? node.addComponent(sniperController);
-        }
-
-        const shotgun = node.getComponent(shotgunController);
-        if (shotgun) node.removeComponent(shotgun);
-        const sniper = node.getComponent(sniperController);
-        if (sniper) node.removeComponent(sniper);
-        return node.getComponent(gunController) ?? node.addComponent(gunController);
+        if (weaponType === 0) return node.addComponent(knifeController);
+        if (weaponType === 4) return node.addComponent(shotgunController);
+        if (weaponType === 5) return node.addComponent(sniperController);
+        return node.addComponent(gunController);
     }
 
     /** 当前武器为狙击枪时扩大视野；切换为其他武器后恢复默认视野。 */

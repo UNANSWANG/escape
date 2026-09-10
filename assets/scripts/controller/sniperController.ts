@@ -11,11 +11,9 @@ export class sniperController extends gunController {
     viewScale = 1.2;
 
     /** 单侧辅助线相对射击方向的初始夹角，总张角为该值的两倍。 */
-    @property
     chargeAngle = 30;
 
     /** 辅助线从初始夹角收拢至 0 度所需时间（秒）。 */
-    @property
     chargeTime = 1;
 
     private isCharging = false;
@@ -134,9 +132,10 @@ export class sniperController extends gunController {
         const parentTransform = this.lineParent.getComponent(UITransform);
         if (!parentTransform) return;
         parentTransform.convertToNodeSpaceAR(this.tempMuzzleWorldPos, this.tempMuzzleLocalPos);
+        const aimLineRange = Math.max(0, this.attackRange);
         this.tempAimEndWorldPos.set(
-            this.tempMuzzleWorldPos.x + this.tempAimWorldDirection.x * this.attackRange,
-            this.tempMuzzleWorldPos.y + this.tempAimWorldDirection.y * this.attackRange,
+            this.tempMuzzleWorldPos.x + this.tempAimWorldDirection.x * aimLineRange,
+            this.tempMuzzleWorldPos.y + this.tempAimWorldDirection.y * aimLineRange,
             this.tempMuzzleWorldPos.z,
         );
         parentTransform.convertToNodeSpaceAR(this.tempAimEndWorldPos, this.tempAimEndLocalPos);

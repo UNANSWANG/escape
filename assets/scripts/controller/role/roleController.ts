@@ -389,16 +389,21 @@ export class roleController extends Component {
     }
 
     /** 由当前枪械从游戏 UI 节点中生成子弹。 */
-    fireBullet(deltaTime = 0) {
-        const isFired = this.gunComp?.fireBullet(this.gameComp?.gameUINode, deltaTime) ?? false;
+    fireBullet(deltaTime = 0, fireSniperOnChargeComplete = true) {
+        const isFired = this.gunComp?.fireBullet(
+            this.gameComp?.gameUINode,
+            deltaTime,
+            fireSniperOnChargeComplete,
+        ) ?? false;
         if (isFired) this.refreshCombatState();
         return isFired;
     }
 
     /** 当前武器执行一次攻击：刀使用扇形近战攻击，枪械发射子弹。 */
-    attack(deltaTime = 0) {
+    attack(deltaTime = 0, fireSniperOnChargeComplete = true) {
         const knife = this.currentWeaponComp?.node.getComponent(knifeController);
-        const isAttacked = knife?.attackInFacingDirection() ?? this.fireBullet(deltaTime);
+        const isAttacked = knife?.attackInFacingDirection()
+            ?? this.fireBullet(deltaTime, fireSniperOnChargeComplete);
         if (isAttacked && knife) this.refreshCombatState();
         return isAttacked;
     }

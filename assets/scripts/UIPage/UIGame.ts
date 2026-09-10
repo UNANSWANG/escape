@@ -644,7 +644,8 @@ export class UIGame extends UIBase {
             this.refreshAutoAim();
         }
         const roleComp = playerMgr.playerComp;
-        if (!roleComp?.attack(deltaTime)) {
+        // 手动瞄准的狙击枪只蓄力，松手时由 setAttackHeld 完成开火；自动模式维持蓄满即开火。
+        if (!roleComp?.attack(deltaTime, pData.isAutoAiming)) {
             return;
         }
 

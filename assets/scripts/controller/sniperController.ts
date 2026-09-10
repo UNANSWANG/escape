@@ -4,7 +4,7 @@ import { poolMgr } from '../manager/poolManager';
 import { gunController } from './gunController';
 const { ccclass, property } = _decorator;
 
-/** 狙击枪控制器：按住攻击时收拢两条瞄准线，蓄力完成后自动开火。 */
+/** 狙击枪控制器：按住攻击时收拢两条瞄准线；自动模式蓄满开火，手动模式松手开火。 */
 @ccclass('sniperController')
 export class sniperController extends gunController {
     /** 装备狙击枪后的可视范围倍率：1.2 表示扩大 20%。 */
@@ -34,7 +34,7 @@ export class sniperController extends gunController {
      * 第一次调用开始蓄力；蓄力完成后才真正生成子弹。
      * 开火成功后由 UIGame 的通用攻击间隔控制下一轮蓄力开始时间。
      */
-    fireBullet(bulletParent: Node, deltaTime = 0) {
+    fireBullet(bulletParent: Node, deltaTime = 0, fireOnChargeComplete = true) {
         if (!bulletParent?.isValid) return false;
 
         if (!this.isCharging) {
@@ -52,7 +52,7 @@ export class sniperController extends gunController {
         }
         this.syncAimLines();
 
-        if (!this.isChargeComplete) return false;
+        if (!this.isChargeComplete || !fireOnChargeComplete) return false;
         const isFired = super.fireBullet(bulletParent);
         if (isFired) {
             // 成功开火后进入攻击间隔，期间不显示辅助线；下一次蓄力时重新创建。

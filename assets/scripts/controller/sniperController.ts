@@ -2,6 +2,7 @@ import { _decorator, Color, Node, Sprite, UITransform, Vec3 } from 'cc';
 import { uiMgr } from '../manager/UIManager';
 import { poolMgr } from '../manager/poolManager';
 import { gunController } from './gunController';
+import { WeaponStats } from './weaponsController';
 const { ccclass, property } = _decorator;
 
 /** 狙击枪控制器：按住攻击时收拢两条瞄准线；自动模式蓄满开火，手动模式松手开火。 */
@@ -29,6 +30,14 @@ export class sniperController extends gunController {
     private tempAimEndWorldPos = new Vec3();
     private tempAimEndLocalPos = new Vec3();
     private tempReleaseWorldDirection = new Vec3();
+
+    /**应用武器表配置，并读取狙击枪专用的蓄力时间。 */
+    applyStats(stats: WeaponStats) {
+        super.applyStats(stats);
+        if (Number.isFinite(stats.chargeTime)) {
+            this.chargeTime = Math.max(0, stats.chargeTime);
+        }
+    }
 
     /**
      * 第一次调用开始蓄力；蓄力完成后才真正生成子弹。

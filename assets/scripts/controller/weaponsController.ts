@@ -13,6 +13,8 @@ export interface WeaponStats {
     attackRange: number;
     /** 单次攻击生成的子弹数；仅霰弹枪等多弹丸武器使用。 */
     bulletNum?: number;
+    /** 蓄力时间（秒）；仅狙击枪等蓄力武器使用。 */
+    chargeTime?: number;
 }
 
 /**

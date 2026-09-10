@@ -30,6 +30,8 @@ export class playerData {
     limitTimeData: { [key: string]: any } = {};
     /**是否为引导关 */
     isGuide = false;
+    /**是否开启自动瞄准 */
+    isAutoAiming = true;
     /**角色默认id，角色皮肤表加载后赋值 */
     private defaultRoleId: number = null;
     /**游戏数据上报状态，避免连续修改产生乱序覆盖 */
@@ -245,6 +247,15 @@ export class playerData {
         this.propsNums = ccStorageTools.getData(SaveKey.props) || {};
         gmConfig.onlyAttackSelf = ccStorageTools.getNumberData(SaveKey.onlyAttackSelf) == 1;
         gmConfig.isFreeAd = ccStorageTools.getNumberData(SaveKey.isFreeAd) == 1;
+        const autoAimingData = ccStorageTools.getData(SaveKey.isAutoAiming);
+        // 旧存档没有此字段时，保持原有自动瞄准行为。
+        this.isAutoAiming = autoAimingData === null ? true : Number(autoAimingData) === 1;
+    }
+
+    /**设置自动瞄准状态并持久化到本地存储 */
+    setAutoAiming(isAutoAiming: boolean) {
+        this.isAutoAiming = isAutoAiming;
+        ccStorageTools.setData(SaveKey.isAutoAiming, isAutoAiming ? 1 : 0);
     }
 }
 

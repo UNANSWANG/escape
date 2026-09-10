@@ -62,6 +62,9 @@ export class UIGame extends UIBase {
     @property(Node)
     weaponBox_1: Node;
 
+    @property(Node)
+    aimingBtn: Node;
+
     @property(Label)
     skill2RemainLab: Label;
 
@@ -150,6 +153,7 @@ export class UIGame extends UIBase {
     async onUI_Open(data?: any) {
         ++this.openVersion;
         this.addListener();
+        this.refreshAimingBtnDisplay();
         this.restartGame();
     }
 
@@ -218,6 +222,8 @@ export class UIGame extends UIBase {
         this.skillBtn2.addComponent(zoomButton).onClick = this.clickSkillBtn2.bind(this);
         this.knifeBtn.addComponent(zoomButton).onClick = this.clickKnifeBtn.bind(this);
         this.bagBtn.addComponent(zoomButton).onClick = this.clickBagBtn.bind(this);
+        this.aimingBtn.addComponent(zoomButton).onClick = this.clickAimingBtn.bind(this);
+
         this.weaponBox_0.on(NodeEventType.TOUCH_END, this.onClickWeaponBox_0, this);
         this.weaponBox_1.on(NodeEventType.TOUCH_END, this.onClickWeaponBox_1, this);
     }
@@ -478,7 +484,9 @@ export class UIGame extends UIBase {
         }
 
         if (this.isAttacking()) {
-            this.refreshAutoAim();
+            if (pData.isAutoAiming) {
+                this.refreshAutoAim();
+            }
             this.shootEnemy(dt);
         }
     }
@@ -875,6 +883,28 @@ export class UIGame extends UIBase {
     onClickWeaponBox_1() {
         this.switchWeapon(1);
         return;
+    }
+
+    /**点击自动瞄准按钮 */
+    clickAimingBtn() {
+        pData.setAutoAiming(!pData.isAutoAiming);
+        this.refreshAimingBtnDisplay();
+        if (!pData.isAutoAiming) {
+            this.stopAutoAim();
+        }
+    }
+
+    /**刷新自动瞄准按钮的选中位置 */
+    private refreshAimingBtnDisplay() {
+        const aimingSelect = this.aimingBtn
+            ?.getChildByName("aimingNode")
+            ?.getChildByName("aimingSelect");
+        if (!aimingSelect) {
+            return;
+        }
+
+        const position = aimingSelect.position;
+        aimingSelect.setPosition(pData.isAutoAiming ? -25 : 25, position.y, position.z);
     }
 
     /**点击设置按钮 */

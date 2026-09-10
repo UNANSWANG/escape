@@ -110,6 +110,8 @@ export enum SaveKey {
     onlyAttackSelf = "onlyAttackSelf",
     /**是否免广告（gm配置） */
     isFreeAd = "isFreeAd",
+    /**是否开启自动瞄准 */
+    isAutoAiming = "isAutoAiming",
 }
 
 /**道具索引 */

@@ -7,6 +7,7 @@ import { enemyBaseController } from '../enemy/enemyBaseController';
 import { gunController } from '../gunController';
 import { knifeController } from '../knifeController';
 import { shotgunController } from '../shotgunController';
+import { sniperController } from '../sniperController';
 import { weaponsController } from '../weaponsController';
 import { uiMgr } from '../../manager/UIManager';
 import { JsonRoleData, roleConfig } from '../../json/jsonRole';
@@ -139,6 +140,7 @@ export class roleController extends Component {
         });
         this.currentWeaponComp = this.weaponComps[slotIndex] ?? null;
         this.gunComp = this.currentWeaponComp?.node.getComponent(gunController) ?? null;
+        this.updateWeaponViewScale();
 
         if (this.currentWeaponComp) {
             this.syncCurrentWeaponDefaultPose();
@@ -320,13 +322,14 @@ export class roleController extends Component {
         if (activeSlotIndex >= 0) {
             this.currentWeaponComp = this.weaponComps[activeSlotIndex];
             this.gunComp = this.currentWeaponComp?.node.getComponent(gunController) ?? null;
+            this.updateWeaponViewScale();
             this.syncCurrentWeaponDefaultPose();
             this.currentWeaponComp?.playIdleAnim();
         }
     }
 
     /**
-     * 按 weapons 表的类型给武器节点挂载控制脚本：0 为刀、4 为霰弹枪，其余为普通枪械。
+     * 按 weapons 表的类型给武器节点挂载控制脚本：0 为刀、4 为霰弹枪、5 为狙击枪，其余为普通枪械。
      * 切换装备数据时会移除旧类型组件，避免同一节点同时存在刀和枪两个控制器。
      */
     private assignWeaponController(node: Node, weaponType: number) {
@@ -347,9 +350,23 @@ export class roleController extends Component {
             return shotgun ?? node.addComponent(shotgunController);
         }
 
+        if (weaponType === 5) {
+            const sniper = node.getComponent(sniperController);
+            if (gun && !sniper) node.removeComponent(gun);
+            return sniper ?? node.addComponent(sniperController);
+        }
+
         const shotgun = node.getComponent(shotgunController);
         if (shotgun) node.removeComponent(shotgun);
+        const sniper = node.getComponent(sniperController);
+        if (sniper) node.removeComponent(sniper);
         return node.getComponent(gunController) ?? node.addComponent(gunController);
+    }
+
+    /** 当前武器为狙击枪时扩大视野；切换为其他武器后恢复默认视野。 */
+    private updateWeaponViewScale() {
+        const sniper = this.currentWeaponComp?.node.getComponent(sniperController);
+        this.gameComp?.setGameViewScale(sniper?.viewScale ?? 1);
     }
 
     /** weapons 表异步加载完成后，为已创建的角色补充装备数值。 */

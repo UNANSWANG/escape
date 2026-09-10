@@ -23,6 +23,8 @@ export class CameraController extends Component {
     private move: Vec3 = null;
     private cameraWorldPos: Vec3 = new Vec3();
     private isPositionLocked: boolean = false;
+    /** 当前视野倍率。数值越大，可见的地图范围越大。 */
+    private viewScale = 1;
     onLoad() {
         this.camera = this.node.getComponent(Camera);
     }
@@ -52,8 +54,17 @@ export class CameraController extends Component {
 
         const designAspect = this.DesignWidth / this.DesignHeight;
         const currentAspect = visibleSize.width / visibleSize.height;
-        this.camera.orthoHeight = this.OrthoHeight * designAspect / currentAspect;
+        this.camera.orthoHeight = this.OrthoHeight * this.viewScale * designAspect / currentAspect;
         gm.Event.emit(GameEvent.refreshGameCamera);
+    }
+
+    /** 设置相机可视范围倍率，并立即重新计算相机边界与 UI 坐标换算比例。 */
+    setViewScale(scale = 1) {
+        const validScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
+        if (this.viewScale === validScale) return;
+        this.viewScale = validScale;
+        this.updateOrthoHeight();
+        if (!this.isPositionLocked) this.setCameraPos(this.node.position);
     }
 
     private limitCameraPos(cameraPos: Vec3): Vec3 {

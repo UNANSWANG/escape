@@ -255,6 +255,7 @@ export class UIGame extends UIBase {
     clearData() {
         this.unscheduleAllCallbacks();
         this.gameCameraComp?.unlockCameraPos();
+        this.setGameViewScale(1);
         this.isGamePause = false;
         this.isKeyboardAttackPressed = false;
         this.isShootButtonPressed = false;
@@ -592,6 +593,11 @@ export class UIGame extends UIBase {
     /**刷新游戏摄像机视角 */
     refreshGameCamera() {
         this.updateGameToUICameraScale();
+    }
+
+    /** 设置游戏地图的可视范围倍率；狙击枪装备时传入 1.2。 */
+    setGameViewScale(scale: number) {
+        this.gameCameraComp?.setViewScale(scale);
     }
 
     /**射击敌人  */

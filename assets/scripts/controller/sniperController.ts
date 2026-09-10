@@ -54,8 +54,9 @@ export class sniperController extends gunController {
         if (!this.isChargeComplete) return false;
         const isFired = super.fireBullet(bulletParent);
         if (isFired) {
-            // 保留归零后的红线，攻击间隔结束、下一次调用时再重置为新的蓄力状态。
+            // 成功开火后进入攻击间隔，期间不显示辅助线；下一次蓄力时重新创建。
             this.isCharging = false;
+            this.recycleAimLines();
         }
         return isFired;
     }

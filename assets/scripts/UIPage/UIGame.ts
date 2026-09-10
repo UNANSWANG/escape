@@ -696,7 +696,9 @@ export class UIGame extends UIBase {
 
     /**攻击按键状态变化时通知角色；不在 update 中重复刷新。 */
     private syncPlayerAttackHeldState() {
-        playerMgr.playerComp?.setAttackHeld(this.isAttacking());
+        const isAttacking = this.isAttacking();
+        // 冷却期间仍记录按住状态，但狙击枪不应提前显示下一轮蓄力辅助线。
+        playerMgr.playerComp?.setAttackHeld(isAttacking, !isAttacking || this.shootCooldownRemaining <= 0);
     }
 
     /**射击按钮按下：立即尝试射击，按住期间由 update 持续射击 */

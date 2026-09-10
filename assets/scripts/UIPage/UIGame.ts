@@ -779,6 +779,27 @@ export class UIGame extends UIBase {
         return playerMgr.playerComp?.isMoveDirectionLocked ?? false;
     }
 
+    /**刷新自动瞄准开关与射击按钮显示 */
+    private refreshAimingBtnDisplay() {
+        const aimingSelect = this.aimingBtn
+            ?.getChildByName("aimingNode")
+            ?.getChildByName("aimingSelect");
+        if (aimingSelect) {
+            const position = aimingSelect.position;
+            aimingSelect.setPosition(pData.isAutoAiming ? -25 : 25, position.y, position.z);
+        }
+
+        // 自动瞄准使用普通射击按钮；手动瞄准时先只显示摇杆，交互后续再实现。
+        const autoAimBtn = this.shootBtn?.getChildByName("btn");
+        const aimingRocker = this.shootBtn?.getChildByName("rocker");
+        if (autoAimBtn) {
+            autoAimBtn.active = pData.isAutoAiming;
+        }
+        if (aimingRocker) {
+            aimingRocker.active = !pData.isAutoAiming;
+        }
+    }
+
     ///
     ///点击函数
     ///
@@ -892,19 +913,6 @@ export class UIGame extends UIBase {
         if (!pData.isAutoAiming) {
             this.stopAutoAim();
         }
-    }
-
-    /**刷新自动瞄准按钮的选中位置 */
-    private refreshAimingBtnDisplay() {
-        const aimingSelect = this.aimingBtn
-            ?.getChildByName("aimingNode")
-            ?.getChildByName("aimingSelect");
-        if (!aimingSelect) {
-            return;
-        }
-
-        const position = aimingSelect.position;
-        aimingSelect.setPosition(pData.isAutoAiming ? -25 : 25, position.y, position.z);
     }
 
     /**点击设置按钮 */

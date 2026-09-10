@@ -49,8 +49,8 @@ export class roleController extends Component {
     roleId = 0;
     /**角色皮肤 id */
     skinId = 0;
-    /**基础移速。角色专属技能可重写 moveSpeed，在读取时按自身状态计算最终速度。 */
-    protected baseMoveSpeed = 0;
+    /**角色未计算武器倍率前的原始移速。 */
+    private originalMoveSpeed = 0;
     /**游戏界面脚本 */
     gameComp: UIGame = null;
     /**角色当前播放的动画名 */
@@ -168,9 +168,15 @@ export class roleController extends Component {
         this.currentWeaponComp.resetRotation(true);
     }
 
-    /**当前移速。基类仅处理通用技能1的加速，专属角色可按自身状态重写。 */
+    /**基础移速属性：角色原始移速 × 当前武器速度倍率。 */
+    protected get baseMoveSpeed() {
+        return this.originalMoveSpeed * (this.currentWeaponComp?.moveSpeedScale ?? 1);
+    }
+
+    /**当前移速：在基础移速属性上叠加通用技能1倍率。 */
     get moveSpeed() {
-        return this.baseMoveSpeed * (this.isUsingCommonSkill1 ? this.skill1SpeedScale : 1);
+        return this.baseMoveSpeed
+            * (this.isUsingCommonSkill1 ? this.skill1SpeedScale : 1);
     }
 
     /**当前是否处于战斗状态。 */
@@ -293,7 +299,7 @@ export class roleController extends Component {
         if (!this.roleData) return;
 
         this.hp = this.roleData?.hp ?? 0;
-        this.baseMoveSpeed = configData.moveSpeed;
+        this.originalMoveSpeed = configData.moveSpeed;
         this.equipWeapon(0);
         this.applyEquippedWeaponStats();
         this.refreshRoleSpine();

@@ -11,6 +11,8 @@ export interface WeaponStats {
     attack: number;
     capacity: number;
     attackRange: number;
+    /** 装备武器时的角色移动速度倍率。 */
+    speed?: number;
     /** 单次攻击生成的子弹数；仅霰弹枪等多弹丸武器使用。 */
     bulletNum?: number;
     /** 蓄力时间（秒）；仅狙击枪等蓄力武器使用。 */
@@ -34,6 +36,8 @@ export class weaponsController extends Component {
     capacity = 20;
     /** 攻击距离：用于自动索敌，并限制远程子弹的最大飞行距离。 */
     attackRange = 600;
+    /** 装备该武器时的角色移动速度倍率。 */
+    moveSpeedScale = 1;
 
     protected roleAnim: sp.Skeleton = null;
     protected weaponSkeleton: sp.Skeleton = null;
@@ -69,6 +73,7 @@ export class weaponsController extends Component {
         if (Number.isFinite(stats.attack)) this.attack = Math.max(0, stats.attack);
         if (Number.isFinite(stats.capacity)) this.capacity = Math.max(0, Math.floor(stats.capacity));
         if (Number.isFinite(stats.attackRange)) this.attackRange = Math.max(0, stats.attackRange);
+        if (Number.isFinite(stats.speed)) this.moveSpeedScale = Math.max(0, stats.speed);
     }
 
     /** 绑定到角色 Spine 的 G 挂点。 */

@@ -152,6 +152,8 @@ export class roleController extends Component {
     /** UI 完成换弹事件绑定后调用，处理当前枪械的切入状态。 */
     onCurrentWeaponEquipped() {
         this.gunComp?.onWeaponEquipped();
+        this.currentWeaponComp?.node.getComponent(sniperController)
+            ?.setAttackHeld(this.isAttackHeld, this.gameComp?.gameUINode);
     }
 
     /**
@@ -193,6 +195,8 @@ export class roleController extends Component {
     setAttackHeld(isHeld: boolean) {
         if (this.isAttackHeld === isHeld) return;
         this.isAttackHeld = isHeld;
+        this.currentWeaponComp?.node.getComponent(sniperController)
+            ?.setAttackHeld(isHeld, this.gameComp?.gameUINode);
         if (isHeld) {
             this.refreshCombatState();
         } else if (this.battleState === roleBattleState.combat) {
@@ -378,16 +382,16 @@ export class roleController extends Component {
     }
 
     /** 由当前枪械从游戏 UI 节点中生成子弹。 */
-    fireBullet() {
-        const isFired = this.gunComp?.fireBullet(this.gameComp?.gameUINode) ?? false;
+    fireBullet(deltaTime = 0) {
+        const isFired = this.gunComp?.fireBullet(this.gameComp?.gameUINode, deltaTime) ?? false;
         if (isFired) this.refreshCombatState();
         return isFired;
     }
 
     /** 当前武器执行一次攻击：刀使用扇形近战攻击，枪械发射子弹。 */
-    attack() {
+    attack(deltaTime = 0) {
         const knife = this.currentWeaponComp?.node.getComponent(knifeController);
-        const isAttacked = knife?.attackInFacingDirection() ?? this.fireBullet();
+        const isAttacked = knife?.attackInFacingDirection() ?? this.fireBullet(deltaTime);
         if (isAttacked && knife) this.refreshCombatState();
         return isAttacked;
     }

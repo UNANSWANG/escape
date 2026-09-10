@@ -479,7 +479,7 @@ export class UIGame extends UIBase {
 
         if (this.isAttacking()) {
             this.refreshAutoAim();
-            this.shootEnemy();
+            this.shootEnemy(dt);
         }
     }
 
@@ -610,14 +610,14 @@ export class UIGame extends UIBase {
     }
 
     /**射击敌人  */
-    shootEnemy() {
+    shootEnemy(deltaTime = 0) {
         if (this.shootCooldownRemaining > 0) {
             return;
         }
 
         this.refreshAutoAim();
         const roleComp = playerMgr.playerComp;
-        if (!roleComp?.attack()) {
+        if (!roleComp?.attack(deltaTime)) {
             return;
         }
 

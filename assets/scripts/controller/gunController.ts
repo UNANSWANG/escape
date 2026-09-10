@@ -81,7 +81,7 @@ export class gunController extends weaponsController {
     }
 
     /** 从枪口创建一枚直线飞行的子弹。 */
-    fireBullet(bulletParent: Node) {
+    fireBullet(bulletParent: Node, _deltaTime = 0) {
         if (!this.prepareFire()) return false;
         if (!this.getShootData(this.tempBulletSpawnWorldPos, this.tempBulletWorldDirection)) return false;
         if (!this.spawnBullet(bulletParent, this.tempBulletSpawnWorldPos, this.tempBulletWorldDirection)) return false;

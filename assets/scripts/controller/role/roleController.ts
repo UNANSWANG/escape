@@ -193,15 +193,17 @@ export class roleController extends Component {
 
     /**设置攻击键是否按住；松开后才开始退出战斗的倒计时。 */
     setAttackHeld(isHeld: boolean, canStartSniperCharge = true) {
-        if (this.isAttackHeld === isHeld) return;
+        if (this.isAttackHeld === isHeld) return false;
         this.isAttackHeld = isHeld;
-        this.currentWeaponComp?.node.getComponent(sniperController)
-            ?.setAttackHeld(isHeld && canStartSniperCharge, this.gameComp?.gameUINode);
+        const isFiredOnRelease = this.currentWeaponComp?.node.getComponent(sniperController)
+            ?.setAttackHeld(isHeld && canStartSniperCharge, this.gameComp?.gameUINode) ?? false;
         if (isHeld) {
             this.refreshCombatState();
         } else if (this.battleState === roleBattleState.combat) {
             this.combatRemainTime = Math.max(0, playerCommonConfig.gunResetTime);
         }
+        if (isFiredOnRelease) this.refreshCombatState();
+        return isFiredOnRelease;
     }
 
     protected update(dt: number): void {

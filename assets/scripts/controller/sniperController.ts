@@ -28,6 +28,7 @@ export class sniperController extends gunController {
     private tempMuzzleLocalPos = new Vec3();
     private tempAimEndWorldPos = new Vec3();
     private tempAimEndLocalPos = new Vec3();
+    private tempReleaseWorldDirection = new Vec3();
 
     /**
      * 第一次调用开始蓄力；蓄力完成后才真正生成子弹。
@@ -66,13 +67,24 @@ export class sniperController extends gunController {
         this.cancelCharge();
     }
 
-    /** 攻击键状态变化时开始或取消蓄力。 */
+    /**
+     * 攻击键状态变化时开始蓄力；蓄力中松开则在当前两条辅助线夹角内随机提前开火。
+     * @returns 本次松手是否成功发射子弹。
+     */
     setAttackHeld(isHeld: boolean, bulletParent: Node) {
-        if (!isHeld) {
-            this.cancelCharge();
-            return;
+        if (isHeld) {
+            if (!this.isCharging) this.startCharge(bulletParent);
+            return false;
         }
-        if (!this.isCharging) this.startCharge(bulletParent);
+
+        if (!this.isCharging) {
+            this.cancelCharge();
+            return false;
+        }
+
+        const isFired = this.fireChargedBullet(this.lineParent ?? bulletParent, this.currentChargeAngle);
+        this.cancelCharge();
+        return isFired;
     }
 
     /** 松开攻击键时立即清除辅助线和本轮蓄力进度。 */
@@ -162,6 +174,23 @@ export class sniperController extends gunController {
             transform.setAnchorPoint(1, 0.5);
             transform.setContentSize(length, transform.height);
         }
+    }
+
+    /** 按当前蓄力剩余角度随机偏转后发射。0 度时即为正中心方向。 */
+    private fireChargedBullet(bulletParent: Node, maxOffsetAngle: number) {
+        if (!bulletParent?.isValid || !this.prepareFire()) return false;
+        if (!this.getShootData(this.tempMuzzleWorldPos, this.tempAimWorldDirection)) return false;
+
+        const offsetRadians = (Math.random() * 2 - 1) * Math.max(0, maxOffsetAngle) * Math.PI / 180;
+        const centerRadians = Math.atan2(this.tempAimWorldDirection.y, this.tempAimWorldDirection.x);
+        this.tempReleaseWorldDirection.set(
+            Math.cos(centerRadians + offsetRadians),
+            Math.sin(centerRadians + offsetRadians),
+            0,
+        );
+        if (!this.spawnBullet(bulletParent, this.tempMuzzleWorldPos, this.tempReleaseWorldDirection)) return false;
+        this.finishFire();
+        return true;
     }
 
     private setLineColor(color: Color) {

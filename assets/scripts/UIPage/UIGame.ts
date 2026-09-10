@@ -698,7 +698,18 @@ export class UIGame extends UIBase {
     private syncPlayerAttackHeldState() {
         const isAttacking = this.isAttacking();
         // 冷却期间仍记录按住状态，但狙击枪不应提前显示下一轮蓄力辅助线。
-        playerMgr.playerComp?.setAttackHeld(isAttacking, !isAttacking || this.shootCooldownRemaining <= 0);
+        const roleComp = playerMgr.playerComp;
+        const isFiredOnRelease = roleComp?.setAttackHeld(
+            isAttacking,
+            !isAttacking || this.shootCooldownRemaining <= 0,
+        );
+        if (isFiredOnRelease) this.startCurrentWeaponAttackCooldown(roleComp);
+    }
+
+    /** 松手提前开火同样需要进入当前武器的攻击间隔。 */
+    private startCurrentWeaponAttackCooldown(roleComp = playerMgr.playerComp) {
+        const weaponComp = roleComp?.weaponsController;
+        if (weaponComp) this.shootCooldownRemaining = weaponComp.attackInterval;
     }
 
     /**射击按钮按下：立即尝试射击，按住期间由 update 持续射击 */

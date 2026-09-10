@@ -46,7 +46,9 @@ export interface JsonWeaponsData {
     capacity: number;
     /**攻击范围 */
     attackRange: number;
-    /**子弹数量 */
+    /**子弹数量(霰弹) */
     bulletNum: number;
+    /**蓄力时间（狙击枪） */
+    chargeTime: number;
 }
 

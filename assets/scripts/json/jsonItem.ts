@@ -14,10 +14,17 @@ export class jsonItem extends jsonBase {
     protected processTableData(): void {
         super.processTableData();
     }
+
+    /** 根据 itemId 获取一条物品配置。 */
+    getDataByItemId(itemId: number): JsonItemData | null {
+        if (!Number.isFinite(itemId) || !this.data) return null;
+        const rows = Array.isArray(this.data) ? this.data : Object.values(this.data);
+        return rows.find((row: JsonItemData) => row?.itemId === itemId) ?? null;
+    }
 }
 export let itemConfig = new jsonItem();
 
-interface JsonItemData {
+export interface JsonItemData {
     /**编号*/
     id: number;
     /**类型 */

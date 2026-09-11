@@ -24,8 +24,8 @@ export class UIReward extends UIBase {
     @property(Prefab)
     rewardItemPre: Prefab;
 
-    /**奖励数据 type:奖励类型 num:奖励数量 */
-    rewardData: rewardItemData[] = [];
+    /**奖励数据 0:奖励id 1:奖励数量 */
+    rewardData: number[][] = [];
 
     protected onLoad(): void {
         this.bindBtn();
@@ -54,8 +54,7 @@ export class UIReward extends UIBase {
     showReward() {
         ccTools.destroyAllChild(this.rewardNode);
         for (let i = 0; i < this.rewardData.length; i++) {
-            let item: rewardItemData = this.rewardData[i];
-            pData.fixPropsNum(item.type, item.num, false);
+            let item = this.rewardData[i];
             let itemNode = instantiate(this.rewardItemPre);
             this.rewardNode.addChild(itemNode);
             itemNode.getComponent(rewardItem).initData(item);

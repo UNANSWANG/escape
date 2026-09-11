@@ -6,8 +6,6 @@ import { zoomButton } from '../extention/zoomButton';
 import { gm, PlatType } from '../manager/gm';
 import { GameEvent, SaveKey } from '../manager/configData';
 import { pData } from '../manager/playerData';
-import { ccTools } from '../extention/generalTools';
-import { rewardItem, rewardItemData } from '../controller/rewardItem';
 import { ccStorageTools } from '../extention/storageTools';
 import { TTManager } from '../sdk/plat/tt/TTManager';
 const { ccclass, property } = _decorator;

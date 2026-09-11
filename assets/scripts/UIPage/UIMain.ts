@@ -167,7 +167,7 @@ export class UIMain extends UIBase {
 
     /**点击排行榜 */
     clickRankBtn() {
-        uiMgr.openPage(UIPath.UIReward);
+        uiMgr.openPage(UIPath.UIReward, { rewardData: [[1, 2], [3, 4], [200002, 3], [100003, 4]]});
         return;
         //有昵称和授权或者h5平台才直接打开排行榜
         if ((gm.API.isAuthorize && userMgr.nickName) || gm.platType == PlatType.h5) {

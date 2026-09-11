@@ -1,6 +1,7 @@
 import { _decorator, Component, Label, Node, Sprite } from 'cc';
 import { imgPath } from '../manager/pathConfig';
 import { ccTools } from '../extention/generalTools';
+import { getItemDataByItemId } from '../json/jsonItemData';
 const { ccclass, property } = _decorator;
 
 export interface rewardItemData {
@@ -29,8 +30,10 @@ export class rewardItem extends Component {
 
         let itemId = data[0];
         let num = data[1];
+        let itemData = getItemDataByItemId(itemId);
 
         this.numLab.string = `x${num}`;
+        this.nameLab.string = itemData?.name ?? "";
         // ccTools.loadImg(this.imgSp, imgPath.props + itemId);
         this.setLight(false);
     }

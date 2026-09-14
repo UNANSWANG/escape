@@ -91,11 +91,11 @@ export class UIMain extends UIBase {
             return;
         }
 
-        this.roleAnim.skeletonData = null;
-        let isLoaded = await ccTools.loadSpine(this.roleAnim, spinePath.role + pData.skinId);
-        if (!isLoaded || !this.roleAnim || !this.roleAnim.isValid) {
-            return;
-        }
+        // this.roleAnim.skeletonData = null;
+        // let isLoaded = await ccTools.loadSpine(this.roleAnim, spinePath.role + pData.skinId);
+        // if (!isLoaded || !this.roleAnim || !this.roleAnim.isValid) {
+        //     return;
+        // }
 
         this.roleAnim.setAnimation(0, roleAnimName.idle, true);
     }

@@ -40,17 +40,11 @@ export class UISetting extends UIBase {
     @property(Sprite)
     musicProgress: Sprite;
 
-    @property(Node)
-    musicCloseFlag: Node;
-    
     @property(Slider)
     effctSlider: Slider;
     
     @property(Sprite)
     effectProgress: Sprite;
-
-    @property(Node)
-    effectCloseFlag: Node;
 
     @property(Toggle)
     vibratToggle: Toggle;
@@ -97,11 +91,11 @@ export class UISetting extends UIBase {
     refreshUI() {
         let bgTrans = this.bg.getComponent(UITransform);
         if (this.mode == 1) {
-            bgTrans.height = 775;
+            bgTrans.height = 560;
             this.homeBtn.active = true;
             this.continueBtn.active = true;
         } else {
-            bgTrans.height = 635;
+            bgTrans.height = 460;
             this.homeBtn.active = false;
             this.continueBtn.active = false;
         }
@@ -112,12 +106,11 @@ export class UISetting extends UIBase {
     /**刷新按钮状态 */
     refreshState() {
         this.vibratToggle.isChecked = audioMgr.isVibrat;
+        this.refreshVibratTogglePosition();
         this.musicSlider.progress = audioMgr.musicVolume;
         this.effctSlider.progress = audioMgr.effectVolume;
         this.musicProgress.fillRange = this.musicSlider.progress;
         this.effectProgress.fillRange = this.effctSlider.progress;
-        this.musicCloseFlag.active = this.musicSlider.progress == 0;
-        this.effectCloseFlag.active = this.effctSlider.progress == 0;
     }
 
     ///
@@ -126,21 +119,30 @@ export class UISetting extends UIBase {
 
     /**点击振动开关 */
     clickVibratBtn() {
-        audioMgr.switchVibrat(!audioMgr.isVibrat);
+        audioMgr.switchVibrat(this.vibratToggle.isChecked);
+        this.refreshVibratTogglePosition();
+    }
+
+    /**刷新振动开关滑块位置 */
+    refreshVibratTogglePosition() {
+        const toggleNode = this.vibratToggle.node.getChildByName('toggle');
+        if (!toggleNode) {
+            return;
+        }
+
+        toggleNode.setPosition(this.vibratToggle.isChecked ? 40 : -40, 0, 0);
     }
 
     /**调整背景音乐音量 */
     changeMusicVolume() {
         audioMgr.setMusicVolume(this.musicSlider.progress);
         this.musicProgress.fillRange = this.musicSlider.progress;
-        this.musicCloseFlag.active = this.musicSlider.progress == 0;
     }
 
     /**调整音效音量 */
     changeEffectVolume() {
         audioMgr.setEffectVolume(this.effctSlider.progress);
         this.effectProgress.fillRange = this.effctSlider.progress;
-        this.effectCloseFlag.active = this.effctSlider.progress == 0;
     }
 
     /**点击主页 */

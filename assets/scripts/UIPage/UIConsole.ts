@@ -51,6 +51,16 @@ export class UIConsole extends UIBase {
         this.adToggle.isChecked = gmConfig.isFreeAd;
     }
 
+    /**刷新开关滑块位置 */
+    refreshTogglePosition(toggle) {
+        const toggleNode = toggle.node.getChildByName('toggle');
+        if (!toggleNode) {
+            return;
+        }
+
+        toggleNode.setPosition(toggle.isChecked ? 40 : -40, 0, 0);
+    }
+
     ///
     ///点击事件
     ///
@@ -68,6 +78,7 @@ export class UIConsole extends UIBase {
     /**点击广告开关 */
     clickAdToggle() {
         gmConfig.isFreeAd = this.adToggle?.isChecked;
+        this.refreshTogglePosition(this.adToggle);
         ccStorageTools.setData(SaveKey.isFreeAd, gmConfig.isFreeAd ? 1 : 0);
     }
 

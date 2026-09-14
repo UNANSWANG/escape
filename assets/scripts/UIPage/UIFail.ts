@@ -31,9 +31,6 @@ export class UIFail extends UIBase {
     @property(Node)
     boxRewardNode: Node;
 
-    @property(Node)
-    boxNode: Node;
-
     @property(sp.Skeleton)
     roleSk: sp.Skeleton;
 
@@ -102,7 +99,6 @@ export class UIFail extends UIBase {
         this.timeLab.string = `存活时间：${Math.floor(survivalTime)}s`;
         this.isRewardClaimed = false;
         this.refreshRewardNum();
-        this.refreshBoxNum();
 
         this.boxRewardNode.active = this.boxNum > 0;
 
@@ -183,31 +179,10 @@ export class UIFail extends UIBase {
         }
     }
 
-    /**刷新当前魔盒数量 */
-    private refreshBoxNum() {
-        let boxLab = this.boxNode?.getChildByName("numLab")?.getComponent(Label);
-        if (boxLab) {
-            
-        }
-    }
-
     /**领取胜利奖励 */
     private getReward(multiplier: number) {
-        let rewardMoney = this.moneyNum * multiplier;
-        let rewardBox = this.boxNum * multiplier;
-        let moneyImg = this.moneyRewardNode?.getChildByName("img") || this.moneyRewardNode;
-        let boxImg = this.boxRewardNode?.getChildByName("img") || this.boxRewardNode;
-        let boxTarget = this.boxNode?.getChildByName("img") || this.boxNode;
-
-        uiMgr.playMoneyAnim(moneyImg, rewardMoney, () => {
-            this.scheduleOnce(() => {
-                uiMgr.closeGame();
-                this.onClose();
-            }, 1);
-        });
-        uiMgr.playRewardAnim(boxImg, boxTarget, rewardBox, () => {
-            this.refreshBoxNum();
-        });
+        uiMgr.closeGame();
+        this.onClose();
     }
 
     onClose() {

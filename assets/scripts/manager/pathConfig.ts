@@ -86,6 +86,8 @@ export enum imgPath {
     roleBodyFull = "texture/role/all/all_",
     /**银币 */
     money = "texture/common/money",
+    /**金币 */
+    gold = "texture/common/money2",
     /**排行榜底 */
     rankItemBg = "texture/rank/bg/bg_",
     /**排行榜线 */

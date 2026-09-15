@@ -1,12 +1,18 @@
-import { _decorator, Component, Label, Node } from 'cc';
+import { _decorator, Component, Enum, Label, Node } from 'cc';
 import { pData } from '../manager/playerData';
 import { gm } from '../manager/gm';
-import { GameEvent } from '../manager/configData';
+import { GameEvent, MonetaryType } from '../manager/configData';
 import { uiMgr } from '../manager/UIManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('moneyController')
 export class moneyController extends Component {
+    @property({
+        type: Enum(MonetaryType),
+        tooltip: '选择货币类型'
+    })
+    moneyType: MonetaryType = MonetaryType.silver;
+
     numLabel: Label = null;
     moneyImg: Node = null;
 
@@ -28,13 +34,18 @@ export class moneyController extends Component {
         gm.Event.off(GameEvent.refreshPlayerMonetary, this.refreshMoney, this);
     }
 
-    /**刷新银币的世界坐标 */
+    /**刷新当前货币动画的目标世界坐标 */
     private refreshMoneyTargetPos() {
-        uiMgr.moneyTargetPos.set(this.moneyImg.worldPosition);
+        if (this.moneyType === MonetaryType.gold) {
+            uiMgr.goldTargetPos.set(this.moneyImg.worldPosition);
+        } else {
+            uiMgr.moneyTargetPos.set(this.moneyImg.worldPosition);
+        }
     }
 
-    /**刷新银币 */
+    /**刷新货币数值 */
     private refreshMoney() {
-        this.numLabel.string = pData.money.toString();
+        const monetary = this.moneyType === MonetaryType.gold ? pData.gold : pData.money;
+        this.numLabel.string = monetary.toString();
     }
 }

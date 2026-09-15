@@ -84,6 +84,14 @@ export enum GameEvent {
     refreshRoleSkin = "refreshRoleSkin",
 }
 
+/**货币类型 */
+export enum MonetaryType {
+    /**银币 */
+    silver,
+    /**金币 */
+    gold,
+}
+
 /**存储的键值 */
 export enum SaveKey {
     /**关卡数据 */

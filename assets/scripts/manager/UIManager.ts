@@ -6,6 +6,7 @@ import { tipsNotice } from '../UIPage/tips/tipsNotice';
 import { pData } from './playerData';
 import { ccTools } from '../extention/generalTools';
 import { audioMgr } from './audioManager';
+import { MonetaryType } from './configData';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIManager')
@@ -270,31 +271,36 @@ export class UIManager {
 
     /**货币动画目标位置(世界坐标) */
     moneyTargetPos: Vec3 = new Vec3();
+    /**金币动画目标位置(世界坐标) */
+    goldTargetPos: Vec3 = new Vec3();
 
     /**播放货币动画
      * @param rootNode 货币动画初始节点
      * @param num 货币数量
+     * @param moneyType 货币类型，默认银币
+     * @param call 动画完成回调
      */
-    playMoneyAnim(rootNode: Node, num: number, call?) {
+    playMoneyAnim(rootNode: Node, num: number, moneyType: MonetaryType = MonetaryType.silver, call?) {
         if (num <= 0) {
             return;
         }
         if (!rootNode || !rootNode.isValid || !this.effectNode || !this.effectNode.isValid
             || !this.effectItemPrefab || !this.resBundle) {
-            pData.fixMoney(num);
+            this.fixMonetary(moneyType, num);
             return;
         }
 
         let effectTransform = this.effectNode.getComponent(UITransform);
         if (!effectTransform) {
-            pData.fixMoney(num);
+            this.fixMonetary(moneyType, num);
             return;
         }
 
         let startCenter = effectTransform.convertToNodeSpaceAR(rootNode.worldPosition);
-        let targetPos = effectTransform.convertToNodeSpaceAR(this.moneyTargetPos);
+        const targetWorldPos = moneyType === MonetaryType.gold ? this.goldTargetPos : this.moneyTargetPos;
+        let targetPos = effectTransform.convertToNodeSpaceAR(targetWorldPos);
         if (!this.effectNode.isValid) {
-            pData.fixMoney(num);
+            this.fixMonetary(moneyType, num);
             return;
         }
 
@@ -311,7 +317,8 @@ export class UIManager {
 
             let sprite = effectItem.getComponent(Sprite);
             if (sprite) {
-                ccTools.loadImg(sprite, imgPath.money);
+                const iconPath = moneyType === MonetaryType.gold ? imgPath.gold : imgPath.money;
+                ccTools.loadImg(sprite, iconPath);
             }
 
             let moneyTween = tween(effectItem).delay(i * 0.02);
@@ -332,11 +339,20 @@ export class UIManager {
                     effectItem.destroy();
                     completedCount++;
                     if (completedCount === itemCount) {
-                        pData.fixMoney(num);
+                        this.fixMonetary(moneyType, num);
                         call && call();
                     }
                 })
                 .start();
+        }
+    }
+
+    /**增加指定类型的货币 */
+    private fixMonetary(moneyType: MonetaryType, num: number) {
+        if (moneyType === MonetaryType.gold) {
+            pData.fixGold(num);
+        } else {
+            pData.fixMoney(num);
         }
     }
 

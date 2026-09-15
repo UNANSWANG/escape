@@ -92,6 +92,10 @@ export enum SaveKey {
     money = "money",
     /**金币 */
     gold = "gold",
+    /**累计签到天数 */
+    signDays = "signDays",
+    /**今日是否已签到 */
+    isGetSign = "isGetSign",
     /**道具存储 */
     props = "props",
     /**引导 */

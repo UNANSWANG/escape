@@ -18,6 +18,8 @@ export class playerData {
     mapHalfSize: Vec2 = Vec2.ZERO;
     /**银币 */
     money = 0;
+    /**金币 */
+    gold = 0;
     /**当前关卡所看广告数 */
     adNum = 0;
     /**角色id */
@@ -181,6 +183,15 @@ export class playerData {
         this.money += money;
         if (this.money < 0) {
             this.money = 0;
+        }
+        gm.Event.emit(GameEvent.refreshPlayerMonetary);
+    }
+
+    /**修改金币*/
+    fixGold(gold: number) {
+        this.gold += gold;
+        if (this.gold < 0) {
+            this.gold = 0;
         }
         gm.Event.emit(GameEvent.refreshPlayerMonetary);
     }

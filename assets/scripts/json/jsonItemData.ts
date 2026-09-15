@@ -1,5 +1,6 @@
 import { equipmentConfig, JsonEquipmentData } from './jsonEquipment';
 import { itemConfig, JsonItemData } from './jsonItem';
+import { roleSkinConfig } from './jsonRoleSkin';
 import { weaponsConfig, JsonWeaponsData } from './jsonWeapons';
 
 /** 三种物品表中任意一条配置数据。 */
@@ -10,6 +11,7 @@ export type JsonItemDataUnion = JsonWeaponsData | JsonEquipmentData | JsonItemDa
  * weapons: 0-100000
  * equipment: 100001-200000
  * item: 200001-300000
+ * roleSkin: 300001-400000
  */
 export function getItemDataByItemId(itemId: number): JsonItemDataUnion | null {
     if (!Number.isInteger(itemId)) return null;
@@ -24,6 +26,10 @@ export function getItemDataByItemId(itemId: number): JsonItemDataUnion | null {
 
     if (itemId >= 200001 && itemId <= 300000) {
         return itemConfig.getDataByItemId(itemId);
+    }
+
+    if (itemId >= 300001 && itemId <= 400000) {
+        return roleSkinConfig.getDataByItemId(itemId);
     }
 
     return null;

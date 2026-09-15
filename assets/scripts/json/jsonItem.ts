@@ -1,6 +1,5 @@
 import { _decorator, Component, Node } from 'cc';
 import { jsonBase } from './jsonBase';
-import { ccTools } from '../extention/generalTools';
 const { ccclass, property } = _decorator;
 
 @ccclass('jsonItem')

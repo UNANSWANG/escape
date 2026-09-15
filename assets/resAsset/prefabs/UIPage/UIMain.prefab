@@ -15810,6 +15810,24 @@
     "revisitBtn": {
       "__id__": 245
     },
+    "handbookBtn": {
+      "__id__": 25
+    },
+    "signBtn": {
+      "__id__": 41
+    },
+    "storeBtn": {
+      "__id__": 58
+    },
+    "storehouseBtn": {
+      "__id__": 80
+    },
+    "roleBtn": {
+      "__id__": 102
+    },
+    "roomBtn": {
+      "__id__": 124
+    },
     "roleAnim": {
       "__id__": 647
     },

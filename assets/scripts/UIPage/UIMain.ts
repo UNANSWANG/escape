@@ -29,6 +29,24 @@ export class UIMain extends UIBase {
     @property(Node)
     revisitBtn: Node = null;
 
+    @property(Node)
+    handbookBtn: Node = null;
+
+    @property(Node)
+    signBtn: Node = null;
+
+    @property(Node)
+    storeBtn: Node = null;
+
+    @property(Node)
+    storehouseBtn: Node = null;
+
+    @property(Node)
+    roleBtn: Node = null;
+
+    @property(Node)
+    roomBtn: Node = null;
+
     @property(sp.Skeleton)
     roleAnim: sp.Skeleton = null;
 
@@ -69,6 +87,12 @@ export class UIMain extends UIBase {
         this.setBtn.addComponent(zoomButton).onClick = this.cliskSetBtn.bind(this);
         this.rankBtn.addComponent(zoomButton).onClick = this.clickRankBtn.bind(this);
         this.revisitBtn.addComponent(zoomButton).onClick = this.clickRevisitBtn.bind(this);
+        this.handbookBtn.addComponent(zoomButton).onClick = this.clickHandbookBtn.bind(this);
+        this.signBtn.addComponent(zoomButton).onClick = this.clickSignBtn.bind(this);
+        this.storeBtn.addComponent(zoomButton).onClick = this.clickStoreBtn.bind(this);
+        this.storehouseBtn.addComponent(zoomButton).onClick = this.clickStorehouseBtn.bind(this);
+        this.roleBtn.addComponent(zoomButton).onClick = this.clickRoleBtn.bind(this);
+        this.roomBtn.addComponent(zoomButton).onClick = this.clickRoomBtn.bind(this);
     }
 
     /**添加监听 */
@@ -200,6 +224,36 @@ export class UIMain extends UIBase {
                 getUserInfo();
             }
         }
+    }
+
+    /**点击图鉴 */
+    clickHandbookBtn() {
+        uiMgr.showTips("打开图鉴");
+    }
+
+    /**点击签到 */
+    clickSignBtn() {
+        uiMgr.showTips("签到");
+    }
+
+    /**点击商店 */
+    clickStoreBtn() {
+        uiMgr.showTips("打开商店");
+    }
+
+    /**点击仓库 */
+    clickStorehouseBtn() {
+        uiMgr.showTips("打开仓库");
+    }
+
+    /**点击角色 */
+    clickRoleBtn() {
+        uiMgr.showTips("打开角色");
+    }
+
+    /**点击房间 */
+    clickRoomBtn() {
+        uiMgr.showTips("打开房间");
     }
 }
 

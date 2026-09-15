@@ -53,6 +53,31 @@ export class generalTools {
         return Math.ceil(Math.abs(num)) * (num > 0 ? 1 : -1);
     }
 
+    /**
+     * 格式化货币数量：以 k、M、B、T 为单位，向下保留一位小数。
+     * 小数位为 0 时不显示，例如 5006 显示为 5k，5106 显示为 5.1k。
+     */
+    formatMonetaryNum(num: number): string {
+        if (!Number.isFinite(num)) {
+            return "0";
+        }
+
+        const units = [
+            { value: 1000000000000, suffix: "T" },
+            { value: 1000000000, suffix: "B" },
+            { value: 1000000, suffix: "M" },
+            { value: 1000, suffix: "k" },
+            { value: 1, suffix: "" },
+        ];
+        const sign = num < 0 ? "-" : "";
+        const absoluteNum = Math.abs(num);
+        const unit = units.find((item) => absoluteNum >= item.value) || units[units.length - 1];
+        const truncatedNum = Math.floor(absoluteNum / unit.value * 10) / 10;
+        const displayNum = Number.isInteger(truncatedNum) ? truncatedNum.toString() : truncatedNum.toFixed(1);
+
+        return `${sign}${displayNum}${unit.suffix}`;
+    }
+
     /**计算两点间距离的辅助函数 */
     calculateDistance(pos1, pos2) {
         const dx = pos2.x - pos1.x;

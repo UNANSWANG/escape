@@ -3,6 +3,7 @@ import { pData } from '../manager/playerData';
 import { gm } from '../manager/gm';
 import { GameEvent, MonetaryType } from '../manager/configData';
 import { uiMgr } from '../manager/UIManager';
+import { ccTools } from '../extention/generalTools';
 const { ccclass, property } = _decorator;
 
 @ccclass('moneyController')
@@ -46,6 +47,6 @@ export class moneyController extends Component {
     /**刷新货币数值 */
     private refreshMoney() {
         const monetary = this.moneyType === MonetaryType.gold ? pData.gold : pData.money;
-        this.numLabel.string = monetary.toString();
+        this.numLabel.string = ccTools.formatMonetaryNum(monetary);
     }
 }

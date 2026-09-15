@@ -88,6 +88,10 @@ export enum GameEvent {
 export enum SaveKey {
     /**关卡数据 */
     level = "level",
+    /**银币 */
+    money = "money",
+    /**金币 */
+    gold = "gold",
     /**道具存储 */
     props = "props",
     /**引导 */

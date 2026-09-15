@@ -184,6 +184,7 @@ export class playerData {
         if (this.money < 0) {
             this.money = 0;
         }
+        ccStorageTools.setData(SaveKey.money, this.money);
         gm.Event.emit(GameEvent.refreshPlayerMonetary);
     }
 
@@ -193,6 +194,7 @@ export class playerData {
         if (this.gold < 0) {
             this.gold = 0;
         }
+        ccStorageTools.setData(SaveKey.gold, this.gold);
         gm.Event.emit(GameEvent.refreshPlayerMonetary);
     }
 
@@ -256,6 +258,8 @@ export class playerData {
     /**初始化存储数据 */
     initData() {
         this.propsNums = ccStorageTools.getData(SaveKey.props) || {};
+        this.money = Math.max(0, ccStorageTools.getNumberData(SaveKey.money));
+        this.gold = Math.max(0, ccStorageTools.getNumberData(SaveKey.gold));
         gmConfig.onlyAttackSelf = ccStorageTools.getNumberData(SaveKey.onlyAttackSelf) == 1;
         gmConfig.isFreeAd = ccStorageTools.getNumberData(SaveKey.isFreeAd) == 1;
         const autoAimingData = ccStorageTools.getData(SaveKey.isAutoAiming);

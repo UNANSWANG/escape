@@ -42,7 +42,19 @@ export class UIReward extends UIBase {
             this.rewardData = data.rewardData;
         }
 
+        this.applyMonetaryRewards();
         this.showReward();
+    }
+
+    /**领取并持久化当前奖励中的银币、金币 */
+    private applyMonetaryRewards() {
+        for (const [itemId, num] of this.rewardData) {
+            if (itemId === 200001) {
+                pData.fixMoney(num);
+            } else if (itemId === 200002) {
+                pData.fixGold(num);
+            }
+        }
     }
 
     bindBtn() {

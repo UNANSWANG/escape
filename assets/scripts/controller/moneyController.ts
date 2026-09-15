@@ -28,12 +28,12 @@ export class moneyController extends Component {
         gm.Event.off(GameEvent.refreshPlayerMonetary, this.refreshMoney, this);
     }
 
-    /**刷新鼠鼠币的世界坐标 */
+    /**刷新银币的世界坐标 */
     private refreshMoneyTargetPos() {
         uiMgr.moneyTargetPos.set(this.moneyImg.worldPosition);
     }
 
-    /**刷新鼠鼠币 */
+    /**刷新银币 */
     private refreshMoney() {
         this.numLabel.string = pData.money.toString();
     }

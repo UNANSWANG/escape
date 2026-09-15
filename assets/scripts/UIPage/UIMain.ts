@@ -233,7 +233,7 @@ export class UIMain extends UIBase {
 
     /**点击签到 */
     clickSignBtn() {
-        uiMgr.showTips("签到");
+        uiMgr.openPage(UIPath.UISign);
     }
 
     /**点击商店 */

@@ -30,6 +30,8 @@ export enum UIPath {
     UIBackpack = "prefabs/UIPage/UIBackpack",
     /**搜索页面 */
     UISearch = "prefabs/UIPage/UISearch",
+    /**签到页面 */
+    UISign = "prefabs/UIPage/UISign",
 }
 
 /**物品路径 */
@@ -82,7 +84,7 @@ export enum imgPath {
     bulletSkin = "texture/game/bullet/bullet_",
     /**角色全身 */
     roleBodyFull = "texture/role/all/all_",
-    /**鼠鼠币 */
+    /**银币 */
     money = "texture/common/money",
     /**排行榜底 */
     rankItemBg = "texture/rank/bg/bg_",

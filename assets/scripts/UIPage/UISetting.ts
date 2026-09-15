@@ -91,7 +91,7 @@ export class UISetting extends UIBase {
     refreshUI() {
         let bgTrans = this.bg.getComponent(UITransform);
         if (this.mode == 1) {
-            bgTrans.height = 560;
+            bgTrans.height = 540;
             this.homeBtn.active = true;
             this.continueBtn.active = true;
         } else {
@@ -130,7 +130,7 @@ export class UISetting extends UIBase {
             return;
         }
 
-        toggleNode.setPosition(this.vibratToggle.isChecked ? 40 : -40, 0, 0);
+        toggleNode.setPosition(this.vibratToggle.isChecked ? 30 : -30, 0, 0);
     }
 
     /**调整背景音乐音量 */

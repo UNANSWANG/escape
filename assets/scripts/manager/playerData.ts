@@ -16,7 +16,7 @@ export class playerData {
     propsNums = {};
     /**地图半宽高 */
     mapHalfSize: Vec2 = Vec2.ZERO;
-    /**鼠鼠币 */
+    /**银币 */
     money = 0;
     /**当前关卡所看广告数 */
     adNum = 0;
@@ -176,7 +176,7 @@ export class playerData {
     }
 
 
-    /**修改鼠鼠币*/
+    /**修改银币*/
     fixMoney(money: number) {
         this.money += money;
         if (this.money < 0) {

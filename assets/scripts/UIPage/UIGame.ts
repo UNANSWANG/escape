@@ -66,6 +66,9 @@ export class UIGame extends UIBase {
     aimingBtn: Node;
 
     @property(Node)
+    openBtn: Node;
+
+    @property(Node)
     containerList: Node;
 
     @property(Label)

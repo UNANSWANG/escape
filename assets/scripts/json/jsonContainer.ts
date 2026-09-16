@@ -25,6 +25,13 @@ export class jsonContainer extends jsonBase {
     protected processTableData(): void {
         super.processTableData();
     }
+
+    /** 根据容器类型获取对应的容器配置 */
+    getDataByType(type: ContainerType): JsonContainerData | null {
+        if (!this.data) return null;
+        const rows = Array.isArray(this.data) ? this.data : Object.values(this.data);
+        return rows.find((row: JsonContainerData) => row?.type === type) ?? null;
+    }
 }
 export let containerConfig = new jsonContainer();
 

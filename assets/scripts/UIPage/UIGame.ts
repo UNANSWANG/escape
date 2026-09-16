@@ -152,6 +152,8 @@ export class UIGame extends UIBase {
     private tempDamageFloatWorldPos: Vec3 = new Vec3();
     private tempDamageFloatLocalPos: Vec3 = new Vec3();
     private tempDamageFloatWorldScale: Vec3 = new Vec3();
+    /** 当前与玩家重叠的容器 */
+    private currentContainer: containerController = null;
 
     protected onLoad(): void {
         this.bindBtn();
@@ -296,6 +298,7 @@ export class UIGame extends UIBase {
         this.stopAutoAim();
         this.clearDamageFloats();
         if (this.openBtn) this.openBtn.active = false;
+        this.currentContainer = null;
 
         ccTools.destroyAllChild(this.roleNode);
 
@@ -320,16 +323,20 @@ export class UIGame extends UIBase {
         }
 
         const playerBounds = playerTransform.getBoundingBoxToWorld();
-        const isOverlappingContainer = this.containerList.children.some((containerNode) => {
+        this.currentContainer = null;
+        for (const containerNode of this.containerList.children) {
             if (!containerNode.activeInHierarchy || !containerNode.getComponent(containerController)) {
-                return false;
+                continue;
             }
             const containerTransform = containerNode.getComponent(UITransform);
-            return !!containerTransform && playerBounds.intersects(containerTransform.getBoundingBoxToWorld());
-        });
+            if (containerTransform && playerBounds.intersects(containerTransform.getBoundingBoxToWorld())) {
+                this.currentContainer = containerNode.getComponent(containerController);
+                break;
+            }
+        }
 
-        if (this.openBtn.active !== isOverlappingContainer) {
-            this.openBtn.active = isOverlappingContainer;
+        if (this.openBtn.active !== !!this.currentContainer) {
+            this.openBtn.active = !!this.currentContainer;
         }
     }
 
@@ -1022,7 +1029,11 @@ export class UIGame extends UIBase {
 
     /**点击打开容器按钮 */
     clickOpenContainerBtn() {
-        uiMgr.openPage(UIPath.UIBackpack, { showSearchNode: true });
+        if (!this.currentContainer) return;
+        uiMgr.openPage(UIPath.UIBackpack, {
+            showSearchNode: true,
+            itemData: this.currentContainer.getItemData(),
+        });
     }
 
     /**点击武器框0 */

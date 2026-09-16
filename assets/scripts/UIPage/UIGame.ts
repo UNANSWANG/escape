@@ -16,6 +16,7 @@ import { roleAnimName } from '../controller/role/roleController';
 import { role0Skill2RemainEvent } from '../controller/role/role0';
 import { addRoleScript } from '../controller/role/roleScriptFactory';
 import { poolMgr } from '../manager/poolManager';
+import { containerController } from '../controller/containerController';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIGame')
@@ -239,6 +240,7 @@ export class UIGame extends UIBase {
         this.skillBtn2.addComponent(zoomButton).onClick = this.clickSkillBtn2.bind(this);
         this.knifeBtn.addComponent(zoomButton).onClick = this.clickKnifeBtn.bind(this);
         this.bagBtn.addComponent(zoomButton).onClick = this.clickBagBtn.bind(this);
+        this.openBtn.addComponent(zoomButton).onClick = this.clickOpenContainerBtn.bind(this);
         this.aimingBtn.addComponent(zoomButton).onClick = this.clickAimingBtn.bind(this);
 
         this.weaponBox_0.on(NodeEventType.TOUCH_END, this.onClickWeaponBox_0, this);
@@ -273,6 +275,7 @@ export class UIGame extends UIBase {
         this.initRockerArea();
         this.initPlayer();
         this.initEnemy();
+        this.updateContainerOpenButton();
     }
 
     clearData() {
@@ -292,6 +295,7 @@ export class UIGame extends UIBase {
         this.updateSkill2RemainLab(0, false);
         this.stopAutoAim();
         this.clearDamageFloats();
+        if (this.openBtn) this.openBtn.active = false;
 
         ccTools.destroyAllChild(this.roleNode);
 
@@ -300,6 +304,33 @@ export class UIGame extends UIBase {
         enemyMgr.enemyId = 0;
         enemyMgr.enemyBornPosArr = [];
         this.rockerReset(true);
+    }
+
+    /**根据玩家与容器的包围盒重合状态显示或隐藏开启按钮 */
+    private updateContainerOpenButton() {
+        if (!this.openBtn) return;
+
+        const playerNode = playerMgr.player;
+        // 角色根节点没有 UITransform，使用脚下阴影的包围盒作为交互范围。
+        const playerTransform = playerNode?.getChildByName('shadow')?.getComponent(UITransform)
+            ?? playerNode?.getComponent(UITransform);
+        if (!playerTransform || !this.containerList) {
+            this.openBtn.active = false;
+            return;
+        }
+
+        const playerBounds = playerTransform.getBoundingBoxToWorld();
+        const isOverlappingContainer = this.containerList.children.some((containerNode) => {
+            if (!containerNode.activeInHierarchy || !containerNode.getComponent(containerController)) {
+                return false;
+            }
+            const containerTransform = containerNode.getComponent(UITransform);
+            return !!containerTransform && playerBounds.intersects(containerTransform.getBoundingBoxToWorld());
+        });
+
+        if (this.openBtn.active !== isOverlappingContainer) {
+            this.openBtn.active = isOverlappingContainer;
+        }
     }
 
     /**初始化玩家 */
@@ -505,6 +536,8 @@ export class UIGame extends UIBase {
             }
             playerMgr.player.setPosition(playerPos);
         }
+
+        this.updateContainerOpenButton();
 
         if (this.isAttacking()) {
             if (pData.isAutoAiming) {
@@ -985,6 +1018,11 @@ export class UIGame extends UIBase {
             return;
         }
         uiMgr.openPage(UIPath.UIBackpack);
+    }
+
+    /**点击打开容器按钮 */
+    clickOpenContainerBtn() {
+        uiMgr.openPage(UIPath.UIBackpack, { showSearchNode: true });
     }
 
     /**点击武器框0 */

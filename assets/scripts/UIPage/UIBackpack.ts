@@ -21,7 +21,10 @@ export class UIBackpack extends UIBase {
         this.bindBtn();
     }
 
-    onUI_Open() {
+    onUI_Open(data?: { showSearchNode?: boolean }) {
+        if (this.searchNode) {
+            this.searchNode.active = !!data?.showSearchNode;
+        }
         this.initData();
     }
 

@@ -928,6 +928,7 @@ export class UIGame extends UIBase {
                 break;
             case KeyCode.KEY_K:
                 this.clickSkillBtn2();
+                break;
             case KeyCode.KEY_B:
                 this.clickBagBtn();
                 break;
@@ -979,6 +980,10 @@ export class UIGame extends UIBase {
 
     /**点击背包按钮 */
     clickBagBtn() {
+        if (uiMgr.isPageOpen(UIPath.UIBackpack)) {
+            uiMgr.closePage(UIPath.UIBackpack);
+            return;
+        }
         uiMgr.openPage(UIPath.UIBackpack);
     }
 

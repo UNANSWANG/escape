@@ -263,6 +263,12 @@ export class UIManager {
         }
     }
 
+    /**页面是否正在显示 */
+    isPageOpen(pagePath: string) {
+        const pageNode = this.uiMap.get(this.getUIName(pagePath));
+        return !!pageNode && pageNode.activeInHierarchy;
+    }
+
     /**获取界面名称 */
     getUIName(str) {
         let strs = str.split('/');

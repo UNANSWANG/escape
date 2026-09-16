@@ -11,6 +11,12 @@ export class UIBackpack extends UIBase {
     @property(Node)
     closeBtn: Node;
 
+    @property(Node)
+    searchNode: Node;
+
+    @property(Node)
+    container: Node;
+
     protected onLoad(): void {
         this.bindBtn();
     }

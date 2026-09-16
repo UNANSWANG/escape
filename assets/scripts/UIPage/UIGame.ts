@@ -65,6 +65,9 @@ export class UIGame extends UIBase {
     @property(Node)
     aimingBtn: Node;
 
+    @property(Node)
+    containerList: Node;
+
     @property(Label)
     skill2RemainLab: Label;
 

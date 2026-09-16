@@ -243,7 +243,7 @@ export class UIMain extends UIBase {
 
     /**点击仓库 */
     clickStorehouseBtn() {
-        uiMgr.showTips("打开仓库");
+        uiMgr.openPage(UIPath.UIStorehouse);
     }
 
     /**点击角色 */
@@ -251,9 +251,9 @@ export class UIMain extends UIBase {
         uiMgr.showTips("打开角色");
     }
 
-    /**点击房间 */
+    /**点击收藏室 */
     clickRoomBtn() {
-        uiMgr.showTips("打开房间");
+        uiMgr.showTips("打开收藏室");
     }
 }
 

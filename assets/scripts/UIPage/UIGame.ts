@@ -922,6 +922,8 @@ export class UIGame extends UIBase {
                 break;
             case KeyCode.KEY_K:
                 this.clickSkillBtn2();
+            case KeyCode.KEY_B:
+                this.clickBagBtn();
                 break;
         }
     }

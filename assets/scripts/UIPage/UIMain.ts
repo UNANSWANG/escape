@@ -238,7 +238,7 @@ export class UIMain extends UIBase {
 
     /**点击商店 */
     clickStoreBtn() {
-        uiMgr.showTips("打开商店");
+        uiMgr.openPage(UIPath.UIStore);
     }
 
     /**点击仓库 */

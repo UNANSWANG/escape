@@ -151,7 +151,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "b3AFdXwBJFtafUJNN28KWe"
+    "fileId": "d3LXGPfTVL/ow4G3ECvils"
   },
   {
     "__type__": "cc.Sprite",
@@ -196,7 +196,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "dc/lS7IchMz52HQV4Zgm4E"
+    "fileId": "62FMBvs/NNJ7lWv3XSHElq"
   },
   {
     "__type__": "cc.BlockInputEvents",
@@ -214,7 +214,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "d5AQ5bR+ZAobaaDAasstZO"
+    "fileId": "e9acjSay9CLpbh082j5hgx"
   },
   {
     "__type__": "cc.PrefabInfo",
@@ -224,7 +224,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "f6PV1A4ZdEvpXg/aeKsi6M",
+    "fileId": "e9ivK+TlRPrL2HXiDLgICJ",
     "instance": null,
     "targetOverrides": null,
     "nestedPrefabInstanceRoots": null

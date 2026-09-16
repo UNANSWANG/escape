@@ -5,8 +5,8 @@ import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 const { ccclass, property } = _decorator;
 
-@ccclass('UISearch')
-export class UISearch extends UIBase {
+@ccclass('UIStore')
+export class UIStore extends UIBase {
     @property(Node)
     closeBtn: Node;
 
@@ -38,7 +38,7 @@ export class UISearch extends UIBase {
     }
 
     onClose() {
-        uiMgr.closePage(UIPath.UISearch);
+        uiMgr.closePage(UIPath.UIStore);
     }
 }
 

@@ -11,7 +11,7 @@
     "6c48a": {
       "importer": "texture",
       "uuid": "8c0627ff-7ee2-48d2-9ee2-5e3d926497db@6c48a",
-      "displayName": "popup_weibiaoti_1_0006_tuceng_3",
+      "displayName": "bg",
       "id": "6c48a",
       "name": "texture",
       "userData": {
@@ -35,7 +35,7 @@
     "f9941": {
       "importer": "sprite-frame",
       "uuid": "8c0627ff-7ee2-48d2-9ee2-5e3d926497db@f9941",
-      "displayName": "popup_weibiaoti_1_0006_tuceng_3",
+      "displayName": "bg",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {

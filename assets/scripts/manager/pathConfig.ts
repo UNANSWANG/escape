@@ -28,8 +28,8 @@ export enum UIPath {
     UIMatch = "prefabs/UIPage/UIMatch",
     /**背包页面 */
     UIBackpack = "prefabs/UIPage/UIBackpack",
-    /**搜索页面 */
-    UISearch = "prefabs/UIPage/UISearch",
+    /**商店页面 */
+    UIStore = "prefabs/UIPage/UIStore",
     /**签到页面 */
     UISign = "prefabs/UIPage/UISign",
     /**仓库页面 */

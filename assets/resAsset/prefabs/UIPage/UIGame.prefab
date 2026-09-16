@@ -1055,6 +1055,7 @@
     "__prefab": {
       "__id__": 40
     },
+    "containerType": 0,
     "_id": ""
   },
   {
@@ -1076,7 +1077,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "insurance",
+    "_name": "eliminationBox",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -1212,6 +1213,7 @@
     "__prefab": {
       "__id__": 48
     },
+    "containerType": 1,
     "_id": ""
   },
   {
@@ -1369,6 +1371,7 @@
     "__prefab": {
       "__id__": 56
     },
+    "containerType": 2,
     "_id": ""
   },
   {
@@ -1390,7 +1393,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "eliminationBox",
+    "_name": "SafeBox",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -1526,6 +1529,7 @@
     "__prefab": {
       "__id__": 64
     },
+    "containerType": 3,
     "_id": ""
   },
   {

@@ -2,6 +2,18 @@ import { _decorator, Component, Node } from 'cc';
 import { jsonBase } from './jsonBase';
 const { ccclass, property } = _decorator;
 
+/** 容器表中 type 字段的取值 */
+export enum ContainerType {
+    /** 物资盒 */
+    SupplyBox = 0,
+    /** 淘汰盒 */
+    EliminationBox = 1,
+    /** Boss 盒 */
+    BossBox = 2,
+    /** 保险箱 */
+    SafeBox = 3,
+}
+
 @ccclass('jsonContainer')
 export class jsonContainer extends jsonBase {
     /** 表格名称 */

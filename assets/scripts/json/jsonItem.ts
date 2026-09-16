@@ -9,9 +9,29 @@ export class jsonItem extends jsonBase {
     protected jsonPath: string = "json/item";
     protected tableUrl1: string = "";
     protected tableUrl2: string = "";
+    /** 按品质分组的物品数据；无品质的物品不会加入 */
+    private itemDataByQuality: Map<number, JsonItemData[]> = new Map();
 
     protected processTableData(): void {
         super.processTableData();
+        this.itemDataByQuality.clear();
+
+        const rows = Array.isArray(this.data) ? this.data : Object.values(this.data ?? {});
+        for (const itemData of rows as JsonItemData[]) {
+            if (!Number.isFinite(itemData?.quality)) continue;
+
+            const qualityItems = this.itemDataByQuality.get(itemData.quality) ?? [];
+            qualityItems.push(itemData);
+            this.itemDataByQuality.set(itemData.quality, qualityItems);
+        }
+
+        console.log(`--------->物品数据:`, this.itemDataByQuality);
+    }
+
+    /** 获取指定品质的全部物品数据 */
+    getDataByQuality(quality: number): JsonItemData[] {
+        if (!Number.isFinite(quality)) return [];
+        return this.itemDataByQuality.get(quality) ?? [];
     }
 
     /** 根据 itemId 获取一条物品配置。 */

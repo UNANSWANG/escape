@@ -22,7 +22,7 @@ export class jsonCommon extends jsonBase {
             this.commonData[data.key] = data;
         }
         gm.Event.emit(GameEvent.commonTableFinish);
-        // console.warn("-------->初始化公共分类型数据:\n",this.commonData);
+        // console.log("-------->初始化公共分类型数据:\n",this.commonData);
     }
 
     /**获取指定类型公共数据 */

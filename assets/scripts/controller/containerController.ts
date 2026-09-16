@@ -22,6 +22,7 @@ export class containerController extends Component {
         if (!this.isItemDataInitialized) {
             this.initItemData();
         }
+        console.warn(`容器数据: ${this.itemData}`);
         return this.itemData;
     }
 

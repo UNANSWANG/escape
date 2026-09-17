@@ -1,5 +1,6 @@
 import { _decorator, Component, Enum } from 'cc';
 import { ContainerType, containerConfig } from '../json/jsonContainer';
+import { itemConfig } from '../json/jsonItem';
 import { ccTools } from '../extention/generalTools';
 const { ccclass, property } = _decorator;
 
@@ -11,7 +12,7 @@ export class containerController extends Component {
     })
     containerType: ContainerType = ContainerType.SupplyBox;
 
-    /** 容器内生成的物品索引；首次打开前为空 */
+    /** 容器内生成的物品 itemId；首次打开前为空 */
     itemData: number[] = [];
     private isItemDataInitialized = false;
 
@@ -44,10 +45,13 @@ export class containerController extends Component {
 
         const probabilityWeight = this.parseWeights(containerData.probabilityWeight);
         for (let i = 0; i < itemCountIndex + 1; i++) {
-            const itemIndex = ccTools.getWeightedRandomIndex(probabilityWeight);
-            if (itemIndex >= 0) {
-                this.itemData.push(itemIndex);
-            }
+            const quality = ccTools.getWeightedRandomIndex(probabilityWeight);
+            if (quality < 0) continue;
+
+            const qualityItems = itemConfig.getDataByQuality(quality);
+            const itemIndex = ccTools.getWeightedRandomIndex(qualityItems.map((itemData) => itemData.weight));
+            const itemData = qualityItems[itemIndex];
+            if (itemData) this.itemData.push(itemData.itemId);
         }
         this.isItemDataInitialized = true;
     }
@@ -63,4 +67,3 @@ export class containerController extends Component {
         }
     }
 }
-

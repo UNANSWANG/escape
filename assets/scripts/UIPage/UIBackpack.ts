@@ -17,7 +17,7 @@ export class UIBackpack extends UIBase {
     @property(Node)
     container: Node;
 
-    /** 当前打开容器传入的物品索引 */
+    /** 当前打开容器传入的物品 itemId */
     itemData: number[] = [];
 
     protected onLoad(): void {

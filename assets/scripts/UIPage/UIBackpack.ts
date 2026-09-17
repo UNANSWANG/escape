@@ -1,4 +1,4 @@
-import { _decorator, Node, Prefab, instantiate, Label, Sprite } from 'cc';
+import { _decorator, Node, Prefab, instantiate, Label, Sprite, EventTouch } from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -41,6 +41,7 @@ export class UIBackpack extends UIBase {
 
     protected onLoad(): void {
         this.bindBtn();
+        this.bindItemSlots();
     }
 
     onUI_Open(data?: { showSearchNode?: boolean; itemData?: number[] }) {
@@ -49,6 +50,7 @@ export class UIBackpack extends UIBase {
         }
         this.itemData = data?.itemData ?? [];
         this.initData();
+        this.hideAllSelect();
     }
 
     /** 初始化背包与当前打开容器的显示。 */
@@ -68,7 +70,12 @@ export class UIBackpack extends UIBase {
         const slots = content.children;
         for (let index = 0; index < slots.length; index++) {
             const slot = slots[index];
-            ccTools.destroyAllChild(slot);
+            const itemContainer = slot.getChildByName("content");
+            if (!itemContainer) {
+                console.warn(`容器第 ${index + 1} 个格子缺少 content 节点`);
+                continue;
+            }
+            ccTools.destroyAllChild(itemContainer);
 
             const itemId = this.itemData[index];
             if (!Number.isFinite(itemId)) {
@@ -82,7 +89,7 @@ export class UIBackpack extends UIBase {
             }
 
             const itemNode = instantiate(this.itemPrefab);
-            itemNode.parent = slot;
+            itemNode.parent = itemContainer;
             this.setItemLabel(itemNode, "nameLab", itemData.name ?? "");
             this.setItemLabel(itemNode, "capacityLab", `${itemData.capacity ?? 0}`);
             this.setItemLabel(itemNode, "valueLab", ccTools.formatMonetaryNum(itemData.value ?? 0));
@@ -127,6 +134,40 @@ export class UIBackpack extends UIBase {
             return;
         }
         label.string = content;
+    }
+
+    /** 绑定容器和背包格子的选中事件。 */
+    private bindItemSlots() {
+        for (const slot of this.getItemSlots()) {
+            slot.on(Node.EventType.TOUCH_END, this.clickItemSlot, this);
+        }
+    }
+
+    /** 获取容器及背包中的全部物品格子。 */
+    private getItemSlots(): Node[] {
+        const containerContent = this.container.getChildByName("content");
+        return [...containerContent.children, ...this.backpackContainer.children];
+    }
+
+    /** 点击物品格子：有物品时显示该格子的选中框，空格子时取消所有选中。 */
+    private clickItemSlot(event: EventTouch) {
+        event.propagationStopped = true;
+
+        const slot = event.currentTarget as Node;
+        const hasItem = slot.getChildByName("content").children.length > 0;
+        this.refreshSelect(hasItem ? slot : null);
+    }
+
+    /** 刷新格子选中状态。 */
+    private refreshSelect(selectedSlot: Node) {
+        for (const slot of this.getItemSlots()) {
+            slot.getChildByName("select").active = slot === selectedSlot;
+        }
+    }
+
+    /** 隐藏所有容器和背包格子的选中框。 */
+    private hideAllSelect() {
+        this.refreshSelect(null);
     }
 
     bindBtn() {

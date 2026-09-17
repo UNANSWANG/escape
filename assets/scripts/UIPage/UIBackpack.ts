@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Animation} from 'cc';
+import { _decorator, Component, Node, Animation, Prefab} from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -16,6 +16,9 @@ export class UIBackpack extends UIBase {
 
     @property(Node)
     container: Node;
+
+    @property(Prefab)
+    itemPrefab: Prefab;
 
     /** 当前打开容器传入的物品 itemId */
     itemData: number[] = [];

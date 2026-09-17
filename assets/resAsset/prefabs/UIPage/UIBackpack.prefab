@@ -10773,6 +10773,9 @@
     "closeBtn": {
       "__id__": 21
     },
+    "discardBtn": {
+      "__id__": 439
+    },
     "searchNode": {
       "__id__": 458
     },

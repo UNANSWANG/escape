@@ -51,6 +51,7 @@ export class UIBackpack extends UIBase {
         this.bindBtn();
         this.bindContainerSlots();
         this.bindBackpackSlots();
+        this.discardBtn.active = false;
     }
 
     onUI_Open(data?: { showSearchNode?: boolean; itemData?: number[] }) {
@@ -73,6 +74,8 @@ export class UIBackpack extends UIBase {
         this.closeBtn.addComponent(zoomButton).onClick = this.clickCloseBtn.bind(this);
         this.node.on(Node.EventType.TOUCH_END, this.clickCloseBtn.bind(this));
         this.discardBtn.addComponent(zoomButton).onClick = this.clickDiscardBtn.bind(this);
+        // 防止点击丢弃按钮时，事件冒泡触发页面背景的关闭逻辑。
+        this.discardBtn.on(Node.EventType.TOUCH_END, this.stopEventPropagation, this);
     }
 
     /** 根据容器传入的物品 id 刷新容器的九个物品格子。 */
@@ -240,6 +243,7 @@ export class UIBackpack extends UIBase {
         for (const slot of this.getBackpackSlots()) {
             slot.getChildByName("select").active = slot === this.selectedBackpackSlot;
         }
+        this.discardBtn.active = this.selectedBackpackSlot !== null;
     }
 
     /** 隐藏所有容器和背包格子的选中框。 */
@@ -254,7 +258,26 @@ export class UIBackpack extends UIBase {
     ///
     /**点击丢弃 */
     clickDiscardBtn() {
-        uiMgr.showTips("丢弃物品");
+        if (!this.selectedBackpackSlot) {
+            return;
+        }
+
+        const slotIndex = this.getBackpackSlots().indexOf(this.selectedBackpackSlot);
+        if (slotIndex < 0 || !Number.isFinite(pData.backpackItems[slotIndex])) {
+            this.hideAllSelect();
+            return;
+        }
+
+        // 移除当前格子的物品；数组后续元素会自动前移一格。
+        pData.backpackItems.splice(slotIndex, 1);
+        this.hideAllSelect();
+        this.initBackpack();
+        this.refreshBackpack();
+    }
+
+    /** 阻止按钮点击冒泡到页面背景。 */
+    private stopEventPropagation(event: EventTouch) {
+        event.propagationStopped = true;
     }
 
     /**点击关闭 */

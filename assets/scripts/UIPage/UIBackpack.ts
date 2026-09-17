@@ -8,6 +8,7 @@ import { getItemDataByItemId } from '../json/jsonItemData';
 import { JsonItemData } from '../json/jsonItem';
 import { pData } from '../manager/playerData';
 import { itemController } from '../controller/itemController';
+import { configData } from '../manager/configData';
 const { ccclass, property } = _decorator;
 
 
@@ -42,6 +43,12 @@ export class UIBackpack extends UIBase {
 
     /** 当前打开容器传入的物品 itemId */
     itemData: number[] = [];
+    /** 当前容器各物品是否已经完成加载展示。 */
+    private revealedItemStates: boolean[] = null;
+    /** 当前正在播放加载动画的物品。 */
+    private loadingItem: itemController = null;
+    /** 当前页面是否正在依次展示容器物品。 */
+    private isRevealingContainerItems = false;
     /** 当前选中的容器格子。 */
     private selectedContainerSlot: Node = null;
     /** 当前选中的背包格子。 */
@@ -54,11 +61,13 @@ export class UIBackpack extends UIBase {
         this.discardBtn.active = false;
     }
 
-    onUI_Open(data?: { showSearchNode?: boolean; itemData?: number[] }) {
+    onUI_Open(data?: { showSearchNode?: boolean; itemData?: number[]; revealedItemStates?: boolean[] }) {
+        this.stopContainerItemReveal();
         if (this.searchNode) {
             this.searchNode.active = !!data?.showSearchNode;
         }
         this.itemData = data?.itemData ?? [];
+        this.revealedItemStates = data?.showSearchNode ? (data.revealedItemStates ?? []) : null;
         this.initData();
         this.hideAllSelect();
     }
@@ -68,6 +77,7 @@ export class UIBackpack extends UIBase {
         this.initContainer();
         this.initBackpack();
         this.refreshBackpack();
+        this.startContainerItemReveal();
     }
 
     bindBtn() {
@@ -179,6 +189,10 @@ export class UIBackpack extends UIBase {
         event.propagationStopped = true;
 
         const slot = event.currentTarget as Node;
+        const slotIndex = this.getContainerSlots().indexOf(slot);
+        if (this.revealedItemStates && !this.revealedItemStates[slotIndex]) {
+            return;
+        }
         const hasItem = slot.getChildByName("content").children.length > 0;
         if (!hasItem) {
             this.hideAllSelect();
@@ -253,6 +267,76 @@ export class UIBackpack extends UIBase {
         this.refreshSelect();
     }
 
+    /** 将容器内未完成加载的物品依次显示。 */
+    private startContainerItemReveal() {
+        if (!this.revealedItemStates) {
+            return;
+        }
+
+        const slots = this.getContainerSlots();
+        for (let index = 0; index < slots.length; index++) {
+            const itemNode = slots[index].getChildByName("content").children[0];
+            if (!itemNode) {
+                continue;
+            }
+
+            const itemComp = itemNode.getComponent(itemController);
+            if (this.revealedItemStates[index]) {
+                itemComp.showNormal();
+            } else {
+                itemComp.showMask();
+            }
+        }
+
+        this.isRevealingContainerItems = true;
+        this.revealNextContainerItem(0);
+    }
+
+    /** 加载并显示指定索引之后的下一件容器物品。 */
+    private revealNextContainerItem(startIndex: number) {
+        if (!this.isRevealingContainerItems) {
+            return;
+        }
+
+        const slots = this.getContainerSlots();
+        for (let index = startIndex; index < slots.length; index++) {
+            const itemId = this.itemData[index];
+            if (!Number.isFinite(itemId) || itemId === -1 || this.revealedItemStates[index]) {
+                continue;
+            }
+
+            const itemData = getItemDataByItemId(itemId) as JsonItemData;
+            const itemNode = slots[index].getChildByName("content").children[0];
+            const itemComp = itemNode?.getComponent(itemController);
+            if (!itemData || !itemComp) {
+                continue;
+            }
+
+            const circleCount = Math.max(1, (Number(itemData.quality) || 0) + 1);
+            this.loadingItem = itemComp;
+            itemComp.playMaskLoading(configData.loadCircleTime * circleCount, circleCount, () => {
+                if (!this.isRevealingContainerItems) {
+                    return;
+                }
+
+                this.revealedItemStates[index] = true;
+                this.loadingItem = null;
+                this.revealNextContainerItem(index + 1);
+            });
+            return;
+        }
+
+        this.loadingItem = null;
+        this.isRevealingContainerItems = false;
+    }
+
+    /** 停止当前容器物品加载；未完成物品不会记录为已展示。 */
+    private stopContainerItemReveal() {
+        this.isRevealingContainerItems = false;
+        this.loadingItem?.stopMaskLoading();
+        this.loadingItem = null;
+    }
+
     ///
     ///点击事件
     ///
@@ -287,5 +371,9 @@ export class UIBackpack extends UIBase {
 
     onClose() {
         uiMgr.closePage(UIPath.UIBackpack);
+    }
+
+    onUI_Close() {
+        this.stopContainerItemReveal();
     }
 }

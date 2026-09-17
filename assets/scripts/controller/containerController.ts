@@ -14,6 +14,8 @@ export class containerController extends Component {
 
     /** 容器内生成的物品 itemId；首次打开前为空 */
     itemData: number[] = [];
+    /** 已完成加载展示的容器物品索引。 */
+    private revealedItemStates: boolean[] = [];
     private isItemDataInitialized = false;
 
     /**
@@ -25,6 +27,11 @@ export class containerController extends Component {
         }
         console.warn(`容器数据: ${this.itemData}`);
         return this.itemData;
+    }
+
+    /** 获取容器物品的加载完成状态。状态与容器生命周期一致。 */
+    getRevealedItemStates(): boolean[] {
+        return this.revealedItemStates;
     }
 
     /** 按容器配置随机生成物品索引 */

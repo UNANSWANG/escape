@@ -1063,6 +1063,7 @@ export class UIGame extends UIBase {
         uiMgr.openPage(UIPath.UIBackpack, {
             showSearchNode: true,
             itemData: this.currentContainer.getItemData(),
+            revealedItemStates: this.currentContainer.getRevealedItemStates(),
         });
     }
 

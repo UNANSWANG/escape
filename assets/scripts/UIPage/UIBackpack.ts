@@ -5,8 +5,8 @@ import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
 import { getItemDataByItemId } from '../json/jsonItemData';
-import { JsonItemData } from '../json/jsonItem';
 import { pData } from '../manager/playerData';
+import { itemController } from '../controller/itemController';
 const { ccclass, property } = _decorator;
 
 
@@ -82,17 +82,9 @@ export class UIBackpack extends UIBase {
                 continue;
             }
 
-            const itemData = getItemDataByItemId(itemId) as JsonItemData;
-            if (!itemData) {
-                console.warn(`未找到物品配置，itemId: ${itemId}`);
-                continue;
-            }
-
             const itemNode = instantiate(this.itemPrefab);
             itemNode.parent = itemContainer;
-            this.setItemLabel(itemNode, "nameLab", itemData.name ?? "");
-            this.setItemLabel(itemNode, "capacityLab", `${itemData.capacity ?? 0}`);
-            this.setItemLabel(itemNode, "valueLab", ccTools.formatMonetaryNum(itemData.value ?? 0));
+            itemNode.getComponent(itemController).initData(itemId);
         }
     }
 
@@ -124,16 +116,6 @@ export class UIBackpack extends UIBase {
         this.capacitySp.fillRange = maxCapacity > 0
             ? Math.min(1, Math.max(0, pData.backpackCapacity / maxCapacity))
             : 0;
-    }
-
-    /** 设置物品预制体内指定文本节点。 */
-    private setItemLabel(itemNode: Node, nodeName: string, content: string) {
-        const label = itemNode.getChildByName(nodeName)?.getComponent(Label);
-        if (!label) {
-            console.warn(`物品预制体缺少 ${nodeName} 标签`);
-            return;
-        }
-        label.string = content;
     }
 
     /** 绑定容器和背包格子的选中事件。 */

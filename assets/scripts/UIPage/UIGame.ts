@@ -17,6 +17,7 @@ import { role0Skill2RemainEvent } from '../controller/role/role0';
 import { addRoleScript } from '../controller/role/roleScriptFactory';
 import { poolMgr } from '../manager/poolManager';
 import { containerController } from '../controller/containerController';
+import { sniperController } from '../controller/sniperController';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIGame')
@@ -768,6 +769,26 @@ export class UIGame extends UIBase {
         return this.isKeyboardAttackPressed || this.isShootButtonPressed;
     }
 
+    /** 背包打开时不响应游戏键盘操作 */
+    private isBackpackOpen() {
+        return uiMgr.isPageOpen(UIPath.UIBackpack);
+    }
+
+    /** 打开背包时清除已按住的键盘移动与攻击状态 */
+    private clearKeyboardGameInput() {
+        this.pressedMoveKeys.clear();
+        this.isKeyboardAttackPressed = false;
+        // 清掉狙击枪蓄力，避免打开背包时同步松键导致开火。
+        playerMgr.playerComp?.weaponsController?.node.getComponent(sniperController)?.cancelCharge();
+        this.syncPlayerAttackHeldState();
+        if (!this.isRockerControlling) {
+            this.isMoving = false;
+            this.currentMoveDirection.set(0, 0, 0);
+            playerMgr.playerComp?.playRoleAnim(roleAnimName.idle, true);
+        }
+        if (!this.isAttacking()) this.stopAutoAim();
+    }
+
     /**攻击按键状态变化时通知角色；不在 update 中重复刷新。 */
     private syncPlayerAttackHeldState() {
         const isAttacking = this.isAttacking();
@@ -929,6 +950,11 @@ export class UIGame extends UIBase {
 
     /**监听按钮点击事件 */
     onKeyDown(event: EventKeyboard) {
+        if (this.isBackpackOpen()) {
+            if (event.keyCode === KeyCode.KEY_B) this.clickBagBtn();
+            return;
+        }
+
         switch (event.keyCode) {
             case KeyCode.KEY_W:
             case KeyCode.KEY_A:
@@ -977,6 +1003,8 @@ export class UIGame extends UIBase {
 
     /**监听键盘松开，恢复剩余按键的方向或停止移动 */
     onKeyUp(event: EventKeyboard) {
+        if (this.isBackpackOpen()) return;
+
         switch (event.keyCode) {
             case KeyCode.KEY_W:
             case KeyCode.KEY_A:
@@ -1024,12 +1052,14 @@ export class UIGame extends UIBase {
             uiMgr.closePage(UIPath.UIBackpack);
             return;
         }
+        this.clearKeyboardGameInput();
         uiMgr.openPage(UIPath.UIBackpack);
     }
 
     /**点击打开容器按钮 */
     clickOpenContainerBtn() {
         if (!this.currentContainer) return;
+        this.clearKeyboardGameInput();
         uiMgr.openPage(UIPath.UIBackpack, {
             showSearchNode: true,
             itemData: this.currentContainer.getItemData(),

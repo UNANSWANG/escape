@@ -1,4 +1,4 @@
-import { _decorator, Node, Prefab, instantiate, Label } from 'cc';
+import { _decorator, Node, Prefab, instantiate, Label, Sprite } from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -6,6 +6,7 @@ import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
 import { getItemDataByItemId } from '../json/jsonItemData';
 import { JsonItemData } from '../json/jsonItem';
+import { pData } from '../manager/playerData';
 const { ccclass, property } = _decorator;
 
 
@@ -19,6 +20,18 @@ export class UIBackpack extends UIBase {
 
     @property(Node)
     container: Node;
+
+    @property(Label)
+    valueLab: Label;
+
+    @property(Node)
+    backpackContainer: Node;
+
+    @property(Label)
+    capacityLab: Label;
+
+    @property(Sprite)
+    capacitySp: Sprite;
 
     @property(Prefab)
     itemPrefab: Prefab;
@@ -38,8 +51,14 @@ export class UIBackpack extends UIBase {
         this.initData();
     }
 
-    /** 根据容器传入的物品 id 刷新九个物品格子。 */
+    /** 初始化背包与当前打开容器的显示。 */
     initData() {
+        this.initContainer();
+        this.refreshBackpack();
+    }
+
+    /** 根据容器传入的物品 id 刷新容器的九个物品格子。 */
+    private initContainer() {
         const content = this.container?.getChildByName("content");
         if (!content || !this.itemPrefab) {
             console.warn("背包容器节点或物品预制体未配置");
@@ -70,6 +89,36 @@ export class UIBackpack extends UIBase {
         }
     }
 
+    /** 根据背包物品重新计算并显示总价值与当前容量。 */
+    refreshBackpack() {
+        let backpackValue = 0;
+        let backpackCapacity = 0;
+
+        for (const itemId of pData.backpackItems) {
+            const itemData = getItemDataByItemId(itemId);
+            if (!itemData) {
+                console.warn(`未找到背包物品配置，itemId: ${itemId}`);
+                continue;
+            }
+
+            backpackCapacity += Number(itemData.capacity) || 0;
+            if ("value" in itemData) {
+                backpackValue += Number(itemData.value) || 0;
+            }
+        }
+
+        pData.backpackValue = backpackValue;
+        pData.backpackCapacity = backpackCapacity;
+
+        this.valueLab.string = ccTools.formatMonetaryNum(pData.backpackValue);
+        this.capacityLab.string = `${pData.backpackCapacity}/${pData.maxBackpackCapacity}`;
+
+        const maxCapacity = pData.maxBackpackCapacity;
+        this.capacitySp.fillRange = maxCapacity > 0
+            ? Math.min(1, Math.max(0, pData.backpackCapacity / maxCapacity))
+            : 0;
+    }
+
     /** 设置物品预制体内指定文本节点。 */
     private setItemLabel(itemNode: Node, nodeName: string, content: string) {
         const label = itemNode.getChildByName(nodeName)?.getComponent(Label);
@@ -98,5 +147,3 @@ export class UIBackpack extends UIBase {
         uiMgr.closePage(UIPath.UIBackpack);
     }
 }
-
-

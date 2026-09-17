@@ -44,6 +44,14 @@ export class playerData {
     gameStartTime = 0;
     /**装备id数组[主武器（weapons），副武器（weapons），近战武器（weapons），头盔（equipment），护甲（equipment），背包（equipment）] */
     equipmentIds: number[] = [1, 5, 0, -1, -1, 0];
+    /**背包内价值 */
+    backpackValue = 0;
+    /**背包内当前容量 */
+    backpackCapacity = 0;
+    /**背包内最大容量 */
+    maxBackpackCapacity = 0;
+    /**背包内物品（存储itemId） */
+    backpackItems: number[] = [];
 
     levelInit() {
         pData.adNum = 0;
@@ -51,6 +59,11 @@ export class playerData {
         pData.mapHalfSize = new Vec2(2680 / 2, 1500 / 2);
         this.isGuide = ccStorageTools.getNumberData(SaveKey.guide) != 1 || gmConfig.forceGuide;
         this.gameStartTime = ccTimeTools.getTime();
+
+        //初始化背包内最大容量
+        this.maxBackpackCapacity = 60;
+        //初始化背包内物品
+        this.backpackItems = [];
 
         this.SDKReportLevelStart();
     }

@@ -424,6 +424,8 @@
       "__id__": 0
     },
     "fileId": "deZkue84xNyqlH7C62aoqr",
+    "instance": null,
+    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {
@@ -10691,6 +10693,18 @@
     "container": {
       "__id__": 447
     },
+    "valueLab": {
+      "__id__": 47
+    },
+    "backpackContainer": {
+      "__id__": 217
+    },
+    "capacityLab": {
+      "__id__": 77
+    },
+    "capacitySp": {
+      "__id__": 71
+    },
     "itemPrefab": {
       "__uuid__": "b1ac032e-2226-4615-a232-d31c584f3a8b",
       "__expectedType__": "cc.Prefab"
@@ -10711,6 +10725,7 @@
     },
     "fileId": "68qqukxORFers6PVqaX+e+",
     "instance": null,
+    "targetOverrides": null,
     "nestedPrefabInstanceRoots": [
       {
         "__id__": 408

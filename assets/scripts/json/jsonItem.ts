@@ -56,7 +56,9 @@ export interface JsonItemData {
     quality: number;
     /**价值 */
     value: number;
-    /**重量 */
+    /**容量 */
+    capacity: number;
+    /**权重 */
     weight: number;
 }
 

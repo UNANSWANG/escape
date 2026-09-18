@@ -1030,6 +1030,9 @@ export class UIGame extends UIBase {
             case KeyCode.KEY_B:
                 this.clickBagBtn();
                 break;
+            case KeyCode.KEY_F:
+                if (this.openBtn?.activeInHierarchy) this.clickOpenContainerBtn();
+                break;
         }
     }
 

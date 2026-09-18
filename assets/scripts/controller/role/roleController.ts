@@ -1,4 +1,4 @@
-import { _decorator, Component, Label, Node, sp, Vec3 } from 'cc';
+import { _decorator, Component, Label, Node, sp, Sprite, tween, Tween, Vec3 } from 'cc';
 import { enemyMgr } from '../../manager/enemyManager';
 import { UIGame } from '../../UIPage/UIGame';
 import { configData, GameEvent, playerCommonConfig } from '../../manager/configData';
@@ -93,8 +93,18 @@ export class roleController extends Component {
     private skill1CooldownRemaining = 0;
     /**技能2剩余冷却时间。 */
     private skill2CooldownRemaining = 0;
-    /**角色血量 */
+    /**角色最大血量 */
+    maxHp = 100;
+    /**角色当前血量 */
     hp = 0;
+    /**血量节点 */
+    hpNode: Node = null;
+    /**当前血量图片 */
+    hpBar: Sprite = null;
+    /**血量虚影 */
+    baseHp: Sprite = null;
+    /**血量虚影追赶动画时长 */
+    private hpShadowDuration = 0.3;
     /**角色数据 */
     roleData: JsonRoleData = null;
 
@@ -102,6 +112,9 @@ export class roleController extends Component {
     protected onLoad(): void {
         this.roleAnim = this.node.getChildByName('roleAnim')?.getComponent(sp.Skeleton);
         this.roleNameLab = this.node.getChildByName('roleNameLab')?.getComponent(Label);
+        this.hpNode = this.node.getChildByName('hpBg');
+        this.hpBar = this.hpNode?.getChildByName('hpBar')?.getComponent(Sprite);
+        this.baseHp = this.hpNode?.getChildByName('baseHp')?.getComponent(Sprite);
         const weaponRoot = this.node.getChildByName('weapons');
         const weaponNodes = ['weapons_0', 'weapons_1', 'weapons_2'];
         this.weaponNodes = weaponNodes.map((name) => weaponRoot?.getChildByName(name) ?? null);
@@ -112,6 +125,7 @@ export class roleController extends Component {
     }
 
     protected onDestroy(): void {
+        if (this.baseHp) Tween.stopAllByTarget(this.baseHp);
         gm.Event.off(GameEvent.loadTable, this.onTableLoad, this);
     }
 
@@ -298,7 +312,8 @@ export class roleController extends Component {
         this.roleData = roleConfig.getRoleDataById(this.roleId);
         if (!this.roleData) return;
 
-        this.hp = this.roleData?.hp ?? 0;
+        this.hp = this.maxHp;
+        this.refreshHp(true);
         this.originalMoveSpeed = configData.moveSpeed;
         this.equipWeapon(0);
         this.applyEquippedWeaponStats();
@@ -419,8 +434,33 @@ export class roleController extends Component {
         if (!Number.isFinite(damage) || damage <= 0 || this.hp <= 0) return false;
         const actualDamage = Math.min(this.hp, damage);
         this.hp -= actualDamage;
+        this.refreshHp();
         this.gameComp?.showDamageFloat(this.node, actualDamage);
         return true;
+    }
+
+    /**当前生命值百分比。 */
+    get hpPercent() {
+        return this.maxHp > 0 ? this.hp / this.maxHp : 0;
+    }
+
+    /**刷新血条；扣血时血量虚影会延迟追赶。 */
+    refreshHp(isImmediate = false) {
+        if (!this.hpBar || !this.baseHp) return;
+
+        const hpPercent = Math.max(0, Math.min(1, this.hpPercent));
+        const isHpReduced = hpPercent < this.hpBar.fillRange;
+        this.hpBar.fillRange = hpPercent;
+        Tween.stopAllByTarget(this.baseHp);
+
+        if (isImmediate || !isHpReduced) {
+            this.baseHp.fillRange = hpPercent;
+            return;
+        }
+
+        tween(this.baseHp)
+            .to(this.hpShadowDuration, { fillRange: hpPercent }, { easing: 'linear' })
+            .start();
     }
 
     /** 播放角色本体 Spine 动画。 */

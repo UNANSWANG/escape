@@ -147,7 +147,8 @@ export class roleController extends Component {
 
     protected onDestroy(): void {
         if (this.baseHp) Tween.stopAllByTarget(this.baseHp);
-        this.clearDrugUse();
+        // 节点销毁阶段组件引用可能仍存在，但 component.node 已经为空，此处只释放回调数据。
+        this.drugCompleteCallback = null;
         gm.Event.off(GameEvent.loadTable, this.onTableLoad, this);
     }
 
@@ -305,12 +306,14 @@ export class roleController extends Component {
 
     /**倒计时保留一位小数并显示在角色头顶。 */
     private refreshDrugRemainTime() {
-        if (this.remainTimeLab) {
-            this.remainTimeLab.node.active = this.isUsingDrug;
+        const remainTimeNode = this.remainTimeLab?.node;
+        if (remainTimeNode) {
+            remainTimeNode.active = this.isUsingDrug;
             if (this.isUsingDrug) this.remainTimeLab.string = this.drugRemainTime.toFixed(1);
         }
-        if (this.remainCircle) {
-            this.remainCircle.node.active = this.isUsingDrug;
+        const remainCircleNode = this.remainCircle?.node;
+        if (remainCircleNode) {
+            remainCircleNode.active = this.isUsingDrug;
             this.remainCircle.fillRange = this.isUsingDrug && this.drugDuration > 0
                 ? Math.max(0, Math.min(1, this.drugRemainTime / this.drugDuration))
                 : 0;
@@ -334,10 +337,12 @@ export class roleController extends Component {
         this.drugDuration = 0;
         this.drugHealPercent = 0;
         this.drugCompleteCallback = null;
-        if (this.remainTimeLab) this.remainTimeLab.node.active = false;
-        if (this.remainCircle) {
+        const remainTimeNode = this.remainTimeLab?.node;
+        if (remainTimeNode) remainTimeNode.active = false;
+        const remainCircleNode = this.remainCircle?.node;
+        if (remainCircleNode) {
             this.remainCircle.fillRange = 0;
-            this.remainCircle.node.active = false;
+            remainCircleNode.active = false;
         }
     }
 

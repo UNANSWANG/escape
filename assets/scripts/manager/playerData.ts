@@ -52,6 +52,10 @@ export class playerData {
     maxBackpackCapacity = 0;
     /**背包内物品（存储itemId） */
     backpackItems: number[] = [];
+    /**小药品数量 */
+    drugDrugCount = 0;
+    /**大药品数量 */
+    drugDrugCountBig = 0;
 
     levelInit() {
         pData.adNum = 0;
@@ -64,6 +68,10 @@ export class playerData {
         this.maxBackpackCapacity = 60;
         //初始化背包内物品
         this.backpackItems = [];
+        //初始化小药品数量
+        this.drugDrugCount = configData.drugDrugCount;
+        //初始化大药品数量
+        this.drugDrugCountBig = configData.drugDrugCountBig;
 
         this.SDKReportLevelStart();
     }

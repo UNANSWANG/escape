@@ -16,6 +16,14 @@ export const configData = {
     rankModeFactor: 100000,
     /**加载单圈时间 */
     loadCircleTime: 0.5,
+    /**小药品初始数量 */
+    drugDrugCount: 3,
+    /**小药品恢复血量 */
+    drugDrugHp: 0.2,
+    /**大药品初始数量 */
+    drugDrugCountBig: 1,
+    /**大药品恢复血量 */
+    drugDrugHpBig: 1,
 }
 
 /**玩家通用配置（暂不读表） */
@@ -26,12 +34,12 @@ export const playerCommonConfig = {
 
 /**敌人通用配置 */
 export const enemyCommonConfig = {
-   
+
 }
 
 /**人机通用配置 */
 export const robotCommonConfig = {
-    
+
 }
 
 /**gm配置 */

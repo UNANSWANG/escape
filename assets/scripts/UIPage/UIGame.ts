@@ -73,6 +73,12 @@ export class UIGame extends UIBase {
     openBtn: Node;
 
     @property(Node)
+    drugBtn_0: Node;
+
+    @property(Node)
+    drugBtn_1: Node;
+
+    @property(Node)
     containerList: Node;
 
     @property(Label)

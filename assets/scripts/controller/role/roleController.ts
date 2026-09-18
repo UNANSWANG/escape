@@ -22,6 +22,8 @@ export enum roleAnimName {
     useSkill1 = 'skill1',
     /**使用技能2 */
     useSkill2 = 'useSkill2',
+    /**使用药品 */
+    useDrug = 'run',
 }
 
 export enum roleType {

@@ -64,6 +64,8 @@ export class roleController extends Component {
     roleNameLab: Label = null;
     /** 打药剩余时间文本。 */
     private remainTimeLab: Label = null;
+    /** 打药剩余时间环形进度。 */
+    private remainCircle: Sprite = null;
     /** 枪节点上的枪械控制器。 */
     /** 武器根节点下的全部武器控制器：主武器、副武器、近战武器。 */
     private weaponComps: Array<weaponsController | null> = [];
@@ -113,6 +115,8 @@ export class roleController extends Component {
     private isUsingDrug = false;
     /**本次打药剩余时间（秒）。 */
     private drugRemainTime = 0;
+    /**本次打药总时间（秒），用于计算环形进度。 */
+    private drugDuration = 0;
     /**本次药品恢复的最大生命值比例。 */
     private drugHealPercent = 0;
     /**药品成功使用后的回调。 */
@@ -124,6 +128,11 @@ export class roleController extends Component {
         this.roleNameLab = this.node.getChildByName('roleNameLab')?.getComponent(Label);
         this.remainTimeLab = this.node.getChildByName('remainTimeLab')?.getComponent(Label);
         if (this.remainTimeLab) this.remainTimeLab.node.active = false;
+        this.remainCircle = this.node.getChildByName('remainCircle')?.getComponent(Sprite);
+        if (this.remainCircle) {
+            this.remainCircle.node.active = false;
+            this.remainCircle.fillRange = 0;
+        }
         this.hpNode = this.node.getChildByName('hpBg');
         this.hpBar = this.hpNode?.getChildByName('hpBar')?.getComponent(Sprite);
         this.baseHp = this.hpNode?.getChildByName('baseHp')?.getComponent(Sprite);
@@ -265,7 +274,8 @@ export class roleController extends Component {
         if (this.isUsingDrug || this.hp <= 0) return false;
 
         this.isUsingDrug = true;
-        this.drugRemainTime = Math.max(0, useTime);
+        this.drugDuration = Math.max(0, useTime);
+        this.drugRemainTime = this.drugDuration;
         this.drugHealPercent = Math.max(0, healPercent);
         this.drugCompleteCallback = complete ?? null;
         this.refreshDrugRemainTime();
@@ -295,9 +305,16 @@ export class roleController extends Component {
 
     /**倒计时保留一位小数并显示在角色头顶。 */
     private refreshDrugRemainTime() {
-        if (!this.remainTimeLab) return;
-        this.remainTimeLab.node.active = this.isUsingDrug;
-        if (this.isUsingDrug) this.remainTimeLab.string = this.drugRemainTime.toFixed(1);
+        if (this.remainTimeLab) {
+            this.remainTimeLab.node.active = this.isUsingDrug;
+            if (this.isUsingDrug) this.remainTimeLab.string = this.drugRemainTime.toFixed(1);
+        }
+        if (this.remainCircle) {
+            this.remainCircle.node.active = this.isUsingDrug;
+            this.remainCircle.fillRange = this.isUsingDrug && this.drugDuration > 0
+                ? Math.max(0, Math.min(1, this.drugRemainTime / this.drugDuration))
+                : 0;
+        }
     }
 
     /**完成使用：先清理状态，再回血和通知 UI 扣除库存。 */
@@ -314,9 +331,14 @@ export class roleController extends Component {
     private clearDrugUse() {
         this.isUsingDrug = false;
         this.drugRemainTime = 0;
+        this.drugDuration = 0;
         this.drugHealPercent = 0;
         this.drugCompleteCallback = null;
         if (this.remainTimeLab) this.remainTimeLab.node.active = false;
+        if (this.remainCircle) {
+            this.remainCircle.fillRange = 0;
+            this.remainCircle.node.active = false;
+        }
     }
 
     /**更新战斗状态；超时后将枪口复位。 */

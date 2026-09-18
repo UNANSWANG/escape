@@ -317,7 +317,8 @@ export class roleController extends Component {
         this.roleData = roleConfig.getRoleDataById(this.roleId);
         if (!this.roleData) return;
 
-        this.hp = this.maxHp;
+        //TODO 临时降低血量
+        this.hp = this.maxHp * 0.1;
         this.refreshHp(true);
         this.originalMoveSpeed = configData.moveSpeed;
         this.equipWeapon(0);

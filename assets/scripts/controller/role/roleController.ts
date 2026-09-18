@@ -62,6 +62,8 @@ export class roleController extends Component {
     roleAnim: sp.Skeleton = null;
     /** 角色头顶名称文本。 */
     roleNameLab: Label = null;
+    /** 打药剩余时间文本。 */
+    private remainTimeLab: Label = null;
     /** 枪节点上的枪械控制器。 */
     /** 武器根节点下的全部武器控制器：主武器、副武器、近战武器。 */
     private weaponComps: Array<weaponsController | null> = [];
@@ -107,11 +109,21 @@ export class roleController extends Component {
     private hpShadowDuration = 0.3;
     /**角色数据 */
     roleData: JsonRoleData = null;
+    /**是否正在使用药品。 */
+    private isUsingDrug = false;
+    /**本次打药剩余时间（秒）。 */
+    private drugRemainTime = 0;
+    /**本次药品恢复的最大生命值比例。 */
+    private drugHealPercent = 0;
+    /**药品成功使用后的回调。 */
+    private drugCompleteCallback: (() => void) = null;
 
     /** 缓存角色自身与子节点组件。 */
     protected onLoad(): void {
         this.roleAnim = this.node.getChildByName('roleAnim')?.getComponent(sp.Skeleton);
         this.roleNameLab = this.node.getChildByName('roleNameLab')?.getComponent(Label);
+        this.remainTimeLab = this.node.getChildByName('remainTimeLab')?.getComponent(Label);
+        if (this.remainTimeLab) this.remainTimeLab.node.active = false;
         this.hpNode = this.node.getChildByName('hpBg');
         this.hpBar = this.hpNode?.getChildByName('hpBar')?.getComponent(Sprite);
         this.baseHp = this.hpNode?.getChildByName('baseHp')?.getComponent(Sprite);
@@ -126,6 +138,7 @@ export class roleController extends Component {
 
     protected onDestroy(): void {
         if (this.baseHp) Tween.stopAllByTarget(this.baseHp);
+        this.clearDrugUse();
         gm.Event.off(GameEvent.loadTable, this.onTableLoad, this);
     }
 
@@ -227,7 +240,10 @@ export class roleController extends Component {
         } else if (this.battleState === roleBattleState.combat) {
             this.combatRemainTime = Math.max(0, playerCommonConfig.gunResetTime);
         }
-        if (isFiredOnRelease) this.refreshCombatState();
+        if (isFiredOnRelease) {
+            this.interruptDrugUse();
+            this.refreshCombatState();
+        }
         return isFiredOnRelease;
     }
 
@@ -235,11 +251,72 @@ export class roleController extends Component {
         this.updateBattleState(dt);
         this.updateCommonSkill1(dt);
         this.updateSkillCooldown(dt);
+        this.updateDrugUse(dt);
     }
 
     /**组件停用时终止通用技能1，避免加速状态遗留到下次启用。 */
     protected onDisable(): void {
         this.finishCommonSkill1();
+        this.interruptDrugUse();
+    }
+
+    /**开始使用药品；大小药品共用同一个状态，期间不能再次使用。 */
+    useDrug(useTime: number, healPercent: number, complete?: () => void) {
+        if (this.isUsingDrug || this.hp <= 0) return false;
+
+        this.isUsingDrug = true;
+        this.drugRemainTime = Math.max(0, useTime);
+        this.drugHealPercent = Math.max(0, healPercent);
+        this.drugCompleteCallback = complete ?? null;
+        this.refreshDrugRemainTime();
+        if (this.drugRemainTime <= 0) this.finishDrugUse();
+        return true;
+    }
+
+    /**动作发生时中断打药；移动、切换武器及界面操作不调用此方法。 */
+    interruptDrugUse() {
+        if (!this.isUsingDrug) return false;
+        this.clearDrugUse();
+        return true;
+    }
+
+    /**当前是否处于打药状态。 */
+    get usingDrug() {
+        return this.isUsingDrug;
+    }
+
+    /**更新打药倒计时；游戏暂停时冻结。 */
+    private updateDrugUse(dt: number) {
+        if (!this.isUsingDrug || gm.isGamePause) return;
+        this.drugRemainTime = Math.max(0, this.drugRemainTime - dt);
+        this.refreshDrugRemainTime();
+        if (this.drugRemainTime <= 0) this.finishDrugUse();
+    }
+
+    /**倒计时保留一位小数并显示在角色头顶。 */
+    private refreshDrugRemainTime() {
+        if (!this.remainTimeLab) return;
+        this.remainTimeLab.node.active = this.isUsingDrug;
+        if (this.isUsingDrug) this.remainTimeLab.string = this.drugRemainTime.toFixed(1);
+    }
+
+    /**完成使用：先清理状态，再回血和通知 UI 扣除库存。 */
+    private finishDrugUse() {
+        if (!this.isUsingDrug) return;
+        const healAmount = this.maxHp * this.drugHealPercent;
+        const complete = this.drugCompleteCallback;
+        this.clearDrugUse();
+        this.heal(healAmount);
+        complete?.();
+    }
+
+    /**清理打药状态与头顶倒计时。 */
+    private clearDrugUse() {
+        this.isUsingDrug = false;
+        this.drugRemainTime = 0;
+        this.drugHealPercent = 0;
+        this.drugCompleteCallback = null;
+        if (this.remainTimeLab) this.remainTimeLab.node.active = false;
     }
 
     /**更新战斗状态；超时后将枪口复位。 */
@@ -431,7 +508,10 @@ export class roleController extends Component {
         const knife = this.currentWeaponComp?.node.getComponent(knifeController);
         const isAttacked = knife?.attackInFacingDirection()
             ?? this.fireBullet(deltaTime, fireSniperOnChargeComplete);
-        if (isAttacked && knife) this.refreshCombatState();
+        if (isAttacked) {
+            this.interruptDrugUse();
+            if (knife) this.refreshCombatState();
+        }
         return isAttacked;
     }
 
@@ -442,6 +522,14 @@ export class roleController extends Component {
         this.hp -= actualDamage;
         this.refreshHp();
         this.gameComp?.showDamageFloat(this.node, actualDamage);
+        return true;
+    }
+
+    /**恢复生命值，恢复量不会使当前生命超过上限。 */
+    heal(healAmount: number) {
+        if (!Number.isFinite(healAmount) || healAmount <= 0 || this.hp <= 0 || this.hp >= this.maxHp) return false;
+        this.hp = Math.min(this.maxHp, this.hp + healAmount);
+        this.refreshHp();
         return true;
     }
 

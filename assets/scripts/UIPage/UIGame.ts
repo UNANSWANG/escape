@@ -20,6 +20,7 @@ import { containerController } from '../controller/containerController';
 import { sniperController } from '../controller/sniperController';
 import { gunController } from '../controller/gunController';
 import { weaponsConfig } from '../json/jsonWeapons';
+import { videoMgr } from '../manager/videoManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIGame')
@@ -163,6 +164,8 @@ export class UIGame extends UIBase {
     private tempDamageFloatWorldScale: Vec3 = new Vec3();
     /** 当前与玩家重叠的容器 */
     private currentContainer: containerController = null;
+    /**是否正在等待药品激励广告结果，防止大小药品按钮重复拉起广告。 */
+    private isDrugAdWatching = false;
 
     protected onLoad(): void {
         this.bindBtn();
@@ -253,6 +256,8 @@ export class UIGame extends UIBase {
         this.bagBtn.addComponent(zoomButton).onClick = this.clickBagBtn.bind(this);
         this.openBtn.addComponent(zoomButton).onClick = this.clickOpenContainerBtn.bind(this);
         this.aimingBtn.addComponent(zoomButton).onClick = this.clickAimingBtn.bind(this);
+        this.drugBtn_0.addComponent(zoomButton).onClick = this.clickDrugBtn.bind(this, false);
+        this.drugBtn_1.addComponent(zoomButton).onClick = this.clickDrugBtn.bind(this, true);
 
         this.weaponBox_0.on(NodeEventType.TOUCH_END, this.onClickWeaponBox_0, this);
         this.weaponBox_1.on(NodeEventType.TOUCH_END, this.onClickWeaponBox_1, this);
@@ -286,6 +291,7 @@ export class UIGame extends UIBase {
         this.initRockerArea();
         this.initPlayer();
         this.initEnemy();
+        this.refreshDrugButtons();
         this.updateContainerOpenButton();
     }
 
@@ -308,6 +314,7 @@ export class UIGame extends UIBase {
         this.clearDamageFloats();
         if (this.openBtn) this.openBtn.active = false;
         this.currentContainer = null;
+        this.isDrugAdWatching = false;
 
         ccTools.destroyAllChild(this.roleNode);
 
@@ -761,6 +768,8 @@ export class UIGame extends UIBase {
 
     /**使用换弹动画时长，让遮罩从满值直接补间至空值。 */
     private playReloadMaskCooldown(reloadTime: number) {
+        // 只有枪械确认进入换弹后才打断，点击无效换弹不会中断打药。
+        playerMgr.playerComp?.interruptDrugUse();
         if (!this.reloadMask) return;
         Tween.stopAllByTarget(this.reloadMask);
         this.reloadMask.fillRange = 1;
@@ -847,6 +856,8 @@ export class UIGame extends UIBase {
 
     /**射击按钮按下：立即尝试射击，按住期间由 update 持续射击 */
     private onShootButtonStart() {
+        // 攻击输入按下即视为动作开始；狙击枪进入瞄准/蓄力时也应立即打断打药。
+        playerMgr.playerComp?.interruptDrugUse();
         const wasAttacking = this.isAttacking();
         this.isShootButtonPressed = true;
         this.syncPlayerAttackHeldState();
@@ -1002,6 +1013,8 @@ export class UIGame extends UIBase {
                 this.refreshKeyboardMove();
                 break;
             case KeyCode.KEY_J: {
+                // 键盘攻击按下即打断，包含狙击枪尚未开火的瞄准/蓄力阶段。
+                playerMgr.playerComp?.interruptDrugUse();
                 const wasAttacking = this.isAttacking();
                 this.isKeyboardAttackPressed = true;
                 this.syncPlayerAttackHeldState();
@@ -1074,12 +1087,79 @@ export class UIGame extends UIBase {
 
     /**点击技能按钮1 */
     clickSkillBtn1() {
-        playerMgr.playerComp?.useSkill1();
+        const roleComp = playerMgr.playerComp;
+        if (roleComp?.useSkill1()) roleComp.interruptDrugUse();
     }
 
     /**点击技能按钮2 */
     clickSkillBtn2() {
-        playerMgr.playerComp?.useSkill2();
+        const roleComp = playerMgr.playerComp;
+        if (roleComp?.useSkill2()) roleComp.interruptDrugUse();
+    }
+
+    /**点击小/大药品；库存为空时观看广告，成功后补充数量并自动使用一次。 */
+    private clickDrugBtn(isBig: boolean) {
+        const roleComp = playerMgr.playerComp;
+        if (!roleComp || roleComp.usingDrug) return;
+
+        if (this.getDrugCount(isBig) > 0) {
+            this.startUseDrug(isBig);
+            return;
+        }
+        if (this.isDrugAdWatching) return;
+
+        this.isDrugAdWatching = true;
+        const gameVersion = this.openVersion;
+        videoMgr.watchVideo(68, () => {
+            this.isDrugAdWatching = false;
+            const rewardCount = isBig ? configData.drugDrugAdCountBig : configData.drugDrugAdCount;
+            this.setDrugCount(isBig, this.getDrugCount(isBig) + Math.max(0, rewardCount));
+            this.refreshDrugButtons();
+            if (gameVersion === this.openVersion && this.node.activeInHierarchy) this.startUseDrug(isBig);
+        }, () => {
+            this.isDrugAdWatching = false;
+        });
+    }
+
+    /**开始打药；药品仅在完整读条结束后扣除，被动作打断不会消耗。 */
+    private startUseDrug(isBig: boolean) {
+        if (this.getDrugCount(isBig) <= 0) return false;
+        const roleComp = playerMgr.playerComp;
+        const useTime = isBig ? configData.drugDrugUseTimeBig : configData.drugDrugUseTime;
+        const healPercent = isBig ? configData.drugDrugHpBig : configData.drugDrugHp;
+        return roleComp?.useDrug(useTime, healPercent, () => {
+            this.setDrugCount(isBig, this.getDrugCount(isBig) - 1);
+            this.refreshDrugButtons();
+        }) ?? false;
+    }
+
+    /**刷新两个药品按钮的数量/广告状态。 */
+    private refreshDrugButtons() {
+        this.refreshDrugButton(this.drugBtn_0, pData.drugDrugCount);
+        this.refreshDrugButton(this.drugBtn_1, pData.drugDrugCountBig);
+    }
+
+    private refreshDrugButton(button: Node, count: number) {
+        const availableCount = Math.max(0, Math.floor(count));
+        const numNode = button?.getChildByName('numNode');
+        const adNode = button?.getChildByName('ad');
+        if (numNode) numNode.active = availableCount > 0;
+        if (adNode) adNode.active = availableCount <= 0;
+        const numLab = numNode?.getChildByName('numLab')?.getComponent(Label);
+        if (numLab) numLab.string = `${availableCount}`;
+    }
+
+    private getDrugCount(isBig: boolean) {
+        return isBig ? pData.drugDrugCountBig : pData.drugDrugCount;
+    }
+
+    private setDrugCount(isBig: boolean, count: number) {
+        const validCount = Math.max(0, Math.floor(count));
+        if (isBig) {
+            pData.drugDrugCountBig = validCount;
+        } else {
+            pData.drugDrugCount = validCount;
+        }
     }
 
     /**点击刀按钮 */

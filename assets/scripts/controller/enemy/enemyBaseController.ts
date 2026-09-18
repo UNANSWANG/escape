@@ -35,8 +35,6 @@ export class enemyBaseController extends Component {
     roleAnim: sp.Skeleton = null;
     /**角色名称 */
     roleNameLab: Label = null;
-    /**角色等级 */
-    levelLab: Label = null;
     /**血量节点 */
     hpNode: Node = null;
     /**血量图片 */
@@ -51,7 +49,6 @@ export class enemyBaseController extends Component {
     protected onLoad(): void {
         this.roleAnim = this.node.getChildByName("roleAnim").getComponent(sp.Skeleton);
         this.roleNameLab = this.node.getChildByName("roleNameLab").getComponent(Label);
-        this.levelLab = this.node.getChildByName("levelLab").getComponent(Label);
         this.hpNode = this.node.getChildByName("hpBg");
         this.hpBar = this.hpNode.getChildByName("hpBar").getComponent(Sprite);
         this.baseHp = this.hpNode.getChildByName("baseHp").getComponent(Sprite);

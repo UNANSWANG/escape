@@ -20,10 +20,18 @@ export const configData = {
     drugDrugCount: 3,
     /**小药品恢复血量 */
     drugDrugHp: 0.2,
+    /**小药品广告赠送数量 */
+    drugDrugAdCount: 2,
+    /**小药品使用时间（秒） */
+    drugDrugUseTime: 2,
     /**大药品初始数量 */
     drugDrugCountBig: 1,
     /**大药品恢复血量 */
     drugDrugHpBig: 1,
+    /**大药品广告赠送数量 */
+    drugDrugAdCountBig: 1,
+    /**大药品使用时间（秒） */
+    drugDrugUseTimeBig: 4,
 }
 
 /**玩家通用配置（暂不读表） */

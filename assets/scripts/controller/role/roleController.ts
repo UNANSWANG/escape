@@ -139,6 +139,11 @@ export class roleController extends Component {
         return this.currentWeaponComp;
     }
 
+    /**获取指定装备槽位的武器控制器。 */
+    getWeaponController(slotIndex: number) {
+        return this.weaponComps[slotIndex] ?? null;
+    }
+
     /**
      * 切换当前装备槽位：0 为主武器、1 为副武器、2 为近战武器。
      * 即使近战控制器尚未实现，也会正确切换武器节点显示。

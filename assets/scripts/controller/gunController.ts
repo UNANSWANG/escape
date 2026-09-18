@@ -52,6 +52,7 @@ export class gunController extends weaponsController {
     applyStats(stats: WeaponStats) {
         super.applyStats(stats);
         this.currentAmmo = this.capacity;
+        this.emitAmmoChange();
     }
 
     private updateReloadTime() {
@@ -137,6 +138,7 @@ export class gunController extends weaponsController {
     /** 完成本次开火。无论本次生成几枚分裂子弹，均只在此扣除 1 发弹药。 */
     protected finishFire() {
         this.currentAmmo--;
+        this.emitAmmoChange();
         if (this.currentAmmo <= 0) {
             this.playShootAnim(true);
             this.startReload(true);
@@ -173,7 +175,13 @@ export class gunController extends weaponsController {
     private finishReload() {
         this.currentAmmo = this.capacity;
         this.isReloading = false;
+        this.emitAmmoChange();
         this.playIdleAnim();
+    }
+
+    /**通知游戏界面刷新当前弹匣数量。 */
+    private emitAmmoChange() {
+        this.node.emit('ammo-change', this.currentAmmo);
     }
 
     protected getShootData(outPosition: Vec3, outDirection: Vec3) {

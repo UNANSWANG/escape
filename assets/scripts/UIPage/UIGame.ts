@@ -18,6 +18,8 @@ import { addRoleScript } from '../controller/role/roleScriptFactory';
 import { poolMgr } from '../manager/poolManager';
 import { containerController } from '../controller/containerController';
 import { sniperController } from '../controller/sniperController';
+import { gunController } from '../controller/gunController';
+import { weaponsConfig } from '../json/jsonWeapons';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIGame')
@@ -352,6 +354,8 @@ export class UIGame extends UIBase {
         roleComp.node.on('skill-cooldown-start', this.playSkillMaskCooldown, this);
         roleComp.node.on(role0Skill2RemainEvent, this.updateSkill2RemainLab, this);
         roleComp.init(this, pData.roleId, 0);
+        this.refreshWeaponNames();
+        this.refreshWeaponNums();
         this.bindCurrentGunReloadEvent();
         roleComp.onCurrentWeaponEquipped();
     }
@@ -361,6 +365,7 @@ export class UIGame extends UIBase {
         this.clearCurrentGunReloadEvent();
         const gunNode = playerMgr.playerComp?.gunController?.node ?? null;
         gunNode?.on('reload-start', this.playReloadMaskCooldown, this);
+        gunNode?.on('ammo-change', this.refreshWeaponNums, this);
         this.reloadEventGunNode = gunNode;
         if (this.reloadBtn) this.reloadBtn.active = !!gunNode;
     }
@@ -369,6 +374,7 @@ export class UIGame extends UIBase {
     private clearCurrentGunReloadEvent() {
         if (this.reloadEventGunNode?.isValid) {
             this.reloadEventGunNode.off('reload-start', this.playReloadMaskCooldown, this);
+            this.reloadEventGunNode.off('ammo-change', this.refreshWeaponNums, this);
         }
         this.reloadEventGunNode = null;
     }
@@ -696,6 +702,8 @@ export class UIGame extends UIBase {
             return;
         }
 
+        this.refreshWeaponNums();
+
         const weaponComp = roleComp.weaponsController;
         if (weaponComp) {
             this.shootCooldownRemaining = weaponComp.attackInterval;
@@ -805,6 +813,30 @@ export class UIGame extends UIBase {
     private startCurrentWeaponAttackCooldown(roleComp = playerMgr.playerComp) {
         const weaponComp = roleComp?.weaponsController;
         if (weaponComp) this.shootCooldownRemaining = weaponComp.attackInterval;
+        this.refreshWeaponNums();
+    }
+
+    /**按装备栏主、副武器 id 刷新两个武器框名称。 */
+    refreshWeaponNames() {
+        const weaponBoxes = [this.weaponBox_0, this.weaponBox_1];
+        weaponBoxes.forEach((weaponBox, slotIndex) => {
+            const nameLab = weaponBox?.getChildByName('nameLab')?.getComponent(Label);
+            if (!nameLab) return;
+            const weaponData = weaponsConfig.getDataById(pData.equipmentIds[slotIndex]);
+            nameLab.string = weaponData?.name ?? '';
+        });
+    }
+
+    /**刷新主、副武器的当前弹匣数量，备用弹药显示为无限。 */
+    refreshWeaponNums() {
+        const weaponBoxes = [this.weaponBox_0, this.weaponBox_1];
+        weaponBoxes.forEach((weaponBox, slotIndex) => {
+            const numLab = weaponBox?.getChildByName('numLab')?.getComponent(Label);
+            if (!numLab) return;
+            const weapon = playerMgr.playerComp?.getWeaponController(slotIndex);
+            const gun = weapon?.node.getComponent(gunController);
+            numLab.string = `${gun?.ammo ?? 0}/∞`;
+        });
     }
 
     /**射击按钮按下：立即尝试射击，按住期间由 update 持续射击 */

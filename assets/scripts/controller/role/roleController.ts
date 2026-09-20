@@ -58,7 +58,8 @@ export class roleController extends Component {
     private moveLocalPoint = new Vec3();
     private moveWorldPoint = new Vec3();
     private moveWorldOrigin = new Vec3();
-    private moveShadow: UITransform = null;
+    /** 角色脚下的移动碰撞区域，由预制体 colliderBox 控制尺寸与位置。 */
+    private moveCollider: UITransform = null;
     /**角色当前播放的动画名 */
     protected curRoleAnimName = '';
 
@@ -130,8 +131,8 @@ export class roleController extends Component {
 
     /** 缓存角色自身与子节点组件。 */
     protected onLoad(): void {
-        this.moveShadow = this.node.getChildByName('shadow')?.getComponent(UITransform)
-            ?? this.node.getComponent(UITransform);
+        this.moveCollider = this.node.getChildByName('colliderBox')?.getComponent(UITransform);
+        if (!this.moveCollider) console.warn('角色预制体缺少 colliderBox 或 UITransform，无法进行移动碰撞检测');
         this.roleAnim = this.node.getChildByName('roleAnim')?.getComponent(sp.Skeleton);
         this.roleNameLab = this.node.getChildByName('roleNameLab')?.getComponent(Label);
         this.remainTimeLab = this.node.getChildByName('remainTimeLab')?.getComponent(Label);
@@ -229,17 +230,17 @@ export class roleController extends Component {
             * (this.isUsingCommonSkill1 ? this.skill1SpeedScale : 1);
     }
 
-    /** 使用 shadow 范围移动；玩家和 AI 均可调用，返回实际移动的本地坐标偏移。 */
+    /** 使用 colliderBox 范围移动；玩家和 AI 均可调用，返回实际移动的本地坐标偏移。 */
     moveWithStaticCollision(deltaX: number, deltaY: number, out: Vec3) {
         out.set(0, 0, 0);
-        if (!this.moveShadow || (!deltaX && !deltaY)) return out;
+        if (!this.moveCollider || (!deltaX && !deltaY)) return out;
         if (!this.gameComp) {
             this.node.setPosition(this.node.position.x + deltaX, this.node.position.y + deltaY, this.node.position.z);
             out.set(deltaX, deltaY, 0);
             return out;
         }
 
-        const bounds = this.moveShadow.getBoundingBoxToWorld();
+        const bounds = this.moveCollider.getBoundingBoxToWorld();
         const parentMatrix = this.node.parent?.worldMatrix;
         const start = this.node.position;
         this.moveLocalPoint.set(start.x, start.y, start.z);

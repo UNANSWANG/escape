@@ -82,6 +82,9 @@ export class UIGame extends UIBase {
     @property(Node)
     containerList: Node;
 
+    @property(Node)
+    colliderList: Node;
+
     @property(Label)
     skill2RemainLab: Label;
 

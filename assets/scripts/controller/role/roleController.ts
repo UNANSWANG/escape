@@ -1,4 +1,4 @@
-import { _decorator, Component, Label, Node, sp, Sprite, tween, Tween, UITransform, Vec3 } from 'cc';
+import { _decorator, Component, Label, Mat4, Node, sp, Sprite, tween, Tween, UITransform, Vec3 } from 'cc';
 import { enemyMgr } from '../../manager/enemyManager';
 import { UIGame, StaticCollisionShape } from '../../UIPage/UIGame';
 import { configData, GameEvent, playerCommonConfig } from '../../manager/configData';
@@ -58,6 +58,8 @@ export class roleController extends Component {
     private moveLocalPoint = new Vec3();
     private moveWorldPoint = new Vec3();
     private moveWorldOrigin = new Vec3();
+    private moveInverseParent = new Mat4();
+    private moveContactNormal = new Vec3();
     /** 角色脚下的移动碰撞区域，由预制体 colliderBox 控制尺寸与位置。 */
     private moveCollider: UITransform = null;
     /**角色当前播放的动画名 */
@@ -252,54 +254,45 @@ export class roleController extends Component {
         const worldDeltaX = this.moveWorldPoint.x - this.moveWorldOrigin.x;
         const worldDeltaY = this.moveWorldPoint.y - this.moveWorldOrigin.y;
 
-        this.gameComp.queryStaticColliders(
-            Math.min(bounds.x, bounds.x + worldDeltaX),
-            Math.min(bounds.y, bounds.y + worldDeltaY),
-            Math.max(bounds.x + bounds.width, bounds.x + bounds.width + worldDeltaX),
-            Math.max(bounds.y + bounds.height, bounds.y + bounds.height + worldDeltaY),
-            this.moveCollisionCandidates,
-        );
+        // 贴边后的位移可能偏离原输入方向，因此候选范围按总移动长度扩展。
+        const reach = Math.hypot(worldDeltaX, worldDeltaY) + 1;
+        this.gameComp.queryStaticColliders(bounds.x - reach, bounds.y - reach,
+            bounds.x + bounds.width + reach, bounds.y + bounds.height + reach, this.moveCollisionCandidates);
         if (!this.moveCollisionCandidates.length) {
             this.node.setPosition(start.x + deltaX, start.y + deltaY, start.z);
             out.set(deltaX, deltaY, 0);
             return out;
         }
 
-        // 小步推进避免一帧越过薄障碍；通常一帧只执行一步。
-        const stepLength = Math.max(1, Math.min(bounds.width, bounds.height) * 0.5);
-        const steps = Math.max(1, Math.ceil(Math.max(Math.abs(worldDeltaX), Math.abs(worldDeltaY)) / stepLength));
         let x = bounds.x, y = bounds.y;
-        let movedX = 0, movedY = 0;
-        const localStepX = deltaX / steps, localStepY = deltaY / steps;
-        for (let step = 0; step < steps; step++) {
-            if (localStepX) {
-                const worldStep = this.localMovementToWorld(localStepX, 0);
-                const fraction = this.allowedMoveFraction(x, y, bounds.width, bounds.height, worldStep.x, worldStep.y);
-                x += worldStep.x * fraction;
-                y += worldStep.y * fraction;
-                movedX += localStepX * fraction;
-            }
-            if (localStepY) {
-                const worldStep = this.localMovementToWorld(0, localStepY);
-                const fraction = this.allowedMoveFraction(x, y, bounds.width, bounds.height, worldStep.x, worldStep.y);
-                x += worldStep.x * fraction;
-                y += worldStep.y * fraction;
-                movedY += localStepY * fraction;
-            }
+        let remainingX = worldDeltaX, remainingY = worldDeltaY;
+        // 一次接触可沿边滑动；最多再处理两个相邻边或墙角。
+        for (let contact = 0; contact < 3; contact++) {
+            if (Math.abs(remainingX) + Math.abs(remainingY) < 0.0001) break;
+            const fraction = this.allowedMoveFraction(x, y, bounds.width, bounds.height, remainingX, remainingY);
+            x += remainingX * fraction;
+            y += remainingY * fraction;
+            if (fraction >= 1) break;
+            remainingX *= 1 - fraction;
+            remainingY *= 1 - fraction;
+            if (!this.findSlideNormal(x, y, bounds.width, bounds.height,
+                remainingX, remainingY, this.moveContactNormal)) break;
+            const inward = remainingX * this.moveContactNormal.x + remainingY * this.moveContactNormal.y;
+            if (inward >= -0.0001) break;
+            remainingX -= inward * this.moveContactNormal.x;
+            remainingY -= inward * this.moveContactNormal.y;
         }
-        this.node.setPosition(start.x + movedX, start.y + movedY, start.z);
-        out.set(movedX, movedY, 0);
+        this.moveWorldPoint.set(this.moveWorldOrigin.x + x - bounds.x,
+            this.moveWorldOrigin.y + y - bounds.y, this.moveWorldOrigin.z);
+        if (parentMatrix) {
+            Mat4.invert(this.moveInverseParent, parentMatrix);
+            Vec3.transformMat4(this.moveLocalPoint, this.moveWorldPoint, this.moveInverseParent);
+        } else {
+            this.moveLocalPoint.set(this.moveWorldPoint);
+        }
+        out.set(this.moveLocalPoint.x - start.x, this.moveLocalPoint.y - start.y, 0);
+        this.node.setPosition(this.moveLocalPoint.x, this.moveLocalPoint.y, start.z);
         return out;
-    }
-
-    private localMovementToWorld(dx: number, dy: number) {
-        const parentMatrix = this.node.parent?.worldMatrix;
-        const position = this.node.position;
-        this.moveLocalPoint.set(position.x + dx, position.y + dy, position.z);
-        if (parentMatrix) Vec3.transformMat4(this.moveWorldPoint, this.moveLocalPoint, parentMatrix);
-        else this.moveWorldPoint.set(this.moveLocalPoint);
-        this.moveWorldPoint.subtract(this.moveWorldOrigin);
-        return this.moveWorldPoint;
     }
 
     private allowedMoveFraction(x: number, y: number, width: number, height: number, dx: number, dy: number) {
@@ -307,7 +300,7 @@ export class roleController extends Component {
         if (!this.sweepIntersectsStaticShape(x, y, width, height, dx, dy, 1)) return 1;
         if (this.intersectsStaticShape(x, y, width, height)) return 0;
         let low = 0, high = 1;
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 12; i++) {
             const middle = (low + high) * 0.5;
             if (this.sweepIntersectsStaticShape(x, y, width, height, dx, dy, middle)) high = middle;
             else low = middle;
@@ -317,9 +310,103 @@ export class roleController extends Component {
 
     private sweepIntersectsStaticShape(x: number, y: number, width: number, height: number,
         dx: number, dy: number, fraction: number) {
-        return this.intersectsStaticShape(
-            Math.min(x, x + dx * fraction), Math.min(y, y + dy * fraction),
-            width + Math.abs(dx * fraction), height + Math.abs(dy * fraction));
+        dx *= fraction;
+        dy *= fraction;
+        const left = Math.min(x, x + dx), bottom = Math.min(y, y + dy);
+        const right = Math.max(x + width, x + width + dx);
+        const top = Math.max(y + height, y + height + dy);
+        for (const shape of this.moveCollisionCandidates) {
+            if (right <= shape.minX || left >= shape.maxX || top <= shape.minY || bottom >= shape.maxY) continue;
+            if (!shape.points) {
+                if (this.sweptRectIntersectsRect(x, y, width, height, dx, dy, shape)) return true;
+            } else if (this.sweptRectIntersectsPolygon(x, y, width, height, dx, dy, shape.points)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** 移动矩形与静态矩形的连续相交检测。 */
+    private sweptRectIntersectsRect(x: number, y: number, width: number, height: number,
+        dx: number, dy: number, shape: StaticCollisionShape) {
+        let enter = 0, exit = 1;
+        if (!dx) {
+            if (x + width <= shape.minX || x >= shape.maxX) return false;
+        } else {
+            enter = Math.max(enter, Math.min((shape.minX - x - width) / dx, (shape.maxX - x) / dx));
+            exit = Math.min(exit, Math.max((shape.minX - x - width) / dx, (shape.maxX - x) / dx));
+        }
+        if (!dy) {
+            if (y + height <= shape.minY || y >= shape.maxY) return false;
+        } else {
+            enter = Math.max(enter, Math.min((shape.minY - y - height) / dy, (shape.maxY - y) / dy));
+            exit = Math.min(exit, Math.max((shape.minY - y - height) / dy, (shape.maxY - y) / dy));
+        }
+        return enter + 0.000000001 < exit;
+    }
+
+    /** 凹多边形也可用：矩形角点轨迹与多边形边相交，或多边形顶点进入矩形扫过的区域。 */
+    private sweptRectIntersectsPolygon(x: number, y: number, width: number, height: number,
+        dx: number, dy: number, points: ReadonlyArray<{ x: number; y: number }>) {
+        if (this.rectIntersectsPolygon(x, y, x + width, y + height, points)
+            || this.rectIntersectsPolygon(x + dx, y + dy, x + width + dx, y + height + dy, points)) return true;
+        for (const point of points) {
+            if (this.pointInsideSweptRect(point.x, point.y, x, y, width, height, dx, dy)) return true;
+        }
+        for (let i = 0; i < points.length; i++) {
+            const a = points[i], b = points[(i + 1) % points.length];
+            if (this.segmentsCross(x, y, x + dx, y + dy, a.x, a.y, b.x, b.y)
+                || this.segmentsCross(x + width, y, x + width + dx, y + dy, a.x, a.y, b.x, b.y)
+                || this.segmentsCross(x + width, y + height, x + width + dx, y + height + dy, a.x, a.y, b.x, b.y)
+                || this.segmentsCross(x, y + height, x + dx, y + height + dy, a.x, a.y, b.x, b.y)) return true;
+        }
+        return false;
+    }
+
+    private pointInsideSweptRect(px: number, py: number, x: number, y: number,
+        width: number, height: number, dx: number, dy: number) {
+        let enter = 0, exit = 1;
+        if (!dx) {
+            if (px <= x || px >= x + width) return false;
+        } else {
+            enter = Math.max(enter, Math.min((px - x - width) / dx, (px - x) / dx));
+            exit = Math.min(exit, Math.max((px - x - width) / dx, (px - x) / dx));
+        }
+        if (!dy) {
+            if (py <= y || py >= y + height) return false;
+        } else {
+            enter = Math.max(enter, Math.min((py - y - height) / dy, (py - y) / dy));
+            exit = Math.min(exit, Math.max((py - y - height) / dy, (py - y) / dy));
+        }
+        return enter + 0.000000001 < exit;
+    }
+
+    /** 在接触位置找朝向角色的障碍物边法线，随后将剩余位移投影到边的切线。 */
+    private findSlideNormal(x: number, y: number, width: number, height: number,
+        dx: number, dy: number, out: Vec3) {
+        const centerX = x + width * 0.5, centerY = y + height * 0.5;
+        let bestProgress = 0;
+        for (const shape of this.moveCollisionCandidates) {
+            if (x + width < shape.minX - 1 || x > shape.maxX + 1
+                || y + height < shape.minY - 1 || y > shape.maxY + 1) continue;
+            for (const edge of shape.edges) {
+                if (dx * edge.nx + dy * edge.ny >= -0.0001) continue;
+                const along = (centerX - edge.x) * edge.tx + (centerY - edge.y) * edge.ty;
+                const tangentRadius = width * 0.5 * Math.abs(edge.tx) + height * 0.5 * Math.abs(edge.ty);
+                if (along + tangentRadius < 0 || along - tangentRadius > edge.length) continue;
+                const gap = (centerX - edge.x) * edge.nx + (centerY - edge.y) * edge.ny
+                    - width * 0.5 * Math.abs(edge.nx) - height * 0.5 * Math.abs(edge.ny);
+                if (gap < -0.01 || gap > 0.25) continue;
+                const inward = dx * edge.nx + dy * edge.ny;
+                const slideX = dx - inward * edge.nx, slideY = dy - inward * edge.ny;
+                const fraction = this.allowedMoveFraction(x, y, width, height, slideX, slideY);
+                const progress = (slideX * slideX + slideY * slideY) * fraction * fraction;
+                if (progress <= bestProgress) continue;
+                bestProgress = progress;
+                out.set(edge.nx, edge.ny, 0);
+            }
+        }
+        return bestProgress > 0;
     }
 
     private intersectsStaticShape(x: number, y: number, width: number, height: number) {
@@ -353,6 +440,11 @@ export class roleController extends Component {
         let inside = false;
         for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
             const a = points[i], b = points[j];
+            // 恰好贴在边上不算进入障碍物，否则沿斜边滑动会被起点误判为碰撞。
+            const cross = (x - a.x) * (b.y - a.y) - (y - a.y) * (b.x - a.x);
+            if (Math.abs(cross) < 0.000001 && x >= Math.min(a.x, b.x) - 0.000001
+                && x <= Math.max(a.x, b.x) + 0.000001 && y >= Math.min(a.y, b.y) - 0.000001
+                && y <= Math.max(a.y, b.y) + 0.000001) return false;
             if ((a.y > y) !== (b.y > y) && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) inside = !inside;
         }
         return inside;
@@ -364,7 +456,9 @@ export class roleController extends Component {
         const abD = (bx - ax) * (dy - ay) - (by - ay) * (dx - ax);
         const cdA = (dx - cx) * (ay - cy) - (dy - cy) * (ax - cx);
         const cdB = (dx - cx) * (by - cy) - (dy - cy) * (bx - cx);
-        return abC * abD < 0 && cdA * cdB < 0;
+        const epsilon = 0.0000001;
+        return ((abC > epsilon && abD < -epsilon) || (abC < -epsilon && abD > epsilon))
+            && ((cdA > epsilon && cdB < -epsilon) || (cdA < -epsilon && cdB > epsilon));
     }
 
     /**当前是否处于战斗状态。 */

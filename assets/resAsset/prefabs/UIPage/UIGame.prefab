@@ -1311,6 +1311,8 @@
       "__id__": 0
     },
     "fileId": "dcEiq/x1VFIqa87hAik83K",
+    "instance": null,
+    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {
@@ -1417,13 +1419,13 @@
     "_points": [
       {
         "__type__": "cc.Vec2",
-        "x": -456,
-        "y": -170.9
+        "x": -450,
+        "y": -170.6
       },
       {
         "__type__": "cc.Vec2",
-        "x": -455.9,
-        "y": -27.1
+        "x": -457,
+        "y": -29.6
       },
       {
         "__type__": "cc.Vec2",
@@ -1471,6 +1473,8 @@
       "__id__": 0
     },
     "fileId": "a3fRiA2dJPTJ1aUNEA3s0u",
+    "instance": null,
+    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {

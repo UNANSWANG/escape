@@ -30,6 +30,7 @@ export interface StaticCollisionShape {
     maxX: number;
     maxY: number;
     points: ReadonlyArray<{ x: number; y: number }> | null;
+    edges: ReadonlyArray<{ x: number; y: number; nx: number; ny: number; tx: number; ty: number; length: number }>;
     queryStamp: number;
 }
 
@@ -389,8 +390,22 @@ export class UIGame extends UIBase {
             const axisAligned = !polygon && points.every((point) =>
                 (Math.abs(point.x - minX) < 0.001 || Math.abs(point.x - maxX) < 0.001)
                 && (Math.abs(point.y - minY) < 0.001 || Math.abs(point.y - maxY) < 0.001));
+            let twiceArea = 0;
+            for (let i = 0; i < points.length; i++) {
+                const a = points[i], b = points[(i + 1) % points.length];
+                twiceArea += a.x * b.y - b.x * a.y;
+            }
+            const winding = twiceArea >= 0 ? 1 : -1;
+            const edges: StaticCollisionShape['edges'][number][] = [];
+            for (let i = 0; i < points.length; i++) {
+                const a = points[i], b = points[(i + 1) % points.length];
+                const length = Math.hypot(b.x - a.x, b.y - a.y);
+                if (length <= 0.0001) continue;
+                const tx = (b.x - a.x) / length, ty = (b.y - a.y) / length;
+                edges.push({ x: a.x, y: a.y, nx: winding * ty, ny: -winding * tx, tx, ty, length });
+            }
             const shape: StaticCollisionShape = {
-                minX, minY, maxX, maxY, points: axisAligned ? null : points, queryStamp: 0,
+                minX, minY, maxX, maxY, points: axisAligned ? null : points, edges, queryStamp: 0,
             };
             this.staticColliders.push(shape);
             const startX = Math.floor(minX / this.collisionCellSize);

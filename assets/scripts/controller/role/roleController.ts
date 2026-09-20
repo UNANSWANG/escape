@@ -1,6 +1,6 @@
-import { _decorator, Component, Label, Node, sp, Sprite, tween, Tween, Vec3 } from 'cc';
+import { _decorator, Component, Label, Node, sp, Sprite, tween, Tween, UITransform, Vec3 } from 'cc';
 import { enemyMgr } from '../../manager/enemyManager';
-import { UIGame } from '../../UIPage/UIGame';
+import { UIGame, StaticCollisionShape } from '../../UIPage/UIGame';
 import { configData, GameEvent, playerCommonConfig } from '../../manager/configData';
 import { gm } from '../../manager/gm';
 import { enemyBaseController } from '../enemy/enemyBaseController';
@@ -53,6 +53,12 @@ export class roleController extends Component {
     private originalMoveSpeed = 0;
     /**游戏界面脚本 */
     gameComp: UIGame = null;
+    /** 静态障碍物候选列表与坐标临时量，由所有角色各自复用。 */
+    private moveCollisionCandidates: StaticCollisionShape[] = [];
+    private moveLocalPoint = new Vec3();
+    private moveWorldPoint = new Vec3();
+    private moveWorldOrigin = new Vec3();
+    private moveShadow: UITransform = null;
     /**角色当前播放的动画名 */
     protected curRoleAnimName = '';
 
@@ -124,6 +130,8 @@ export class roleController extends Component {
 
     /** 缓存角色自身与子节点组件。 */
     protected onLoad(): void {
+        this.moveShadow = this.node.getChildByName('shadow')?.getComponent(UITransform)
+            ?? this.node.getComponent(UITransform);
         this.roleAnim = this.node.getChildByName('roleAnim')?.getComponent(sp.Skeleton);
         this.roleNameLab = this.node.getChildByName('roleNameLab')?.getComponent(Label);
         this.remainTimeLab = this.node.getChildByName('remainTimeLab')?.getComponent(Label);
@@ -219,6 +227,143 @@ export class roleController extends Component {
     get moveSpeed() {
         return this.baseMoveSpeed
             * (this.isUsingCommonSkill1 ? this.skill1SpeedScale : 1);
+    }
+
+    /** 使用 shadow 范围移动；玩家和 AI 均可调用，返回实际移动的本地坐标偏移。 */
+    moveWithStaticCollision(deltaX: number, deltaY: number, out: Vec3) {
+        out.set(0, 0, 0);
+        if (!this.moveShadow || (!deltaX && !deltaY)) return out;
+        if (!this.gameComp) {
+            this.node.setPosition(this.node.position.x + deltaX, this.node.position.y + deltaY, this.node.position.z);
+            out.set(deltaX, deltaY, 0);
+            return out;
+        }
+
+        const bounds = this.moveShadow.getBoundingBoxToWorld();
+        const parentMatrix = this.node.parent?.worldMatrix;
+        const start = this.node.position;
+        this.moveLocalPoint.set(start.x, start.y, start.z);
+        if (parentMatrix) Vec3.transformMat4(this.moveWorldOrigin, this.moveLocalPoint, parentMatrix);
+        else this.moveWorldOrigin.set(this.moveLocalPoint);
+        this.moveLocalPoint.set(start.x + deltaX, start.y + deltaY, start.z);
+        if (parentMatrix) Vec3.transformMat4(this.moveWorldPoint, this.moveLocalPoint, parentMatrix);
+        else this.moveWorldPoint.set(this.moveLocalPoint);
+        const worldDeltaX = this.moveWorldPoint.x - this.moveWorldOrigin.x;
+        const worldDeltaY = this.moveWorldPoint.y - this.moveWorldOrigin.y;
+
+        this.gameComp.queryStaticColliders(
+            Math.min(bounds.x, bounds.x + worldDeltaX),
+            Math.min(bounds.y, bounds.y + worldDeltaY),
+            Math.max(bounds.x + bounds.width, bounds.x + bounds.width + worldDeltaX),
+            Math.max(bounds.y + bounds.height, bounds.y + bounds.height + worldDeltaY),
+            this.moveCollisionCandidates,
+        );
+        if (!this.moveCollisionCandidates.length) {
+            this.node.setPosition(start.x + deltaX, start.y + deltaY, start.z);
+            out.set(deltaX, deltaY, 0);
+            return out;
+        }
+
+        // 小步推进避免一帧越过薄障碍；通常一帧只执行一步。
+        const stepLength = Math.max(1, Math.min(bounds.width, bounds.height) * 0.5);
+        const steps = Math.max(1, Math.ceil(Math.max(Math.abs(worldDeltaX), Math.abs(worldDeltaY)) / stepLength));
+        let x = bounds.x, y = bounds.y;
+        let movedX = 0, movedY = 0;
+        const localStepX = deltaX / steps, localStepY = deltaY / steps;
+        for (let step = 0; step < steps; step++) {
+            if (localStepX) {
+                const worldStep = this.localMovementToWorld(localStepX, 0);
+                const fraction = this.allowedMoveFraction(x, y, bounds.width, bounds.height, worldStep.x, worldStep.y);
+                x += worldStep.x * fraction;
+                y += worldStep.y * fraction;
+                movedX += localStepX * fraction;
+            }
+            if (localStepY) {
+                const worldStep = this.localMovementToWorld(0, localStepY);
+                const fraction = this.allowedMoveFraction(x, y, bounds.width, bounds.height, worldStep.x, worldStep.y);
+                x += worldStep.x * fraction;
+                y += worldStep.y * fraction;
+                movedY += localStepY * fraction;
+            }
+        }
+        this.node.setPosition(start.x + movedX, start.y + movedY, start.z);
+        out.set(movedX, movedY, 0);
+        return out;
+    }
+
+    private localMovementToWorld(dx: number, dy: number) {
+        const parentMatrix = this.node.parent?.worldMatrix;
+        const position = this.node.position;
+        this.moveLocalPoint.set(position.x + dx, position.y + dy, position.z);
+        if (parentMatrix) Vec3.transformMat4(this.moveWorldPoint, this.moveLocalPoint, parentMatrix);
+        else this.moveWorldPoint.set(this.moveLocalPoint);
+        this.moveWorldPoint.subtract(this.moveWorldOrigin);
+        return this.moveWorldPoint;
+    }
+
+    private allowedMoveFraction(x: number, y: number, width: number, height: number, dx: number, dy: number) {
+        // 检测整个移动路径，终点已越过薄障碍时也不会漏检。
+        if (!this.sweepIntersectsStaticShape(x, y, width, height, dx, dy, 1)) return 1;
+        if (this.intersectsStaticShape(x, y, width, height)) return 0;
+        let low = 0, high = 1;
+        for (let i = 0; i < 10; i++) {
+            const middle = (low + high) * 0.5;
+            if (this.sweepIntersectsStaticShape(x, y, width, height, dx, dy, middle)) high = middle;
+            else low = middle;
+        }
+        return low;
+    }
+
+    private sweepIntersectsStaticShape(x: number, y: number, width: number, height: number,
+        dx: number, dy: number, fraction: number) {
+        return this.intersectsStaticShape(
+            Math.min(x, x + dx * fraction), Math.min(y, y + dy * fraction),
+            width + Math.abs(dx * fraction), height + Math.abs(dy * fraction));
+    }
+
+    private intersectsStaticShape(x: number, y: number, width: number, height: number) {
+        const right = x + width, top = y + height;
+        for (const shape of this.moveCollisionCandidates) {
+            if (right <= shape.minX || x >= shape.maxX || top <= shape.minY || y >= shape.maxY) continue;
+            if (!shape.points || this.rectIntersectsPolygon(x, y, right, top, shape.points)) return true;
+        }
+        return false;
+    }
+
+    /** 支持凹多边形：顶点包含检测加线段相交检测。 */
+    private rectIntersectsPolygon(left: number, bottom: number, right: number, top: number,
+        points: ReadonlyArray<{ x: number; y: number }>) {
+        for (const point of points) {
+            if (point.x > left && point.x < right && point.y > bottom && point.y < top) return true;
+        }
+        if (this.pointInPolygon(left, bottom, points) || this.pointInPolygon(right, bottom, points)
+            || this.pointInPolygon(right, top, points) || this.pointInPolygon(left, top, points)) return true;
+        for (let i = 0; i < points.length; i++) {
+            const a = points[i], b = points[(i + 1) % points.length];
+            if (this.segmentsCross(a.x, a.y, b.x, b.y, left, bottom, right, bottom)
+                || this.segmentsCross(a.x, a.y, b.x, b.y, right, bottom, right, top)
+                || this.segmentsCross(a.x, a.y, b.x, b.y, right, top, left, top)
+                || this.segmentsCross(a.x, a.y, b.x, b.y, left, top, left, bottom)) return true;
+        }
+        return false;
+    }
+
+    private pointInPolygon(x: number, y: number, points: ReadonlyArray<{ x: number; y: number }>) {
+        let inside = false;
+        for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+            const a = points[i], b = points[j];
+            if ((a.y > y) !== (b.y > y) && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) inside = !inside;
+        }
+        return inside;
+    }
+
+    private segmentsCross(ax: number, ay: number, bx: number, by: number,
+        cx: number, cy: number, dx: number, dy: number) {
+        const abC = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+        const abD = (bx - ax) * (dy - ay) - (by - ay) * (dx - ax);
+        const cdA = (dx - cx) * (ay - cy) - (dy - cy) * (ax - cx);
+        const cdB = (dx - cx) * (by - cy) - (dy - cy) * (bx - cx);
+        return abC * abD < 0 && cdA * cdB < 0;
     }
 
     /**当前是否处于战斗状态。 */

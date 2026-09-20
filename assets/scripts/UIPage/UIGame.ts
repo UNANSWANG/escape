@@ -1,4 +1,4 @@
-import { _decorator, AnimationClip, Camera, Canvas, EventKeyboard, EventTouch, Input, input, instantiate, KeyCode, Label, Layout, Node, UITransform, Vec2, Vec3, NodeEventType, director, TiledMap, TiledObjectGroup, Prefab, Sprite, Tween, UIOpacity, tween, sp, view, Size } from 'cc';
+import { _decorator, AnimationClip, Camera, Canvas, EventKeyboard, EventTouch, Input, input, instantiate, KeyCode, Label, Layout, Node, UITransform, Vec2, Vec3, NodeEventType, director, TiledMap, TiledObjectGroup, Prefab, Sprite, Tween, UIOpacity, tween, sp, view, Size, PolygonCollider2D } from 'cc';
 import { uiMgr } from '../manager/UIManager';
 import { pData } from '../manager/playerData';
 import { UIBase } from './UIBase';
@@ -22,6 +22,16 @@ import { gunController } from '../controller/gunController';
 import { weaponsConfig } from '../json/jsonWeapons';
 import { videoMgr } from '../manager/videoManager';
 const { ccclass, property } = _decorator;
+
+/** 静态障碍物的世界坐标数据。points 为 null 时直接使用矩形包围盒。 */
+export interface StaticCollisionShape {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+    points: ReadonlyArray<{ x: number; y: number }> | null;
+    queryStamp: number;
+}
 
 @ccclass('UIGame')
 export class UIGame extends UIBase {
@@ -169,6 +179,13 @@ export class UIGame extends UIBase {
     private currentContainer: containerController = null;
     /**是否正在等待药品激励广告结果，防止大小药品按钮重复拉起广告。 */
     private isDrugAdWatching = false;
+    /** 静态障碍物使用世界坐标缓存；仅在场景障碍物变化时重建。 */
+    private staticColliders: StaticCollisionShape[] = [];
+    private readonly collisionCellSize = 256;
+    private collisionCells: Map<string, StaticCollisionShape[]> = new Map();
+    private collisionQueryStamp = 0;
+    private tempColliderLocalPoint = new Vec3();
+    private tempColliderWorldPoint = new Vec3();
 
     protected onLoad(): void {
         this.bindBtn();
@@ -291,6 +308,8 @@ export class UIGame extends UIBase {
         /**清除数据 */
         this.clearData();
 
+        this.rebuildStaticColliders();
+
         this.initRockerArea();
         this.initPlayer();
         this.initEnemy();
@@ -317,6 +336,8 @@ export class UIGame extends UIBase {
         this.clearDamageFloats();
         if (this.openBtn) this.openBtn.active = false;
         this.currentContainer = null;
+        this.staticColliders.length = 0;
+        this.collisionCells.clear();
         this.isDrugAdWatching = false;
 
         ccTools.destroyAllChild(this.roleNode);
@@ -326,6 +347,94 @@ export class UIGame extends UIBase {
         enemyMgr.enemyId = 0;
         enemyMgr.enemyBornPosArr = [];
         this.rockerReset(true);
+    }
+
+    /** colliderList 的直属子节点：有 PolygonCollider2D 时取顶点，否则取 UITransform 矩形。 */
+    rebuildStaticColliders() {
+        this.staticColliders.length = 0;
+        this.collisionCells.clear();
+        if (!this.colliderList) return;
+
+        for (const node of this.colliderList.children) {
+            if (!node.activeInHierarchy) continue;
+            const transform = node.getComponent(UITransform);
+            if (!transform) continue;
+            const polygon = node.getComponent(PolygonCollider2D);
+            const points: Array<{ x: number; y: number }> = [];
+            // 组件可以在编辑器中关闭物理计算，顶点仍作为静态数据读取。
+            if (polygon && polygon.points.length >= 3) {
+                for (const point of polygon.points) {
+                    this.pushColliderWorldPoint(node, point.x + polygon.offset.x, point.y + polygon.offset.y, points);
+                }
+            } else {
+                const left = -transform.width * transform.anchorX;
+                const bottom = -transform.height * transform.anchorY;
+                const right = left + transform.width;
+                const top = bottom + transform.height;
+                this.pushColliderWorldPoint(node, left, bottom, points);
+                this.pushColliderWorldPoint(node, right, bottom, points);
+                this.pushColliderWorldPoint(node, right, top, points);
+                this.pushColliderWorldPoint(node, left, top, points);
+            }
+
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            for (const point of points) {
+                minX = Math.min(minX, point.x);
+                minY = Math.min(minY, point.y);
+                maxX = Math.max(maxX, point.x);
+                maxY = Math.max(maxY, point.y);
+            }
+            if (minX >= maxX || minY >= maxY) continue;
+            // 没有多边形组件的轴对齐节点只需矩形相交检测。
+            const axisAligned = !polygon && points.every((point) =>
+                (Math.abs(point.x - minX) < 0.001 || Math.abs(point.x - maxX) < 0.001)
+                && (Math.abs(point.y - minY) < 0.001 || Math.abs(point.y - maxY) < 0.001));
+            const shape: StaticCollisionShape = {
+                minX, minY, maxX, maxY, points: axisAligned ? null : points, queryStamp: 0,
+            };
+            this.staticColliders.push(shape);
+            const startX = Math.floor(minX / this.collisionCellSize);
+            const endX = Math.floor(maxX / this.collisionCellSize);
+            const startY = Math.floor(minY / this.collisionCellSize);
+            const endY = Math.floor(maxY / this.collisionCellSize);
+            for (let x = startX; x <= endX; x++) {
+                for (let y = startY; y <= endY; y++) {
+                    const key = `${x},${y}`;
+                    let cell = this.collisionCells.get(key);
+                    if (!cell) this.collisionCells.set(key, cell = []);
+                    cell.push(shape);
+                }
+            }
+        }
+    }
+
+    private pushColliderWorldPoint(node: Node, x: number, y: number, points: Array<{ x: number; y: number }>) {
+        this.tempColliderLocalPoint.set(x, y, 0);
+        Vec3.transformMat4(this.tempColliderWorldPoint, this.tempColliderLocalPoint, node.worldMatrix);
+        points.push({ x: this.tempColliderWorldPoint.x, y: this.tempColliderWorldPoint.y });
+    }
+
+    /** 按移动路径范围取候选；精确碰撞由 roleController 计算。 */
+    queryStaticColliders(minX: number, minY: number, maxX: number, maxY: number, out: StaticCollisionShape[]) {
+        out.length = 0;
+        const stamp = ++this.collisionQueryStamp;
+        const startX = Math.floor(minX / this.collisionCellSize);
+        const endX = Math.floor(maxX / this.collisionCellSize);
+        const startY = Math.floor(minY / this.collisionCellSize);
+        const endY = Math.floor(maxY / this.collisionCellSize);
+        for (let x = startX; x <= endX; x++) {
+            for (let y = startY; y <= endY; y++) {
+                const cell = this.collisionCells.get(`${x},${y}`);
+                if (!cell) continue;
+                for (const shape of cell) {
+                    if (shape.queryStamp === stamp || shape.maxX <= minX || shape.minX >= maxX
+                        || shape.maxY <= minY || shape.minY >= maxY) continue;
+                    shape.queryStamp = stamp;
+                    out.push(shape);
+                }
+            }
+        }
+        return out;
     }
 
     /**根据玩家与容器的包围盒重合状态显示或隐藏开启按钮 */
@@ -557,14 +666,14 @@ export class UIGame extends UIBase {
             if (!moveDirectionLocked) playerMgr.playerComp?.playRoleAnim(roleAnimName.move, true);
             //玩家移动
             this.tempPlayerMoveOffset.set(this.currentMoveDirection.x * speed * dt, this.currentMoveDirection.y * speed * dt, 0);
-            let playerPos = new Vec3(playerMgr.player.position.x + this.tempPlayerMoveOffset.x, playerMgr.player.position.y + this.tempPlayerMoveOffset.y, 0);
 
             // 攻击瞄准期间由目标决定人物朝向；其余时间跟随移动方向。
             if (!this.isAttackAiming && this.currentMoveDirection.x !== 0) {
                 this.normalFacingRight = this.currentMoveDirection.x > 0;
                 playerMgr.playerComp?.setFacingByHorizontal(this.normalFacingRight ? 1 : -1);
             }
-            playerMgr.player.setPosition(playerPos);
+            playerMgr.playerComp.moveWithStaticCollision(
+                this.tempPlayerMoveOffset.x, this.tempPlayerMoveOffset.y, this.tempPlayerMoveOffset);
         }
 
         this.updateContainerOpenButton();

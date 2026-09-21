@@ -52,7 +52,7 @@ export class UIGame extends UIBase {
     rolePre: Prefab;
 
     @property(Prefab)
-    enemyPre: Prefab;
+    soldiersPre: Prefab;
 
     @property(Node)
     shootBtn: Node;
@@ -521,7 +521,7 @@ export class UIGame extends UIBase {
 
     /**在玩家右侧生成两个仅播放待机动画的临时敌人，第二个在第一个上方 */
     private initEnemy() {
-        if (!this.enemyPre || !playerMgr.player) {
+        if (!this.soldiersPre || !playerMgr.player) {
             return;
         }
 
@@ -532,7 +532,7 @@ export class UIGame extends UIBase {
 
     /**创建并登记一个测试敌人 */
     private createTestEnemy(x: number, y: number) {
-        let enemyNode = instantiate(this.enemyPre);
+        let enemyNode = instantiate(this.soldiersPre);
         this.roleNode.addChild(enemyNode);
         let enemyComp: enemyBaseController = enemyNode.getComponent(enemyBaseController);
         const enemyId = enemyMgr.enemyId++;

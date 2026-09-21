@@ -70,19 +70,19 @@ export class enemyBaseController extends Component {
         this.skinId = skinId;
         this.refreshRoleSpine();
 
-        this.roleNameLab.string = nickname || `感染者${this.roleId + 1}`
+        this.roleNameLab.string = nickname || `小兵${this.roleId + 1}`
     }
 
     /**根据皮肤id刷新敌人spine */
     private async refreshRoleSpine() {
-        if (this.roleAnim) {
-            this.roleAnim.skeletonData = null;
-        }
+        // if (this.roleAnim) {
+        //     this.roleAnim.skeletonData = null;
+        // }
 
-        let isLoaded = await ccTools.loadSpine(this.roleAnim, spinePath.boss + this.skinId);
-        if (!isLoaded) {
-            return;
-        }
+        // let isLoaded = await ccTools.loadSpine(this.roleAnim, spinePath.boss + this.skinId);
+        // if (!isLoaded) {
+        //     return;
+        // }
 
         this.roleAnim.setAnimation(0, enemyAnim.idle, true);
     }

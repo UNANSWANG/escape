@@ -21,6 +21,7 @@ import { gunController } from '../controller/gunController';
 import { weaponsConfig } from '../json/jsonWeapons';
 import { videoMgr } from '../manager/videoManager';
 import { soldiersController } from '../controller/enemy/soldiersController';
+import { soldiersData } from '../data/soldiersData';
 const { ccclass, property } = _decorator;
 
 /** 静态障碍物的世界坐标数据。points 为 null 时直接使用矩形包围盒。 */
@@ -133,10 +134,6 @@ export class UIGame extends UIBase {
     private skill2Mask: Sprite = null;
     /**摇杆初始位置 */
     private rockerInitPos: Vec3 = new Vec3(200, -56, 0);
-    /**临时敌人与玩家的水平间距，保持在自动瞄准范围内以便测试 */
-    private readonly tempEnemyOffsetX = 150;
-    /**第二个临时敌人相对第一个敌人的垂直间距 */
-    private readonly tempEnemyOffsetY = 150;
     /**当前是否正在攻击瞄准 */
     private isAttackAiming = false;
     /**本轮持续攻击锁定的目标；离开检测范围后仍保留至松开攻击键 */
@@ -527,31 +524,26 @@ export class UIGame extends UIBase {
         this.reloadEventGunNode = null;
     }
 
-    /**在玩家右侧生成两个仅播放待机动画的临时小兵，第二个在第一个上方 */
+    /**按地图中 soldiersList 的子节点生成小兵 */
     private initSoldier() {
-        if (!this.soldiersPre || !playerMgr.player) {
-            return;
+        const soldiersList = this.mapNode?.getChildByName('soldiersList');
+        if (!this.soldiersPre || !soldiersList || !this.roleNode) return;
+
+        for (const spawnNode of soldiersList.children) {
+            const data = spawnNode.getComponent(soldiersData);
+            const soldierId = data?.soldierId ?? enemyMgr.soldierId;
+            const soldierNode = instantiate(this.soldiersPre);
+            this.roleNode.addChild(soldierNode);
+            soldierNode.setWorldPosition(spawnNode.worldPosition);
+
+            // 小兵暂时不添加 AI；仅初始化外观、名称和满血状态。
+            const soldierComp = soldierNode.getComponent(soldiersController);
+            if (soldierComp) {
+                soldierComp.init(this, soldierId, 0);
+                enemyMgr.soldiersArr.push(soldierComp);
+            }
+            enemyMgr.soldierId = Math.max(enemyMgr.soldierId, soldierId + 1);
         }
-
-        const playerPos = playerMgr.player.position;
-        this.createTestSoldier(playerPos.x + this.tempEnemyOffsetX, playerPos.y);
-        this.createTestSoldier(playerPos.x + this.tempEnemyOffsetX, playerPos.y + this.tempEnemyOffsetY);
-    }
-
-    /**创建并登记一个测试小兵 */
-    private createTestSoldier(x: number, y: number) {
-        let soldierNode = instantiate(this.soldiersPre);
-        this.roleNode.addChild(soldierNode);
-        let soldierComp: soldiersController = soldierNode.getComponent(soldiersController);
-        const soldierId = enemyMgr.soldierId++;
-
-        // 小兵暂时不添加 AI；仅初始化外观、名称和满血状态。
-        if (soldierComp) {
-            soldierComp.init(this, soldierId, 0);
-            enemyMgr.soldiersArr.push(soldierComp);
-        }
-
-        soldierNode.setPosition(x, y, 0);
     }
 
     /**初始化角色位置 */

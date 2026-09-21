@@ -42,7 +42,8 @@ export const playerCommonConfig = {
 
 /**敌人通用配置 */
 export const enemyCommonConfig = {
-
+    /**巡逻等待时间（秒） */
+    patrolWaitTime: [2, 5],
 }
 
 /**人机通用配置 */

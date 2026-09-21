@@ -3,10 +3,17 @@ import { EDITOR, PREVIEW } from 'cc/env';
 const { ccclass, executeInEditMode, property } = _decorator;
 
 enum ScoutType {
-    站岗 = 0,
-    范围侦察 = 1,
-    路径侦察 = 2,
+    StandGuard = 0,
+    AreaScout = 1,
+    PathScout = 2,
 }
+
+const scoutTypeOptions = Enum({
+    站岗: ScoutType.StandGuard,
+    范围侦察: ScoutType.AreaScout,
+    路径侦察: ScoutType.PathScout,
+});
+
 @ccclass('soldiersData')
 @executeInEditMode
 export class soldiersData extends Component {
@@ -19,9 +26,9 @@ export class soldiersData extends Component {
     })
     soldierId: number = 0;
 
-    private _scoutType: ScoutType = ScoutType.站岗;
+    private _scoutType: ScoutType = ScoutType.StandGuard;
 
-    @property({ type: Enum(ScoutType), tooltip: '侦察类型' })
+    @property({ type: scoutTypeOptions, tooltip: '侦察类型' })
     get scoutType(): ScoutType {
         return this._scoutType;
     }
@@ -38,7 +45,7 @@ export class soldiersData extends Component {
         type: CCFloat,
         tooltip: '范围巡逻半径',
         visible() {
-            return this.scoutType == ScoutType.范围侦察;
+            return this.scoutType == ScoutType.AreaScout;
         },
     })
     get rangeRadius(): number {
@@ -54,7 +61,7 @@ export class soldiersData extends Component {
     @property({
         tooltip: '路径是否循环',
         visible() {
-            return this.scoutType == ScoutType.路径侦察;
+            return this.scoutType == ScoutType.PathScout;
         },
     })
     isLoop: boolean = false;
@@ -63,7 +70,7 @@ export class soldiersData extends Component {
         type: [Node],
         tooltip: '侦察路径',
         visible() {
-            return this.scoutType == ScoutType.路径侦察;
+            return this.scoutType == ScoutType.PathScout;
         },
     })
     scoutPath: Node[] = [];
@@ -81,7 +88,7 @@ export class soldiersData extends Component {
 
     private refreshRangePreview() {
         if (!EDITOR || PREVIEW || !this.isFocusedInEditor) return;
-        if (this.scoutType !== ScoutType.范围侦察 || this.rangeRadius <= 0) {
+        if (this.scoutType !== ScoutType.AreaScout || this.rangeRadius <= 0) {
             this.hideRange();
             return;
         }
@@ -113,7 +120,7 @@ export class soldiersData extends Component {
         if (!graphics) return;
 
         graphics.clear();
-        if (this.scoutType !== ScoutType.范围侦察 || this.rangeRadius <= 0) return;
+        if (this.scoutType !== ScoutType.AreaScout || this.rangeRadius <= 0) return;
 
         graphics.lineWidth = 6;
         graphics.strokeColor = new Color(89, 0, 255, 220);

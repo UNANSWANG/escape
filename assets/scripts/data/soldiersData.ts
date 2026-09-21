@@ -21,6 +21,14 @@ export class soldiersData extends Component {
     scoutType: ScoutType = ScoutType.站岗;
 
     @property({
+        tooltip: '范围巡逻半径',
+        visible() {
+            return this.scoutType == ScoutType.范围侦察;
+        },
+    })
+    rangeRadius: number = 800;
+
+    @property({
         tooltip: '路径是否循环',
         visible() {
             return this.scoutType == ScoutType.路径侦察;

@@ -91,10 +91,7 @@ export class UIGame extends UIBase {
     drugBtn_1: Node;
 
     @property(Node)
-    containerList: Node;
-
-    @property(Node)
-    colliderList: Node;
+    mapNode: Node;
 
     @property(Label)
     skill2RemainLab: Label;
@@ -154,6 +151,10 @@ export class UIGame extends UIBase {
     private uiCamera: Camera = null;
     /**游戏摄像机到UI摄像机的视角比例 */
     private gameToUICameraScale = 1;
+    /**地图层容器列表，用于存储所有地图层容器节点 */
+    private containerList: Node = null;
+    /**地图层碰撞体列表，用于存储所有地图层碰撞体节点 */
+    private colliderList: Node = null;
 
     ///
     ///临时变量，不参与重新开始游戏数据恢复
@@ -309,6 +310,7 @@ export class UIGame extends UIBase {
         /**清除数据 */
         this.clearData();
 
+        this.initMapChildNodes();
         this.rebuildStaticColliders();
 
         this.initRockerArea();
@@ -316,6 +318,12 @@ export class UIGame extends UIBase {
         this.initSoldier();
         this.refreshDrugButtons();
         this.updateContainerOpenButton();
+    }
+
+    /**从地图节点获取容器和碰撞节点。 */
+    private initMapChildNodes() {
+        this.containerList = this.mapNode?.getChildByName('containerList') ?? null;
+        this.colliderList = this.mapNode?.getChildByName('colliderList') ?? null;
     }
 
     clearData() {

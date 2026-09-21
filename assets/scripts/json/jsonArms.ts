@@ -1,6 +1,5 @@
 import { _decorator, Component, Node } from 'cc';
 import { jsonBase } from './jsonBase';
-import { configData } from '../manager/configData';
 const { ccclass, property } = _decorator;
 
 @ccclass('jsonArms')
@@ -20,8 +19,6 @@ export let armsConfig = new jsonArms();
 export interface JsonArmsData {
     /**编号 */
     id: string;
-    /**类型 */
-    type: number;
     /**名称 */
     name: string;
     /**使用武器编号 */
@@ -30,6 +27,8 @@ export interface JsonArmsData {
     hp: number;
     /**检测范围 */
     detectRange: number;
+    /**追击时间 */
+    chaseTime: string;
 }
 
 

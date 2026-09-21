@@ -55,7 +55,7 @@ export class knifeController extends weaponsController {
         const rangeSquared = this.attackRange ** 2;
         // 以角色本体的当前朝向作为扇形正前方，而非武器节点自身的缩放状态。
         const facingX = this.roleAnim?.node?.scale.x < 0 ? 1 : -1;
-        for (const enemy of enemyMgr.enemyArr) {
+        for (const enemy of enemyMgr.soldiersArr) {
             if (!enemy?.node?.isValid || !enemy.node.activeInHierarchy || enemy.hp <= 0) continue;
             enemy.node.getWorldPosition(this.tempTargetWorldPos);
             const offsetX = this.tempTargetWorldPos.x - this.tempRoleWorldPos.x;

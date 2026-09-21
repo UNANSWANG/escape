@@ -13,8 +13,8 @@ enum enemyAnim {
     move = "move",
 }
 
-@ccclass('enemyBaseController')
-export class enemyBaseController extends Component {
+@ccclass('soldiersController')
+export class soldiersController extends Component {
     /**角色当前游戏内id */
     roleId: number = 0;
     /**皮肤id */

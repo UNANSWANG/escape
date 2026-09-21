@@ -79,7 +79,7 @@ export class bulletController extends Component {
         if (!bulletTransform) return false;
         const bulletBounds = bulletTransform.getBoundingBoxToWorld();
 
-        for (const enemy of enemyMgr.enemyArr) {
+        for (const enemy of enemyMgr.soldiersArr) {
             if (!enemy?.node?.isValid || !enemy.node.activeInHierarchy || enemy.hp <= 0) continue;
             // 只用角色本体作为受击范围，避免血条和名字也触发命中。
             const hitNode = enemy.roleAnim?.node || enemy.node;

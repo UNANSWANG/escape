@@ -10,7 +10,6 @@ import { ccTools } from '../extention/generalTools';
 import { playerMgr } from '../manager/playerManager';
 import { CameraController } from '../controller/CameraController';
 import { enemyMgr } from '../manager/enemyManager';
-import { enemyBaseController } from '../controller/enemy/enemyBaseController';
 import { audioMgr } from '../manager/audioManager';
 import { roleAnimName } from '../controller/role/roleController';
 import { role0Skill2RemainEvent } from '../controller/role/role0';
@@ -21,6 +20,7 @@ import { sniperController } from '../controller/sniperController';
 import { gunController } from '../controller/gunController';
 import { weaponsConfig } from '../json/jsonWeapons';
 import { videoMgr } from '../manager/videoManager';
+import { soldiersController } from '../controller/enemy/soldiersController';
 const { ccclass, property } = _decorator;
 
 /** 静态障碍物的世界坐标数据。points 为 null 时直接使用矩形包围盒。 */
@@ -143,7 +143,7 @@ export class UIGame extends UIBase {
     /**当前是否正在攻击瞄准 */
     private isAttackAiming = false;
     /**本轮持续攻击锁定的目标；离开检测范围后仍保留至松开攻击键 */
-    private autoAttackTarget: enemyBaseController = null;
+    private autoAttackTarget: soldiersController = null;
     /**非攻击状态下的角色朝向 */
     private normalFacingRight = false;
     /**地图层相机，用于把瓦片世界坐标转成屏幕坐标 */
@@ -313,7 +313,7 @@ export class UIGame extends UIBase {
 
         this.initRockerArea();
         this.initPlayer();
-        this.initEnemy();
+        this.initSoldier();
         this.refreshDrugButtons();
         this.updateContainerOpenButton();
     }
@@ -344,8 +344,8 @@ export class UIGame extends UIBase {
         ccTools.destroyAllChild(this.roleNode);
 
         playerMgr.clearPlayer();
-        enemyMgr.enemyArr = [];
-        enemyMgr.enemyId = 0;
+        enemyMgr.soldiersArr = [];
+        enemyMgr.soldierId = 0;
         enemyMgr.enemyBornPosArr = [];
         this.rockerReset(true);
     }
@@ -519,31 +519,31 @@ export class UIGame extends UIBase {
         this.reloadEventGunNode = null;
     }
 
-    /**在玩家右侧生成两个仅播放待机动画的临时敌人，第二个在第一个上方 */
-    private initEnemy() {
+    /**在玩家右侧生成两个仅播放待机动画的临时小兵，第二个在第一个上方 */
+    private initSoldier() {
         if (!this.soldiersPre || !playerMgr.player) {
             return;
         }
 
         const playerPos = playerMgr.player.position;
-        this.createTestEnemy(playerPos.x + this.tempEnemyOffsetX, playerPos.y);
-        this.createTestEnemy(playerPos.x + this.tempEnemyOffsetX, playerPos.y + this.tempEnemyOffsetY);
+        this.createTestSoldier(playerPos.x + this.tempEnemyOffsetX, playerPos.y);
+        this.createTestSoldier(playerPos.x + this.tempEnemyOffsetX, playerPos.y + this.tempEnemyOffsetY);
     }
 
-    /**创建并登记一个测试敌人 */
-    private createTestEnemy(x: number, y: number) {
-        let enemyNode = instantiate(this.soldiersPre);
-        this.roleNode.addChild(enemyNode);
-        let enemyComp: enemyBaseController = enemyNode.getComponent(enemyBaseController);
-        const enemyId = enemyMgr.enemyId++;
+    /**创建并登记一个测试小兵 */
+    private createTestSoldier(x: number, y: number) {
+        let soldierNode = instantiate(this.soldiersPre);
+        this.roleNode.addChild(soldierNode);
+        let soldierComp: soldiersController = soldierNode.getComponent(soldiersController);
+        const soldierId = enemyMgr.soldierId++;
 
-        // 敌人不添加 AI；仅初始化外观、名称和满血状态。
-        if (enemyComp) {
-            enemyComp.init(this, enemyId, 0);
-            enemyMgr.enemyArr.push(enemyComp);
+        // 小兵暂时不添加 AI；仅初始化外观、名称和满血状态。
+        if (soldierComp) {
+            soldierComp.init(this, soldierId, 0);
+            enemyMgr.soldiersArr.push(soldierComp);
         }
 
-        enemyNode.setPosition(x, y, 0);
+        soldierNode.setPosition(x, y, 0);
     }
 
     /**初始化角色位置 */
@@ -801,7 +801,7 @@ export class UIGame extends UIBase {
     }
 
     /**锁定目标是否仍可攻击；锁定后不再受自动瞄准范围限制 */
-    private isValidAttackTarget(target: enemyBaseController) {
+    private isValidAttackTarget(target: soldiersController) {
         return !!target && target.node?.isValid && target.node.activeInHierarchy && target.hp > 0;
     }
 

@@ -3,7 +3,6 @@ import { enemyMgr } from '../../manager/enemyManager';
 import { UIGame, StaticCollisionShape } from '../../UIPage/UIGame';
 import { configData, GameEvent, playerCommonConfig } from '../../manager/configData';
 import { gm } from '../../manager/gm';
-import { enemyBaseController } from '../enemy/enemyBaseController';
 import { gunController } from '../gunController';
 import { knifeController } from '../knifeController';
 import { shotgunController } from '../shotgunController';
@@ -13,6 +12,7 @@ import { uiMgr } from '../../manager/UIManager';
 import { JsonRoleData, roleConfig } from '../../json/jsonRole';
 import { weaponsConfig } from '../../json/jsonWeapons';
 import { pData } from '../../manager/playerData';
+import { soldiersController } from '../enemy/soldiersController';
 const { ccclass } = _decorator;
 
 export enum roleAnimName {
@@ -638,9 +638,9 @@ export class roleController extends Component {
         if (!this.currentWeaponComp) return null;
         const rolePos = this.node.position;
         const rangeSquared = this.currentWeaponComp.attackRange ** 2;
-        let nearestEnemy: enemyBaseController = null;
+        let nearestEnemy: soldiersController = null;
         let nearestDistanceSquared = rangeSquared;
-        for (const enemy of enemyMgr.enemyArr) {
+        for (const enemy of enemyMgr.soldiersArr) {
             if (!enemy || !enemy.node?.isValid || !enemy.node.activeInHierarchy || enemy.hp <= 0) continue;
             const offsetX = enemy.node.position.x - rolePos.x;
             const offsetY = enemy.node.position.y - rolePos.y;
@@ -662,7 +662,7 @@ export class roleController extends Component {
         if (!this.roleData) return;
 
         //TODO 临时降低血量
-        this.hp = this.maxHp * 0.1;
+        this.hp = this.maxHp;
         this.refreshHp(true);
         this.originalMoveSpeed = configData.moveSpeed;
         this.equipWeapon(0);

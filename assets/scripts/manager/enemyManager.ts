@@ -1,13 +1,13 @@
 import { _decorator, Node, Vec2 } from 'cc';
-import type { enemyBaseController } from '../controller/enemy/enemyBaseController';
+import { soldiersController } from '../controller/enemy/soldiersController';
 const { ccclass, property } = _decorator;
 
 @ccclass('enemyManager')
 export class enemyManager {
-    /**敌人数组 */
-    enemyArr: enemyBaseController[] = [];
-    /**敌人id(单局累加) */
-    enemyId: number = 0;
+    /**小兵数组 */
+    soldiersArr: soldiersController[] = [];
+    /**小兵id(单局累加) */
+    soldierId: number = 0;
 
     /**当前关卡敌人全等级数据 */
     enemyAllData: any = [];
@@ -18,15 +18,15 @@ export class enemyManager {
     /**根据id移除敌人 */
     removeEnemy(roleId: number) {
         let idx = -1;
-        for (let i = 0; i < this.enemyArr.length; i++) {
-            let enemyComp = this.enemyArr[i];
+        for (let i = 0; i < this.soldiersArr.length; i++) {
+            let enemyComp = this.soldiersArr[i];
             if(enemyComp.roleId == roleId){
                 idx = i;
                 break;
             }
         }
         if(idx != -1){
-            this.enemyArr.splice(idx, 1);
+            this.soldiersArr.splice(idx, 1);
         }
     }
 }

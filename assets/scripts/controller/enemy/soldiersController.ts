@@ -41,6 +41,8 @@ export class soldiersController extends Component {
     ///
     /**角色spine节点 */
     roleAnim: sp.Skeleton = null;
+    /**手持武器节点 */
+    weaponNode: Node = null;
     /**角色名称 */
     roleNameLab: Label = null;
     /**血量节点 */
@@ -65,9 +67,12 @@ export class soldiersController extends Component {
     private isPathLoop = false;
     private waitRemaining = 0;
     private currentAnim: enemyAnim = null;
+    private weaponDefaultX = 0;
 
     protected onLoad(): void {
         this.roleAnim = this.node.getChildByName("roleAnim").getComponent(sp.Skeleton);
+        this.weaponNode = this.node.getChildByName("weapons");
+        this.weaponDefaultX = this.weaponNode?.position.x ?? 0;
         this.roleNameLab = this.node.getChildByName("roleNameLab").getComponent(Label);
         this.hpNode = this.node.getChildByName("hpBg");
         this.hpBar = this.hpNode.getChildByName("hpBar").getComponent(Sprite);
@@ -117,6 +122,7 @@ export class soldiersController extends Component {
         this.waitRemaining = 0;
         this.patrolState = PatrolState.Idle;
         this.playPatrolAnimation(enemyAnim.idle);
+        this.setWeaponDefaultAngle();
         this.startNextPatrolLeg();
     }
 
@@ -138,8 +144,32 @@ export class soldiersController extends Component {
             return;
         }
 
+        this.facePatrolTarget();
         this.patrolState = PatrolState.Moving;
         this.playPatrolAnimation(enemyAnim.move);
+    }
+
+    /**按玩家的朝向规则翻转人物和枪，不影响名字和血条。 */
+    private facePatrolTarget() {
+        const directionX = this.patrolTarget.x - this.node.worldPosition.x;
+        if (Math.abs(directionX) < 0.001) return;
+        const facingScale = directionX > 0 ? -1 : 1;
+        const animNode = this.roleAnim.node;
+        const animScale = animNode.scale;
+        animNode.setScale(facingScale * Math.abs(animScale.x), animScale.y, animScale.z);
+
+        const weapon = this.weaponNode;
+        if (!weapon) return;
+        const weaponScale = weapon.scale;
+        weapon.setScale(facingScale * Math.abs(weaponScale.x), weaponScale.y, weaponScale.z);
+        weapon.setPosition(facingScale < 0 ? -this.weaponDefaultX : this.weaponDefaultX,
+            weapon.position.y, weapon.position.z);
+        this.setWeaponDefaultAngle();
+    }
+
+    /**与玩家武器回正时使用相同的左右默认角度。 */
+    private setWeaponDefaultAngle() {
+        if (this.weaponNode) this.weaponNode.angle = this.weaponNode.scale.x < 0 ? 10 : -10;
     }
 
     private updatePatrolMovement(dt: number) {

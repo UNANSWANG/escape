@@ -30,6 +30,12 @@ enum PatrolState {
     Waiting,
 }
 
+enum SoldierState {
+    Patrol,
+    Chase,
+    Return,
+}
+
 @ccclass('soldiersController')
 export class soldiersController extends Component {
     /**小兵当前游戏内id */
@@ -65,9 +71,11 @@ export class soldiersController extends Component {
     /**血量虚影追赶动画时长 */
     private hpShadowDuration: number = 0.3;
     private patrolState: PatrolState = PatrolState.Idle;
+    private soldierState: SoldierState = SoldierState.Patrol;
     private scoutType: ScoutType = ScoutType.StandGuard;
     private patrolOrigin = new Vec3();
     private patrolTarget = new Vec3();
+    private returnTarget = new Vec3();
     private patrolPosition = new Vec3();
     private patrolPath: Vec3[] = [];
     private pathIndex = 0;
@@ -80,6 +88,9 @@ export class soldiersController extends Component {
     private weaponComp: weaponsController = null;
     private attackCooldown = 0;
     private isAttacking = false;
+    private detectRange = 0;
+    private chaseTimeRange: [number, number] = [0, 0];
+    private chaseRemaining = 0;
 
     protected onLoad(): void {
         this.roleAnim = this.node.getChildByName("roleAnim").getComponent(sp.Skeleton);
@@ -100,14 +111,11 @@ export class soldiersController extends Component {
 
     /**初始化 */
     init(comp: UIGame, id: number, armsId: number, data: soldiersData = null, nickname = "") {
-        this.hp = this.maxHp;
-        
-        this.refreshHp();
-        
         this.gameComp = comp;
         this.id = id;
         this.armsId = armsId;
-        this.applyArmsAndWeapon();
+        this.initArmsData();
+        this.initWeapon();
 
         this.refreshRoleSpine();
 
@@ -118,7 +126,18 @@ export class soldiersController extends Component {
     protected update(dt: number): void {
         if (this.hp <= 0) return;
         this.attackCooldown = Math.max(0, this.attackCooldown - dt);
-        if (this.updateAttack(dt)) return;
+        if (this.soldierState === SoldierState.Chase) {
+            this.updateChase(dt);
+            return;
+        }
+        if (this.soldierState === SoldierState.Return) {
+            this.updateReturn(dt);
+            return;
+        }
+        if (this.canDetectPlayer()) {
+            this.startChase();
+            return;
+        }
         if (this.patrolState === PatrolState.Moving) {
             this.updatePatrolMovement(dt);
         } else if (this.patrolState === PatrolState.Waiting) {
@@ -127,14 +146,30 @@ export class soldiersController extends Component {
         }
     }
 
-    /** 一名小兵只装配兵种表指定的一把武器。 */
-    private applyArmsAndWeapon() {
+    /** 兵种的生命值和追击参数与武器装配分开初始化。 */
+    private initArmsData() {
         const arms = armsConfig.getDataById(this.armsId);
         if (!arms) return;
         this.maxHp = Math.max(1, arms.hp);
         this.hp = this.maxHp;
         this.refreshHp(true);
+        this.detectRange = Math.max(0, arms.detectRange);
+        try {
+            const range = JSON.parse(arms.chaseTime);
+            if (!Array.isArray(range) || range.length !== 2) throw new Error('chaseTime must be [min, max]');
+            const first = Number(range[0]);
+            const second = Number(range[1]);
+            if (!Number.isFinite(first) || !Number.isFinite(second)) throw new Error('invalid chaseTime bounds');
+            this.chaseTimeRange = [Math.max(0, Math.min(first, second)), Math.max(0, first, second)];
+        } catch (error) {
+            console.warn(`兵种 ${this.armsId} 的 chaseTime 配置无效: ${arms.chaseTime}`);
+        }
+    }
 
+    /** 一名小兵只装配兵种表指定的一把武器。 */
+    private initWeapon() {
+        const arms = armsConfig.getDataById(this.armsId);
+        if (!arms) return;
         const weaponData = weaponsConfig.getDataById(arms.weaponId);
         if (!weaponData || !this.weaponNode) return;
         const oldWeapon = this.weaponNode.getComponent(weaponsController);
@@ -154,10 +189,62 @@ export class soldiersController extends Component {
     }
 
     private onTableLoad(tableName: string) {
-        if (tableName === 'arms' || tableName === 'weapons') this.applyArmsAndWeapon();
+        if (tableName === 'arms') this.initArmsData();
+        if (tableName === 'arms' || tableName === 'weapons') this.initWeapon();
     }
 
-    /** 玩家进入武器攻击范围时停下巡逻、瞄准并按武器间隔攻击。 */
+    private canDetectPlayer() {
+        const player = playerMgr.playerComp;
+        if (!player?.node?.isValid || !player.node.activeInHierarchy || player.hp <= 0 || this.detectRange <= 0) return false;
+        const dx = player.node.worldPosition.x - this.node.worldPosition.x;
+        const dy = player.node.worldPosition.y - this.node.worldPosition.y;
+        return dx * dx + dy * dy <= this.detectRange * this.detectRange;
+    }
+
+    private startChase() {
+        this.soldierState = SoldierState.Chase;
+        if (this.scoutType === ScoutType.AreaScout && this.rangeRadius > 0) {
+            this.pickAreaPoint(this.returnTarget);
+        } else if (this.scoutType === ScoutType.PathScout && this.patrolPath.length > 0) {
+            // pathIndex 始终指向巡逻的下一个路径点。
+            this.returnTarget.set(this.patrolPath[this.pathIndex]);
+        } else {
+            this.returnTarget.set(this.patrolOrigin);
+        }
+        this.gameComp?.clampWorldPointToMap(this.node, this.returnTarget, this.returnTarget);
+        const [min, max] = this.chaseTimeRange;
+        this.chaseRemaining = min + Math.random() * (max - min);
+    }
+
+    private updateChase(dt: number) {
+        this.chaseRemaining -= dt;
+        const player = playerMgr.playerComp;
+        if (this.chaseRemaining <= 0 || !player?.node?.isValid || !player.node.activeInHierarchy || player.hp <= 0) {
+            this.finishChase();
+            return;
+        }
+        if (this.updateAttack(dt)) return;
+        this.moveToward(player.node.worldPosition, dt);
+    }
+
+    private finishChase() {
+        this.stopAttack();
+        this.soldierState = SoldierState.Return;
+        this.playPatrolAnimation(enemyAnim.move);
+    }
+
+    private updateReturn(dt: number) {
+        if (!this.moveToward(this.returnTarget, dt)) return;
+        this.soldierState = SoldierState.Patrol;
+        if (this.scoutType === ScoutType.StandGuard || this.scoutType === ScoutType.AreaScout && this.rangeRadius <= 0) {
+            this.patrolState = PatrolState.Idle;
+            this.playPatrolAnimation(enemyAnim.idle);
+        } else {
+            this.arriveAtPatrolTarget();
+        }
+    }
+
+    /** 只有追击状态才会调用攻击；武器射程外继续向玩家移动。 */
     private updateAttack(dt: number) {
         const player = playerMgr.playerComp;
         const weapon = this.weaponComp;
@@ -203,6 +290,7 @@ export class soldiersController extends Component {
         this.pathIndex = 0;
         this.pathDirection = 1;
         this.waitRemaining = 0;
+        this.soldierState = SoldierState.Patrol;
         this.patrolState = PatrolState.Idle;
         this.playPatrolAnimation(enemyAnim.idle);
         this.setWeaponDefaultAngle();
@@ -211,14 +299,7 @@ export class soldiersController extends Component {
 
     private startNextPatrolLeg() {
         if (this.scoutType === ScoutType.AreaScout && this.rangeRadius > 0) {
-            // 均匀地在出生点周围的圆内选点。
-            const angle = Math.random() * Math.PI * 2;
-            const radius = Math.sqrt(Math.random()) * this.rangeRadius;
-            this.patrolTarget.set(
-                this.patrolOrigin.x + Math.cos(angle) * radius,
-                this.patrolOrigin.y + Math.sin(angle) * radius,
-                this.patrolOrigin.z,
-            );
+            this.pickAreaPoint(this.patrolTarget);
         } else if (this.scoutType === ScoutType.PathScout && this.patrolPath.length > 0) {
             this.patrolTarget.set(this.patrolPath[this.pathIndex]);
         } else {
@@ -228,14 +309,22 @@ export class soldiersController extends Component {
         }
 
         this.gameComp?.clampWorldPointToMap(this.node, this.patrolTarget, this.patrolTarget);
-        this.facePatrolTarget();
+        this.facePatrolTarget(this.patrolTarget);
         this.patrolState = PatrolState.Moving;
         this.playPatrolAnimation(enemyAnim.move);
     }
 
+    /** 均匀选取出生点周围圆形巡逻区中的目标点。 */
+    private pickAreaPoint(out: Vec3) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.sqrt(Math.random()) * this.rangeRadius;
+        out.set(this.patrolOrigin.x + Math.cos(angle) * radius,
+            this.patrolOrigin.y + Math.sin(angle) * radius, this.patrolOrigin.z);
+    }
+
     /**按玩家的朝向规则翻转人物和枪，不影响名字和血条。 */
-    private facePatrolTarget() {
-        const directionX = this.patrolTarget.x - this.node.worldPosition.x;
+    private facePatrolTarget(target: Vec3) {
+        const directionX = target.x - this.node.worldPosition.x;
         if (Math.abs(directionX) < 0.001) return;
         const facingScale = directionX > 0 ? -1 : 1;
         const animNode = this.roleAnim.node;
@@ -262,21 +351,28 @@ export class soldiersController extends Component {
     }
 
     private updatePatrolMovement(dt: number) {
+        if (this.moveToward(this.patrolTarget, dt)) this.arriveAtPatrolTarget();
+    }
+
+    /** 按装备移速移动，抵达目标时返回 true。 */
+    private moveToward(target: Vec3, dt: number) {
         const current = this.node.worldPosition;
-        const dx = this.patrolTarget.x - current.x;
-        const dy = this.patrolTarget.y - current.y;
+        const dx = target.x - current.x;
+        const dy = target.y - current.y;
         const distance = Math.hypot(dx, dy);
         const step = Math.max(0, configData.moveSpeed * (this.weaponComp?.moveSpeedScale ?? 1) * dt);
         if (distance <= step || distance < 0.001) {
-            this.patrolPosition.set(this.patrolTarget.x, this.patrolTarget.y, current.z);
+            this.patrolPosition.set(target.x, target.y, current.z);
             this.node.setWorldPosition(this.patrolPosition);
-            this.arriveAtPatrolTarget();
-            return;
+            return true;
         }
 
+        this.facePatrolTarget(target);
+        this.playPatrolAnimation(enemyAnim.move);
         this.patrolPosition.set(current.x + dx / distance * step,
             current.y + dy / distance * step, current.z);
         this.node.setWorldPosition(this.patrolPosition);
+        return false;
     }
 
     private arriveAtPatrolTarget() {

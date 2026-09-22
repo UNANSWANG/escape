@@ -245,6 +245,7 @@ export class roleController extends Component {
         const bounds = this.moveCollider.getBoundingBoxToWorld();
         const parentMatrix = this.node.parent?.worldMatrix;
         const start = this.node.position;
+        const startX = start.x, startY = start.y;
         this.moveLocalPoint.set(start.x, start.y, start.z);
         if (parentMatrix) Vec3.transformMat4(this.moveWorldOrigin, this.moveLocalPoint, parentMatrix);
         else this.moveWorldOrigin.set(this.moveLocalPoint);
@@ -260,7 +261,8 @@ export class roleController extends Component {
             bounds.x + bounds.width + reach, bounds.y + bounds.height + reach, this.moveCollisionCandidates);
         if (!this.moveCollisionCandidates.length) {
             this.node.setPosition(start.x + deltaX, start.y + deltaY, start.z);
-            out.set(deltaX, deltaY, 0);
+            this.gameComp.keepNodeInsideMap(this.node);
+            out.set(this.node.position.x - startX, this.node.position.y - startY, 0);
             return out;
         }
 
@@ -290,8 +292,9 @@ export class roleController extends Component {
         } else {
             this.moveLocalPoint.set(this.moveWorldPoint);
         }
-        out.set(this.moveLocalPoint.x - start.x, this.moveLocalPoint.y - start.y, 0);
         this.node.setPosition(this.moveLocalPoint.x, this.moveLocalPoint.y, start.z);
+        this.gameComp.keepNodeInsideMap(this.node);
+        out.set(this.node.position.x - startX, this.node.position.y - startY, 0);
         return out;
     }
 

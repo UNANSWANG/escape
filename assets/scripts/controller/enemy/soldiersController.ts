@@ -144,6 +144,7 @@ export class soldiersController extends Component {
             return;
         }
 
+        this.gameComp?.clampWorldPointToMap(this.node, this.patrolTarget, this.patrolTarget);
         this.facePatrolTarget();
         this.patrolState = PatrolState.Moving;
         this.playPatrolAnimation(enemyAnim.move);

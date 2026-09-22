@@ -162,6 +162,11 @@ export class UIGame extends UIBase {
     private tempTouchMapLocalPos: Vec3 = new Vec3();
     /**玩家每帧移动偏移 */
     private tempPlayerMoveOffset: Vec3 = new Vec3();
+    /**地图边界计算复用坐标 */
+    private tempMapCenter: Vec3 = new Vec3();
+    private tempMapScale: Vec3 = new Vec3();
+    private tempMapNodePos: Vec3 = new Vec3();
+    private tempMapClampedPos: Vec3 = new Vec3();
     /**手动瞄准摇杆当前方向。 */
     private manualAimDirection: Vec3 = new Vec3();
     /**游戏是否暂停 */
@@ -494,6 +499,7 @@ export class UIGame extends UIBase {
         this.roleNode.addChild(playerMgr.player);
         playerMgr.cameraFollow = true;
         this.initRolePos(playerMgr.player);
+        this.keepNodeInsideMap(playerMgr.player);
         const roleComp = addRoleScript(playerMgr.player, pData.roleId);
         playerMgr.setPlayerComp(roleComp);
         roleComp.node.on('skill-cooldown-start', this.playSkillMaskCooldown, this);
@@ -535,6 +541,7 @@ export class UIGame extends UIBase {
             const soldierNode = instantiate(this.soldiersPre);
             this.roleNode.addChild(soldierNode);
             soldierNode.setWorldPosition(spawnNode.worldPosition);
+            this.keepNodeInsideMap(soldierNode);
 
             const soldierComp = soldierNode.getComponent(soldiersController);
             if (soldierComp) {
@@ -548,6 +555,43 @@ export class UIGame extends UIBase {
     /**初始化角色位置 */
     initRolePos(node) {
         node.setPosition(Vec3.ZERO);
+    }
+
+    /**将节点目标位置限制在地图内，按脚下 colliderBox 保留人物体积。 */
+    clampWorldPointToMap(node: Node, target: Vec3, out: Vec3) {
+        out.set(target);
+        if (!this.mapNode || !node || pData.mapHalfSize.x <= 0 || pData.mapHalfSize.y <= 0) return out;
+
+        this.mapNode.getWorldPosition(this.tempMapCenter);
+        this.mapNode.getWorldScale(this.tempMapScale);
+        node.getWorldPosition(this.tempMapNodePos);
+        const colliderBounds = node.getChildByName('colliderBox')
+            ?.getComponent(UITransform)?.getBoundingBoxToWorld();
+        const left = colliderBounds ? this.tempMapNodePos.x - colliderBounds.x : 0;
+        const right = colliderBounds
+            ? colliderBounds.x + colliderBounds.width - this.tempMapNodePos.x : 0;
+        const bottom = colliderBounds ? this.tempMapNodePos.y - colliderBounds.y : 0;
+        const top = colliderBounds
+            ? colliderBounds.y + colliderBounds.height - this.tempMapNodePos.y : 0;
+        const halfWidth = pData.mapHalfSize.x * Math.abs(this.tempMapScale.x);
+        const halfHeight = pData.mapHalfSize.y * Math.abs(this.tempMapScale.y);
+        const minX = this.tempMapCenter.x - halfWidth + left;
+        const maxX = this.tempMapCenter.x + halfWidth - right;
+        const minY = this.tempMapCenter.y - halfHeight + bottom;
+        const maxY = this.tempMapCenter.y + halfHeight - top;
+        out.x = minX <= maxX ? Math.max(minX, Math.min(maxX, target.x)) : this.tempMapCenter.x;
+        out.y = minY <= maxY ? Math.max(minY, Math.min(maxY, target.y)) : this.tempMapCenter.y;
+        return out;
+    }
+
+    /**校正人物当前坐标，避免玩家移动或其他位移越过地图边缘。 */
+    keepNodeInsideMap(node: Node) {
+        if (!node) return;
+        const current = node.worldPosition;
+        this.clampWorldPointToMap(node, current, this.tempMapClampedPos);
+        if (this.tempMapClampedPos.x !== current.x || this.tempMapClampedPos.y !== current.y) {
+            node.setWorldPosition(this.tempMapClampedPos);
+        }
     }
 
     /**在受击目标头顶播放伤害飘字，动画结束后回收至标签对象池。 */

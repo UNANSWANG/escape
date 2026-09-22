@@ -48,7 +48,8 @@ export const enemyCommonConfig = {
 
 /**人机通用配置 */
 export const robotCommonConfig = {
-
+    /**npc攻击力百分比 */
+    npcAttackPercent: 0.2,
 }
 
 /**gm配置 */

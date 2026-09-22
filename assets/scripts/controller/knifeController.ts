@@ -1,5 +1,6 @@
 import { _decorator, Node, Vec3 } from 'cc';
 import { enemyMgr } from '../manager/enemyManager';
+import { playerMgr } from '../manager/playerManager';
 import { weaponsAnimName, weaponsController } from './weaponsController';
 const { ccclass, property } = _decorator;
 
@@ -55,6 +56,16 @@ export class knifeController extends weaponsController {
         const rangeSquared = this.attackRange ** 2;
         // 以角色本体的当前朝向作为扇形正前方，而非武器节点自身的缩放状态。
         const facingX = this.roleAnim?.node?.scale.x < 0 ? 1 : -1;
+        if (this.targetPlayer) {
+            const player = playerMgr.playerComp;
+            if (player?.node?.isValid && player.node.activeInHierarchy && player.hp > 0) {
+                player.node.getWorldPosition(this.tempTargetWorldPos);
+                const dx = this.tempTargetWorldPos.x - this.tempRoleWorldPos.x;
+                const dy = this.tempTargetWorldPos.y - this.tempRoleWorldPos.y;
+                if (dx * dx + dy * dy <= rangeSquared && dx * facingX >= 0) player.takeDamage(this.attack);
+            }
+            return true;
+        }
         for (const enemy of enemyMgr.soldiersArr) {
             if (!enemy?.node?.isValid || !enemy.node.activeInHierarchy || enemy.hp <= 0) continue;
             enemy.node.getWorldPosition(this.tempTargetWorldPos);

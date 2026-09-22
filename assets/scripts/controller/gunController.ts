@@ -131,7 +131,7 @@ export class gunController extends weaponsController {
             poolMgr.putBulletNode(bulletNode);
             return false;
         }
-        bulletComp.initStraight(this.tempBulletLocalDirection, this.attack, this.attackRange, this.flightSpeed);
+        bulletComp.initStraight(this.tempBulletLocalDirection, this.attack, this.attackRange, this.flightSpeed, this.targetPlayer);
         return true;
     }
 

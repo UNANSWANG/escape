@@ -26,6 +26,8 @@ export interface WeaponStats {
  */
 @ccclass('weaponsController')
 export class weaponsController extends Component {
+    /** 武器所属敌方时，攻击目标为玩家。 */
+    targetPlayer = false;
     /** 攻击间隔（秒），由 weapons 表 attackInterval 配置。 */
     attackInterval = 0.2;
     /** 子弹飞行速度；远程武器会逐发传给子弹控制器。 */

@@ -1,6 +1,7 @@
 import { _decorator, Component, UITransform, Vec3 } from 'cc';
 import { enemyMgr } from '../manager/enemyManager';
 import { poolMgr } from '../manager/poolManager';
+import { playerMgr } from '../manager/playerManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('bulletController')
@@ -13,9 +14,10 @@ export class bulletController extends Component {
     private flightSpeed = 0;
     /**本发子弹命中敌人时造成的伤害 */
     private damage = 0;
+    private targetPlayer = false;
 
     /**初始化为不锁定目标的直线飞行子弹 */
-    initStraight(direction: Vec3, damage: number, attackRange: number, flightSpeed: number) {
+    initStraight(direction: Vec3, damage: number, attackRange: number, flightSpeed: number, targetPlayer = false) {
         const directionLength = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
         if (directionLength <= 0) {
             this.recycle();
@@ -30,6 +32,7 @@ export class bulletController extends Component {
 
         this.moveDirection.set(direction.x / directionLength, direction.y / directionLength, 0);
         this.damage = Math.max(0, damage);
+        this.targetPlayer = targetPlayer;
         this.flightSpeed = Math.max(0, flightSpeed);
         if (this.flightSpeed <= 0) {
             this.recycle();
@@ -44,6 +47,7 @@ export class bulletController extends Component {
         this.moveDirection.set(0, 0, 0);
         this.straightMoveRemainDistance = 0;
         this.damage = 0;
+        this.targetPlayer = false;
         this.flightSpeed = 0;
     }
 
@@ -62,7 +66,7 @@ export class bulletController extends Component {
             curPos.z,
         );
         this.straightMoveRemainDistance -= moveDistance;
-        if (this.checkHitEnemy()) {
+        if (this.targetPlayer ? this.checkHitPlayer() : this.checkHitEnemy()) {
             return;
         }
         if (this.straightMoveRemainDistance <= 0) {
@@ -91,6 +95,19 @@ export class bulletController extends Component {
             return true;
         }
         return false;
+    }
+
+    private checkHitPlayer() {
+        const player = playerMgr.playerComp;
+        if (!player?.node?.isValid || !player.node.activeInHierarchy || player.hp <= 0) return false;
+        const bulletTransform = this.getComponent(UITransform);
+        const hitNode = player.roleAnim?.node || player.node;
+        const playerTransform = hitNode.getComponent(UITransform);
+        if (!bulletTransform || !playerTransform
+            || !bulletTransform.getBoundingBoxToWorld().intersects(playerTransform.getBoundingBoxToWorld())) return false;
+        player.takeDamage(this.damage);
+        this.recycle();
+        return true;
     }
 
     /**回收子弹 */

@@ -3,7 +3,16 @@ import { ccTools } from '../../extention/generalTools';
 import { UIGame } from '../../UIPage/UIGame';
 import { audioPath, spinePath, UIPath } from '../../manager/pathConfig';
 import { ScoutType, soldiersData } from '../../data/soldiersData';
-import { configData, enemyCommonConfig } from '../../manager/configData';
+import { configData, enemyCommonConfig, GameEvent, robotCommonConfig } from '../../manager/configData';
+import { armsConfig } from '../../json/jsonArms';
+import { weaponsConfig } from '../../json/jsonWeapons';
+import { gm } from '../../manager/gm';
+import { playerMgr } from '../../manager/playerManager';
+import { weaponsController } from '../weaponsController';
+import { gunController } from '../gunController';
+import { knifeController } from '../knifeController';
+import { shotgunController } from '../shotgunController';
+import { sniperController } from '../sniperController';
 const { ccclass, property } = _decorator;
 
 enum enemyAnim {
@@ -68,6 +77,9 @@ export class soldiersController extends Component {
     private waitRemaining = 0;
     private currentAnim: enemyAnim = null;
     private weaponDefaultX = 0;
+    private weaponComp: weaponsController = null;
+    private attackCooldown = 0;
+    private isAttacking = false;
 
     protected onLoad(): void {
         this.roleAnim = this.node.getChildByName("roleAnim").getComponent(sp.Skeleton);
@@ -78,10 +90,12 @@ export class soldiersController extends Component {
         this.hpBar = this.hpNode.getChildByName("hpBar").getComponent(Sprite);
         this.baseHp = this.hpNode.getChildByName("baseHp").getComponent(Sprite);
         this.effectNode = this.node.getChildByName("effectNode");
+        gm.Event.on(GameEvent.loadTable, this.onTableLoad, this);
     }
 
     protected onDestroy(): void {
         Tween.stopAllByTarget(this.baseHp);
+        gm.Event.off(GameEvent.loadTable, this.onTableLoad, this);
     }
 
     /**初始化 */
@@ -93,6 +107,7 @@ export class soldiersController extends Component {
         this.gameComp = comp;
         this.id = id;
         this.armsId = armsId;
+        this.applyArmsAndWeapon();
 
         this.refreshRoleSpine();
 
@@ -102,12 +117,79 @@ export class soldiersController extends Component {
 
     protected update(dt: number): void {
         if (this.hp <= 0) return;
+        this.attackCooldown = Math.max(0, this.attackCooldown - dt);
+        if (this.updateAttack(dt)) return;
         if (this.patrolState === PatrolState.Moving) {
             this.updatePatrolMovement(dt);
         } else if (this.patrolState === PatrolState.Waiting) {
             this.waitRemaining -= dt;
             if (this.waitRemaining <= 0) this.startNextPatrolLeg();
         }
+    }
+
+    /** 一名小兵只装配兵种表指定的一把武器。 */
+    private applyArmsAndWeapon() {
+        const arms = armsConfig.getDataById(this.armsId);
+        if (!arms) return;
+        this.maxHp = Math.max(1, arms.hp);
+        this.hp = this.maxHp;
+        this.refreshHp(true);
+
+        const weaponData = weaponsConfig.getDataById(arms.weaponId);
+        if (!weaponData || !this.weaponNode) return;
+        const oldWeapon = this.weaponNode.getComponent(weaponsController);
+        if (oldWeapon) this.weaponNode.removeComponent(oldWeapon);
+        if (weaponData.type === 0) this.weaponComp = this.weaponNode.addComponent(knifeController);
+        else if (weaponData.type === 4) this.weaponComp = this.weaponNode.addComponent(shotgunController);
+        else if (weaponData.type === 5) this.weaponComp = this.weaponNode.addComponent(sniperController);
+        else this.weaponComp = this.weaponNode.addComponent(gunController);
+
+        this.weaponComp.applyStats(weaponData);
+        this.weaponComp.attack *= robotCommonConfig.npcAttackPercent;
+        this.weaponComp.targetPlayer = true;
+        this.weaponComp.bindToRole(this.roleAnim);
+        this.weaponComp.resetRotation(true);
+        this.weaponComp.playIdleAnim();
+        this.attackCooldown = 0;
+    }
+
+    private onTableLoad(tableName: string) {
+        if (tableName === 'arms' || tableName === 'weapons') this.applyArmsAndWeapon();
+    }
+
+    /** 玩家进入武器攻击范围时停下巡逻、瞄准并按武器间隔攻击。 */
+    private updateAttack(dt: number) {
+        const player = playerMgr.playerComp;
+        const weapon = this.weaponComp;
+        if (!weapon || !player?.node?.isValid || !player.node.activeInHierarchy || player.hp <= 0) {
+            this.stopAttack();
+            return false;
+        }
+        const dx = player.node.worldPosition.x - this.node.worldPosition.x;
+        const dy = player.node.worldPosition.y - this.node.worldPosition.y;
+        if (dx * dx + dy * dy > weapon.attackRange * weapon.attackRange) {
+            this.stopAttack();
+            return false;
+        }
+        this.isAttacking = true;
+        this.playPatrolAnimation(enemyAnim.idle);
+        weapon.aimAt(player.node);
+        if (this.attackCooldown > 0) return true;
+
+        const knife = weapon instanceof knifeController ? weapon : null;
+        const attacked = knife ? knife.attackInFacingDirection()
+            : (weapon as gunController).fireBullet(this.gameComp?.gameUINode, dt);
+        if (attacked) this.attackCooldown = weapon.attackInterval;
+        return true;
+    }
+
+    private stopAttack() {
+        if (!this.isAttacking) return;
+        this.isAttacking = false;
+        this.weaponNode?.getComponent(sniperController)?.cancelCharge();
+        this.weaponComp?.clearAimTarget();
+        this.weaponComp?.resetRotation();
+        if (this.patrolState === PatrolState.Moving) this.playPatrolAnimation(enemyAnim.move);
     }
 
     private initPatrol(data: soldiersData) {
@@ -160,13 +242,18 @@ export class soldiersController extends Component {
         const animScale = animNode.scale;
         animNode.setScale(facingScale * Math.abs(animScale.x), animScale.y, animScale.z);
 
-        const weapon = this.weaponNode;
-        if (!weapon) return;
-        const weaponScale = weapon.scale;
-        weapon.setScale(facingScale * Math.abs(weaponScale.x), weaponScale.y, weaponScale.z);
-        weapon.setPosition(facingScale < 0 ? -this.weaponDefaultX : this.weaponDefaultX,
-            weapon.position.y, weapon.position.z);
-        this.setWeaponDefaultAngle();
+        if (this.weaponComp) {
+            this.weaponComp.setFacingByHorizontal(directionX);
+            this.weaponComp.resetRotation(true);
+        } else {
+            const weapon = this.weaponNode;
+            if (!weapon) return;
+            const weaponScale = weapon.scale;
+            weapon.setScale(facingScale * Math.abs(weaponScale.x), weaponScale.y, weaponScale.z);
+            weapon.setPosition(facingScale < 0 ? -this.weaponDefaultX : this.weaponDefaultX,
+                weapon.position.y, weapon.position.z);
+            this.setWeaponDefaultAngle();
+        }
     }
 
     /**与玩家武器回正时使用相同的左右默认角度。 */
@@ -179,7 +266,7 @@ export class soldiersController extends Component {
         const dx = this.patrolTarget.x - current.x;
         const dy = this.patrolTarget.y - current.y;
         const distance = Math.hypot(dx, dy);
-        const step = Math.max(0, configData.moveSpeed * dt);
+        const step = Math.max(0, configData.moveSpeed * (this.weaponComp?.moveSpeedScale ?? 1) * dt);
         if (distance <= step || distance < 0.001) {
             this.patrolPosition.set(this.patrolTarget.x, this.patrolTarget.y, current.z);
             this.node.setWorldPosition(this.patrolPosition);
@@ -247,6 +334,7 @@ export class soldiersController extends Component {
         this.hp -= actualDamage;
         this.refreshHp();
         if (this.hp <= 0) {
+            this.stopAttack();
             this.patrolState = PatrolState.Idle;
             this.playPatrolAnimation(enemyAnim.idle);
         }

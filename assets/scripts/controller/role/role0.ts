@@ -75,7 +75,7 @@ export class role0 extends roleController {
         this.skill2Cooldown = this.roleData?.initiativeCd ?? 50;
         const values = this.getInitiativeValues();
         this.skill2MoveSpeedPercent = values[0] ?? 0;
-        this.skill2KillHealPercent = values[1] ?? 0;
+        this.skill2KillHealPercent = (values[1] ?? 0) / 100;
         this.skill2KillExtendTime = values[2] ?? 0;
     }
 
@@ -154,10 +154,8 @@ export class role0 extends roleController {
 
     /**处理技能2击杀奖励：恢复最大生命值百分比，并延长剩余时间但不超过原始时长。 */
     private onSkill2KillEnemy() {
-        const maxHp = Math.max(0, this.roleData?.hp ?? 0);
-        if (maxHp > 0 && this.skill2KillHealPercent > 0) {
-            const healAmount = maxHp * this.skill2KillHealPercent / 100;
-            this.hp = Math.min(maxHp, this.hp + healAmount);
+        if (this.skill2KillHealPercent > 0) {
+            this.heal(this.maxHp * this.skill2KillHealPercent);
         }
 
         if (this.skill2KillExtendTime > 0) {

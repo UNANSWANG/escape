@@ -2,7 +2,7 @@ import { _decorator, CCFloat, CCInteger, Color, Component, Enum, Graphics, Node 
 import { EDITOR, PREVIEW } from 'cc/env';
 const { ccclass, executeInEditMode, property } = _decorator;
 
-enum ScoutType {
+export enum ScoutType {
     StandGuard = 0,
     AreaScout = 1,
     PathScout = 2,
@@ -26,6 +26,7 @@ export class soldiersData extends Component {
     })
     soldierId: number = 0;
 
+    @property({ type: scoutTypeOptions, visible: false })
     private _scoutType: ScoutType = ScoutType.StandGuard;
 
     @property({ type: scoutTypeOptions, tooltip: '侦察类型' })
@@ -39,6 +40,7 @@ export class soldiersData extends Component {
         this.refreshRangePreview();
     }
 
+    @property({ type: CCFloat, visible: false })
     private _rangeRadius: number = 800;
 
     @property({

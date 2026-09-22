@@ -1720,6 +1720,8 @@
       "__id__": 71
     },
     "soldierId": 3,
+    "_scoutType": 0,
+    "_rangeRadius": 800,
     "isLoop": false,
     "scoutPath": [],
     "_id": ""
@@ -1832,6 +1834,8 @@
       "__id__": 77
     },
     "soldierId": 2,
+    "_scoutType": 1,
+    "_rangeRadius": 800,
     "isLoop": false,
     "scoutPath": [],
     "_id": ""
@@ -2309,6 +2313,8 @@
       "__id__": 99
     },
     "soldierId": 1,
+    "_scoutType": 2,
+    "_rangeRadius": 800,
     "isLoop": false,
     "scoutPath": [
       {

@@ -536,10 +536,9 @@ export class UIGame extends UIBase {
             this.roleNode.addChild(soldierNode);
             soldierNode.setWorldPosition(spawnNode.worldPosition);
 
-            // 小兵暂时不添加 AI；仅初始化外观、名称和满血状态。
             const soldierComp = soldierNode.getComponent(soldiersController);
             if (soldierComp) {
-                soldierComp.init(this, soldierId, 0);
+                soldierComp.init(this, soldierId, 0, data);
                 enemyMgr.soldiersArr.push(soldierComp);
             }
             enemyMgr.soldierId = Math.max(enemyMgr.soldierId, soldierId + 1);

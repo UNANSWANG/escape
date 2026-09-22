@@ -3,7 +3,7 @@ import { ccTools } from '../../extention/generalTools';
 import { UIGame } from '../../UIPage/UIGame';
 import { audioPath, spinePath, UIPath } from '../../manager/pathConfig';
 import { ScoutType, soldiersData } from '../../data/soldiersData';
-import { configData, enemyCommonConfig, GameEvent, robotCommonConfig } from '../../manager/configData';
+import { configData, enemyCommonConfig, GameEvent, playerCommonConfig, robotCommonConfig } from '../../manager/configData';
 import { armsConfig } from '../../json/jsonArms';
 import { weaponsConfig } from '../../json/jsonWeapons';
 import { gm } from '../../manager/gm';
@@ -88,6 +88,7 @@ export class soldiersController extends Component {
     private weaponComp: weaponsController = null;
     private attackCooldown = 0;
     private isAttacking = false;
+    private gunResetRemaining: number | null = null;
     private detectRange = 0;
     private chaseTimeRange: [number, number] = [0, 0];
     private chaseRemaining = 0;
@@ -126,6 +127,7 @@ export class soldiersController extends Component {
     protected update(dt: number): void {
         if (this.hp <= 0) return;
         this.attackCooldown = Math.max(0, this.attackCooldown - dt);
+        this.updateGunReset(dt);
         if (this.soldierState === SoldierState.Chase) {
             this.updateChase(dt);
             return;
@@ -186,6 +188,7 @@ export class soldiersController extends Component {
         this.weaponComp.resetRotation(true);
         this.weaponComp.playIdleAnim();
         this.attackCooldown = 0;
+        this.gunResetRemaining = null;
     }
 
     private onTableLoad(tableName: string) {
@@ -254,9 +257,16 @@ export class soldiersController extends Component {
         }
         const dx = player.node.worldPosition.x - this.node.worldPosition.x;
         const dy = player.node.worldPosition.y - this.node.worldPosition.y;
-        if (dx * dx + dy * dy > weapon.attackRange * weapon.attackRange) {
+        // 进入攻击需要比最大射程更近一些，离开时仍按最大射程判断，避免边缘反复切换。
+        const enterRange = Math.max(0, weapon.attackRange - Math.min(20, weapon.attackRange * 0.1));
+        const allowedRange = this.isAttacking ? weapon.attackRange : enterRange;
+        if (dx * dx + dy * dy > allowedRange * allowedRange) {
             this.stopAttack();
             return false;
+        }
+        if (!this.isAttacking) {
+            this.gunResetRemaining = null;
+            weapon.stopResetRotationTween();
         }
         this.isAttacking = true;
         this.playPatrolAnimation(enemyAnim.idle);
@@ -275,8 +285,16 @@ export class soldiersController extends Component {
         this.isAttacking = false;
         this.weaponNode?.getComponent(sniperController)?.cancelCharge();
         this.weaponComp?.clearAimTarget();
-        this.weaponComp?.resetRotation();
+        this.gunResetRemaining = Math.max(0, playerCommonConfig.gunResetTime);
         if (this.patrolState === PatrolState.Moving) this.playPatrolAnimation(enemyAnim.move);
+    }
+
+    private updateGunReset(dt: number) {
+        if (this.gunResetRemaining === null || this.isAttacking) return;
+        this.gunResetRemaining = Math.max(0, this.gunResetRemaining - dt);
+        if (this.gunResetRemaining > 0) return;
+        this.gunResetRemaining = null;
+        this.weaponComp?.resetRotation();
     }
 
     private initPatrol(data: soldiersData) {
@@ -333,7 +351,6 @@ export class soldiersController extends Component {
 
         if (this.weaponComp) {
             this.weaponComp.setFacingByHorizontal(directionX);
-            this.weaponComp.resetRotation(true);
         } else {
             const weapon = this.weaponNode;
             if (!weapon) return;

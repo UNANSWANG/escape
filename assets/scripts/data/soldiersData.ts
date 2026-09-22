@@ -22,9 +22,9 @@ export class soldiersData extends Component {
 
     @property({
         type: CCInteger,
-        tooltip: '小兵编号'
+        tooltip: '兵种编号'
     })
-    soldierId: number = 0;
+    armsId: number = 0;
 
     @property({ type: scoutTypeOptions, visible: false })
     private _scoutType: ScoutType = ScoutType.StandGuard;

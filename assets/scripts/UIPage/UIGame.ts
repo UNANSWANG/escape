@@ -537,7 +537,7 @@ export class UIGame extends UIBase {
 
         for (const spawnNode of soldiersList.children) {
             const data = spawnNode.getComponent(soldiersData);
-            const soldierId = data?.soldierId ?? enemyMgr.soldierId;
+            const soldierId = enemyMgr.soldierId++;
             const soldierNode = instantiate(this.soldiersPre);
             this.roleNode.addChild(soldierNode);
             soldierNode.setWorldPosition(spawnNode.worldPosition);
@@ -545,10 +545,9 @@ export class UIGame extends UIBase {
 
             const soldierComp = soldierNode.getComponent(soldiersController);
             if (soldierComp) {
-                soldierComp.init(this, soldierId, 0, data);
+                soldierComp.init(this, soldierId, data.armsId, data);
                 enemyMgr.soldiersArr.push(soldierComp);
             }
-            enemyMgr.soldierId = Math.max(enemyMgr.soldierId, soldierId + 1);
         }
     }
 

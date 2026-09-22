@@ -23,10 +23,10 @@ enum PatrolState {
 
 @ccclass('soldiersController')
 export class soldiersController extends Component {
-    /**角色当前游戏内id */
-    roleId: number = 0;
-    /**皮肤id */
-    skinId: number = 0;
+    /**小兵当前游戏内id */
+    id: number = 0;
+    /**兵种id */
+    armsId: number = 0;
     /**游戏脚本 */
     gameComp: UIGame = null;
     /**最大血量 */
@@ -85,17 +85,18 @@ export class soldiersController extends Component {
     }
 
     /**初始化 */
-    init(comp: UIGame, id: number, skinId: number, data: soldiersData = null, nickname = "") {
+    init(comp: UIGame, id: number, armsId: number, data: soldiersData = null, nickname = "") {
         this.hp = this.maxHp;
         
         this.refreshHp();
         
         this.gameComp = comp;
-        this.roleId = id;
-        this.skinId = skinId;
+        this.id = id;
+        this.armsId = armsId;
+
         this.refreshRoleSpine();
 
-        this.roleNameLab.string = nickname || `小兵${this.roleId + 1}`
+        this.roleNameLab.string = nickname || `小兵${this.id + 1}`
         this.initPatrol(data);
     }
 

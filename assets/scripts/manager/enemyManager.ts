@@ -16,11 +16,11 @@ export class enemyManager {
     enemyBornPosArr: Vec2[] = [];
 
     /**根据id移除敌人 */
-    removeEnemy(roleId: number) {
+    removeEnemy(id: number) {
         let idx = -1;
         for (let i = 0; i < this.soldiersArr.length; i++) {
             let enemyComp = this.soldiersArr[i];
-            if(enemyComp.roleId == roleId){
+            if(enemyComp.id == id){
                 idx = i;
                 break;
             }

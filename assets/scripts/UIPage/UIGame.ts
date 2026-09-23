@@ -190,6 +190,7 @@ export class UIGame extends UIBase {
     private collisionQueryStamp = 0;
     private tempColliderLocalPoint = new Vec3();
     private tempColliderWorldPoint = new Vec3();
+    private lineCollisionCandidates: StaticCollisionShape[] = [];
 
     protected onLoad(): void {
         this.bindBtn();
@@ -491,6 +492,77 @@ export class UIGame extends UIBase {
         if (this.openBtn.active !== !!this.currentContainer) {
             this.openBtn.active = !!this.currentContainer;
         }
+    }
+
+    /** 判断两点间的世界坐标线段是否穿过地图静态碰撞体。 */
+    isWorldSegmentBlocked(x1: number, y1: number, x2: number, y2: number) {
+        const padding = 0.01;
+        this.queryStaticColliders(Math.min(x1, x2) - padding, Math.min(y1, y2) - padding,
+            Math.max(x1, x2) + padding, Math.max(y1, y2) + padding, this.lineCollisionCandidates);
+        for (const shape of this.lineCollisionCandidates) {
+            if (!this.segmentHitsBounds(x1, y1, x2, y2, shape)) continue;
+            if (!shape.points || this.pointInsideStaticPolygon(x1, y1, shape.points)
+                || this.pointInsideStaticPolygon(x2, y2, shape.points)) return true;
+            for (let i = 0; i < shape.points.length; i++) {
+                const a = shape.points[i];
+                const b = shape.points[(i + 1) % shape.points.length];
+                if (this.staticSegmentsIntersect(x1, y1, x2, y2, a.x, a.y, b.x, b.y)) return true;
+            }
+        }
+        return false;
+    }
+
+    private segmentHitsBounds(x1: number, y1: number, x2: number, y2: number, shape: StaticCollisionShape) {
+        let enter = 0;
+        let exit = 1;
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        for (let axis = 0; axis < 2; axis++) {
+            const origin = axis === 0 ? x1 : y1;
+            const delta = axis === 0 ? dx : dy;
+            const min = axis === 0 ? shape.minX : shape.minY;
+            const max = axis === 0 ? shape.maxX : shape.maxY;
+            if (Math.abs(delta) < 0.000001) {
+                if (origin < min || origin > max) return false;
+                continue;
+            }
+            const first = (min - origin) / delta;
+            const second = (max - origin) / delta;
+            enter = Math.max(enter, Math.min(first, second));
+            exit = Math.min(exit, Math.max(first, second));
+            if (enter > exit) return false;
+        }
+        return true;
+    }
+
+    private pointInsideStaticPolygon(x: number, y: number,
+        points: ReadonlyArray<{ x: number; y: number }>) {
+        let inside = false;
+        for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+            const a = points[i];
+            const b = points[j];
+            const cross = (x - a.x) * (b.y - a.y) - (y - a.y) * (b.x - a.x);
+            if (Math.abs(cross) < 0.000001 && x >= Math.min(a.x, b.x) && x <= Math.max(a.x, b.x)
+                && y >= Math.min(a.y, b.y) && y <= Math.max(a.y, b.y)) return true;
+            if ((a.y > y) !== (b.y > y)
+                && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) inside = !inside;
+        }
+        return inside;
+    }
+
+    private staticSegmentsIntersect(ax: number, ay: number, bx: number, by: number,
+        cx: number, cy: number, dx: number, dy: number) {
+        const abx = bx - ax;
+        const aby = by - ay;
+        const cdx = dx - cx;
+        const cdy = dy - cy;
+        const denominator = abx * cdy - aby * cdx;
+        if (Math.abs(denominator) < 0.000001) return false;
+        const acx = cx - ax;
+        const acy = cy - ay;
+        const alongAB = (acx * cdy - acy * cdx) / denominator;
+        const alongCD = (acx * aby - acy * abx) / denominator;
+        return alongAB >= 0 && alongAB <= 1 && alongCD >= 0 && alongCD <= 1;
     }
 
     /**初始化玩家 */

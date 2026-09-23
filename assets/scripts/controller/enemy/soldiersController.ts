@@ -13,6 +13,7 @@ import { gunController } from '../gunController';
 import { knifeController } from '../knifeController';
 import { shotgunController } from '../shotgunController';
 import { sniperController } from '../sniperController';
+import { StaticCollisionMover } from '../staticCollisionMover';
 const { ccclass, property } = _decorator;
 
 enum enemyAnim {
@@ -92,6 +93,16 @@ export class soldiersController extends Component {
     private detectRange = 0;
     private chaseTimeRange: [number, number] = [0, 0];
     private chaseRemaining = 0;
+    /** NPC 脚底碰撞区域及静态障碍物移动器。 */
+    private moveCollider: UITransform = null;
+    private collisionMover = new StaticCollisionMover();
+    private actualMove = new Vec3();
+    /** A* 计算得到的世界坐标路线。玩家移动时会定期重新规划。 */
+    private navigationPath: Vec3[] = [];
+    private navigationIndex = 0;
+    private navigationTarget = new Vec3(Number.NaN, Number.NaN, 0);
+    private navigationReplanRemaining = 0;
+    private readonly navigationReplanInterval = 0.35;
 
     protected onLoad(): void {
         this.roleAnim = this.node.getChildByName("roleAnim").getComponent(sp.Skeleton);
@@ -102,6 +113,8 @@ export class soldiersController extends Component {
         this.hpBar = this.hpNode.getChildByName("hpBar").getComponent(Sprite);
         this.baseHp = this.hpNode.getChildByName("baseHp").getComponent(Sprite);
         this.effectNode = this.node.getChildByName("effectNode");
+        this.moveCollider = this.node.getChildByName('colliderBox')?.getComponent(UITransform);
+        if (!this.moveCollider) console.warn('NPC 预制体缺少 colliderBox 或 UITransform，无法避开地图碰撞体');
         gm.Event.on(GameEvent.loadTable, this.onTableLoad, this);
     }
 
@@ -206,6 +219,7 @@ export class soldiersController extends Component {
 
     private startChase() {
         this.soldierState = SoldierState.Chase;
+        this.clearNavigationPath();
         if (this.scoutType === ScoutType.AreaScout && this.rangeRadius > 0) {
             this.pickAreaPoint(this.returnTarget);
         } else if (this.scoutType === ScoutType.PathScout && this.patrolPath.length > 0) {
@@ -232,6 +246,7 @@ export class soldiersController extends Component {
 
     private finishChase() {
         this.stopAttack();
+        this.clearNavigationPath();
         this.soldierState = SoldierState.Return;
         this.playPatrolAnimation(enemyAnim.move);
     }
@@ -260,7 +275,11 @@ export class soldiersController extends Component {
         // 进入攻击需要比最大射程更近一些，离开时仍按最大射程判断，避免边缘反复切换。
         const enterRange = Math.max(0, weapon.attackRange - Math.min(20, weapon.attackRange * 0.1));
         const allowedRange = this.isAttacking ? weapon.attackRange : enterRange;
-        if (dx * dx + dy * dy > allowedRange * allowedRange) {
+        // 隔着墙即使在武器射程内也继续寻路，避免 NPC 停在障碍物另一侧攻击。
+        const sightBlocked = this.gameComp?.isWorldSegmentBlocked(
+            this.node.worldPosition.x, this.node.worldPosition.y,
+            player.node.worldPosition.x, player.node.worldPosition.y) ?? false;
+        if (dx * dx + dy * dy > allowedRange * allowedRange || sightBlocked) {
             this.stopAttack();
             return false;
         }
@@ -316,6 +335,7 @@ export class soldiersController extends Component {
     }
 
     private startNextPatrolLeg() {
+        this.clearNavigationPath();
         if (this.scoutType === ScoutType.AreaScout && this.rangeRadius > 0) {
             this.pickAreaPoint(this.patrolTarget);
         } else if (this.scoutType === ScoutType.PathScout && this.patrolPath.length > 0) {
@@ -371,25 +391,100 @@ export class soldiersController extends Component {
         if (this.moveToward(this.patrolTarget, dt)) this.arriveAtPatrolTarget();
     }
 
-    /** 按装备移速移动，抵达目标时返回 true。 */
+    /** 按 A* 路线逐个前往路点；碰撞移动器只作为路线执行时的安全保护。 */
     private moveToward(target: Vec3, dt: number) {
         const current = this.node.worldPosition;
-        const dx = target.x - current.x;
-        const dy = target.y - current.y;
-        const distance = Math.hypot(dx, dy);
+        const targetDx = target.x - current.x;
+        const targetDy = target.y - current.y;
+        const targetDistance = Math.hypot(targetDx, targetDy);
         const step = Math.max(0, configData.moveSpeed * (this.weaponComp?.moveSpeedScale ?? 1) * dt);
-        if (distance <= step || distance < 0.001) {
-            this.patrolPosition.set(target.x, target.y, current.z);
-            this.node.setWorldPosition(this.patrolPosition);
+        if (targetDistance < 0.5) {
+            this.clearNavigationPath();
             return true;
         }
 
-        this.facePatrolTarget(target);
+        this.navigationReplanRemaining = Math.max(0, this.navigationReplanRemaining - dt);
+        const targetMovedX = target.x - this.navigationTarget.x;
+        const targetMovedY = target.y - this.navigationTarget.y;
+        const targetMoved = targetMovedX * targetMovedX + targetMovedY * targetMovedY > 24 * 24;
+        if (this.navigationIndex >= this.navigationPath.length && this.navigationReplanRemaining <= 0
+            || targetMoved && this.navigationReplanRemaining <= 0) {
+            this.rebuildNavigationPath(target);
+        }
+        let waypoint = this.navigationPath[this.navigationIndex];
+        if (!waypoint) {
+            this.playPatrolAnimation(enemyAnim.idle);
+            return false;
+        }
+
+        let dx = waypoint.x - current.x;
+        let dy = waypoint.y - current.y;
+        let distance = Math.hypot(dx, dy);
+        // 只跳过已经实际抵达的路点，不能因为单帧步长较大而跨过障碍物转角。
+        while (distance < 0.5 && this.navigationIndex + 1 < this.navigationPath.length) {
+            this.navigationIndex++;
+            waypoint = this.navigationPath[this.navigationIndex];
+            dx = waypoint.x - current.x;
+            dy = waypoint.y - current.y;
+            distance = Math.hypot(dx, dy);
+        }
+
+        if (distance < 0.001 || step <= 0) return false;
+        this.facePatrolTarget(this.navigationPath[this.navigationIndex]);
         this.playPatrolAnimation(enemyAnim.move);
-        this.patrolPosition.set(current.x + dx / distance * step,
-            current.y + dy / distance * step, current.z);
-        this.node.setWorldPosition(this.patrolPosition);
-        return false;
+        const moveDistance = Math.min(distance, step);
+        const directionX = dx / distance;
+        const directionY = dy / distance;
+
+        if (!this.moveCollider || !this.gameComp) {
+            this.patrolPosition.set(current.x + directionX * moveDistance,
+                current.y + directionY * moveDistance, current.z);
+            this.node.setWorldPosition(this.patrolPosition);
+        } else {
+            this.collisionMover.moveWorld(this.node, this.moveCollider, this.gameComp,
+                directionX * moveDistance, directionY * moveDistance, this.actualMove);
+            const forwardProgress = this.actualMove.x * directionX + this.actualMove.y * directionY;
+            if (forwardProgress < moveDistance * 0.2) {
+                // 场景碰撞体或目标在寻路后发生变化，下一帧重新规划，不继续顶墙。
+                this.navigationPath.length = 0;
+                this.navigationIndex = 0;
+                this.navigationReplanRemaining = 0;
+            }
+        }
+
+        const remainingX = target.x - this.node.worldPosition.x;
+        const remainingY = target.y - this.node.worldPosition.y;
+        const arrived = remainingX * remainingX + remainingY * remainingY < 0.25;
+        if (arrived) {
+            this.clearNavigationPath();
+        } else {
+            const waypointRemainingX = waypoint.x - this.node.worldPosition.x;
+            const waypointRemainingY = waypoint.y - this.node.worldPosition.y;
+            if (waypointRemainingX * waypointRemainingX + waypointRemainingY * waypointRemainingY < 0.25) {
+                this.navigationIndex++;
+            }
+        }
+        return arrived;
+    }
+
+    private rebuildNavigationPath(target: Vec3) {
+        this.navigationPath.length = 0;
+        this.navigationIndex = 0;
+        this.navigationTarget.set(target);
+        this.navigationReplanRemaining = this.navigationReplanInterval;
+        if (!this.moveCollider || !this.gameComp) {
+            this.navigationPath.push(new Vec3(target.x, target.y, this.node.worldPosition.z));
+            return;
+        }
+        this.collisionMover.findPath(this.node, this.moveCollider, this.gameComp,
+            target, this.navigationPath);
+    }
+
+    private clearNavigationPath() {
+        this.navigationPath.length = 0;
+        this.navigationIndex = 0;
+        this.navigationTarget.set(Number.NaN, Number.NaN, 0);
+        this.navigationReplanRemaining = 0;
     }
 
     private arriveAtPatrolTarget() {

@@ -515,13 +515,21 @@ export class UIGame extends UIBase {
         }
     }
 
-    /**玩家进入任意透视区域时半透明，离开所有区域后恢复不透明。 */
-    private updatePlayerPerspective() {
-        const playerNode = playerMgr.player;
-        const opacity = playerNode?.getComponent(UIOpacity);
-        if (!playerNode || !opacity) return;
+    /**玩家和 NPC 分别根据自身所在的透视区域更新透明度。 */
+    private updateRolePerspectives() {
+        this.updateRolePerspective(playerMgr.player);
+        for (const soldier of enemyMgr.soldiersArr) {
+            this.updateRolePerspective(soldier?.node);
+        }
+    }
 
-        playerNode.getWorldPosition(this.tempPerspectiveWorldPos);
+    /**角色进入任意透视区域时半透明，离开所有区域后恢复不透明。 */
+    private updateRolePerspective(roleNode: Node) {
+        if (!roleNode?.isValid) return;
+        const opacity = roleNode.getComponent(UIOpacity);
+        if (!opacity) return;
+
+        roleNode.getWorldPosition(this.tempPerspectiveWorldPos);
         const x = this.tempPerspectiveWorldPos.x;
         const y = this.tempPerspectiveWorldPos.y;
         const isInside = this.perspectiveAreas.some((area) =>
@@ -672,7 +680,7 @@ export class UIGame extends UIBase {
         this.refreshWeaponNums();
         this.bindCurrentGunReloadEvent();
         roleComp.onCurrentWeaponEquipped();
-        this.updatePlayerPerspective();
+        this.updateRolePerspectives();
     }
 
     /** 武器切换后，将换弹 UI 事件绑定到当前枪械，并移除旧枪监听。 */
@@ -907,7 +915,7 @@ export class UIGame extends UIBase {
         }
 
         this.updateContainerOpenButton();
-        this.updatePlayerPerspective();
+        this.updateRolePerspectives();
         this.updateLeaveCountdown(dt);
         if (this.isLeaveSuccessTriggered) return;
 

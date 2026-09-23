@@ -12523,6 +12523,8 @@
       "__id__": 0
     },
     "fileId": "2eZTqKmSxMlpEJV9lnnEtm",
+    "instance": null,
+    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {
@@ -12821,6 +12823,9 @@
     },
     "skill2RemainLab": {
       "__id__": 529
+    },
+    "leaveRemainLab": {
+      "__id__": 535
     },
     "_id": ""
   },

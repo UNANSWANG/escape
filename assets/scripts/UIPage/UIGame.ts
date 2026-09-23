@@ -155,6 +155,16 @@ export class UIGame extends UIBase {
     private containerList: Node = null;
     /**地图层碰撞体列表，用于存储所有地图层碰撞体节点 */
     private colliderList: Node = null;
+    /**地图中的全部撤离点。 */
+    private leaveList: Node = null;
+    /**玩家是否正在任意撤离点内。 */
+    private isPlayerInLeavePoint = false;
+    /**本次撤离剩余时间（秒），离开撤离点后重置。 */
+    private leaveRemaining = 0;
+    /**本局已经进行的时间（秒），用于成功界面的存活时间。 */
+    private survivalTime = 0;
+    /**防止倒计时结束后重复打开成功界面。 */
+    private isLeaveSuccessTriggered = false;
 
     ///
     ///临时变量，不参与重新开始游戏数据恢复
@@ -199,6 +209,7 @@ export class UIGame extends UIBase {
         this.bindBtn();
         this.initButtonMasks();
         this.updateSkill2RemainLab(0, false);
+        this.leaveRemainLab.node.active = false;
         this.initCamera();
         audioMgr.initSceneAudio(this.node);
     }
@@ -330,6 +341,7 @@ export class UIGame extends UIBase {
     private initMapChildNodes() {
         this.containerList = this.mapNode?.getChildByName('containerList') ?? null;
         this.colliderList = this.mapNode?.getChildByName('colliderList') ?? null;
+        this.leaveList = this.mapNode?.getChildByName('leaveList') ?? null;
     }
 
     clearData() {
@@ -351,6 +363,9 @@ export class UIGame extends UIBase {
         this.clearDamageFloats();
         if (this.openBtn) this.openBtn.active = false;
         this.currentContainer = null;
+        this.resetLeaveCountdown();
+        this.survivalTime = 0;
+        this.isLeaveSuccessTriggered = false;
         this.staticColliders.length = 0;
         this.collisionCells.clear();
         this.isDrugAdWatching = false;
@@ -785,6 +800,7 @@ export class UIGame extends UIBase {
         }
 
         this.shootCooldownRemaining = Math.max(0, this.shootCooldownRemaining - dt);
+        this.survivalTime += dt;
 
         const moveDirectionLocked = this.isMoveDirectionLocked();
         if (this.wasMoveDirectionLocked && !moveDirectionLocked) {
@@ -809,6 +825,8 @@ export class UIGame extends UIBase {
         }
 
         this.updateContainerOpenButton();
+        this.updateLeaveCountdown(dt);
+        if (this.isLeaveSuccessTriggered) return;
 
         if (this.isAttacking()) {
             if (pData.isAutoAiming) {
@@ -816,6 +834,55 @@ export class UIGame extends UIBase {
             }
             this.shootEnemy(dt);
         }
+    }
+
+    /**检测玩家是否站在任意撤离点中，并更新可中断的撤离倒计时。 */
+    private updateLeaveCountdown(dt: number) {
+        if (this.isLeaveSuccessTriggered) return;
+        const playerNode = playerMgr.player;
+        const playerTransform = playerNode?.getChildByName('colliderBox')?.getComponent(UITransform)
+            ?? playerNode?.getComponent(UITransform);
+        let isInside = false;
+        if (playerTransform && this.leaveList) {
+            const playerBounds = playerTransform.getBoundingBoxToWorld();
+            for (const leaveNode of this.leaveList.children) {
+                if (!leaveNode.activeInHierarchy) continue;
+                const leaveTransform = leaveNode.getComponent(UITransform);
+                if (leaveTransform && playerBounds.intersects(leaveTransform.getBoundingBoxToWorld())) {
+                    isInside = true;
+                    break;
+                }
+            }
+        }
+
+        if (!isInside) {
+            if (this.isPlayerInLeavePoint) this.resetLeaveCountdown();
+            return;
+        }
+
+        if (!this.isPlayerInLeavePoint) {
+            this.isPlayerInLeavePoint = true;
+            this.leaveRemaining = Math.max(0, Number(configData.leaveTime) || 0);
+            this.leaveRemainLab.node.active = true;
+        }
+
+        this.leaveRemaining = Math.max(0, this.leaveRemaining - Math.max(0, dt));
+        this.leaveRemainLab.string = `撤离时间：${Math.ceil(this.leaveRemaining)}`;
+        if (this.leaveRemaining > 0) return;
+
+        this.isLeaveSuccessTriggered = true;
+        uiMgr.openPage(UIPath.UISuccess, {
+            survivalTime: this.survivalTime,
+            skinId: pData.skinId,
+        });
+    }
+
+    /**隐藏撤离文本，并让下一次进入撤离点时从完整时间重新开始。 */
+    private resetLeaveCountdown() {
+        this.isPlayerInLeavePoint = false;
+        this.leaveRemaining = Math.max(0, Number(configData.leaveTime) || 0);
+        this.leaveRemainLab.node.active = false;
+        this.leaveRemainLab.string = `撤离时间：${Math.ceil(this.leaveRemaining)}`;
     }
 
     /**摇杆区域点击开始 */

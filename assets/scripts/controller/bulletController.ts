@@ -85,7 +85,11 @@ export class bulletController extends Component {
         }
     }
 
-    /** 检查本帧飞行线段与 colliderList 的矩形或多边形是否相交。 */
+    /**
+     * 检查子弹本帧经过的世界坐标线段是否命中 colliderList 中的障碍物。
+     * 先通过空间网格取得候选形状，再进行矩形粗筛和多边形精确检测。
+     * @returns 命中任意障碍物时返回 true。
+     */
     private checkHitObstacle() {
         const game = playerMgr.playerComp?.gameComp;
         if (!game) {
@@ -113,7 +117,15 @@ export class bulletController extends Component {
         return false;
     }
 
-    /** 线段与轴对齐矩形的相交检测，也用作多边形的快速排除。 */
+    /**
+     * 使用线段裁剪方式检测线段与轴对齐矩形是否相交。
+     * 多边形检测也先用其外接矩形调用此方法，快速排除不可能命中的形状。
+     * @param x1 线段起点世界坐标 X。
+     * @param y1 线段起点世界坐标 Y。
+     * @param x2 线段终点世界坐标 X。
+     * @param y2 线段终点世界坐标 Y。
+     * @param box 障碍物的世界坐标外接矩形。
+     */
     private segmentHitsRect(x1: number, y1: number, x2: number, y2: number, box: StaticCollisionShape) {
         let enter = 0;
         let exit = 1;
@@ -137,6 +149,12 @@ export class bulletController extends Component {
         return true;
     }
 
+    /**
+     * 使用射线法判断世界坐标点是否在多边形内部，落在边界上也视为命中。
+     * @param x 待检测点的世界坐标 X。
+     * @param y 待检测点的世界坐标 Y。
+     * @param points 按边界顺序排列的多边形世界坐标顶点。
+     */
     private pointInPolygon(x: number, y: number, points: ReadonlyArray<{ x: number; y: number }>) {
         let inside = false;
         for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
@@ -151,6 +169,11 @@ export class bulletController extends Component {
         return inside;
     }
 
+    /**
+     * 检测有限线段 AB 与有限线段 CD 是否相交。
+     * 子弹的本帧飞行路径为 AB，多边形当前边为 CD。
+     * 平行或共线时由端点位于多边形内的检测覆盖，因此这里直接返回 false。
+     */
     private segmentsIntersect(ax: number, ay: number, bx: number, by: number,
         cx: number, cy: number, dx: number, dy: number) {
         const abx = bx - ax, aby = by - ay;

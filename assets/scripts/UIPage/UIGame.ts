@@ -35,6 +35,15 @@ export interface StaticCollisionShape {
     queryStamp: number;
 }
 
+/** 透视区域的世界坐标数据。 */
+interface PerspectiveArea {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+    points: ReadonlyArray<{ x: number; y: number }>;
+}
+
 @ccclass('UIGame')
 export class UIGame extends UIBase {
     @property(Node)
@@ -155,6 +164,8 @@ export class UIGame extends UIBase {
     private containerList: Node = null;
     /**地图层碰撞体列表，用于存储所有地图层碰撞体节点 */
     private colliderList: Node = null;
+    /**玩家进入后需要半透明显示的区域列表 */
+    private perspectiveList: Node = null;
     /**地图中的全部撤离点。 */
     private leaveList: Node = null;
     /**玩家是否正在任意撤离点内。 */
@@ -204,6 +215,9 @@ export class UIGame extends UIBase {
     private tempColliderLocalPoint = new Vec3();
     private tempColliderWorldPoint = new Vec3();
     private lineCollisionCandidates: StaticCollisionShape[] = [];
+    /**地图透视区域的世界坐标缓存。 */
+    private perspectiveAreas: PerspectiveArea[] = [];
+    private tempPerspectiveWorldPos = new Vec3();
 
     protected onLoad(): void {
         this.bindBtn();
@@ -329,6 +343,7 @@ export class UIGame extends UIBase {
 
         this.initMapChildNodes();
         this.rebuildStaticColliders();
+        this.rebuildPerspectiveAreas();
 
         this.initRockerArea();
         this.initPlayer();
@@ -341,6 +356,7 @@ export class UIGame extends UIBase {
     private initMapChildNodes() {
         this.containerList = this.mapNode?.getChildByName('containerList') ?? null;
         this.colliderList = this.mapNode?.getChildByName('colliderList') ?? null;
+        this.perspectiveList = this.mapNode?.getChildByName('perspectiveList') ?? null;
         this.leaveList = this.mapNode?.getChildByName('leaveList') ?? null;
     }
 
@@ -368,6 +384,7 @@ export class UIGame extends UIBase {
         this.isLeaveSuccessTriggered = false;
         this.staticColliders.length = 0;
         this.collisionCells.clear();
+        this.perspectiveAreas.length = 0;
         this.isDrugAdWatching = false;
 
         ccTools.destroyAllChild(this.roleNode);
@@ -456,6 +473,62 @@ export class UIGame extends UIBase {
         this.tempColliderLocalPoint.set(x, y, 0);
         Vec3.transformMat4(this.tempColliderWorldPoint, this.tempColliderLocalPoint, node.worldMatrix);
         points.push({ x: this.tempColliderWorldPoint.x, y: this.tempColliderWorldPoint.y });
+    }
+
+    /**缓存 perspectiveList 直属子节点的矩形或多边形范围。 */
+    private rebuildPerspectiveAreas() {
+        this.perspectiveAreas.length = 0;
+        if (!this.perspectiveList) return;
+
+        for (const node of this.perspectiveList.children) {
+            if (!node.activeInHierarchy) continue;
+            const transform = node.getComponent(UITransform);
+            if (!transform) continue;
+
+            const polygon = node.getComponent(PolygonCollider2D);
+            const points: Array<{ x: number; y: number }> = [];
+            if (polygon && polygon.points.length >= 3) {
+                for (const point of polygon.points) {
+                    this.pushColliderWorldPoint(node, point.x + polygon.offset.x, point.y + polygon.offset.y, points);
+                }
+            } else {
+                const left = -transform.width * transform.anchorX;
+                const bottom = -transform.height * transform.anchorY;
+                const right = left + transform.width;
+                const top = bottom + transform.height;
+                this.pushColliderWorldPoint(node, left, bottom, points);
+                this.pushColliderWorldPoint(node, right, bottom, points);
+                this.pushColliderWorldPoint(node, right, top, points);
+                this.pushColliderWorldPoint(node, left, top, points);
+            }
+
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            for (const point of points) {
+                minX = Math.min(minX, point.x);
+                minY = Math.min(minY, point.y);
+                maxX = Math.max(maxX, point.x);
+                maxY = Math.max(maxY, point.y);
+            }
+            if (minX < maxX && minY < maxY) {
+                this.perspectiveAreas.push({ minX, minY, maxX, maxY, points });
+            }
+        }
+    }
+
+    /**玩家进入任意透视区域时半透明，离开所有区域后恢复不透明。 */
+    private updatePlayerPerspective() {
+        const playerNode = playerMgr.player;
+        const opacity = playerNode?.getComponent(UIOpacity);
+        if (!playerNode || !opacity) return;
+
+        playerNode.getWorldPosition(this.tempPerspectiveWorldPos);
+        const x = this.tempPerspectiveWorldPos.x;
+        const y = this.tempPerspectiveWorldPos.y;
+        const isInside = this.perspectiveAreas.some((area) =>
+            x >= area.minX && x <= area.maxX && y >= area.minY && y <= area.maxY
+            && this.pointInsideStaticPolygon(x, y, area.points));
+        const targetOpacity = isInside ? 120 : 255;
+        if (opacity.opacity !== targetOpacity) opacity.opacity = targetOpacity;
     }
 
     /** 按移动路径范围取候选；精确碰撞由 roleController 计算。 */
@@ -599,6 +672,7 @@ export class UIGame extends UIBase {
         this.refreshWeaponNums();
         this.bindCurrentGunReloadEvent();
         roleComp.onCurrentWeaponEquipped();
+        this.updatePlayerPerspective();
     }
 
     /** 武器切换后，将换弹 UI 事件绑定到当前枪械，并移除旧枪监听。 */
@@ -833,6 +907,7 @@ export class UIGame extends UIBase {
         }
 
         this.updateContainerOpenButton();
+        this.updatePlayerPerspective();
         this.updateLeaveCountdown(dt);
         if (this.isLeaveSuccessTriggered) return;
 

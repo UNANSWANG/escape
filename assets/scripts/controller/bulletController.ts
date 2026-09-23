@@ -2,6 +2,7 @@ import { _decorator, Component, UITransform, Vec3 } from 'cc';
 import { enemyMgr } from '../manager/enemyManager';
 import { poolMgr } from '../manager/poolManager';
 import { playerMgr } from '../manager/playerManager';
+import type { StaticCollisionShape } from '../UIPage/UIGame';
 const { ccclass, property } = _decorator;
 
 @ccclass('bulletController')
@@ -15,6 +16,9 @@ export class bulletController extends Component {
     /**本发子弹命中敌人时造成的伤害 */
     private damage = 0;
     private targetPlayer = false;
+    private obstacleCandidates: StaticCollisionShape[] = [];
+    private moveStartWorld = new Vec3();
+    private moveEndWorld = new Vec3();
 
     /**初始化为不锁定目标的直线飞行子弹 */
     initStraight(direction: Vec3, damage: number, attackRange: number, flightSpeed: number, targetPlayer = false) {
@@ -49,6 +53,7 @@ export class bulletController extends Component {
         this.damage = 0;
         this.targetPlayer = false;
         this.flightSpeed = 0;
+        this.obstacleCandidates.length = 0;
     }
 
     protected update(dt: number): void {
@@ -59,6 +64,7 @@ export class bulletController extends Component {
 
         // 最后一帧只移动剩余距离，确保子弹不会飞过配置的消失距离。
         const moveDistance = Math.min(this.flightSpeed * dt, this.straightMoveRemainDistance);
+        this.node.getWorldPosition(this.moveStartWorld);
         const curPos = this.node.position;
         this.node.setPosition(
             curPos.x + this.moveDirection.x * moveDistance,
@@ -66,12 +72,95 @@ export class bulletController extends Component {
             curPos.z,
         );
         this.straightMoveRemainDistance -= moveDistance;
+        this.node.getWorldPosition(this.moveEndWorld);
+        if (this.checkHitObstacle()) {
+            this.recycle();
+            return;
+        }
         if (this.targetPlayer ? this.checkHitPlayer() : this.checkHitEnemy()) {
             return;
         }
         if (this.straightMoveRemainDistance <= 0) {
             this.recycle();
         }
+    }
+
+    /** 检查本帧飞行线段与 colliderList 的矩形或多边形是否相交。 */
+    private checkHitObstacle() {
+        const game = playerMgr.playerComp?.gameComp;
+        if (!game) {
+            this.obstacleCandidates.length = 0;
+            return false;
+        }
+        const start = this.moveStartWorld;
+        const end = this.moveEndWorld;
+        const padding = 0.01;
+        game.queryStaticColliders(
+            Math.min(start.x, end.x) - padding, Math.min(start.y, end.y) - padding,
+            Math.max(start.x, end.x) + padding, Math.max(start.y, end.y) + padding,
+            this.obstacleCandidates,
+        );
+        for (const shape of this.obstacleCandidates) {
+            if (!this.segmentHitsRect(start.x, start.y, end.x, end.y, shape)) continue;
+            if (!shape.points || this.pointInPolygon(start.x, start.y, shape.points)
+                || this.pointInPolygon(end.x, end.y, shape.points)) return true;
+            for (let i = 0; i < shape.points.length; i++) {
+                const a = shape.points[i];
+                const b = shape.points[(i + 1) % shape.points.length];
+                if (this.segmentsIntersect(start.x, start.y, end.x, end.y, a.x, a.y, b.x, b.y)) return true;
+            }
+        }
+        return false;
+    }
+
+    /** 线段与轴对齐矩形的相交检测，也用作多边形的快速排除。 */
+    private segmentHitsRect(x1: number, y1: number, x2: number, y2: number, box: StaticCollisionShape) {
+        let enter = 0;
+        let exit = 1;
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        for (let axis = 0; axis < 2; axis++) {
+            const origin = axis === 0 ? x1 : y1;
+            const delta = axis === 0 ? dx : dy;
+            const min = axis === 0 ? box.minX : box.minY;
+            const max = axis === 0 ? box.maxX : box.maxY;
+            if (Math.abs(delta) < 0.000001) {
+                if (origin < min || origin > max) return false;
+                continue;
+            }
+            const first = (min - origin) / delta;
+            const second = (max - origin) / delta;
+            enter = Math.max(enter, Math.min(first, second));
+            exit = Math.min(exit, Math.max(first, second));
+            if (enter > exit) return false;
+        }
+        return true;
+    }
+
+    private pointInPolygon(x: number, y: number, points: ReadonlyArray<{ x: number; y: number }>) {
+        let inside = false;
+        for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+            const a = points[i];
+            const b = points[j];
+            const cross = (x - a.x) * (b.y - a.y) - (y - a.y) * (b.x - a.x);
+            if (Math.abs(cross) < 0.000001 && x >= Math.min(a.x, b.x) && x <= Math.max(a.x, b.x)
+                && y >= Math.min(a.y, b.y) && y <= Math.max(a.y, b.y)) return true;
+            if ((a.y > y) !== (b.y > y)
+                && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) inside = !inside;
+        }
+        return inside;
+    }
+
+    private segmentsIntersect(ax: number, ay: number, bx: number, by: number,
+        cx: number, cy: number, dx: number, dy: number) {
+        const abx = bx - ax, aby = by - ay;
+        const cdx = dx - cx, cdy = dy - cy;
+        const denominator = abx * cdy - aby * cdx;
+        if (Math.abs(denominator) < 0.000001) return false;
+        const acx = cx - ax, acy = cy - ay;
+        const alongBullet = (acx * cdy - acy * cdx) / denominator;
+        const alongEdge = (acx * aby - acy * abx) / denominator;
+        return alongBullet >= 0 && alongBullet <= 1 && alongEdge >= 0 && alongEdge <= 1;
     }
 
     /**

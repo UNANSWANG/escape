@@ -641,9 +641,17 @@ export class UIGame extends UIBase {
         }
     }
 
-    /**初始化角色位置 */
-    initRolePos(node) {
-        node.setPosition(Vec3.ZERO);
+    /**从地图 bornList 的有效子节点中随机选择玩家出生点。 */
+    initRolePos(node: Node) {
+        const bornList = this.mapNode?.getChildByName('bornList');
+        const bornPoints = bornList?.children.filter(point => point.activeInHierarchy) ?? [];
+        if (!bornPoints.length) {
+            node.setPosition(Vec3.ZERO);
+            return;
+        }
+
+        const bornPoint = bornPoints[Math.floor(Math.random() * bornPoints.length)];
+        node.setWorldPosition(bornPoint.worldPosition);
     }
 
     /**将节点目标位置限制在地图内，按脚下 colliderBox 保留人物体积。 */

@@ -97,6 +97,9 @@ export class UIGame extends UIBase {
     @property(Label)
     skill2RemainLab: Label;
 
+    @property(Label)
+    leaveRemainLab: Label;
+
     ///
     ///需要获取的节点
     ///

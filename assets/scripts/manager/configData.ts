@@ -32,6 +32,8 @@ export const configData = {
     drugDrugAdCountBig: 1,
     /**大药品使用时间（秒） */
     drugDrugUseTimeBig: 4,
+    /**撤离时间（秒） */
+    leaveTime: 10,
 }
 
 /**玩家通用配置（暂不读表） */

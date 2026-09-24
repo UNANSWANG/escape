@@ -277,7 +277,7 @@ export class UIMatch extends UIBase {
         }
 
         if (target.type == "enemy") {
-            this.enemySkinId = ccTools.getRandomNum(0, configData.enemySkinCount);
+            this.enemySkinId = 0;
             this.enemyNickname = nickname;
             this.showBossAnim(target.node, this.enemySkinId);
             return;
@@ -291,7 +291,7 @@ export class UIMatch extends UIBase {
         let roleData = roleConfig.roleAllData || [];
         let roleId = roleData.length > 0
             ? roleData[ccTools.getRandomNum(0, roleData.length)].roleId
-            : ccTools.getRandomNum(0, configData.roleSkinCount);
+            : 0;
         this.roleSkinIds[target.roleIndex] = roleId;
         this.roleNicknames[target.roleIndex] = nickname;
         roleImg.node.setScale(0.7, 0.7, 1);

@@ -500,7 +500,7 @@ export class soldiersController extends Component {
 
     private arriveAtPatrolTarget() {
         if (this.scoutType === ScoutType.PathScout) this.advancePathIndex();
-        const [first, second] = enemyCommonConfig.patrolWaitTime;
+        const [first, second] = soldierCommonConfig.patrolWaitTime;
         const min = Math.max(0, Math.min(first, second));
         const max = Math.max(min, first, second);
         this.waitRemaining = min + Math.random() * (max - min);

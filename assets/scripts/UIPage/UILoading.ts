@@ -4,7 +4,7 @@ import { gamePath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { jsonMgr } from '../manager/jsonManager';
 import { gm, PlatType } from '../manager/gm';
-import {  GameEvent} from '../manager/configData';
+import {  configData, GameEvent, playerCommonConfig, soldierCommonConfig} from '../manager/configData';
 import { pData } from '../manager/playerData';
 import { audioMgr } from '../manager/audioManager';
 import { commonConfig } from '../json/jsonCommon';
@@ -204,7 +204,30 @@ export class UILoading extends Component {
 
     /**通用配置表加载完成 */
     commonTableFinish() {
-        //通用
+        //通用配置
+        configData.moveSpeed = Number(commonConfig.getValue("moveSpeed"));
+        configData.loadCircleTime = Number(commonConfig.getValue("loadCircleTime"));
+        configData.drugDrugCount = Number(commonConfig.getValue("drugDrugCount"));
+        configData.drugDrugHp = Number(commonConfig.getValue("drugDrugHp")) / 100;
+        configData.drugDrugAdCount = Number(commonConfig.getValue("drugDrugAdCount"));
+        configData.drugDrugUseTime = Number(commonConfig.getValue("drugDrugUseTime"));
+        configData.drugDrugCountBig = Number(commonConfig.getValue("drugDrugCountBig"));
+        configData.drugDrugHpBig = Number(commonConfig.getValue("drugDrugHpBig")) / 100;
+        configData.drugDrugAdCountBig = Number(commonConfig.getValue("drugDrugAdCountBig"));
+        configData.drugDrugUseTimeBig = Number(commonConfig.getValue("drugDrugUseTimeBig"));
+        configData.leaveTime = Number(commonConfig.getValue("leaveTime"));
+
+        //玩家通用配置
+        playerCommonConfig.gunResetTime = Number(commonConfig.getValue("gunResetTime"));
+
+        //小兵通用配置
+        soldierCommonConfig.patrolWaitTime = JSON.parse(commonConfig.getValue("patrolWaitTime"));
+        soldierCommonConfig.npcAttackPercent = Number(commonConfig.getValue("npcAttackPercent")) / 100;
+        soldierCommonConfig.npcSpeedPercent = Number(commonConfig.getValue("npcSpeedPercent")) / 100;
+        soldierCommonConfig.npcAttackRangePercent = Number(commonConfig.getValue("npcAttackRangePercent")) / 100;
+        soldierCommonConfig.npcFireRatePercent = Number(commonConfig.getValue("npcFireRatePercent")) / 100;
+
+
         console.log("------------>公共配置表数据同步完毕");
     }
 

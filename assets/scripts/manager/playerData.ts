@@ -240,9 +240,10 @@ export class playerData {
 
     /**设置全皮肤拥有 */
     getAllSkin() {
-        for (let i = 0; i < configData.roleSkinCount; i++) {
-            this.unlockedRoleSkin[i + ""] = true;
-        }
+        //TODO 等待加入皮肤表后，再设置全皮肤拥有
+        // for (let i = 0; i < ; i++) {
+        //     this.unlockedRoleSkin[i + ""] = true;
+        // }
     }
 
     /**没有云端道具数据时，按商城配置初始化每种道具数量 */

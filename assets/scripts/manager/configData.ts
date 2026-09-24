@@ -2,19 +2,11 @@
 export const configData = {
     /**人物移动速度 */
     moveSpeed: 300,
-    /**游戏开始后人物移动速度 */
-    moveSpeedGame: 200,
-    /**人物皮肤数量 */
-    roleSkinCount: 7,
-    /**怪物皮肤数量 */
-    enemySkinCount: 5,
-    /**子弹速度 */
-    bulletSpeed: 2000,
-    /**人机匹配显示时间区间（秒） */
+    /**人机匹配显示时间区间（秒）不做读表 */
     roleMatchTime: [0.5, 1.2],
-    /**上报排名值的模式系数（rank = 模式ID * 系数 + 该模式关卡数） */
+    /**上报排名值的模式系数（rank = 模式ID * 系数 + 该模式关卡数）不做读表 */
     rankModeFactor: 100000,
-    /**加载单圈时间 */
+    /**搜索物品加载单圈时间 */
     loadCircleTime: 0.5,
     /**小药品初始数量 */
     drugDrugCount: 3,
@@ -44,12 +36,13 @@ export const playerCommonConfig = {
 
 /**敌人通用配置 */
 export const enemyCommonConfig = {
-    /**巡逻等待时间（秒） */
-    patrolWaitTime: [2, 5],
+    
 }
 
 /**小兵通用配置 */
 export const soldierCommonConfig = {
+    /**巡逻等待时间（秒） */
+    patrolWaitTime: [2, 5],
     /**npc攻击力百分比 */
     npcAttackPercent: 0.2,
     /**npc速度百分比 */

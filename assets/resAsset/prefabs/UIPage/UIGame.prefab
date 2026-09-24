@@ -6921,7 +6921,7 @@
     "__prefab": {
       "__id__": 287
     },
-    "armsId": 3,
+    "armsId": 4,
     "_scoutType": 2,
     "_rangeRadius": 800,
     "isLoop": false,
@@ -7917,6 +7917,8 @@
       "__id__": 0
     },
     "fileId": "298ZcmYXRCEo9HT12f30Vz",
+    "instance": null,
+    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {

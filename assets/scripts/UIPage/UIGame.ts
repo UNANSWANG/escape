@@ -44,11 +44,10 @@ interface PerspectiveArea {
     points: ReadonlyArray<{ x: number; y: number }>;
 }
 
-/** 遮挡物及其用于检测玩家相交的区域。 */
+/** 遮挡物的碰撞检测区域及显示节点。 */
 interface ShelterArea {
-    node: Node;
-    detectTransform: UITransform;
-    opacity: UIOpacity;
+    colliderTransform: UITransform;
+    imgNode: Node;
 }
 
 @ccclass('UIGame')
@@ -398,7 +397,7 @@ export class UIGame extends UIBase {
         this.staticColliders.length = 0;
         this.collisionCells.clear();
         this.perspectiveAreas.length = 0;
-        this.resetShelterOpacity();
+        this.resetShelterVisibility();
         this.shelterAreas.length = 0;
         this.isDrugAdWatching = false;
 
@@ -554,48 +553,44 @@ export class UIGame extends UIBase {
         if (opacity.opacity !== targetOpacity) opacity.opacity = targetOpacity;
     }
 
-    /**
-     * 缓存 shelterList 的直属子节点。
-     * 遮挡物有子节点时使用第一个子节点检测，否则使用遮挡物自身检测。
-     */
+    /**缓存 shelterList 直属子节点中的 collider 和 img。 */
     private rebuildShelterAreas() {
         this.shelterAreas.length = 0;
         if (!this.shelterList) return;
 
         for (const shelterNode of this.shelterList.children) {
-            const detectNode = shelterNode.children[0] ?? shelterNode;
-            const detectTransform = detectNode.getComponent(UITransform);
-            if (!detectTransform) continue;
+            const colliderTransform = shelterNode.getChildByName('collider')?.getComponent(UITransform);
+            const imgNode = shelterNode.getChildByName('img');
+            if (!colliderTransform || !imgNode) continue;
 
-            const opacity = shelterNode.getComponent(UIOpacity) ?? shelterNode.addComponent(UIOpacity);
-            opacity.opacity = 255;
-            this.shelterAreas.push({ node: shelterNode, detectTransform, opacity });
+            imgNode.active = true;
+            this.shelterAreas.push({ colliderTransform, imgNode });
         }
     }
 
     /**玩家与遮挡物检测区域相交时隐藏遮挡物，离开后恢复显示。 */
-    private updateShelterOpacity() {
+    private updateShelterVisibility() {
         const playerNode = playerMgr.player;
         const playerTransform = playerNode?.getChildByName('colliderBox')?.getComponent(UITransform)
             ?? playerNode?.getComponent(UITransform);
         if (!playerTransform) {
-            this.resetShelterOpacity();
+            this.resetShelterVisibility();
             return;
         }
 
         const playerBounds = playerTransform.getBoundingBoxToWorld();
         for (const shelter of this.shelterAreas) {
-            if (!shelter.node?.isValid || !shelter.detectTransform?.isValid) continue;
-            const isIntersecting = playerBounds.intersects(shelter.detectTransform.getBoundingBoxToWorld());
-            const targetOpacity = isIntersecting ? 0 : 255;
-            if (shelter.opacity.opacity !== targetOpacity) shelter.opacity.opacity = targetOpacity;
+            if (!shelter.imgNode?.isValid || !shelter.colliderTransform?.isValid) continue;
+            const isIntersecting = playerBounds.intersects(shelter.colliderTransform.getBoundingBoxToWorld());
+            const shouldShow = !isIntersecting;
+            if (shelter.imgNode.active !== shouldShow) shelter.imgNode.active = shouldShow;
         }
     }
 
     /**恢复全部遮挡物的显示状态。 */
-    private resetShelterOpacity() {
+    private resetShelterVisibility() {
         for (const shelter of this.shelterAreas) {
-            if (shelter.opacity?.isValid) shelter.opacity.opacity = 255;
+            if (shelter.imgNode?.isValid) shelter.imgNode.active = true;
         }
     }
 
@@ -976,7 +971,7 @@ export class UIGame extends UIBase {
 
         this.updateContainerOpenButton();
         this.updateRolePerspectives();
-        this.updateShelterOpacity();
+        this.updateShelterVisibility();
         this.updateLeaveCountdown(dt);
         if (this.isLeaveSuccessTriggered) return;
 

@@ -14,8 +14,11 @@ export class gunController extends weaponsController {
     /** 换弹动画时长。 */
     reloadTime = 0;
 
+    /**当前弹匣内的剩余子弹数量。 */
     private currentAmmo = 0;
+    /**当前是否正在换弹。 */
     private isReloading = false;
+    /**武器 Spine 中用于确定枪口位置的开火骨骼。 */
     private shootBone: any = null;
     private tempGunWorldPos = new Vec3();
     private tempShootRootWorldPos = new Vec3();

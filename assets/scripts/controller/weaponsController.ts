@@ -6,10 +6,15 @@ export enum weaponsAnimName { idle = 'idle', attack = 'attack' }
 
 /** 从 weapons 表读取并应用到武器控制器的基础数值。 */
 export interface WeaponStats {
+    /** 两次攻击之间的基础间隔（秒）。 */
     attackInterval: number;
+    /** 子弹的基础飞行速度（世界坐标单位/秒）；近战武器不使用。 */
     flightSpeed: number;
+    /** 单次命中的基础伤害。 */
     attack: number;
+    /** 弹匣容量；近战武器可配置为 1。 */
     capacity: number;
+    /** 攻击射程（世界坐标单位），同时用于自动索敌和限制攻击距离。 */
     attackRange: number;
     /** 装备武器时的角色移动速度倍率。 */
     speed?: number;

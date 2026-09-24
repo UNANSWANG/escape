@@ -196,6 +196,14 @@ export class soldiersController extends Component {
 
         this.weaponComp.applyStats(weaponData);
         this.weaponComp.attack *= soldierCommonConfig.npcAttackPercent;
+        const attackRangePercent = Number.isFinite(soldierCommonConfig.npcAttackRangePercent)
+            ? Math.max(0, soldierCommonConfig.npcAttackRangePercent) : 1;
+        this.weaponComp.attackRange *= attackRangePercent;
+        const fireRatePercent = Number.isFinite(soldierCommonConfig.npcFireRatePercent)
+            && soldierCommonConfig.npcFireRatePercent > 0
+            ? soldierCommonConfig.npcFireRatePercent : 1;
+        // 射速与攻击间隔成反比：80% 射速对应基础攻击间隔除以 0.8。
+        this.weaponComp.attackInterval /= fireRatePercent;
         this.weaponComp.targetPlayer = true;
         this.weaponComp.bindToRole(this.roleAnim);
         this.weaponComp.resetRotation(true);
@@ -397,7 +405,10 @@ export class soldiersController extends Component {
         const targetDx = target.x - current.x;
         const targetDy = target.y - current.y;
         const targetDistance = Math.hypot(targetDx, targetDy);
-        const step = Math.max(0, configData.moveSpeed * (this.weaponComp?.moveSpeedScale ?? 1) * dt);
+        const speedPercent = Number.isFinite(soldierCommonConfig.npcSpeedPercent)
+            ? Math.max(0, soldierCommonConfig.npcSpeedPercent) : 1;
+        const step = Math.max(0, configData.moveSpeed * speedPercent
+            * (this.weaponComp?.moveSpeedScale ?? 1) * dt);
         if (targetDistance < 0.5) {
             this.clearNavigationPath();
             return true;

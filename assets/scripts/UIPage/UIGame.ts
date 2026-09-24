@@ -44,6 +44,13 @@ interface PerspectiveArea {
     points: ReadonlyArray<{ x: number; y: number }>;
 }
 
+/** 遮挡物及其用于检测玩家相交的区域。 */
+interface ShelterArea {
+    node: Node;
+    detectTransform: UITransform;
+    opacity: UIOpacity;
+}
+
 @ccclass('UIGame')
 export class UIGame extends UIBase {
     @property(Node)
@@ -166,6 +173,8 @@ export class UIGame extends UIBase {
     private colliderList: Node = null;
     /**玩家进入后需要半透明显示的区域列表 */
     private perspectiveList: Node = null;
+    /**玩家进入检测范围后需要隐藏的遮挡物列表 */
+    private shelterList: Node = null;
     /**地图中的全部撤离点。 */
     private leaveList: Node = null;
     /**玩家是否正在任意撤离点内。 */
@@ -218,6 +227,8 @@ export class UIGame extends UIBase {
     /**地图透视区域的世界坐标缓存。 */
     private perspectiveAreas: PerspectiveArea[] = [];
     private tempPerspectiveWorldPos = new Vec3();
+    /**地图遮挡物及其检测区域缓存。 */
+    private shelterAreas: ShelterArea[] = [];
 
     protected onLoad(): void {
         this.bindBtn();
@@ -344,6 +355,7 @@ export class UIGame extends UIBase {
         this.initMapChildNodes();
         this.rebuildStaticColliders();
         this.rebuildPerspectiveAreas();
+        this.rebuildShelterAreas();
 
         this.initRockerArea();
         this.initPlayer();
@@ -357,6 +369,7 @@ export class UIGame extends UIBase {
         this.containerList = this.mapNode?.getChildByName('containerList') ?? null;
         this.colliderList = this.mapNode?.getChildByName('colliderList') ?? null;
         this.perspectiveList = this.mapNode?.getChildByName('perspectiveList') ?? null;
+        this.shelterList = this.mapNode?.getChildByName('shelterList') ?? null;
         this.leaveList = this.mapNode?.getChildByName('leaveList') ?? null;
     }
 
@@ -385,6 +398,8 @@ export class UIGame extends UIBase {
         this.staticColliders.length = 0;
         this.collisionCells.clear();
         this.perspectiveAreas.length = 0;
+        this.resetShelterOpacity();
+        this.shelterAreas.length = 0;
         this.isDrugAdWatching = false;
 
         ccTools.destroyAllChild(this.roleNode);
@@ -537,6 +552,51 @@ export class UIGame extends UIBase {
             && this.pointInsideStaticPolygon(x, y, area.points));
         const targetOpacity = isInside ? 120 : 255;
         if (opacity.opacity !== targetOpacity) opacity.opacity = targetOpacity;
+    }
+
+    /**
+     * 缓存 shelterList 的直属子节点。
+     * 遮挡物有子节点时使用第一个子节点检测，否则使用遮挡物自身检测。
+     */
+    private rebuildShelterAreas() {
+        this.shelterAreas.length = 0;
+        if (!this.shelterList) return;
+
+        for (const shelterNode of this.shelterList.children) {
+            const detectNode = shelterNode.children[0] ?? shelterNode;
+            const detectTransform = detectNode.getComponent(UITransform);
+            if (!detectTransform) continue;
+
+            const opacity = shelterNode.getComponent(UIOpacity) ?? shelterNode.addComponent(UIOpacity);
+            opacity.opacity = 255;
+            this.shelterAreas.push({ node: shelterNode, detectTransform, opacity });
+        }
+    }
+
+    /**玩家与遮挡物检测区域相交时隐藏遮挡物，离开后恢复显示。 */
+    private updateShelterOpacity() {
+        const playerNode = playerMgr.player;
+        const playerTransform = playerNode?.getChildByName('colliderBox')?.getComponent(UITransform)
+            ?? playerNode?.getComponent(UITransform);
+        if (!playerTransform) {
+            this.resetShelterOpacity();
+            return;
+        }
+
+        const playerBounds = playerTransform.getBoundingBoxToWorld();
+        for (const shelter of this.shelterAreas) {
+            if (!shelter.node?.isValid || !shelter.detectTransform?.isValid) continue;
+            const isIntersecting = playerBounds.intersects(shelter.detectTransform.getBoundingBoxToWorld());
+            const targetOpacity = isIntersecting ? 0 : 255;
+            if (shelter.opacity.opacity !== targetOpacity) shelter.opacity.opacity = targetOpacity;
+        }
+    }
+
+    /**恢复全部遮挡物的显示状态。 */
+    private resetShelterOpacity() {
+        for (const shelter of this.shelterAreas) {
+            if (shelter.opacity?.isValid) shelter.opacity.opacity = 255;
+        }
     }
 
     /** 按移动路径范围取候选；精确碰撞由 roleController 计算。 */
@@ -916,6 +976,7 @@ export class UIGame extends UIBase {
 
         this.updateContainerOpenButton();
         this.updateRolePerspectives();
+        this.updateShelterOpacity();
         this.updateLeaveCountdown(dt);
         if (this.isLeaveSuccessTriggered) return;
 

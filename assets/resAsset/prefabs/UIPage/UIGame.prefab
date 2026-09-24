@@ -2173,6 +2173,8 @@
       "__id__": 0
     },
     "fileId": "32sW4t9e5MeKi7LnAsaxVF",
+    "instance": null,
+    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {
@@ -7965,7 +7967,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "occlusionList",
+    "_name": "shelterList",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {

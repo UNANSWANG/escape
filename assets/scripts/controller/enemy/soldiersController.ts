@@ -3,7 +3,7 @@ import { ccTools } from '../../extention/generalTools';
 import { UIGame } from '../../UIPage/UIGame';
 import { audioPath, spinePath, UIPath } from '../../manager/pathConfig';
 import { ScoutType, soldiersData } from '../../data/soldiersData';
-import { configData, enemyCommonConfig, GameEvent, playerCommonConfig, robotCommonConfig } from '../../manager/configData';
+import { configData, enemyCommonConfig, GameEvent, playerCommonConfig, soldierCommonConfig } from '../../manager/configData';
 import { armsConfig } from '../../json/jsonArms';
 import { weaponsConfig } from '../../json/jsonWeapons';
 import { gm } from '../../manager/gm';
@@ -195,7 +195,7 @@ export class soldiersController extends Component {
         else this.weaponComp = this.weaponNode.addComponent(gunController);
 
         this.weaponComp.applyStats(weaponData);
-        this.weaponComp.attack *= robotCommonConfig.npcAttackPercent;
+        this.weaponComp.attack *= soldierCommonConfig.npcAttackPercent;
         this.weaponComp.targetPlayer = true;
         this.weaponComp.bindToRole(this.roleAnim);
         this.weaponComp.resetRotation(true);

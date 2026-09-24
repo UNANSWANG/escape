@@ -48,10 +48,16 @@ export const enemyCommonConfig = {
     patrolWaitTime: [2, 5],
 }
 
-/**人机通用配置 */
-export const robotCommonConfig = {
+/**小兵通用配置 */
+export const soldierCommonConfig = {
     /**npc攻击力百分比 */
     npcAttackPercent: 0.2,
+    /**npc速度百分比 */
+    npcSpeedPercent: 0.8,
+    /**npc的攻击范围百分比 */
+    npcAttackRangePercent: 0.8,
+    /**npc的射速百分比 */
+    npcFireRatePercent: 0.8,
 }
 
 /**gm配置 */

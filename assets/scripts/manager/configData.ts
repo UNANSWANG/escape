@@ -9,21 +9,21 @@ export const configData = {
     /**搜索物品加载单圈时间 */
     loadCircleTime: 0.5,
     /**小药品初始数量 */
-    drugDrugCount: 3,
+    drugCount: 3,
     /**小药品恢复血量 */
-    drugDrugHp: 0.2,
+    drugHp: 0.2,
     /**小药品广告赠送数量 */
-    drugDrugAdCount: 2,
+    drugAdCount: 2,
     /**小药品使用时间（秒） */
-    drugDrugUseTime: 2,
+    drugUseTime: 2,
     /**大药品初始数量 */
-    drugDrugCountBig: 1,
+    drugCountBig: 1,
     /**大药品恢复血量 */
-    drugDrugHpBig: 1,
+    drugHpBig: 1,
     /**大药品广告赠送数量 */
-    drugDrugAdCountBig: 1,
+    drugAdCountBig: 1,
     /**大药品使用时间（秒） */
-    drugDrugUseTimeBig: 4,
+    drugUseTimeBig: 4,
     /**撤离时间（秒） */
     leaveTime: 10,
 }

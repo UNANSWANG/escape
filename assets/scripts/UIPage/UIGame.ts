@@ -1514,7 +1514,7 @@ export class UIGame extends UIBase {
         const gameVersion = this.openVersion;
         videoMgr.watchVideo(68, () => {
             this.isDrugAdWatching = false;
-            const rewardCount = isBig ? configData.drugDrugAdCountBig : configData.drugDrugAdCount;
+            const rewardCount = isBig ? configData.drugAdCountBig : configData.drugAdCount;
             this.setDrugCount(isBig, this.getDrugCount(isBig) + Math.max(0, rewardCount));
             this.refreshDrugButtons();
             if (gameVersion === this.openVersion && this.node.activeInHierarchy) this.startUseDrug(isBig);
@@ -1527,8 +1527,8 @@ export class UIGame extends UIBase {
     private startUseDrug(isBig: boolean) {
         if (this.getDrugCount(isBig) <= 0) return false;
         const roleComp = playerMgr.playerComp;
-        const useTime = isBig ? configData.drugDrugUseTimeBig : configData.drugDrugUseTime;
-        const healPercent = isBig ? configData.drugDrugHpBig : configData.drugDrugHp;
+        const useTime = isBig ? configData.drugUseTimeBig : configData.drugUseTime;
+        const healPercent = isBig ? configData.drugHpBig : configData.drugHp;
         return roleComp?.useDrug(useTime, healPercent, () => {
             this.setDrugCount(isBig, this.getDrugCount(isBig) - 1);
             this.refreshDrugButtons();
@@ -1537,8 +1537,8 @@ export class UIGame extends UIBase {
 
     /**刷新两个药品按钮的数量/广告状态。 */
     private refreshDrugButtons() {
-        this.refreshDrugButton(this.drugBtn_0, pData.drugDrugCount);
-        this.refreshDrugButton(this.drugBtn_1, pData.drugDrugCountBig);
+        this.refreshDrugButton(this.drugBtn_0, pData.drugCount);
+        this.refreshDrugButton(this.drugBtn_1, pData.drugCountBig);
     }
 
     private refreshDrugButton(button: Node, count: number) {
@@ -1552,15 +1552,15 @@ export class UIGame extends UIBase {
     }
 
     private getDrugCount(isBig: boolean) {
-        return isBig ? pData.drugDrugCountBig : pData.drugDrugCount;
+        return isBig ? pData.drugCountBig : pData.drugCount;
     }
 
     private setDrugCount(isBig: boolean, count: number) {
         const validCount = Math.max(0, Math.floor(count));
         if (isBig) {
-            pData.drugDrugCountBig = validCount;
+            pData.drugCountBig = validCount;
         } else {
-            pData.drugDrugCount = validCount;
+            pData.drugCount = validCount;
         }
     }
 

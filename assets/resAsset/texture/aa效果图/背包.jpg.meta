@@ -2,22 +2,22 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "9f7c4192-26f5-4273-b1c0-03cbb3be8648",
+  "uuid": "61b8a17d-a5c4-4231-8998-81319cfc50d8",
   "files": [
-    ".json",
-    ".png"
+    ".jpg",
+    ".json"
   ],
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "9f7c4192-26f5-4273-b1c0-03cbb3be8648@6c48a",
-      "displayName": "bg_qirisignin",
+      "uuid": "61b8a17d-a5c4-4231-8998-81319cfc50d8@6c48a",
+      "displayName": "背包",
       "id": "6c48a",
       "name": "texture",
       "userData": {
         "wrapModeS": "clamp-to-edge",
         "wrapModeT": "clamp-to-edge",
-        "imageUuidOrDatabaseUri": "9f7c4192-26f5-4273-b1c0-03cbb3be8648",
+        "imageUuidOrDatabaseUri": "61b8a17d-a5c4-4231-8998-81319cfc50d8",
         "isUuid": true,
         "visible": false,
         "minfilter": "linear",
@@ -34,8 +34,8 @@
     },
     "f9941": {
       "importer": "sprite-frame",
-      "uuid": "9f7c4192-26f5-4273-b1c0-03cbb3be8648@f9941",
-      "displayName": "bg_qirisignin",
+      "uuid": "61b8a17d-a5c4-4231-8998-81319cfc50d8@f9941",
+      "displayName": "背包",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {
@@ -113,7 +113,7 @@
           ]
         },
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "9f7c4192-26f5-4273-b1c0-03cbb3be8648@6c48a",
+        "imageUuidOrDatabaseUri": "61b8a17d-a5c4-4231-8998-81319cfc50d8@6c48a",
         "atlasUuid": "",
         "trimType": "auto"
       },
@@ -129,6 +129,6 @@
     "type": "sprite-frame",
     "fixAlphaTransparencyArtifacts": false,
     "hasAlpha": false,
-    "redirect": "9f7c4192-26f5-4273-b1c0-03cbb3be8648@6c48a"
+    "redirect": "61b8a17d-a5c4-4231-8998-81319cfc50d8@6c48a"
   }
 }

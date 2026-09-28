@@ -94,6 +94,8 @@ export enum imgPath {
     rankItemBg = "texture/rank/bg/bg_",
     /**排行榜线 */
     rankItemLine = "texture/rank/line/line_",
+    /**物品背景 */
+    itemBg = "texture/common/itemBg_",
 }
 
 /**spine路径 */

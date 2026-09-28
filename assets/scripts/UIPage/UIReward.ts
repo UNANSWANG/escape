@@ -13,13 +13,7 @@ const { ccclass, property } = _decorator;
 @ccclass('UIReward')
 export class UIReward extends UIBase {
     @property(Node)
-    closeBtn: Node;
-
-    @property(Node)
     rewardNode: Node;
-
-    @property(Node)
-    getBtn: Node;
 
     @property(Prefab)
     rewardItemPre: Prefab;
@@ -58,8 +52,7 @@ export class UIReward extends UIBase {
     }
 
     bindBtn() {
-        this.closeBtn.addComponent(zoomButton).onClick = this.clickCloseBtn.bind(this);
-        this.getBtn.addComponent(zoomButton).onClick = this.clickGetBtn.bind(this);
+        this.node.getChildByName("mask").on(Node.EventType.TOUCH_END, this.clickCloseBtn.bind(this));
     }
 
     /**显示奖励（不刷新数据） */

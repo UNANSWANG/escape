@@ -39,6 +39,8 @@ export class UIStorehouse extends UIBase {
     @property([Node])
     tabBtns: Node[] = [];
 
+    private selectedTabIndex = 0;
+
     protected onLoad(): void {
         this.bindBtn();
     }
@@ -48,7 +50,7 @@ export class UIStorehouse extends UIBase {
     }
 
     initData() {
-        
+        this.clickTabBtn(this.selectedTabIndex);
     }
 
     bindBtn() {
@@ -61,6 +63,9 @@ export class UIStorehouse extends UIBase {
         this.head.addComponent(zoomButton).onClick = this.clickHeadBtn.bind(this);
         this.armor.addComponent(zoomButton).onClick = this.clickArmorBtn.bind(this);
         this.backpack.addComponent(zoomButton).onClick = this.clickBackpackBtn.bind(this);
+        for(let i = 0; i < this.tabBtns.length; i++){
+            this.tabBtns[i].on(Node.EventType.TOUCH_END, this.clickTabBtn.bind(this, i));
+        }
     }
 
     ///
@@ -99,6 +104,21 @@ export class UIStorehouse extends UIBase {
     /**点击背包 */
     clickBackpackBtn() {
         console.log("点击背包");
+    }
+
+    /**点击页签 */
+    clickTabBtn(index: number) {
+        if (index < 0 || index >= this.tabBtns.length) {
+            return;
+        }
+
+        this.selectedTabIndex = index;
+        for (let i = 0; i < this.tabBtns.length; i++) {
+            const selectNode = this.tabBtns[i]?.getChildByName("select");
+            if (selectNode) {
+                selectNode.active = i === this.selectedTabIndex;
+            }
+        }
     }
 
     /**点击关闭 */

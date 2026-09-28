@@ -2,6 +2,7 @@ import { _decorator, Component, Label, Node, Sprite } from 'cc';
 import { imgPath } from '../manager/pathConfig';
 import { ccTools } from '../extention/generalTools';
 import { getItemDataByItemId } from '../json/jsonItemData';
+import { itemConfig } from '../json/jsonItem';
 const { ccclass, property } = _decorator;
 
 export interface rewardItemData {
@@ -14,13 +15,13 @@ export class rewardItem extends Component {
     numLab: Label = null;
     nameLab: Label = null;
     imgSp: Sprite = null;
-    lightNode: Node = null;
+    bgSp: Sprite = null;
 
     protected onLoad(): void {
         this.numLab = this.node.getChildByName("numLab").getComponent(Label);
         this.nameLab = this.node.getChildByName("nameLab").getComponent(Label);
         this.imgSp = this.node.getChildByName("img").getComponent(Sprite);
-        this.lightNode = this.node.getChildByName("light");
+        this.bgSp = this.node.getChildByName("bg").getComponent(Sprite);
     }
 
     initData(data : number[]) {
@@ -34,15 +35,8 @@ export class rewardItem extends Component {
 
         this.numLab.string = `x${num}`;
         this.nameLab.string = itemData?.name ?? "";
+        const quality = itemConfig.getDataByItemId(itemId)?.quality ?? 4;
+        ccTools.loadImg(this.bgSp, imgPath.itemBg + quality);
         // ccTools.loadImg(this.imgSp, imgPath.props + itemId);
-        this.setLight(false);
-    }
-
-    /**设置发光状态 */
-    setLight(isLight: boolean) {
-        if(!this.lightNode){
-            return;
-        }
-        this.lightNode.active = isLight;
     }
 }

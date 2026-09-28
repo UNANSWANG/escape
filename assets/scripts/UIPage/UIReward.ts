@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Animation, Prefab, instantiate } from 'cc';
+import { _decorator, Node, Animation, Prefab, instantiate } from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -7,7 +7,7 @@ import { gm } from '../manager/gm';
 import { GameEvent} from '../manager/configData';
 import { pData } from '../manager/playerData';
 import { ccTools } from '../extention/generalTools';
-import { rewardItem, rewardItemData } from '../controller/rewardItem';
+import { rewardItem } from '../controller/rewardItem';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIReward')

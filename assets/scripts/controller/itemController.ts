@@ -1,7 +1,8 @@
-import { _decorator, Component, Label, Node, tween, Tween } from 'cc';
+import { _decorator, Component, Label, Node, Sprite, tween, Tween } from 'cc';
 import { ccTools } from '../extention/generalTools';
 import { getItemDataByItemId } from '../json/jsonItemData';
-import { JsonItemData } from '../json/jsonItem';
+import { itemConfig, JsonItemData } from '../json/jsonItem';
+import { imgPath } from '../manager/pathConfig';
 const { ccclass } = _decorator;
 
 @ccclass('itemController')
@@ -12,6 +13,8 @@ export class itemController extends Component {
     private normalNode: Node = null;
     /** 物品遮罩节点。 */
     private maskNode: Node = null;
+    /** 物品品质背景。 */
+    private bgSp: Sprite = null;
     /** 遮罩中的加载圆环节点。 */
     private circleNode: Node = null;
 
@@ -24,6 +27,8 @@ export class itemController extends Component {
         this.initNodes();
         this.itemId = itemId;
         this.showNormal();
+        const quality = itemConfig.getDataByItemId(itemId)?.quality ?? 4;
+        ccTools.loadImg(this.bgSp, imgPath.itemBg + quality);
 
         const itemData = getItemDataByItemId(itemId) as JsonItemData;
         if (!itemData) {
@@ -46,6 +51,7 @@ export class itemController extends Component {
     private initNodes() {
         this.normalNode = this.node.getChildByName("normal");
         this.maskNode = this.node.getChildByName("mask");
+        this.bgSp = this.normalNode.getChildByName("bg").getComponent(Sprite);
         this.circleNode = this.maskNode.getChildByName("circle");
     }
 

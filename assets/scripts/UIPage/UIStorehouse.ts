@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Animation} from 'cc';
+import { _decorator, Component, Node} from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -14,8 +14,6 @@ export class UIStorehouse extends UIBase {
     }
 
     onUI_Open() {
-        let anim = this.getComponent(Animation);
-        anim.play();
         this.initData();
     }
 

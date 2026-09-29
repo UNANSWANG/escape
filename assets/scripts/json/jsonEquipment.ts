@@ -15,6 +15,13 @@ export class jsonEquipment extends jsonBase {
         super.processTableData();
     }
 
+    /** 根据 equipment 表的 id 获取一条装备配置。 */
+    getDataById(id: number): JsonEquipmentData | null {
+        if (!Number.isFinite(id) || !this.data) return null;
+        const rows = Array.isArray(this.data) ? this.data : Object.values(this.data);
+        return rows.find((row: JsonEquipmentData) => row?.id === id) ?? null;
+    }
+
     /** 根据 itemId 获取一条装备配置。 */
     getDataByItemId(itemId: number): JsonEquipmentData | null {
         if (!Number.isFinite(itemId) || !this.data) return null;

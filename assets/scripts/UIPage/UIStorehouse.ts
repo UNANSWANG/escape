@@ -1,4 +1,4 @@
-import { _decorator, EventTouch, Node, UITransform, Vec3 } from 'cc';
+import { _decorator, EventTouch, Label, Node, UITransform, Vec3 } from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -86,6 +86,37 @@ export class UIStorehouse extends UIBase {
         this.clickTabBtn(this.selectedTabIndex);
         this.isShowEquipment = ccStorageTools.getNumberData(SaveKey.isShowEquipment) === 1 ? 1 : 0;
         this.refreshEquipmentDisplay();
+        this.refreshWeaponNames();
+        this.refreshEquipmentNames();
+    }
+
+    /**根据装备栏前三项刷新主武器、副武器和近战武器名称。 */
+    private refreshWeaponNames() {
+        const weaponNodes = [this.weapons_0, this.weapons_1, this.knife];
+        weaponNodes.forEach((weaponNode, slotIndex) => {
+            const nameLab = weaponNode?.getChildByName("nameLab")?.getComponent(Label);
+            if (!nameLab) {
+                return;
+            }
+
+            const weaponData = weaponsConfig.getDataById(pData.equipmentIds[slotIndex]);
+            nameLab.string = weaponData?.name ?? "";
+        });
+    }
+
+    /**根据装备栏后三项刷新头盔、护甲和背包名称。 */
+    private refreshEquipmentNames() {
+        const equipmentNodes = [this.head, this.armor, this.backpack];
+        equipmentNodes.forEach((equipmentNode, index) => {
+            const nameLab = equipmentNode?.getChildByName("nameLab")?.getComponent(Label);
+            if (!nameLab) {
+                return;
+            }
+
+            const slotIndex = index + 3;
+            const equipmentData = equipmentConfig.getDataById(pData.equipmentIds[slotIndex]);
+            nameLab.string = equipmentData?.name ?? "";
+        });
     }
 
     bindBtn() {

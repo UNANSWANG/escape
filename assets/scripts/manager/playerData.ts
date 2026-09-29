@@ -200,6 +200,19 @@ export class playerData {
         return this.storehouseData.map((itemData) => [itemData[0], itemData[1]]);
     }
 
+    /**排序仓库数据并保存；比较结果相同时保持原有先后顺序 */
+    sortStorehouseData(compareFn: (itemA: number[], itemB: number[]) => number) {
+        if (typeof compareFn !== "function" || this.storehouseData.length < 2) {
+            return;
+        }
+
+        this.storehouseData = this.storehouseData
+            .map((itemData, index) => ({ itemData, index }))
+            .sort((dataA, dataB) => compareFn(dataA.itemData, dataB.itemData) || dataA.index - dataB.index)
+            .map((data) => data.itemData);
+        this.saveStorehouseData();
+    }
+
     /**增减单个仓库物品数量 */
     fixStorehouseData(itemId: number, num: number) {
         if (this.updateStorehouseData(itemId, num)) {

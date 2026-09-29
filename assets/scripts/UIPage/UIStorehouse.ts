@@ -160,7 +160,34 @@ export class UIStorehouse extends UIBase {
     ///
     /**点击排序 */
     clickSortBtn() {
-        console.log("点击排序");
+        pData.sortStorehouseData((itemA, itemB) => {
+            const itemIdA = itemA[0];
+            const itemIdB = itemB[0];
+            const weaponA = weaponsConfig.getDataByItemId(itemIdA);
+            const weaponB = weaponsConfig.getDataByItemId(itemIdB);
+            const equipmentA = equipmentConfig.getDataByItemId(itemIdA);
+            const equipmentB = equipmentConfig.getDataByItemId(itemIdB);
+            const collectionA = itemConfig.getDataByItemId(itemIdA);
+            const collectionB = itemConfig.getDataByItemId(itemIdB);
+            const categoryA = weaponA ? 0 : equipmentA ? 1 : collectionA ? 2 : 3;
+            const categoryB = weaponB ? 0 : equipmentB ? 1 : collectionB ? 2 : 3;
+
+            if (categoryA !== categoryB) {
+                return categoryA - categoryB;
+            }
+            if (weaponA && weaponB) {
+                return (Number(weaponA.type) || 0) - (Number(weaponB.type) || 0);
+            }
+            if (equipmentA && equipmentB) {
+                return (Number(equipmentA.type) || 0) - (Number(equipmentB.type) || 0);
+            }
+            if (collectionA && collectionB) {
+                return (Number(collectionB.quality) || 0) - (Number(collectionA.quality) || 0);
+            }
+            return 0;
+        });
+        uiMgr.showTips("整理完成");
+        this.clickTabBtn(this.selectedTabIndex);
     }
 
     /**点击出售 */

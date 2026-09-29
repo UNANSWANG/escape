@@ -1,4 +1,4 @@
-import { _decorator, Node } from 'cc';
+import { _decorator, EventTouch, Node, UITransform, Vec3 } from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -50,6 +50,12 @@ export class UIStorehouse extends UIBase {
     @property(Node)
     showWeaponNode: Node;
 
+    @property(Node)
+    equipBtn: Node;
+
+    @property(Node)
+    removeBtn: Node;
+
     @property(List)
     scrolList: List;
 
@@ -60,9 +66,16 @@ export class UIStorehouse extends UIBase {
     private isShowEquipment = 0;
     private readonly minItemCount = 20;
     private listData: StorehouseListItem[] = [];
+    private selectedEquipmentNode: Node = null;
+    private selectedStorehouseIndex = -1;
+    private isListScrolling = false;
+    private readonly renderedItemIndexes = new Map<Node, number>();
+    private readonly tempWorldPosition = new Vec3();
+    private readonly tempLocalPosition = new Vec3();
 
     protected onLoad(): void {
         this.bindBtn();
+        this.hideAllSelect();
     }
 
     onUI_Open() {
@@ -79,13 +92,18 @@ export class UIStorehouse extends UIBase {
         this.closeBtn.addComponent(zoomButton).onClick = this.clickCloseBtn.bind(this);
         this.sortBtn.addComponent(zoomButton).onClick = this.clickSortBtn.bind(this);
         this.sellBtn.addComponent(zoomButton).onClick = this.clickSellBtn.bind(this);
-        this.weapons_0.addComponent(zoomButton).onClick = this.clickWeaponsBtn.bind(this, 0);
-        this.weapons_1.addComponent(zoomButton).onClick = this.clickWeaponsBtn.bind(this, 1);
-        this.knife.addComponent(zoomButton).onClick = this.clickKnifeBtn.bind(this);
-        this.head.addComponent(zoomButton).onClick = this.clickHeadBtn.bind(this);
-        this.armor.addComponent(zoomButton).onClick = this.clickArmorBtn.bind(this);
-        this.backpack.addComponent(zoomButton).onClick = this.clickBackpackBtn.bind(this);
+        this.equipBtn.addComponent(zoomButton).onClick = this.clickEquipBtn.bind(this);
+        this.removeBtn.addComponent(zoomButton).onClick = this.clickRemoveBtn.bind(this);
         this.showWeaponNode.addComponent(zoomButton).onClick = this.clickShowWeaponBtn.bind(this);
+        this.weapons_0.on(Node.EventType.TOUCH_END, this.clickWeaponsBtn.bind(this, 0));
+        this.weapons_1.on(Node.EventType.TOUCH_END, this.clickWeaponsBtn.bind(this, 1));
+        this.knife.on(Node.EventType.TOUCH_END, this.clickKnifeBtn, this);
+        this.head.on(Node.EventType.TOUCH_END, this.clickHeadBtn, this);
+        this.armor.on(Node.EventType.TOUCH_END, this.clickArmorBtn, this);
+        this.backpack.on(Node.EventType.TOUCH_END, this.clickBackpackBtn, this);
+        this.node.on(Node.EventType.TOUCH_END, this.clickBlankArea, this);
+        this.scrolList.node.on('scrolling', this.onListScrolling, this);
+        this.scrolList.node.on('scroll-ended', this.onListScrollEnded, this);
         for (let i = 0; i < this.tabBtns.length; i++) {
             this.tabBtns[i].on(Node.EventType.TOUCH_END, this.clickTabBtn.bind(this, i));
         }
@@ -93,6 +111,15 @@ export class UIStorehouse extends UIBase {
 
     /**渲染数据 */
     onListRender(item: any, idx: number) {
+        item.off(Node.EventType.TOUCH_END, this.clickStorehouseItem, this);
+        item.on(Node.EventType.TOUCH_END, this.clickStorehouseItem, this);
+        this.renderedItemIndexes.set(item, idx);
+
+        const selectNode = item.getChildByName("select");
+        if (selectNode) {
+            selectNode.active = idx === this.selectedStorehouseIndex && !!this.listData[idx];
+        }
+
         const contentNode = item?.getChildByName("content");
         const itemNode = contentNode?.children?.[0];
         if (!itemNode) {
@@ -123,6 +150,137 @@ export class UIStorehouse extends UIBase {
                 || !!equipmentConfig.getDataByItemId(listItem.itemId);
             valueNode.active = !isEquipment;
         }
+    }
+
+    /**点击仓库物品并刷新右侧选中状态。 */
+    private clickStorehouseItem(event: EventTouch) {
+        if (this.isListScrolling || this.isTouchMoved(event)) {
+            this.hideAllSelect();
+            return;
+        }
+
+        const itemNode = event.currentTarget as Node;
+        const itemIndex = this.renderedItemIndexes.get(itemNode);
+        if (itemIndex === undefined) {
+            this.hideAllSelect();
+            return;
+        }
+        const listItem = this.listData[itemIndex];
+        if (!listItem) {
+            this.hideAllSelect();
+            return;
+        }
+
+        this.selectedEquipmentNode = null;
+        this.selectedStorehouseIndex = itemIndex;
+        this.refreshSelect();
+
+        if (this.isEquipment(listItem.itemId)) {
+            this.moveEquipButtonToItemRight(itemNode);
+        }
+    }
+
+    /**刷新左右两侧选中框及操作按钮。 */
+    private refreshSelect() {
+        for (const equipmentNode of this.getEquipmentNodes()) {
+            const selectNode = equipmentNode?.getChildByName("select");
+            if (selectNode) {
+                selectNode.active = equipmentNode === this.selectedEquipmentNode;
+            }
+        }
+
+        for (const [itemNode, itemIndex] of this.renderedItemIndexes) {
+            const selectNode = itemNode?.getChildByName("select");
+            if (selectNode) {
+                selectNode.active = itemIndex === this.selectedStorehouseIndex && !!this.listData[itemIndex];
+            }
+        }
+
+        const selectedStorehouseItem = this.listData[this.selectedStorehouseIndex];
+        this.removeBtn.active = this.selectedEquipmentNode !== null;
+        this.equipBtn.active = !!selectedStorehouseItem && this.isEquipment(selectedStorehouseItem.itemId);
+    }
+
+    /**取消左右两侧的全部选中状态。 */
+    private hideAllSelect() {
+        this.selectedEquipmentNode = null;
+        this.selectedStorehouseIndex = -1;
+        this.refreshSelect();
+    }
+
+    /**选中左侧已装备的武器或装备。 */
+    private selectEquipment(event: EventTouch) {
+        this.selectedEquipmentNode = event.currentTarget as Node;
+        this.selectedStorehouseIndex = -1;
+        this.refreshSelect();
+    }
+
+    /**将装备按钮移动到右侧选中物品的右边。 */
+    private moveEquipButtonToItemRight(itemNode: Node) {
+        const itemTransform = itemNode.getComponent(UITransform);
+        const buttonTransform = this.equipBtn.getComponent(UITransform);
+        const buttonParentTransform = this.equipBtn.parent?.getComponent(UITransform);
+        if (!itemTransform || !buttonTransform || !buttonParentTransform) {
+            return;
+        }
+
+        this.tempLocalPosition.set(
+            itemTransform.width * (1 - itemTransform.anchorX),
+            itemTransform.height * (0.5 - itemTransform.anchorY),
+            0,
+        );
+        itemTransform.convertToWorldSpaceAR(this.tempLocalPosition, this.tempWorldPosition);
+        buttonParentTransform.convertToNodeSpaceAR(this.tempWorldPosition, this.tempLocalPosition);
+        this.tempLocalPosition.x += buttonTransform.width * this.equipBtn.scale.x * buttonTransform.anchorX;
+        this.tempLocalPosition.y += buttonTransform.height * this.equipBtn.scale.y * (buttonTransform.anchorY - 0.5);
+        this.equipBtn.setPosition(this.tempLocalPosition);
+    }
+
+    private getEquipmentNodes(): Node[] {
+        return [this.weapons_0, this.weapons_1, this.knife, this.head, this.armor, this.backpack];
+    }
+
+    private isEquipment(itemId: number): boolean {
+        return !!weaponsConfig.getDataByItemId(itemId) || !!equipmentConfig.getDataByItemId(itemId);
+    }
+
+    private isTouchMoved(event: EventTouch): boolean {
+        const startPosition = event.getUIStartLocation();
+        const endPosition = event.getUILocation();
+        return Math.abs(endPosition.x - startPosition.x) > 10
+            || Math.abs(endPosition.y - startPosition.y) > 10;
+    }
+
+    private onListScrolling() {
+        this.isListScrolling = true;
+        this.hideAllSelect();
+    }
+
+    private onListScrollEnded() {
+        this.isListScrolling = false;
+    }
+
+    /**点击页面其他区域时取消选中。 */
+    private clickBlankArea(event: EventTouch) {
+        const targetNode = event.target as Node;
+        if (this.isNodeInside(targetNode, this.equipBtn)
+            || this.isNodeInside(targetNode, this.removeBtn)
+            || this.getEquipmentNodes().some((equipmentNode) => this.isNodeInside(targetNode, equipmentNode))
+            || Array.from(this.renderedItemIndexes.keys()).some((itemNode) => this.isNodeInside(targetNode, itemNode))) {
+            return;
+        }
+        this.hideAllSelect();
+    }
+
+    private isNodeInside(targetNode: Node, parentNode: Node): boolean {
+        let currentNode = targetNode;
+        while (currentNode) {
+            if (currentNode === parentNode) {
+                return true;
+            }
+            currentNode = currentNode.parent;
+        }
+        return false;
     }
 
     private getTabData(index: number): StorehouseListItem[] {
@@ -196,28 +354,44 @@ export class UIStorehouse extends UIBase {
     }
 
     /**点击武器 */
-    clickWeaponsBtn(index: number) {
+    clickWeaponsBtn(index: number, event: EventTouch) {
+        this.selectEquipment(event);
         console.log("点击武器", index);
     }
 
     /**点击刀 */
-    clickKnifeBtn() {
+    clickKnifeBtn(event: EventTouch) {
+        this.selectEquipment(event);
         console.log("点击刀");
     }
 
     /**点击头 */
-    clickHeadBtn() {
+    clickHeadBtn(event: EventTouch) {
+        this.selectEquipment(event);
         console.log("点击头");
     }
 
     /**点击护甲 */
-    clickArmorBtn() {
+    clickArmorBtn(event: EventTouch) {
+        this.selectEquipment(event);
         console.log("点击护甲");
     }
 
     /**点击背包 */
-    clickBackpackBtn() {
+    clickBackpackBtn(event: EventTouch) {
+        this.selectEquipment(event);
         console.log("点击背包");
+    }
+
+    /**点击装备按钮。 */
+    clickEquipBtn() {
+        const selectedItem = this.listData[this.selectedStorehouseIndex];
+        console.log("点击装备", selectedItem?.itemId);
+    }
+
+    /**点击卸下按钮。 */
+    clickRemoveBtn() {
+        console.log("点击卸下装备", this.selectedEquipmentNode?.name);
     }
 
     /**点击显示装备开关 */
@@ -233,6 +407,7 @@ export class UIStorehouse extends UIBase {
             return;
         }
 
+        this.hideAllSelect();
         this.selectedTabIndex = index;
         this.listData = this.getTabData(index);
         for (let i = 0; i < this.tabBtns.length; i++) {

@@ -326,8 +326,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 90,
-      "height": 50.4
+      "width": 93,
+      "height": 53.4
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -379,7 +379,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 0,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 0,
@@ -387,7 +387,7 @@
       "b": 0,
       "a": 255
     },
-    "_outlineWidth": 2,
+    "_outlineWidth": 1.5,
     "_enableShadow": false,
     "_shadowColor": {
       "__type__": "cc.Color",
@@ -485,8 +485,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 30,
-      "height": 50.4
+      "width": 33,
+      "height": 53.4
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -538,7 +538,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 0,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 0,
@@ -546,7 +546,7 @@
       "b": 0,
       "a": 255
     },
-    "_outlineWidth": 2,
+    "_outlineWidth": 1.5,
     "_enableShadow": false,
     "_shadowColor": {
       "__type__": "cc.Color",
@@ -644,8 +644,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 36,
-      "height": 50.4
+      "width": 39,
+      "height": 53.4
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -697,7 +697,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 0,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 0,
@@ -705,7 +705,7 @@
       "b": 0,
       "a": 255
     },
-    "_outlineWidth": 2,
+    "_outlineWidth": 1.5,
     "_enableShadow": false,
     "_shadowColor": {
       "__type__": "cc.Color",
@@ -803,8 +803,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 30,
-      "height": 50.4
+      "width": 33,
+      "height": 53.4
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -856,7 +856,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 0,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 0,
@@ -864,7 +864,7 @@
       "b": 0,
       "a": 255
     },
-    "_outlineWidth": 2,
+    "_outlineWidth": 1.5,
     "_enableShadow": false,
     "_shadowColor": {
       "__type__": "cc.Color",

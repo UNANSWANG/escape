@@ -116,6 +116,13 @@ export class UIStorehouse extends UIBase {
         if (capacityNode) {
             capacityNode.active = false;
         }
+
+        const valueNode = itemNode.getChildByName("normal")?.getChildByName("valueLab");
+        if (valueNode) {
+            const isEquipment = !!weaponsConfig.getDataByItemId(listItem.itemId)
+                || !!equipmentConfig.getDataByItemId(listItem.itemId);
+            valueNode.active = !isEquipment;
+        }
     }
 
     private getTabData(index: number): StorehouseListItem[] {

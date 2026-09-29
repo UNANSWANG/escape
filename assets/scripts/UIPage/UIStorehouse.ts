@@ -6,7 +6,18 @@ import { zoomButton } from '../extention/zoomButton';
 import { ccStorageTools } from '../extention/storageTools';
 import { SaveKey } from '../manager/configData';
 import List from '../sdk/virtualList/List';
+import { pData } from '../manager/playerData';
+import { equipmentConfig } from '../json/jsonEquipment';
+import { weaponsConfig } from '../json/jsonWeapons';
+import { itemConfig } from '../json/jsonItem';
+import { itemController } from '../controller/itemController';
 const { ccclass, property } = _decorator;
+
+interface StorehouseListItem {
+    itemId: number;
+    num: number;
+}
+
 @ccclass('UIStorehouse')
 export class UIStorehouse extends UIBase {
     @property(Node)
@@ -47,7 +58,8 @@ export class UIStorehouse extends UIBase {
 
     private selectedTabIndex = 0;
     private isShowEquipment = 0;
-    private readonly tabItemCounts = [100, 30, 70];
+    private readonly minItemCount = 20;
+    private listData: StorehouseListItem[] = [];
 
     protected onLoad(): void {
         this.bindBtn();
@@ -74,14 +86,66 @@ export class UIStorehouse extends UIBase {
         this.armor.addComponent(zoomButton).onClick = this.clickArmorBtn.bind(this);
         this.backpack.addComponent(zoomButton).onClick = this.clickBackpackBtn.bind(this);
         this.showWeaponNode.addComponent(zoomButton).onClick = this.clickShowWeaponBtn.bind(this);
-        for(let i = 0; i < this.tabBtns.length; i++){
+        for (let i = 0; i < this.tabBtns.length; i++) {
             this.tabBtns[i].on(Node.EventType.TOUCH_END, this.clickTabBtn.bind(this, i));
         }
     }
 
     /**渲染数据 */
     onListRender(item: any, idx: number) {
-        
+        const contentNode = item?.getChildByName("content");
+        const itemNode = contentNode?.children?.[0];
+        if (!itemNode) {
+            return;
+        }
+
+        const listItem = this.listData[idx];
+        if (!listItem) {
+            itemNode.active = false;
+            return;
+        }
+
+        itemNode.active = true;
+        const itemComp = itemNode.getComponent(itemController);
+        if (!itemComp) {
+            return;
+        }
+
+        itemComp.initData(listItem.itemId, listItem.num);
+        const capacityNode = itemNode.getChildByName("normal")?.getChildByName("capacityLab");
+        if (capacityNode) {
+            capacityNode.active = false;
+        }
+    }
+
+    private getTabData(index: number): StorehouseListItem[] {
+        const storehouseData = pData.getStorehouseData();
+        return storehouseData
+            .filter((itemData) => Array.isArray(itemData) && itemData.length >= 2)
+            .filter(([itemId]) => {
+                if (index === 0) {
+                    return true;
+                }
+                if (index === 1) {
+                    return !!weaponsConfig.getDataByItemId(itemId) || !!equipmentConfig.getDataByItemId(itemId);
+                }
+                return !!itemConfig.getDataByItemId(itemId);
+            })
+            .map(([itemId, num]) => ({ itemId, num }));
+    }
+
+    /**刷新装备显示状态 */
+    private refreshEquipmentDisplay() {
+        const isVisible = this.isShowEquipment === 0;
+        const equipmentNode = this.showWeaponNode?.parent?.getChildByName("equipmentNode");
+        if (equipmentNode) {
+            equipmentNode.active = isVisible;
+        }
+
+        const checkNode = this.showWeaponNode?.getChildByName("check");
+        if (checkNode) {
+            checkNode.active = isVisible;
+        }
     }
 
     ///
@@ -129,27 +193,14 @@ export class UIStorehouse extends UIBase {
         this.refreshEquipmentDisplay();
     }
 
-    /**刷新装备显示状态 */
-    private refreshEquipmentDisplay() {
-        const isVisible = this.isShowEquipment === 0;
-        const equipmentNode = this.showWeaponNode?.parent?.getChildByName("equipmentNode");
-        if (equipmentNode) {
-            equipmentNode.active = isVisible;
-        }
-
-        const checkNode = this.showWeaponNode?.getChildByName("check");
-        if (checkNode) {
-            checkNode.active = isVisible;
-        }
-    }
-
     /**点击页签 */
     clickTabBtn(index: number) {
-        if (index < 0 || index >= this.tabBtns.length || index >= this.tabItemCounts.length) {
+        if (index < 0 || index >= this.tabBtns.length || index > 2) {
             return;
         }
 
         this.selectedTabIndex = index;
+        this.listData = this.getTabData(index);
         for (let i = 0; i < this.tabBtns.length; i++) {
             const selectNode = this.tabBtns[i]?.getChildByName("select");
             if (selectNode) {
@@ -158,7 +209,7 @@ export class UIStorehouse extends UIBase {
         }
 
         if (this.scrolList) {
-            this.scrolList.numItems = this.tabItemCounts[this.selectedTabIndex];
+            this.scrolList.numItems = Math.max(this.minItemCount, this.listData.length);
             this.scrolList.scrollTo(0, 0);
         }
     }

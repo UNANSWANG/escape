@@ -77,6 +77,11 @@ export class UIStorehouse extends UIBase {
         }
     }
 
+    /**渲染数据 */
+    onListRender(item: any, idx: number) {
+        
+    }
+
     ///
     ///点击事件
     ///

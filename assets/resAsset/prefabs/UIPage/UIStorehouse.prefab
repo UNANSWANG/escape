@@ -4361,7 +4361,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "gou",
+    "_name": "check",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -8620,6 +8620,9 @@
     },
     "backpack": {
       "__id__": 138
+    },
+    "showWeaponNode": {
+      "__id__": 174
     },
     "scrol": {
       "__id__": 340

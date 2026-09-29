@@ -3,6 +3,8 @@ import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
+import { ccStorageTools } from '../extention/storageTools';
+import { SaveKey } from '../manager/configData';
 const { ccclass, property } = _decorator;
 @ccclass('UIStorehouse')
 export class UIStorehouse extends UIBase {
@@ -33,6 +35,9 @@ export class UIStorehouse extends UIBase {
     @property(Node)
     backpack: Node;
 
+    @property(Node)
+    showWeaponNode: Node;
+
     @property(ScrollView)
     scrol: ScrollView;
 
@@ -40,6 +45,7 @@ export class UIStorehouse extends UIBase {
     tabBtns: Node[] = [];
 
     private selectedTabIndex = 0;
+    private isShowEquipment = 0;
 
     protected onLoad(): void {
         this.bindBtn();
@@ -51,6 +57,8 @@ export class UIStorehouse extends UIBase {
 
     initData() {
         this.clickTabBtn(this.selectedTabIndex);
+        this.isShowEquipment = ccStorageTools.getNumberData(SaveKey.isShowEquipment) === 1 ? 1 : 0;
+        this.refreshEquipmentDisplay();
     }
 
     bindBtn() {
@@ -63,6 +71,7 @@ export class UIStorehouse extends UIBase {
         this.head.addComponent(zoomButton).onClick = this.clickHeadBtn.bind(this);
         this.armor.addComponent(zoomButton).onClick = this.clickArmorBtn.bind(this);
         this.backpack.addComponent(zoomButton).onClick = this.clickBackpackBtn.bind(this);
+        this.showWeaponNode.addComponent(zoomButton).onClick = this.clickShowWeaponBtn.bind(this);
         for(let i = 0; i < this.tabBtns.length; i++){
             this.tabBtns[i].on(Node.EventType.TOUCH_END, this.clickTabBtn.bind(this, i));
         }
@@ -104,6 +113,27 @@ export class UIStorehouse extends UIBase {
     /**点击背包 */
     clickBackpackBtn() {
         console.log("点击背包");
+    }
+
+    /**点击显示装备开关 */
+    clickShowWeaponBtn() {
+        this.isShowEquipment = this.isShowEquipment === 0 ? 1 : 0;
+        ccStorageTools.setData(SaveKey.isShowEquipment, this.isShowEquipment);
+        this.refreshEquipmentDisplay();
+    }
+
+    /**刷新装备显示状态 */
+    private refreshEquipmentDisplay() {
+        const isVisible = this.isShowEquipment === 0;
+        const equipmentNode = this.showWeaponNode?.parent?.getChildByName("equipmentNode");
+        if (equipmentNode) {
+            equipmentNode.active = isVisible;
+        }
+
+        const checkNode = this.showWeaponNode?.getChildByName("check");
+        if (checkNode) {
+            checkNode.active = isVisible;
+        }
     }
 
     /**点击页签 */

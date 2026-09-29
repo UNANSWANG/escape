@@ -149,6 +149,8 @@ export enum SaveKey {
     isFreeAd = "isFreeAd",
     /**是否开启自动瞄准 */
     isAutoAiming = "isAutoAiming",
+    /**是否显示装备 */
+    isShowEquipment = "isShowEquipment",
 }
 
 /**道具索引 */

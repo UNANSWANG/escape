@@ -23,7 +23,7 @@ export class itemController extends Component {
     }
 
     /** 初始化物品显示。 */
-    initData(itemId: number) {
+    initData(itemId: number, num = 1) {
         this.initNodes();
         this.itemId = itemId;
         this.showNormal();
@@ -39,12 +39,16 @@ export class itemController extends Component {
         this.setLabel("nameLab", itemData.name ?? "");
         this.setLabel("capacityLab", `${itemData.capacity ?? 0}`);
         this.setLabel("valueLab", ccTools.formatMonetaryNum(itemData.value ?? 0));
+        const itemNum = Number.isFinite(num) ? Math.max(1, Math.floor(num)) : 1;
+        this.setLabel("numLab", `x${itemNum}`);
     }
 
     /** 设置物品预制体内的标签。 */
     private setLabel(nodeName: string, content: string) {
-        const label = this.normalNode.getChildByName(nodeName).getComponent(Label);
-        label.string = content;
+        const label = this.normalNode?.getChildByName(nodeName)?.getComponent(Label);
+        if (label) {
+            label.string = content;
+        }
     }
 
     /** 缓存物品预制体中的展示节点。 */

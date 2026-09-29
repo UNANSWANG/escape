@@ -52,8 +52,8 @@ export class playerData {
     backpackCapacity = 0;
     /**背包内最大容量 */
     maxBackpackCapacity = 0;
-    /**背包内物品（存储itemId） */
-    backpackItems: number[] = [];
+    /**背包内物品，格式为 [[itemId, 数量], ...] */
+    backpackItems: [number, number][] = [];
     /**小药品数量 */
     drugCount = 0;
     /**大药品数量 */

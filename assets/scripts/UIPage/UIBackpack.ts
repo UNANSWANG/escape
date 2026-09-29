@@ -112,21 +112,22 @@ export class UIBackpack extends UIBase {
         }
     }
 
-    /** 根据背包物品 id 刷新背包格子。 */
+    /** 根据背包物品及数量刷新背包格子。 */
     private initBackpack() {
         const slots = this.getBackpackSlots();
         for (let index = 0; index < slots.length; index++) {
             const itemContainer = slots[index].getChildByName("content");
             ccTools.destroyAllChild(itemContainer);
 
-            const itemId = pData.backpackItems[index];
-            if (!Number.isFinite(itemId)) {
+            const backpackItem = pData.backpackItems[index];
+            if (!Array.isArray(backpackItem) || backpackItem.length < 2) {
                 continue;
             }
+            const [itemId, num] = backpackItem;
 
             const itemNode = instantiate(this.itemPrefab);
             itemNode.parent = itemContainer;
-            itemNode.getComponent(itemController).initData(itemId);
+            itemNode.getComponent(itemController).initData(itemId, num);
         }
     }
 
@@ -135,16 +136,17 @@ export class UIBackpack extends UIBase {
         let backpackValue = 0;
         let backpackCapacity = 0;
 
-        for (const itemId of pData.backpackItems) {
+        for (const [itemId, num] of pData.backpackItems) {
             const itemData = getItemDataByItemId(itemId);
             if (!itemData) {
                 console.warn(`未找到背包物品配置，itemId: ${itemId}`);
                 continue;
             }
 
-            backpackCapacity += Number(itemData.capacity) || 0;
+            const itemNum = Math.max(0, Math.floor(num));
+            backpackCapacity += (Number(itemData.capacity) || 0) * itemNum;
             if ("value" in itemData) {
-                backpackValue += Number(itemData.value) || 0;
+                backpackValue += (Number(itemData.value) || 0) * itemNum;
             }
         }
 
@@ -241,7 +243,12 @@ export class UIBackpack extends UIBase {
             return;
         }
 
-        pData.backpackItems.push(itemId);
+        const backpackItem = pData.backpackItems.find((itemData) => itemData[0] === itemId);
+        if (backpackItem) {
+            backpackItem[1]++;
+        } else {
+            pData.backpackItems.push([itemId, 1]);
+        }
         this.itemData[slotIndex] = -1;
         ccTools.destroyAllChild(slot.getChildByName("content"));
         this.initBackpack();
@@ -347,13 +354,16 @@ export class UIBackpack extends UIBase {
         }
 
         const slotIndex = this.getBackpackSlots().indexOf(this.selectedBackpackSlot);
-        if (slotIndex < 0 || !Number.isFinite(pData.backpackItems[slotIndex])) {
+        const backpackItem = pData.backpackItems[slotIndex];
+        if (slotIndex < 0 || !Array.isArray(backpackItem) || backpackItem.length < 2) {
             this.hideAllSelect();
             return;
         }
 
-        // 移除当前格子的物品；数组后续元素会自动前移一格。
-        pData.backpackItems.splice(slotIndex, 1);
+        backpackItem[1]--;
+        if (backpackItem[1] <= 0) {
+            pData.backpackItems.splice(slotIndex, 1);
+        }
         this.hideAllSelect();
         this.initBackpack();
         this.refreshBackpack();

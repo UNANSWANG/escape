@@ -129,6 +129,8 @@ export enum SaveKey {
     props = "props",
     /**仓库数据 */
     storehouse = "storehouse",
+    /**当前装备数据 */
+    equipmentIds = "equipmentIds",
     /**引导 */
     guide = "guide",
     /**音效开关 */

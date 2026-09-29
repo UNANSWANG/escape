@@ -44,8 +44,10 @@ export class playerData {
     private isGameReportDirty = false;
     /**游戏开始的时间戳 */
     gameStartTime = 0;
+    /**装备栏默认值；近战武器和背包不能留空。 */
+    private readonly defaultEquipmentIds: number[] = [-1, -1, 0, -1, -1, 0];
     /**装备id数组[主武器（weapons），副武器（weapons），近战武器（weapons），头盔（equipment），护甲（equipment），背包（equipment）] */
-    equipmentIds: number[] = [-1, -1, -1, -1, -1, -1];
+    equipmentIds: number[] = this.defaultEquipmentIds.slice();
     /**背包内价值 */
     backpackValue = 0;
     /**背包内当前容量 */
@@ -267,6 +269,70 @@ export class playerData {
         ccStorageTools.setData(SaveKey.storehouse, this.storehouseData);
     }
 
+    /**修改单个装备槽并保存；近战武器和背包为空时自动恢复默认装备。 */
+    setEquipmentId(slotIndex: number, equipmentId: number): boolean {
+        if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= this.defaultEquipmentIds.length) {
+            return false;
+        }
+        if (!Number.isInteger(equipmentId) || equipmentId < -1) {
+            return false;
+        }
+
+        const equipmentIds = this.equipmentIds.slice();
+        equipmentIds[slotIndex] = equipmentId;
+        const normalizedEquipmentIds = this.normalizeEquipmentIds(equipmentIds);
+        const isChanged = normalizedEquipmentIds.length !== this.equipmentIds.length
+            || normalizedEquipmentIds.some((normalizedId, index) => normalizedId !== this.equipmentIds[index]);
+        if (!isChanged) {
+            return false;
+        }
+
+        this.equipmentIds = normalizedEquipmentIds;
+        this.saveEquipmentIds();
+        return true;
+    }
+
+    /**卸下指定槽位的装备，并恢复该槽位的默认装备。 */
+    removeEquipment(slotIndex: number): boolean {
+        return this.setEquipmentId(slotIndex, this.defaultEquipmentIds[slotIndex]);
+    }
+
+    /**读取并兼容旧版装备存档。 */
+    private initEquipmentIds(data: any) {
+        this.equipmentIds = this.normalizeEquipmentIds(data);
+        const isNormalizedData = Array.isArray(data)
+            && data.length === this.equipmentIds.length
+            && data.every((equipmentId, index) => equipmentId === this.equipmentIds[index]);
+        if (!isNormalizedData) {
+            this.saveEquipmentIds();
+        }
+    }
+
+    /**保证装备栏固定为六格，并处理不可为空的默认装备。 */
+    private normalizeEquipmentIds(data: any): number[] {
+        const equipmentIds = this.defaultEquipmentIds.slice();
+        if (Array.isArray(data)) {
+            for (let index = 0; index < equipmentIds.length; index++) {
+                const equipmentId = data[index];
+                if (Number.isInteger(equipmentId) && equipmentId >= -1) {
+                    equipmentIds[index] = equipmentId;
+                }
+            }
+        }
+
+        if (equipmentIds[2] < 0) {
+            equipmentIds[2] = this.defaultEquipmentIds[2];
+        }
+        if (equipmentIds[5] < 0) {
+            equipmentIds[5] = this.defaultEquipmentIds[5];
+        }
+        return equipmentIds;
+    }
+
+    private saveEquipmentIds() {
+        ccStorageTools.setData(SaveKey.equipmentIds, this.equipmentIds.slice());
+    }
+
     private initStorehouseData(data: any) {
         this.storehouseData = [];
         if (!Array.isArray(data)) {
@@ -368,6 +434,7 @@ export class playerData {
     initData() {
         this.propsNums = ccStorageTools.getData(SaveKey.props) || {};
         this.initStorehouseData(ccStorageTools.getData(SaveKey.storehouse));
+        this.initEquipmentIds(ccStorageTools.getData(SaveKey.equipmentIds));
         this.money = Math.max(0, ccStorageTools.getNumberData(SaveKey.money));
         this.gold = Math.max(0, ccStorageTools.getNumberData(SaveKey.gold));
         gmConfig.onlyAttackSelf = ccStorageTools.getNumberData(SaveKey.onlyAttackSelf) == 1;

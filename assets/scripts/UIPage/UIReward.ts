@@ -36,19 +36,23 @@ export class UIReward extends UIBase {
             this.rewardData = data.rewardData;
         }
 
-        this.applyMonetaryRewards();
+        this.applyRewards();
         this.showReward();
     }
 
-    /**领取并持久化当前奖励中的银币、金币 */
-    private applyMonetaryRewards() {
+    /**领取并持久化当前奖励 */
+    private applyRewards() {
+        const storehouseRewards: number[][] = [];
         for (const [itemId, num] of this.rewardData) {
             if (itemId === 200001) {
                 pData.fixMoney(num);
             } else if (itemId === 200002) {
                 pData.fixGold(num);
+            } else {
+                storehouseRewards.push([itemId, num]);
             }
         }
+        pData.fixStorehouseDatas(storehouseRewards);
     }
 
     bindBtn() {
@@ -77,11 +81,6 @@ export class UIReward extends UIBase {
 
     /**点击关闭 */
     clickCloseBtn() {
-        this.onClose();
-    }
-
-    /**点击获取 */
-    clickGetBtn() {
         this.onClose();
     }
 

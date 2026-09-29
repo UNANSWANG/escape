@@ -127,6 +127,8 @@ export enum SaveKey {
     isGetSign = "isGetSign",
     /**道具存储 */
     props = "props",
+    /**仓库数据 */
+    storehouse = "storehouse",
     /**引导 */
     guide = "guide",
     /**音效开关 */

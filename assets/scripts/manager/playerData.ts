@@ -14,6 +14,8 @@ export class playerData {
     level = 0;
     /**道具集合 */
     propsNums = {};
+    /**仓库数据，格式为 [[itemId, 数量], ...] */
+    storehouseData: number[][] = [];
     /**地图半宽高 */
     mapHalfSize: Vec2 = Vec2.ZERO;
     /**银币 */
@@ -193,6 +195,78 @@ export class playerData {
         }
     }
 
+    /**获取仓库数据 */
+    getStorehouseData(): number[][] {
+        return this.storehouseData.map((itemData) => [itemData[0], itemData[1]]);
+    }
+
+    /**增减单个仓库物品数量 */
+    fixStorehouseData(itemId: number, num: number) {
+        if (this.updateStorehouseData(itemId, num)) {
+            this.saveStorehouseData();
+        }
+    }
+
+    /**批量增减仓库物品数量，全部修改完成后只存储一次 */
+    fixStorehouseDatas(data: number[][]) {
+        if (!Array.isArray(data) || data.length === 0) {
+            return;
+        }
+
+        let isChanged = false;
+        for (const itemData of data) {
+            if (!Array.isArray(itemData) || itemData.length < 2) {
+                continue;
+            }
+            if (this.updateStorehouseData(itemData[0], itemData[1])) {
+                isChanged = true;
+            }
+        }
+
+        if (isChanged) {
+            this.saveStorehouseData();
+        }
+    }
+
+    private updateStorehouseData(itemId: number, num: number): boolean {
+        if (!Number.isInteger(itemId) || itemId < 0 || !Number.isInteger(num) || num === 0) {
+            return false;
+        }
+
+        const itemIndex = this.storehouseData.findIndex((itemData) => itemData[0] === itemId);
+        const currentNum = itemIndex >= 0 ? this.storehouseData[itemIndex][1] : 0;
+        const targetNum = Math.max(0, currentNum + num);
+        if (targetNum === currentNum) {
+            return false;
+        }
+
+        if (targetNum === 0) {
+            this.storehouseData.splice(itemIndex, 1);
+        } else if (itemIndex >= 0) {
+            this.storehouseData[itemIndex][1] = targetNum;
+        } else {
+            this.storehouseData.push([itemId, targetNum]);
+        }
+        return true;
+    }
+
+    private saveStorehouseData() {
+        ccStorageTools.setData(SaveKey.storehouse, this.storehouseData);
+    }
+
+    private initStorehouseData(data: any) {
+        this.storehouseData = [];
+        if (!Array.isArray(data)) {
+            return;
+        }
+
+        for (const itemData of data) {
+            if (Array.isArray(itemData) && itemData.length >= 2) {
+                this.updateStorehouseData(itemData[0], itemData[1]);
+            }
+        }
+    }
+
     /**获取带等级道具的存储键 */
     private getLevelPropsNumKey(propsType: string, level: number) {
         return propsType + "_" + level;
@@ -280,6 +354,7 @@ export class playerData {
     /**初始化存储数据 */
     initData() {
         this.propsNums = ccStorageTools.getData(SaveKey.props) || {};
+        this.initStorehouseData(ccStorageTools.getData(SaveKey.storehouse));
         this.money = Math.max(0, ccStorageTools.getNumberData(SaveKey.money));
         this.gold = Math.max(0, ccStorageTools.getNumberData(SaveKey.gold));
         gmConfig.onlyAttackSelf = ccStorageTools.getNumberData(SaveKey.onlyAttackSelf) == 1;

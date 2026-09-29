@@ -260,11 +260,12 @@ export default class List extends Component {
         let t = this;
         if (!t.checkInited(false))
             return;
-        if (val == null || val < 0) {
+        if (!Number.isFinite(val) || val < 0 || !Number.isInteger(val)) {
             console.error('numItems set the wrong::', val);
             return;
         }
         t._actualNumItems = t._numItems = val;
+        t._updateColLineNum();
         t._forceUpdate = true;
 
         if (t._virtual) {
@@ -674,6 +675,11 @@ export default class List extends Component {
         if (t.selectedMode == SelectedType.MULT)
             t.multSelected = [];
 
+        t._updateColLineNum();
+    }
+
+    _updateColLineNum() {
+        let t: any = this;
         switch (t._align) {
             case Layout.Type.HORIZONTAL:
                 t._colLineNum = 1;
@@ -683,22 +689,37 @@ export default class List extends Component {
                 t._colLineNum = 1;
                 t._sizeType = true;
                 break;
-            case Layout.Type.GRID:
+            case Layout.Type.GRID: {
+                let constraintNum: number = Math.max(1, Math.floor(t._layout.constraintNum));
                 switch (t._startAxis) {
-                    case Layout.AxisDirection.HORIZONTAL:
-                        //计算列数
-                        let trimW: number = t._contentUt.width - t._leftGap - t._rightGap;
-                        t._colLineNum = Math.floor((trimW + t._columnGap) / (t._itemSize.width + t._columnGap));
+                    case Layout.AxisDirection.HORIZONTAL: {
+                        if (t._layout.constraint == Layout.Constraint.FIXED_COL) {
+                            t._colLineNum = constraintNum;
+                        } else if (t._layout.constraint == Layout.Constraint.FIXED_ROW) {
+                            t._colLineNum = Math.ceil(t._numItems / constraintNum);
+                        } else {
+                            let trimW: number = t._contentUt.width - t._leftGap - t._rightGap;
+                            t._colLineNum = Math.floor((trimW + t._columnGap) / (t._itemSize.width + t._columnGap));
+                        }
                         t._sizeType = true;
                         break;
-                    case Layout.AxisDirection.VERTICAL:
-                        //计算行数
-                        let trimH: number = t._contentUt.height - t._topGap - t._bottomGap;
-                        t._colLineNum = Math.floor((trimH + t._lineGap) / (t._itemSize.height + t._lineGap));
+                    }
+                    case Layout.AxisDirection.VERTICAL: {
+                        if (t._layout.constraint == Layout.Constraint.FIXED_ROW) {
+                            t._colLineNum = constraintNum;
+                        } else if (t._layout.constraint == Layout.Constraint.FIXED_COL) {
+                            t._colLineNum = Math.ceil(t._numItems / constraintNum);
+                        } else {
+                            let trimH: number = t._contentUt.height - t._topGap - t._bottomGap;
+                            t._colLineNum = Math.floor((trimH + t._lineGap) / (t._itemSize.height + t._lineGap));
+                        }
                         t._sizeType = false;
                         break;
+                    }
                 }
+                t._colLineNum = Math.max(1, t._colLineNum || 0);
                 break;
+            }
         }
     }
     /**
@@ -723,18 +744,18 @@ export default class List extends Component {
             case Layout.Type.HORIZONTAL: {
                 if (t._customSize) {
                     let fixed: any = t._getFixedSize(null);
-                    result = t._leftGap + fixed.val + (t._itemSize.width * (t._numItems - fixed.count)) + (t._columnGap * (t._numItems - 1)) + t._rightGap;
+                    result = t._leftGap + fixed.val + (t._itemSize.width * (t._numItems - fixed.count)) + (t._columnGap * Math.max(0, t._numItems - 1)) + t._rightGap;
                 } else {
-                    result = t._leftGap + (t._itemSize.width * t._numItems) + (t._columnGap * (t._numItems - 1)) + t._rightGap;
+                    result = t._leftGap + (t._itemSize.width * t._numItems) + (t._columnGap * Math.max(0, t._numItems - 1)) + t._rightGap;
                 }
                 break;
             }
             case Layout.Type.VERTICAL: {
                 if (t._customSize) {
                     let fixed: any = t._getFixedSize(null);
-                    result = t._topGap + fixed.val + (t._itemSize.height * (t._numItems - fixed.count)) + (t._lineGap * (t._numItems - 1)) + t._bottomGap;
+                    result = t._topGap + fixed.val + (t._itemSize.height * (t._numItems - fixed.count)) + (t._lineGap * Math.max(0, t._numItems - 1)) + t._bottomGap;
                 } else {
-                    result = t._topGap + (t._itemSize.height * t._numItems) + (t._lineGap * (t._numItems - 1)) + t._bottomGap;
+                    result = t._topGap + (t._itemSize.height * t._numItems) + (t._lineGap * Math.max(0, t._numItems - 1)) + t._bottomGap;
                 }
                 break;
             }
@@ -745,11 +766,11 @@ export default class List extends Component {
                 switch (t._startAxis) {
                     case Layout.AxisDirection.HORIZONTAL:
                         let lineNum: number = Math.ceil(t._numItems / t._colLineNum);
-                        result = t._topGap + (t._itemSize.height * lineNum) + (t._lineGap * (lineNum - 1)) + t._bottomGap;
+                        result = t._topGap + (t._itemSize.height * lineNum) + (t._lineGap * Math.max(0, lineNum - 1)) + t._bottomGap;
                         break;
                     case Layout.AxisDirection.VERTICAL:
                         let colNum: number = Math.ceil(t._numItems / t._colLineNum);
-                        result = t._leftGap + (t._itemSize.width * colNum) + (t._columnGap * (colNum - 1)) + t._rightGap;
+                        result = t._leftGap + (t._itemSize.width * colNum) + (t._columnGap * Math.max(0, colNum - 1)) + t._rightGap;
                         break;
                 }
                 break;
@@ -1028,11 +1049,11 @@ export default class List extends Component {
     }
     //计算可视范围
     _calcViewPos() {
-        let scrollPos: any = this.content.getPosition();
+        let scrollPos: number = this._getScrollPosition();
         switch (this._alignCalcType) {
             case 1://单行HORIZONTAL（LEFT_TO_RIGHT）、网格VERTICAL（LEFT_TO_RIGHT）
-                this.elasticLeft = scrollPos.x > 0 ? scrollPos.x : 0;
-                this.viewLeft = (scrollPos.x < 0 ? -scrollPos.x : 0) - this.elasticLeft;
+                this.elasticLeft = scrollPos > 0 ? scrollPos : 0;
+                this.viewLeft = (scrollPos < 0 ? -scrollPos : 0) - this.elasticLeft;
 
                 this.viewRight = this.viewLeft + this._thisNodeUt.width;
                 this.elasticRight = this.viewRight > this._contentUt.width ? Math.abs(this.viewRight - this._contentUt.width) : 0;
@@ -1040,29 +1061,45 @@ export default class List extends Component {
                 // cc.log(this.elasticLeft, this.elasticRight, this.viewLeft, this.viewRight);
                 break;
             case 2://单行HORIZONTAL（RIGHT_TO_LEFT）、网格VERTICAL（RIGHT_TO_LEFT）
-                this.elasticRight = scrollPos.x < 0 ? -scrollPos.x : 0;
-                this.viewRight = (scrollPos.x > 0 ? -scrollPos.x : 0) + this.elasticRight;
+                this.elasticRight = scrollPos < 0 ? -scrollPos : 0;
+                this.viewRight = (scrollPos > 0 ? -scrollPos : 0) + this.elasticRight;
                 this.viewLeft = this.viewRight - this._thisNodeUt.width;
                 this.elasticLeft = this.viewLeft < -this._contentUt.width ? Math.abs(this.viewLeft + this._contentUt.width) : 0;
                 this.viewLeft -= this.elasticLeft;
                 // cc.log(this.elasticLeft, this.elasticRight, this.viewLeft, this.viewRight);
                 break;
             case 3://单列VERTICAL（TOP_TO_BOTTOM）、网格HORIZONTAL（TOP_TO_BOTTOM）
-                this.elasticTop = scrollPos.y < 0 ? Math.abs(scrollPos.y) : 0;
-                this.viewTop = (scrollPos.y > 0 ? -scrollPos.y : 0) + this.elasticTop;
+                this.elasticTop = scrollPos < 0 ? Math.abs(scrollPos) : 0;
+                this.viewTop = (scrollPos > 0 ? -scrollPos : 0) + this.elasticTop;
                 this.viewBottom = this.viewTop - this._thisNodeUt.height;
                 this.elasticBottom = this.viewBottom < -this._contentUt.height ? Math.abs(this.viewBottom + this._contentUt.height) : 0;
                 this.viewBottom += this.elasticBottom;
                 // cc.log(this.elasticTop, this.elasticBottom, this.viewTop, this.viewBottom);
                 break;
             case 4://单列VERTICAL（BOTTOM_TO_TOP）、网格HORIZONTAL（BOTTOM_TO_TOP）
-                this.elasticBottom = scrollPos.y > 0 ? Math.abs(scrollPos.y) : 0;
-                this.viewBottom = (scrollPos.y < 0 ? -scrollPos.y : 0) - this.elasticBottom;
+                this.elasticBottom = scrollPos > 0 ? Math.abs(scrollPos) : 0;
+                this.viewBottom = (scrollPos < 0 ? -scrollPos : 0) - this.elasticBottom;
                 this.viewTop = this.viewBottom + this._thisNodeUt.height;
                 this.elasticTop = this.viewTop > this._contentUt.height ? Math.abs(this.viewTop - this._contentUt.height) : 0;
                 this.viewTop -= this.elasticTop;
                 // cc.log(this.elasticTop, this.elasticBottom, this.viewTop, this.viewBottom);
                 break;
+        }
+    }
+    _getScrollPosition() {
+        let scrollOffset: Vec2 = this._scrollView.getScrollOffset();
+        let maxScrollOffset: Vec2 = this._scrollView.getMaxScrollOffset();
+        switch (this._alignCalcType) {
+            case 1:
+                return scrollOffset.x;
+            case 2:
+                return scrollOffset.x + maxScrollOffset.x;
+            case 3:
+                return scrollOffset.y;
+            case 4:
+                return scrollOffset.y - maxScrollOffset.y;
+            default:
+                return 0;
         }
     }
     //计算位置 根据id
@@ -1395,8 +1432,16 @@ export default class List extends Component {
     }
     //当尺寸改变
     _onSizeChanged() {
-        if (this.checkInited(false))
+        if (this.checkInited(false)) {
+            if (this._align == Layout.Type.GRID) {
+                this._updateColLineNum();
+                if (this._virtual) {
+                    this._forceUpdate = true;
+                    this._resizeContent();
+                }
+            }
             this._onScrolling();
+        }
     }
     //当Item自适应
     _onItemAdaptive(item: any) {
@@ -1962,8 +2007,7 @@ export default class List extends Component {
                 pos = new Vec3(0, -targetY + t._contentUt.height, 0);
                 break;
         }
-        let viewPos: any = t.content.getPosition();
-        viewPos = Math.abs(t._sizeType ? viewPos.y : viewPos.x);
+        let viewPos: number = Math.abs(t._getScrollPosition());
 
         let comparePos = t._sizeType ? pos.y : pos.x;
         let runScroll = Math.abs((t._scrollPos != null ? t._scrollPos : viewPos) - comparePos) > .5;

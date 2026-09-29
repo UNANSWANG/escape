@@ -1,10 +1,11 @@
-import { _decorator, Component, Node, ScrollView} from 'cc';
+import { _decorator, Node } from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccStorageTools } from '../extention/storageTools';
 import { SaveKey } from '../manager/configData';
+import List from '../sdk/virtualList/List';
 const { ccclass, property } = _decorator;
 @ccclass('UIStorehouse')
 export class UIStorehouse extends UIBase {
@@ -38,14 +39,15 @@ export class UIStorehouse extends UIBase {
     @property(Node)
     showWeaponNode: Node;
 
-    @property(ScrollView)
-    scrol: ScrollView;
+    @property(List)
+    scrolList: List;
 
     @property([Node])
     tabBtns: Node[] = [];
 
     private selectedTabIndex = 0;
     private isShowEquipment = 0;
+    private readonly tabItemCounts = [100, 30, 70];
 
     protected onLoad(): void {
         this.bindBtn();
@@ -143,7 +145,7 @@ export class UIStorehouse extends UIBase {
 
     /**点击页签 */
     clickTabBtn(index: number) {
-        if (index < 0 || index >= this.tabBtns.length) {
+        if (index < 0 || index >= this.tabBtns.length || index >= this.tabItemCounts.length) {
             return;
         }
 
@@ -153,6 +155,11 @@ export class UIStorehouse extends UIBase {
             if (selectNode) {
                 selectNode.active = i === this.selectedTabIndex;
             }
+        }
+
+        if (this.scrolList) {
+            this.scrolList.numItems = this.tabItemCounts[this.selectedTabIndex];
+            this.scrolList.scrollTo(0, 0);
         }
     }
 

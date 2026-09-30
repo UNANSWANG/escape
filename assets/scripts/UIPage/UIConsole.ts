@@ -20,6 +20,15 @@ export class UIConsole extends UIBase {
     fullSkinBtn: Node;
 
     @property(Node)
+    addAllWeaponBtn: Node;
+
+    @property(Node)
+    addAllEquipBtn: Node;
+
+    @property(Node)
+    addAllItemBtn: Node;
+
+    @property(Node)
     addPlayerMonetaryBtn: Node;
 
     @property(Toggle)
@@ -44,6 +53,9 @@ export class UIConsole extends UIBase {
         this.fullSkinBtn.addComponent(zoomButton).onClick = this.clickFullSkinBtn.bind(this);
         this.addPlayerMonetaryBtn.addComponent(zoomButton).onClick = this.clickAddPlayerMonetaryBtn.bind(this);
         this.adToggle.node.on(Toggle.EventType.TOGGLE, this.clickAdToggle, this);
+        this.addAllWeaponBtn.addComponent(zoomButton).onClick = this.clickAddWeaponBtn.bind(this);
+        this.addAllEquipBtn.addComponent(zoomButton).onClick = this.clickAddEquipBtn.bind(this);
+        this.addAllItemBtn.addComponent(zoomButton).onClick = this.clickAddItemBtn.bind(this);
     }
 
     /**刷新只攻击玩家自身开关 */
@@ -64,6 +76,20 @@ export class UIConsole extends UIBase {
     ///
     ///点击事件
     ///
+    /**点击增加武器 */
+    clickAddWeaponBtn() {
+        
+    }
+
+    /**点击增加装备 */
+    clickAddEquipBtn() {
+        
+    }
+
+    /**点击增加物品 */
+    clickAddItemBtn() {
+        
+    }
 
     /**点击全皮肤 */
     clickFullSkinBtn() {
@@ -72,7 +98,7 @@ export class UIConsole extends UIBase {
 
     /**点击增加玩家货币 */
     clickAddPlayerMonetaryBtn() {
-        pData.fixMoney(100000);
+        pData.fixMoney(10000000);
     }
 
     /**点击广告开关 */

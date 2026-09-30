@@ -22,6 +22,7 @@ import { weaponsConfig } from '../json/jsonWeapons';
 import { videoMgr } from '../manager/videoManager';
 import { soldiersController } from '../controller/enemy/soldiersController';
 import { soldiersData } from '../data/soldiersData';
+import { commonConfig } from '../json/jsonCommon';
 const { ccclass, property } = _decorator;
 
 /** 静态障碍物的世界坐标数据。points 为 null 时直接使用矩形包围盒。 */
@@ -1585,7 +1586,7 @@ export class UIGame extends UIBase {
         const gameVersion = this.openVersion;
         videoMgr.watchVideo(68, () => {
             this.isDrugAdWatching = false;
-            const rewardCount = isBig ? configData.drugAdCountBig : configData.drugAdCount;
+            const rewardCount = Number(isBig ? commonConfig.getValue("drugAdCountBig") : commonConfig.getValue("drugAdCount"));
             this.setDrugCount(isBig, this.getDrugCount(isBig) + Math.max(0, rewardCount));
             this.refreshDrugButtons();
             if (gameVersion === this.openVersion && this.node.activeInHierarchy) this.startUseDrug(isBig);
@@ -1599,7 +1600,7 @@ export class UIGame extends UIBase {
         if (this.getDrugCount(isBig) <= 0) return false;
         const roleComp = playerMgr.playerComp;
         const useTime = isBig ? configData.drugUseTimeBig : configData.drugUseTime;
-        const healPercent = isBig ? configData.drugHpBig : configData.drugHp;
+        const healPercent = Number(isBig ? commonConfig.getValue("drugHpBig") : commonConfig.getValue("drugHp")) / 100;
         return roleComp?.useDrug(useTime, healPercent, () => {
             this.setDrugCount(isBig, this.getDrugCount(isBig) - 1);
             this.refreshDrugButtons();

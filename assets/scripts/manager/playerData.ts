@@ -5,6 +5,7 @@ import { gm, PlatType } from './gm';
 import { httpMgr } from '../sdk/network/httpManager';
 import { urlConfig } from '../sdk/network/netConfig';
 import { ccTimeTools } from '../extention/timeTools';
+import { commonConfig } from '../json/jsonCommon';
 const { ccclass, property } = _decorator;
 
 //用户游戏内数据
@@ -73,9 +74,9 @@ export class playerData {
         //初始化背包内物品
         this.backpackItems = [];
         //初始化小药品数量
-        this.drugCount = configData.drugCount;
+        this.drugCount = Number(commonConfig.getValue("drugCount"));
         //初始化大药品数量
-        this.drugCountBig = configData.drugCountBig;
+        this.drugCountBig = Number(commonConfig.getValue("drugCountBig"));
 
         this.SDKReportLevelStart();
     }

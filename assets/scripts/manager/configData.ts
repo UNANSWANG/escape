@@ -8,20 +8,8 @@ export const configData = {
     rankModeFactor: 100000,
     /**搜索物品加载单圈时间 */
     loadCircleTime: 0.5,
-    /**小药品初始数量 */
-    drugCount: 3,
-    /**小药品恢复血量 */
-    drugHp: 0.2,
-    /**小药品广告赠送数量 */
-    drugAdCount: 2,
     /**小药品使用时间（秒） */
     drugUseTime: 2,
-    /**大药品初始数量 */
-    drugCountBig: 1,
-    /**大药品恢复血量 */
-    drugHpBig: 1,
-    /**大药品广告赠送数量 */
-    drugAdCountBig: 1,
     /**大药品使用时间（秒） */
     drugUseTimeBig: 4,
     /**撤离时间（秒） */

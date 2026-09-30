@@ -207,13 +207,7 @@ export class UILoading extends Component {
         //通用配置
         configData.moveSpeed = Number(commonConfig.getValue("moveSpeed"));
         configData.loadCircleTime = Number(commonConfig.getValue("loadCircleTime"));
-        configData.drugCount = Number(commonConfig.getValue("drugCount"));
-        configData.drugHp = Number(commonConfig.getValue("drugHp")) / 100;
-        configData.drugAdCount = Number(commonConfig.getValue("drugAdCount"));
         configData.drugUseTime = Number(commonConfig.getValue("drugUseTime"));
-        configData.drugCountBig = Number(commonConfig.getValue("drugCountBig"));
-        configData.drugHpBig = Number(commonConfig.getValue("drugHpBig")) / 100;
-        configData.drugAdCountBig = Number(commonConfig.getValue("drugAdCountBig"));
         configData.drugUseTimeBig = Number(commonConfig.getValue("drugUseTimeBig"));
         configData.leaveTime = Number(commonConfig.getValue("leaveTime"));
 

@@ -1,4 +1,4 @@
-import { _decorator, EventTouch, Label, Node, UITransform, Vec3 } from 'cc';
+import { _decorator, EventTouch, Label, Node, UITransform, Vec3, view } from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -433,16 +433,47 @@ export class UIStorehouse extends UIBase {
             return;
         }
 
+        this.setEquipButtonAtItemEdge(itemTransform, buttonTransform, buttonParentTransform, true);
+        if (this.isEquipButtonOutsideVisibleArea(buttonTransform)) {
+            this.setEquipButtonAtItemEdge(itemTransform, buttonTransform, buttonParentTransform, false);
+        }
+    }
+
+    private setEquipButtonAtItemEdge(
+        itemTransform: UITransform,
+        buttonTransform: UITransform,
+        buttonParentTransform: UITransform,
+        isRightSide: boolean,
+    ) {
         this.tempLocalPosition.set(
-            itemTransform.width * (1 - itemTransform.anchorX),
+            isRightSide
+                ? itemTransform.width * (1 - itemTransform.anchorX)
+                : -itemTransform.width * itemTransform.anchorX,
             itemTransform.height * (0.5 - itemTransform.anchorY),
             0,
         );
         itemTransform.convertToWorldSpaceAR(this.tempLocalPosition, this.tempWorldPosition);
         buttonParentTransform.convertToNodeSpaceAR(this.tempWorldPosition, this.tempLocalPosition);
-        this.tempLocalPosition.x += buttonTransform.width * this.equipBtn.scale.x * buttonTransform.anchorX;
-        this.tempLocalPosition.y += buttonTransform.height * this.equipBtn.scale.y * (buttonTransform.anchorY - 0.5);
+
+        const buttonWidth = buttonTransform.width * Math.abs(this.equipBtn.scale.x);
+        const buttonHeight = buttonTransform.height * Math.abs(this.equipBtn.scale.y);
+        this.tempLocalPosition.x += isRightSide
+            ? buttonWidth * buttonTransform.anchorX
+            : -buttonWidth * (1 - buttonTransform.anchorX);
+        this.tempLocalPosition.y += buttonHeight * (buttonTransform.anchorY - 0.5);
         this.equipBtn.setPosition(this.tempLocalPosition);
+    }
+
+    private isEquipButtonOutsideVisibleArea(buttonTransform: UITransform): boolean {
+        const buttonRect = buttonTransform.getBoundingBoxToWorld();
+        const visibleOrigin = view.getVisibleOrigin();
+        const visibleSize = view.getVisibleSize();
+        const visibleRight = visibleOrigin.x + visibleSize.width;
+        const visibleTop = visibleOrigin.y + visibleSize.height;
+        return buttonRect.x < visibleOrigin.x
+            || buttonRect.y < visibleOrigin.y
+            || buttonRect.x + buttonRect.width > visibleRight
+            || buttonRect.y + buttonRect.height > visibleTop;
     }
 
     private getEquipmentNodes(): Node[] {

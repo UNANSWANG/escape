@@ -14,6 +14,8 @@ export const configData = {
     drugUseTimeBig: 4,
     /**撤离时间（秒） */
     leaveTime: 10,
+    /**装备售卖百分比 */
+    equipmentSellPercent: 0.6,
 }
 
 /**玩家通用配置（暂不读表） */

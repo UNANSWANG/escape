@@ -47,6 +47,8 @@ export interface JsonEquipmentData {
     itemId: number;
     /**名字 */
     name: string;
+    /**价值 */
+    value: number;
     /**免伤百分比 */
     damageImmunity: number;
     /**护甲值 */

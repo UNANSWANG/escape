@@ -48,6 +48,8 @@ export interface JsonWeaponsData {
     itemId: number;
     /**名字 */
     name: string;
+    /**价值 */
+    value: number;
     /**攻击间隔 */
     attackInterval: number;
     /**子弹飞行速度 */

@@ -244,6 +244,14 @@ export class playerData {
         }
     }
 
+    /** 撤离成功时将背包物品批量转入仓库，并清空本局背包数据。 */
+    moveBackpackItemsToStorehouse() {
+        this.fixStorehouseDatas(this.backpackItems);
+        this.backpackItems = [];
+        this.backpackValue = 0;
+        this.backpackCapacity = 0;
+    }
+
     private updateStorehouseData(itemId: number, num: number): boolean {
         if (!Number.isInteger(itemId) || itemId < 0 || !Number.isInteger(num) || num === 0) {
             return false;

@@ -1030,6 +1030,7 @@ export class UIGame extends UIBase {
         if (this.leaveRemaining > 0) return;
 
         this.isLeaveSuccessTriggered = true;
+        pData.moveBackpackItemsToStorehouse();
         uiMgr.openPage(UIPath.UISuccess, {
             survivalTime: this.survivalTime,
             skinId: pData.skinId,

@@ -4,13 +4,14 @@ import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccStorageTools } from '../extention/storageTools';
-import { SaveKey } from '../manager/configData';
+import { configData, SaveKey } from '../manager/configData';
 import List from '../sdk/virtualList/List';
 import { pData } from '../manager/playerData';
 import { equipmentConfig } from '../json/jsonEquipment';
 import { weaponsConfig } from '../json/jsonWeapons';
 import { itemConfig } from '../json/jsonItem';
 import { itemController } from '../controller/itemController';
+import { ccTools } from '../extention/generalTools';
 const { ccclass, property } = _decorator;
 
 interface StorehouseListItem {
@@ -84,6 +85,8 @@ export class UIStorehouse extends UIBase {
     private selectedEquipmentNode: Node = null;
     private selectedStorehouseIndex = -1;
     private isListScrolling = false;
+    private isBatchSellMode = false;
+    private readonly sellItemCounts = new Map<number, number>();
     private readonly renderedItemIndexes = new Map<Node, number>();
     private readonly tempWorldPosition = new Vec3();
     private readonly tempLocalPosition = new Vec3();
@@ -140,6 +143,8 @@ export class UIStorehouse extends UIBase {
         this.closeBtn.addComponent(zoomButton).onClick = this.clickCloseBtn.bind(this);
         this.sortBtn.addComponent(zoomButton).onClick = this.clickSortBtn.bind(this);
         this.sellSwitchBtn.addComponent(zoomButton).onClick = this.clickSellSwitchBtn.bind(this);
+        this.selectAllBtn.addComponent(zoomButton).onClick = this.clickSelectAllBtn.bind(this);
+        this.sellBtn.addComponent(zoomButton).onClick = this.clickSellBtn.bind(this);
         this.cancelBtn.addComponent(zoomButton).onClick = this.clickCancelBtn.bind(this);
         this.equipBtn.addComponent(zoomButton).onClick = this.clickEquipBtn.bind(this);
         this.removeBtn.addComponent(zoomButton).onClick = this.clickRemoveBtn.bind(this);
@@ -166,8 +171,11 @@ export class UIStorehouse extends UIBase {
 
         const selectNode = item.getChildByName("select");
         if (selectNode) {
-            selectNode.active = idx === this.selectedStorehouseIndex && !!this.listData[idx];
+            selectNode.active = !this.isBatchSellMode
+                && idx === this.selectedStorehouseIndex
+                && !!this.listData[idx];
         }
+        this.refreshSellItemDisplay(item, idx);
 
         const contentNode = item?.getChildByName("content");
         const itemNode = contentNode?.children?.[0];
@@ -220,6 +228,17 @@ export class UIStorehouse extends UIBase {
             return;
         }
 
+        if (this.isBatchSellMode) {
+            if (this.sellItemCounts.has(listItem.itemId)) {
+                this.sellItemCounts.delete(listItem.itemId);
+            } else {
+                this.sellItemCounts.set(listItem.itemId, Math.max(1, Math.floor(listItem.num)));
+            }
+            this.refreshSellItemDisplay(itemNode, itemIndex);
+            this.refreshSellPrice();
+            return;
+        }
+
         this.selectedEquipmentNode = null;
         this.selectedStorehouseIndex = itemIndex;
         this.refreshSelect();
@@ -241,14 +260,20 @@ export class UIStorehouse extends UIBase {
         for (const [itemNode, itemIndex] of this.renderedItemIndexes) {
             const selectNode = itemNode?.getChildByName("select");
             if (selectNode) {
-                selectNode.active = itemIndex === this.selectedStorehouseIndex && !!this.listData[itemIndex];
+                selectNode.active = !this.isBatchSellMode
+                    && itemIndex === this.selectedStorehouseIndex
+                    && !!this.listData[itemIndex];
             }
         }
 
         const selectedStorehouseItem = this.listData[this.selectedStorehouseIndex];
         const selectedEquipmentSlot = this.getEquipmentNodes().indexOf(this.selectedEquipmentNode);
-        this.removeBtn.active = selectedEquipmentSlot >= 0 && this.getEquippedItemId(selectedEquipmentSlot) >= 0;
-        this.equipBtn.active = !!selectedStorehouseItem && this.isEquipment(selectedStorehouseItem.itemId);
+        this.removeBtn.active = !this.isBatchSellMode
+            && selectedEquipmentSlot >= 0
+            && this.getEquippedItemId(selectedEquipmentSlot) >= 0;
+        this.equipBtn.active = !this.isBatchSellMode
+            && !!selectedStorehouseItem
+            && this.isEquipment(selectedStorehouseItem.itemId);
     }
 
     /**取消左右两侧的全部选中状态。 */
@@ -259,6 +284,8 @@ export class UIStorehouse extends UIBase {
     }
 
     private setBatchSellMode(isBatchSellMode: boolean) {
+        this.isBatchSellMode = isBatchSellMode;
+        this.sellItemCounts.clear();
         this.sortBtn.active = !isBatchSellMode;
         this.sellSwitchBtn.active = !isBatchSellMode;
         this.sellMask.active = isBatchSellMode;
@@ -266,6 +293,128 @@ export class UIStorehouse extends UIBase {
         this.sellBtn.active = isBatchSellMode;
         this.cancelBtn.active = isBatchSellMode;
         this.sellPriceLab.node.active = isBatchSellMode;
+        this.refreshSelect();
+        this.refreshRenderedSellItems();
+        this.refreshSellPrice();
+    }
+
+    /**刷新当前已渲染格子的批量出售显示。 */
+    private refreshRenderedSellItems() {
+        for (const [itemNode, itemIndex] of this.renderedItemIndexes) {
+            this.refreshSellItemDisplay(itemNode, itemIndex);
+        }
+    }
+
+    /**刷新单个格子的出售选择及数量控制。 */
+    private refreshSellItemDisplay(itemNode: Node, itemIndex: number) {
+        const sellNode = itemNode?.getChildByName("sellNode");
+        if (!sellNode) {
+            return;
+        }
+
+        const listItem = this.listData[itemIndex];
+        const selectedCount = listItem ? this.sellItemCounts.get(listItem.itemId) : undefined;
+        sellNode.active = this.isBatchSellMode && selectedCount !== undefined;
+
+        const leftNode = sellNode.getChildByName("left");
+        const rightNode = sellNode.getChildByName("right");
+        const numMask = sellNode.getChildByName("numMask");
+        const numLabNode = sellNode.getChildByName("numLab");
+        leftNode?.off(Node.EventType.TOUCH_END, this.clickSellLeftBtn, this);
+        rightNode?.off(Node.EventType.TOUCH_END, this.clickSellRightBtn, this);
+        leftNode?.on(Node.EventType.TOUCH_END, this.clickSellLeftBtn, this);
+        rightNode?.on(Node.EventType.TOUCH_END, this.clickSellRightBtn, this);
+
+        if (!listItem || selectedCount === undefined) {
+            return;
+        }
+
+        const showCountControls = Math.floor(listItem.num) > 1;
+        if (leftNode) {
+            leftNode.active = showCountControls;
+        }
+        if (rightNode) {
+            rightNode.active = showCountControls;
+        }
+        if (numMask) {
+            numMask.active = showCountControls;
+        }
+
+        if (numLabNode) {
+            numLabNode.active = showCountControls;
+            const numLab = numLabNode.getComponent(Label);
+            if (numLab) {
+                numLab.string = `${selectedCount}`;
+            }
+        }
+    }
+
+    /**根据出售数量刷新总价格。 */
+    private refreshSellPrice() {
+        let totalPrice = 0;
+        for (const [itemId, count] of this.sellItemCounts) {
+            totalPrice += this.getItemSellPrice(itemId) * count;
+        }
+        this.sellPriceLab.string = `出售价格：${ccTools.formatMonetaryNum(totalPrice)}`;
+    }
+
+    /**获取单个物品的实际出售价格。 */
+    private getItemSellPrice(itemId: number): number {
+        const weaponData = weaponsConfig.getDataByItemId(itemId);
+        const equipmentData = equipmentConfig.getDataByItemId(itemId);
+        if (weaponData || equipmentData) {
+            const equipmentValue = Number(weaponData?.value ?? equipmentData?.value) || 0;
+            const sellPercent = Math.max(0, Number(configData.equipmentSellPercent) || 0);
+            return Math.floor(equipmentValue * sellPercent);
+        }
+        return Math.max(0, Math.floor(Number(itemConfig.getDataByItemId(itemId)?.value) || 0));
+    }
+
+    /**从出售数量按钮向上找到对应的虚拟列表格子。 */
+    private getRenderedItemNode(targetNode: Node): Node | null {
+        let currentNode = targetNode;
+        while (currentNode) {
+            if (this.renderedItemIndexes.has(currentNode)) {
+                return currentNode;
+            }
+            currentNode = currentNode.parent;
+        }
+        return null;
+    }
+
+    private changeSellItemCount(event: EventTouch, changeCount: number) {
+        event.propagationStopped = true;
+        if (this.isTouchMoved(event)) {
+            return;
+        }
+
+        const itemNode = this.getRenderedItemNode(event.currentTarget as Node);
+        const itemIndex = itemNode ? this.renderedItemIndexes.get(itemNode) : undefined;
+        const listItem = itemIndex === undefined ? null : this.listData[itemIndex];
+        if (!itemNode || itemIndex === undefined || !listItem) {
+            return;
+        }
+
+        const currentCount = this.sellItemCounts.get(listItem.itemId);
+        if (currentCount === undefined) {
+            return;
+        }
+
+        const maxCount = Math.max(1, Math.floor(listItem.num));
+        this.sellItemCounts.set(
+            listItem.itemId,
+            Math.min(maxCount, Math.max(1, currentCount + changeCount)),
+        );
+        this.refreshSellItemDisplay(itemNode, itemIndex);
+        this.refreshSellPrice();
+    }
+
+    private clickSellLeftBtn(event: EventTouch) {
+        this.changeSellItemCount(event, -1);
+    }
+
+    private clickSellRightBtn(event: EventTouch) {
+        this.changeSellItemCount(event, 1);
     }
 
     /**选中左侧已装备的武器或装备。 */
@@ -473,6 +622,62 @@ export class UIStorehouse extends UIBase {
     clickSellSwitchBtn(event: EventTouch) {
         this.hideAllSelect();
         this.setBatchSellMode(true);
+    }
+
+    /**点击全选，保留已选物品，并选中当前页签中尚未选中的低品质藏品。 */
+    clickSelectAllBtn() {
+        for (const listItem of this.listData) {
+            if (this.sellItemCounts.has(listItem.itemId)) {
+                continue;
+            }
+
+            const itemData = itemConfig.getDataByItemId(listItem.itemId);
+            const quality = Number(itemData?.quality);
+            if (!itemData || !Number.isFinite(quality) || quality >= 4) {
+                continue;
+            }
+
+            const maxCount = Math.max(0, Math.floor(listItem.num));
+            if (maxCount > 0) {
+                this.sellItemCounts.set(listItem.itemId, maxCount);
+            }
+        }
+        this.refreshRenderedSellItems();
+        this.refreshSellPrice();
+    }
+
+    /**出售全部已选择的物品。 */
+    clickSellBtn() {
+        const currentItemCounts = new Map<number, number>();
+        for (const [itemId, count] of pData.getStorehouseData()) {
+            currentItemCounts.set(itemId, count);
+        }
+
+        const storehouseChanges: number[][] = [];
+        let totalPrice = 0;
+        for (const [itemId, selectedCount] of this.sellItemCounts) {
+            const availableCount = Math.max(0, Math.floor(currentItemCounts.get(itemId) ?? 0));
+            const sellCount = Math.min(availableCount, Math.max(0, Math.floor(selectedCount)));
+            if (sellCount <= 0) {
+                continue;
+            }
+
+            storehouseChanges.push([itemId, -sellCount]);
+            totalPrice += this.getItemSellPrice(itemId) * sellCount;
+        }
+
+        if (storehouseChanges.length === 0) {
+            uiMgr.showTips("请选择出售物品");
+            return;
+        }
+
+        pData.fixStorehouseDatas(storehouseChanges);
+        pData.fixMoney(totalPrice);
+        this.sellItemCounts.clear();
+        this.clickTabBtn(this.selectedTabIndex);
+        this.refreshRenderedSellItems();
+        this.refreshSellPrice();
+        uiMgr.showTips("出售成功");
     }
 
     /**点击取消批量出售 */

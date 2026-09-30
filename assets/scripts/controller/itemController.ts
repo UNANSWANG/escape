@@ -15,6 +15,8 @@ export class itemController extends Component {
     private maskNode: Node = null;
     /** 物品品质背景。 */
     private bgSp: Sprite = null;
+    /** 物品图片。 */
+    private itemImgSp: Sprite = null;
     /** 遮罩中的加载圆环节点。 */
     private circleNode: Node = null;
 
@@ -29,6 +31,11 @@ export class itemController extends Component {
         this.showNormal();
         const quality = itemConfig.getDataByItemId(itemId)?.quality ?? 4;
         ccTools.loadImg(this.bgSp, imgPath.itemBg + quality);
+        if (this.itemImgSp) {
+            this.itemImgSp.spriteFrame = null;
+            //TODO 物品图片不齐，暂时先屏蔽
+            // ccTools.loadImg(this.itemImgSp, imgPath.item + itemId);
+        }
 
         const itemData = getItemDataByItemId(itemId) as JsonItemData;
         if (!itemData) {
@@ -56,6 +63,7 @@ export class itemController extends Component {
         this.normalNode = this.node.getChildByName("normal");
         this.maskNode = this.node.getChildByName("mask");
         this.bgSp = this.normalNode.getChildByName("bg").getComponent(Sprite);
+        this.itemImgSp = this.normalNode.getChildByName("itemImg")?.getComponent(Sprite) ?? null;
         this.circleNode = this.maskNode.getChildByName("circle");
     }
 

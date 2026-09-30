@@ -11,6 +11,7 @@ import { weaponsController } from '../weaponsController';
 import { uiMgr } from '../../manager/UIManager';
 import { JsonRoleData, roleConfig } from '../../json/jsonRole';
 import { weaponsConfig } from '../../json/jsonWeapons';
+import { equipmentConfig } from '../../json/jsonEquipment';
 import { pData } from '../../manager/playerData';
 import { soldiersController } from '../enemy/soldiersController';
 const { ccclass } = _decorator;
@@ -110,6 +111,10 @@ export class roleController extends Component {
     maxHp = 100;
     /**角色当前血量 */
     hp = 0;
+    /** 角色护甲值上限。 */
+    maxDefenseValue = 0;
+    /** 角色当前护甲值。 */
+    defenseValue = 0;
     /**血量节点 */
     hpNode: Node = null;
     /**当前血量图片 */
@@ -675,6 +680,7 @@ export class roleController extends Component {
         //TODO 临时降低血量
         this.hp = this.maxHp;
         this.refreshHp(true);
+        this.applyEquippedArmor();
         this.originalMoveSpeed = configData.moveSpeed;
         this.applyEquippedWeaponStats();
         this.refreshRoleSpine();
@@ -730,6 +736,17 @@ export class roleController extends Component {
         }
     }
 
+    /** 读取护甲槽配置，并用表格中的 defenseValue 初始化本局护甲值。 */
+    private applyEquippedArmor() {
+        const armorData = equipmentConfig.getDataById(pData.equipmentIds[4]);
+        const configuredDefenseValue = Number(armorData?.defenseValue);
+        this.maxDefenseValue = Number.isFinite(configuredDefenseValue) && configuredDefenseValue > 0
+            ? configuredDefenseValue
+            : 0;
+        this.defenseValue = this.maxDefenseValue;
+        this.refreshDefense();
+    }
+
     /**
      * 按 weapons 表的类型给武器节点挂载控制脚本：0 为刀、4 为霰弹枪、5 为狙击枪，其余为普通枪械。
      * 切换装备数据时统一移除旧的武器基类组件，避免同一节点同时存在多个武器控制器。
@@ -750,9 +767,10 @@ export class roleController extends Component {
         this.gameComp?.setGameViewScale(sniper?.viewScale ?? 1);
     }
 
-    /** weapons 表异步加载完成后，为已创建的角色补充装备数值。 */
+    /** 装备相关表异步加载完成后，为已创建的角色补充装备数值。 */
     private onTableLoad(tableName: string) {
         if (tableName === 'weapons') this.applyEquippedWeaponStats();
+        if (tableName === 'equipment') this.applyEquippedArmor();
     }
 
     /** 刷新角色初始状态，同时通知枪械重新绑定角色挂点。 */
@@ -807,14 +825,25 @@ export class roleController extends Component {
         return isAttacked;
     }
 
-    /**受到伤害时扣除生命值，并在角色头顶显示实际伤害数值。 */
+    /** 受到伤害时先扣护甲再扣生命，并在角色头顶显示实际伤害数值。 */
     takeDamage(damage: number) {
         if (!Number.isFinite(damage) || damage <= 0 || this.hp <= 0) return false;
-        const actualDamage = Math.min(this.hp, damage);
-        this.hp -= actualDamage;
-        this.refreshHp();
+        const defenseDamage = Math.min(this.defenseValue, damage);
+        this.defenseValue -= defenseDamage;
+
+        const hpDamage = Math.min(this.hp, damage - defenseDamage);
+        this.hp -= hpDamage;
+
+        if (defenseDamage > 0) this.refreshDefense();
+        if (hpDamage > 0) this.refreshHp();
+        const actualDamage = defenseDamage + hpDamage;
         this.gameComp?.showDamageFloat(this.node, actualDamage);
         return true;
+    }
+
+    /** 刷新游戏界面的护甲条。 */
+    private refreshDefense() {
+        this.gameComp?.refreshDefenseBar(this.defenseValue, this.maxDefenseValue);
     }
 
     /**恢复生命值，恢复量不会使当前生命超过上限。 */

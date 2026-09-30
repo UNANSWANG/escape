@@ -228,7 +228,8 @@ export class UIStorehouse extends UIBase {
         }
 
         const selectedStorehouseItem = this.listData[this.selectedStorehouseIndex];
-        this.removeBtn.active = this.selectedEquipmentNode !== null;
+        const selectedEquipmentSlot = this.getEquipmentNodes().indexOf(this.selectedEquipmentNode);
+        this.removeBtn.active = selectedEquipmentSlot >= 0 && this.getEquippedItemId(selectedEquipmentSlot) >= 0;
         this.equipBtn.active = !!selectedStorehouseItem && this.isEquipment(selectedStorehouseItem.itemId);
     }
 
@@ -273,6 +274,67 @@ export class UIStorehouse extends UIBase {
 
     private isEquipment(itemId: number): boolean {
         return !!weaponsConfig.getDataByItemId(itemId) || !!equipmentConfig.getDataByItemId(itemId);
+    }
+
+    /**根据物品配置获取应该装备到的槽位。 */
+    private getEquipmentSlotIndex(itemId: number): number {
+        const weaponData = weaponsConfig.getDataByItemId(itemId);
+        if (weaponData) {
+            if (weaponData.type === 0) {
+                return 2;
+            }
+            if (pData.equipmentIds[0] < 0) {
+                return 0;
+            }
+            if (pData.equipmentIds[1] < 0) {
+                return 1;
+            }
+            return 0;
+        }
+
+        const equipmentData = equipmentConfig.getDataByItemId(itemId);
+        if (!equipmentData) {
+            return -1;
+        }
+        if (equipmentData.type === 0) {
+            return 3;
+        }
+        if (equipmentData.type === 1) {
+            return 4;
+        }
+        if (equipmentData.type === 2) {
+            return 5;
+        }
+        return -1;
+    }
+
+    /**根据物品配置取得写入 equipmentIds 的配置 id。 */
+    private getEquipmentConfigId(itemId: number): number {
+        const weaponData = weaponsConfig.getDataByItemId(itemId);
+        if (weaponData) {
+            return weaponData.id;
+        }
+        return equipmentConfig.getDataByItemId(itemId)?.id ?? -1;
+    }
+
+    /**获取指定槽位当前装备对应的仓库物品 id。 */
+    private getEquippedItemId(slotIndex: number): number {
+        const equipmentId = pData.equipmentIds[slotIndex];
+        if (equipmentId === pData.getDefaultEquipmentId(slotIndex)) {
+            return -1;
+        }
+
+        if (slotIndex <= 2) {
+            return weaponsConfig.getDataById(equipmentId)?.itemId ?? -1;
+        }
+        return equipmentConfig.getDataById(equipmentId)?.itemId ?? -1;
+    }
+
+    /**装备变化后刷新装备名称和当前仓库列表。 */
+    private refreshAfterEquipmentChange() {
+        this.refreshWeaponNames();
+        this.refreshEquipmentNames();
+        this.clickTabBtn(this.selectedTabIndex);
     }
 
     private isTouchMoved(event: EventTouch): boolean {
@@ -417,12 +479,44 @@ export class UIStorehouse extends UIBase {
     /**点击装备按钮。 */
     clickEquipBtn() {
         const selectedItem = this.listData[this.selectedStorehouseIndex];
-        console.log("点击装备", selectedItem?.itemId);
+        if (!selectedItem || selectedItem.num <= 0) {
+            this.hideAllSelect();
+            return;
+        }
+
+        const slotIndex = this.getEquipmentSlotIndex(selectedItem.itemId);
+        const equipmentId = this.getEquipmentConfigId(selectedItem.itemId);
+        if (slotIndex < 0 || equipmentId < 0) {
+            this.hideAllSelect();
+            return;
+        }
+
+        const replacedItemId = this.getEquippedItemId(slotIndex);
+        pData.setEquipmentId(slotIndex, equipmentId);
+        const storehouseChanges = [[selectedItem.itemId, -1]];
+        if (replacedItemId >= 0) {
+            storehouseChanges.push([replacedItemId, 1]);
+        }
+        pData.fixStorehouseDatas(storehouseChanges);
+        this.refreshAfterEquipmentChange();
     }
 
     /**点击卸下按钮。 */
     clickRemoveBtn() {
-        console.log("点击卸下装备", this.selectedEquipmentNode?.name);
+        const slotIndex = this.getEquipmentNodes().indexOf(this.selectedEquipmentNode);
+        if (slotIndex < 0) {
+            this.hideAllSelect();
+            return;
+        }
+
+        const removedItemId = this.getEquippedItemId(slotIndex);
+        if (removedItemId < 0 || !pData.removeEquipment(slotIndex)) {
+            this.hideAllSelect();
+            return;
+        }
+
+        pData.fixStorehouseData(removedItemId, 1);
+        this.refreshAfterEquipmentChange();
     }
 
     /**点击显示装备开关 */

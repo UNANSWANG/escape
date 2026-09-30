@@ -297,6 +297,14 @@ export class playerData {
         return this.setEquipmentId(slotIndex, this.defaultEquipmentIds[slotIndex]);
     }
 
+    /**获取指定装备槽位的默认装备 id。 */
+    getDefaultEquipmentId(slotIndex: number): number {
+        if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= this.defaultEquipmentIds.length) {
+            return -1;
+        }
+        return this.defaultEquipmentIds[slotIndex];
+    }
+
     /**读取并兼容旧版装备存档。 */
     private initEquipmentIds(data: any) {
         this.equipmentIds = this.normalizeEquipmentIds(data);

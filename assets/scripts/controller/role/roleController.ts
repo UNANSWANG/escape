@@ -178,20 +178,28 @@ export class roleController extends Component {
         return this.weaponComps[slotIndex] ?? null;
     }
 
+    /**指定武器槽是否已装备武器。 */
+    private hasEquippedWeapon(slotIndex: number) {
+        const weaponId = pData.equipmentIds[slotIndex];
+        return slotIndex >= 0 && slotIndex < this.weaponNodes.length
+            && Number.isInteger(weaponId) && weaponId >= 0;
+    }
+
     /**
      * 切换当前装备槽位：0 为主武器、1 为副武器、2 为近战武器。
      * 即使近战控制器尚未实现，也会正确切换武器节点显示。
      */
     equipWeapon(slotIndex: number) {
         const targetNode = this.weaponNodes[slotIndex];
-        if (!targetNode) return false;
+        const targetWeapon = this.weaponComps[slotIndex];
+        if (!targetNode || !targetWeapon || !this.hasEquippedWeapon(slotIndex)) return false;
         const isWeaponChanged = targetNode !== this.currentWeaponComp?.node;
         if (isWeaponChanged) this.gunComp?.onWeaponUnequipped();
 
         this.weaponNodes.forEach((node, index) => {
             if (node) node.active = index === slotIndex;
         });
-        this.currentWeaponComp = this.weaponComps[slotIndex] ?? null;
+        this.currentWeaponComp = targetWeapon;
         this.gunComp = this.currentWeaponComp?.node.getComponent(gunController) ?? null;
         this.updateWeaponViewScale();
 
@@ -668,7 +676,6 @@ export class roleController extends Component {
         this.hp = this.maxHp;
         this.refreshHp(true);
         this.originalMoveSpeed = configData.moveSpeed;
-        this.equipWeapon(0);
         this.applyEquippedWeaponStats();
         this.refreshRoleSpine();
         this.initData();
@@ -685,6 +692,10 @@ export class roleController extends Component {
         this.weaponNodes.forEach((node, slotIndex) => {
             if (!node) return;
             const weaponId = pData.equipmentIds[slotIndex];
+            if (!this.hasEquippedWeapon(slotIndex)) {
+                node.active = false;
+                return;
+            }
             const weaponData = weaponsConfig.getDataById(weaponId);
             if (!weaponData) {
                 console.warn(`未找到装备栏第 ${slotIndex + 1} 格的武器配置，id: ${weaponId}`);
@@ -697,14 +708,25 @@ export class roleController extends Component {
         });
 
         // 配置表可能在角色创建后才加载；重新缓存以保证切换武器时拿到新挂载的组件。
-        this.weaponComps = this.weaponNodes.map((node) => node?.getComponent(weaponsController) ?? null);
-        const activeSlotIndex = this.weaponNodes.findIndex((node) => node?.active);
-        if (activeSlotIndex >= 0) {
-            this.currentWeaponComp = this.weaponComps[activeSlotIndex];
-            this.gunComp = this.currentWeaponComp?.node.getComponent(gunController) ?? null;
+        this.weaponComps = this.weaponNodes.map((node, slotIndex) => {
+            if (!this.hasEquippedWeapon(slotIndex)) return null;
+            return node?.getComponent(weaponsController) ?? null;
+        });
+        const activeSlotIndex = this.weaponNodes.findIndex((node, slotIndex) => {
+            return node?.active && !!this.weaponComps[slotIndex];
+        });
+        const defaultSlotIndex = activeSlotIndex >= 0
+            ? activeSlotIndex
+            : this.weaponComps.findIndex((weapon) => !!weapon);
+        if (defaultSlotIndex >= 0) {
+            this.equipWeapon(defaultSlotIndex);
+        } else {
+            this.weaponNodes.forEach((node) => {
+                if (node) node.active = false;
+            });
+            this.currentWeaponComp = null;
+            this.gunComp = null;
             this.updateWeaponViewScale();
-            this.syncCurrentWeaponDefaultPose();
-            this.currentWeaponComp?.playIdleAnim();
         }
     }
 

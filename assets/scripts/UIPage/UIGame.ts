@@ -1306,6 +1306,10 @@ export class UIGame extends UIBase {
         weaponBoxes.forEach((weaponBox, slotIndex) => {
             const numLab = weaponBox?.getChildByName('numLab')?.getComponent(Label);
             if (!numLab) return;
+            if (pData.equipmentIds[slotIndex] < 0) {
+                numLab.string = '';
+                return;
+            }
             const weapon = playerMgr.playerComp?.getWeaponController(slotIndex);
             const gun = weapon?.node.getComponent(gunController);
             numLab.string = `${gun?.ammo ?? 0}/∞`;

@@ -27,7 +27,7 @@ export class UIStorehouse extends UIBase {
     sortBtn: Node;
 
     @property(Node)
-    sellBtn: Node;
+    sellSwitchBtn: Node;
 
     @property(Node)
     weapons_0: Node;
@@ -55,6 +55,18 @@ export class UIStorehouse extends UIBase {
 
     @property(Node)
     removeBtn: Node;
+
+    @property(Node)
+    selectAllBtn: Node;
+
+    @property(Node)
+    sellBtn: Node;
+
+    @property(Node)
+    cancelBtn: Node;
+
+    @property(Label)
+    sellPriceLab: Label;
 
     @property(List)
     scrolList: List;
@@ -122,7 +134,7 @@ export class UIStorehouse extends UIBase {
     bindBtn() {
         this.closeBtn.addComponent(zoomButton).onClick = this.clickCloseBtn.bind(this);
         this.sortBtn.addComponent(zoomButton).onClick = this.clickSortBtn.bind(this);
-        this.sellBtn.addComponent(zoomButton).onClick = this.clickSellBtn.bind(this);
+        this.sellSwitchBtn.addComponent(zoomButton).onClick = this.clickSellSwitchBtn.bind(this);
         this.equipBtn.addComponent(zoomButton).onClick = this.clickEquipBtn.bind(this);
         this.removeBtn.addComponent(zoomButton).onClick = this.clickRemoveBtn.bind(this);
         this.showWeaponNode.addComponent(zoomButton).onClick = this.clickShowWeaponBtn.bind(this);
@@ -441,9 +453,9 @@ export class UIStorehouse extends UIBase {
         this.clickTabBtn(this.selectedTabIndex);
     }
 
-    /**点击出售 */
-    clickSellBtn() {
-        console.log("点击出售");
+    /**点击批量出售开关 */
+    clickSellSwitchBtn(event: EventTouch) {
+        console.log("点击批量出售开关");
     }
 
     /**点击武器 */

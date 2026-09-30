@@ -115,6 +115,8 @@ export class roleController extends Component {
     maxDefenseValue = 0;
     /** 角色当前护甲值。 */
     defenseValue = 0;
+    /** 角色总免伤百分比。 */
+    damageImmunity = 0;
     /**血量节点 */
     hpNode: Node = null;
     /**当前血量图片 */
@@ -680,7 +682,7 @@ export class roleController extends Component {
         //TODO 临时降低血量
         this.hp = this.maxHp;
         this.refreshHp(true);
-        this.applyEquippedArmor();
+        this.applyEquippedDefenseStats();
         this.originalMoveSpeed = configData.moveSpeed;
         this.applyEquippedWeaponStats();
         this.refreshRoleSpine();
@@ -736,14 +738,25 @@ export class roleController extends Component {
         }
     }
 
-    /** 读取护甲槽配置，并用表格中的 defenseValue 初始化本局护甲值。 */
-    private applyEquippedArmor() {
-        const armorData = equipmentConfig.getDataById(pData.equipmentIds[4]);
-        const configuredDefenseValue = Number(armorData?.defenseValue);
-        this.maxDefenseValue = Number.isFinite(configuredDefenseValue) && configuredDefenseValue > 0
-            ? configuredDefenseValue
-            : 0;
+    /** 累加头盔和护甲提供的护甲值与免伤百分比。 */
+    private applyEquippedDefenseStats() {
+        let totalDefenseValue = 0;
+        let totalDamageImmunity = 0;
+        for (const slotIndex of [3, 4]) {
+            const equipmentData = equipmentConfig.getDataById(pData.equipmentIds[slotIndex]);
+            const defenseValue = Number(equipmentData?.defenseValue);
+            const damageImmunity = Number(equipmentData?.damageImmunity);
+            if (Number.isFinite(defenseValue) && defenseValue > 0) {
+                totalDefenseValue += defenseValue;
+            }
+            if (Number.isFinite(damageImmunity) && damageImmunity > 0) {
+                totalDamageImmunity += damageImmunity;
+            }
+        }
+
+        this.maxDefenseValue = totalDefenseValue;
         this.defenseValue = this.maxDefenseValue;
+        this.damageImmunity = Math.min(100, totalDamageImmunity);
         this.refreshDefense();
     }
 
@@ -770,7 +783,7 @@ export class roleController extends Component {
     /** 装备相关表异步加载完成后，为已创建的角色补充装备数值。 */
     private onTableLoad(tableName: string) {
         if (tableName === 'weapons') this.applyEquippedWeaponStats();
-        if (tableName === 'equipment') this.applyEquippedArmor();
+        if (tableName === 'equipment') this.applyEquippedDefenseStats();
     }
 
     /** 刷新角色初始状态，同时通知枪械重新绑定角色挂点。 */
@@ -828,10 +841,11 @@ export class roleController extends Component {
     /** 受到伤害时先扣护甲再扣生命，并在角色头顶显示实际伤害数值。 */
     takeDamage(damage: number) {
         if (!Number.isFinite(damage) || damage <= 0 || this.hp <= 0) return false;
-        const defenseDamage = Math.min(this.defenseValue, damage);
+        const damageAfterImmunity = damage * (1 - this.damageImmunity / 100);
+        const defenseDamage = Math.min(this.defenseValue, damageAfterImmunity);
         this.defenseValue -= defenseDamage;
 
-        const hpDamage = Math.min(this.hp, damage - defenseDamage);
+        const hpDamage = Math.min(this.hp, damageAfterImmunity - defenseDamage);
         this.hp -= hpDamage;
 
         if (defenseDamage > 0) this.refreshDefense();

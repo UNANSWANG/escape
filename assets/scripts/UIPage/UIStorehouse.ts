@@ -57,6 +57,9 @@ export class UIStorehouse extends UIBase {
     removeBtn: Node;
 
     @property(Node)
+    sellMask: Node;
+
+    @property(Node)
     selectAllBtn: Node;
 
     @property(Node)
@@ -88,9 +91,11 @@ export class UIStorehouse extends UIBase {
     protected onLoad(): void {
         this.bindBtn();
         this.hideAllSelect();
+        this.setBatchSellMode(false);
     }
 
     onUI_Open() {
+        this.setBatchSellMode(false);
         this.initData();
     }
 
@@ -135,6 +140,7 @@ export class UIStorehouse extends UIBase {
         this.closeBtn.addComponent(zoomButton).onClick = this.clickCloseBtn.bind(this);
         this.sortBtn.addComponent(zoomButton).onClick = this.clickSortBtn.bind(this);
         this.sellSwitchBtn.addComponent(zoomButton).onClick = this.clickSellSwitchBtn.bind(this);
+        this.cancelBtn.addComponent(zoomButton).onClick = this.clickCancelBtn.bind(this);
         this.equipBtn.addComponent(zoomButton).onClick = this.clickEquipBtn.bind(this);
         this.removeBtn.addComponent(zoomButton).onClick = this.clickRemoveBtn.bind(this);
         this.showWeaponNode.addComponent(zoomButton).onClick = this.clickShowWeaponBtn.bind(this);
@@ -250,6 +256,16 @@ export class UIStorehouse extends UIBase {
         this.selectedEquipmentNode = null;
         this.selectedStorehouseIndex = -1;
         this.refreshSelect();
+    }
+
+    private setBatchSellMode(isBatchSellMode: boolean) {
+        this.sortBtn.active = !isBatchSellMode;
+        this.sellSwitchBtn.active = !isBatchSellMode;
+        this.sellMask.active = isBatchSellMode;
+        this.selectAllBtn.active = isBatchSellMode;
+        this.sellBtn.active = isBatchSellMode;
+        this.cancelBtn.active = isBatchSellMode;
+        this.sellPriceLab.node.active = isBatchSellMode;
     }
 
     /**选中左侧已装备的武器或装备。 */
@@ -455,7 +471,14 @@ export class UIStorehouse extends UIBase {
 
     /**点击批量出售开关 */
     clickSellSwitchBtn(event: EventTouch) {
-        console.log("点击批量出售开关");
+        this.hideAllSelect();
+        this.setBatchSellMode(true);
+    }
+
+    /**点击取消批量出售 */
+    clickCancelBtn() {
+        this.hideAllSelect();
+        this.setBatchSellMode(false);
     }
 
     /**点击武器 */

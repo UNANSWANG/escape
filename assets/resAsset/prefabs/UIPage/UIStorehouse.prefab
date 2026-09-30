@@ -5886,7 +5886,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "mask",
+    "_name": "sellMask",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -12852,6 +12852,9 @@
     },
     "removeBtn": {
       "__id__": 193
+    },
+    "sellMask": {
+      "__id__": 244
     },
     "selectAllBtn": {
       "__id__": 489

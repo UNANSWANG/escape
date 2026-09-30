@@ -40,6 +40,13 @@ export class jsonItem extends jsonBase {
         const rows = Array.isArray(this.data) ? this.data : Object.values(this.data);
         return rows.find((row: JsonItemData) => row?.itemId === itemId) ?? null;
     }
+
+    /** 获取 item 表的全部配置。 */
+    getAllData(): JsonItemData[] {
+        if (!this.data) return [];
+        const rows = Array.isArray(this.data) ? this.data : Object.values(this.data);
+        return rows as JsonItemData[];
+    }
 }
 export let itemConfig = new jsonItem();
 

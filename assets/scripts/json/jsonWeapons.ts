@@ -29,6 +29,13 @@ export class jsonWeapons extends jsonBase {
         const rows = Array.isArray(this.data) ? this.data : Object.values(this.data);
         return rows.find((row: JsonWeaponsData) => row?.itemId === itemId) ?? null;
     }
+
+    /** 获取 weapons 表的全部配置。 */
+    getAllData(): JsonWeaponsData[] {
+        if (!this.data) return [];
+        const rows = Array.isArray(this.data) ? this.data : Object.values(this.data);
+        return rows as JsonWeaponsData[];
+    }
 }
 export let weaponsConfig = new jsonWeapons();
 

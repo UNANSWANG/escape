@@ -191,12 +191,6 @@ export class UIMain extends UIBase {
 
     /**点击排行榜 */
     clickRankBtn() {
-        uiMgr.openPage(UIPath.UIReward, {
-            rewardData: [[1, 1], [200016, 4], [2, 1], [4, 1], [5, 1], [6, 1], [7, 1],
-            [3, 1], [200001, 3], [200010, 4], [200007, 2], [200004, 3], [200013, 5],
-            [100002, 1], [100003, 1], [100004, 1], [100005, 1], [100006, 1]
-            ]
-        });
         return;
         //有昵称和授权或者h5平台才直接打开排行榜
         if ((gm.API.isAuthorize && userMgr.nickName) || gm.platType == PlatType.h5) {

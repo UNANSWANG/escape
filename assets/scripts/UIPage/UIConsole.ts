@@ -8,6 +8,9 @@ import { GameEvent, gmConfig, SaveKey } from '../manager/configData';
 import { pData } from '../manager/playerData';
 import { ccStorageTools } from '../extention/storageTools';
 import { videoMgr } from '../manager/videoManager';
+import { weaponsConfig } from '../json/jsonWeapons';
+import { equipmentConfig } from '../json/jsonEquipment';
+import { itemConfig } from '../json/jsonItem';
 const { ccclass, property } = _decorator;
 
 
@@ -78,17 +81,27 @@ export class UIConsole extends UIBase {
     ///
     /**点击增加武器 */
     clickAddWeaponBtn() {
-        
+        this.openTableRewards(weaponsConfig.getAllData().slice(1));
     }
 
     /**点击增加装备 */
     clickAddEquipBtn() {
-        
+        this.openTableRewards(equipmentConfig.getAllData().slice(1));
     }
 
     /**点击增加物品 */
     clickAddItemBtn() {
-        
+        const collectionItems = itemConfig.getAllData().filter((itemData) => Number.isFinite(itemData.quality));
+        this.openTableRewards(collectionItems);
+    }
+
+    /** 将表格中的 itemId 组装成奖励数据并打开奖励界面。 */
+    private openTableRewards(tableData: Array<{ itemId: number }>) {
+        const rewardData: number[][] = tableData
+            .filter((itemData) => Number.isInteger(itemData?.itemId) && itemData.itemId >= 0)
+            .map((itemData) => [itemData.itemId, 1]);
+        if (rewardData.length === 0) return;
+        uiMgr.openPage(UIPath.UIReward, { rewardData });
     }
 
     /**点击全皮肤 */
@@ -99,6 +112,7 @@ export class UIConsole extends UIBase {
     /**点击增加玩家货币 */
     clickAddPlayerMonetaryBtn() {
         pData.fixMoney(10000000);
+        uiMgr.showTips('增加完成');
     }
 
     /**点击广告开关 */

@@ -28,6 +28,13 @@ export class jsonEquipment extends jsonBase {
         const rows = Array.isArray(this.data) ? this.data : Object.values(this.data);
         return rows.find((row: JsonEquipmentData) => row?.itemId === itemId) ?? null;
     }
+
+    /** 获取 equipment 表的全部配置。 */
+    getAllData(): JsonEquipmentData[] {
+        if (!this.data) return [];
+        const rows = Array.isArray(this.data) ? this.data : Object.values(this.data);
+        return rows as JsonEquipmentData[];
+    }
 }
 export let equipmentConfig = new jsonEquipment();
 

@@ -247,7 +247,7 @@ export class UIMain extends UIBase {
 
     /**点击角色 */
     clickRoleBtn() {
-        uiMgr.showTips("打开角色");
+        uiMgr.openPage(UIPath.UIRoleStore);
     }
 
     /**点击收藏室 */

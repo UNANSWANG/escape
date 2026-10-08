@@ -5,8 +5,8 @@ import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 const { ccclass, property } = _decorator;
 
-@ccclass('UIStore')
-export class UIStore extends UIBase {
+@ccclass('UIRoleStore')
+export class UIRoleStore extends UIBase {
     @property(Node)
     closeBtn: Node;
 
@@ -15,6 +15,8 @@ export class UIStore extends UIBase {
     }
 
     onUI_Open() {
+        let anim = this.getComponent(Animation);
+        anim.play();
         this.initData();
     }
 
@@ -36,7 +38,8 @@ export class UIStore extends UIBase {
     }
 
     onClose() {
-        uiMgr.closePage(UIPath.UIStore);
+        uiMgr.closePage(UIPath.UIRoleStore);
     }
 }
+
 

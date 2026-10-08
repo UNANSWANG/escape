@@ -34,6 +34,8 @@ export enum UIPath {
     UISign = "prefabs/UIPage/UISign",
     /**仓库页面 */
     UIStorehouse = "prefabs/UIPage/UIStorehouse",
+    /**角色商店页面 */
+    UIRoleStore = "prefabs/UIPage/UIRoleStore",
 }
 
 /**物品路径 */

@@ -151,9 +151,9 @@ export class roleController extends Component {
             this.remainCircle.node.active = false;
             this.remainCircle.fillRange = 0;
         }
-        this.hpNode = this.node.getChildByName('hpBg');
-        this.hpBar = this.hpNode?.getChildByName('hpBar')?.getComponent(Sprite);
-        this.baseHp = this.hpNode?.getChildByName('baseHp')?.getComponent(Sprite);
+        this.hpNode = this.node.getChildByName('hpNode');
+        this.hpBar = this.hpNode?.getChildByName('bar')?.getComponent(Sprite);
+        this.baseHp = this.hpNode?.getChildByName('base')?.getComponent(Sprite);
         const weaponRoot = this.node.getChildByName('weapons');
         const weaponNodes = ['weapons_0', 'weapons_1', 'weapons_2'];
         this.weaponNodes = weaponNodes.map((name) => weaponRoot?.getChildByName(name) ?? null);

@@ -2,7 +2,6 @@ import { _decorator, Component, Label, Node, Sprite } from 'cc';
 import { imgPath } from '../manager/pathConfig';
 import { ccTools } from '../extention/generalTools';
 import { getItemDataByItemId } from '../json/jsonItemData';
-import { itemConfig } from '../json/jsonItem';
 const { ccclass, property } = _decorator;
 
 export interface rewardItemData {
@@ -35,7 +34,7 @@ export class rewardItem extends Component {
 
         this.numLab.string = `x${num}`;
         this.nameLab.string = itemData?.name ?? "";
-        const quality = itemConfig.getDataByItemId(itemId)?.quality ?? 4;
+        const quality = itemData?.quality ?? 4;
         ccTools.loadImg(this.bgSp, imgPath.itemBg + quality);
         // ccTools.loadImg(this.imgSp, imgPath.props + itemId);
     }

@@ -392,7 +392,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "hpBg",
+    "_name": "hpNode",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -449,7 +449,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "baseHp",
+    "_name": "base",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -585,7 +585,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "hpBar",
+    "_name": "bar",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {

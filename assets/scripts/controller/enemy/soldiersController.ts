@@ -119,9 +119,9 @@ export class soldiersController extends Component {
         this.weaponNode = this.node.getChildByName("weapons");
         this.weaponDefaultX = this.weaponNode?.position.x ?? 0;
         this.roleNameLab = this.node.getChildByName("roleNameLab").getComponent(Label);
-        this.hpNode = this.node.getChildByName("hpBg");
-        this.hpBar = this.hpNode.getChildByName("hpBar").getComponent(Sprite);
-        this.baseHp = this.hpNode.getChildByName("baseHp").getComponent(Sprite);
+        this.hpNode = this.node.getChildByName("hpNode");
+        this.hpBar = this.hpNode.getChildByName("bar").getComponent(Sprite);
+        this.baseHp = this.hpNode.getChildByName("base").getComponent(Sprite);
         this.effectNode = this.node.getChildByName("effectNode");
         this.moveCollider = this.node.getChildByName('colliderBox')?.getComponent(UITransform);
         if (!this.moveCollider) console.warn('NPC 预制体缺少 colliderBox 或 UITransform，无法避开地图碰撞体');

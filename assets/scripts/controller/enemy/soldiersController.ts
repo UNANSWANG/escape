@@ -25,15 +25,23 @@ enum enemyAnim {
     move = "move",
 }
 
+/**巡逻阶段。 */
 enum PatrolState {
+    /**待机，没有正在执行的巡逻移动。 */
     Idle,
+    /**正在前往巡逻目标点。 */
     Moving,
+    /**已到达巡逻目标点，等待下一次巡逻。 */
     Waiting,
 }
 
+/**士兵行为状态。 */
 enum SoldierState {
+    /**按照巡逻配置活动。 */
     Patrol,
+    /**已发现玩家，正在追击或攻击。 */
     Chase,
+    /**追击结束，正在返回巡逻区域。 */
     Return,
 }
 
@@ -76,7 +84,9 @@ export class soldiersController extends Component {
     private scoutType: ScoutType = ScoutType.StandGuard;
     private patrolOrigin = new Vec3();
     private patrolTarget = new Vec3();
+    private areaCandidate = new Vec3();
     private returnTarget = new Vec3();
+    private areaCandidatePath: Vec3[] = [];
     private patrolPosition = new Vec3();
     private patrolPath: Vec3[] = [];
     private pathIndex = 0;
@@ -229,7 +239,7 @@ export class soldiersController extends Component {
         this.soldierState = SoldierState.Chase;
         this.clearNavigationPath();
         if (this.scoutType === ScoutType.AreaScout && this.rangeRadius > 0) {
-            this.pickAreaPoint(this.returnTarget);
+            if (!this.pickReachableAreaPoint(this.returnTarget)) this.returnTarget.set(this.patrolOrigin);
         } else if (this.scoutType === ScoutType.PathScout && this.patrolPath.length > 0) {
             // pathIndex 始终指向巡逻的下一个路径点。
             this.returnTarget.set(this.patrolPath[this.pathIndex]);
@@ -345,7 +355,11 @@ export class soldiersController extends Component {
     private startNextPatrolLeg() {
         this.clearNavigationPath();
         if (this.scoutType === ScoutType.AreaScout && this.rangeRadius > 0) {
-            this.pickAreaPoint(this.patrolTarget);
+            if (!this.pickReachableAreaPoint(this.patrolTarget)) {
+                this.patrolState = PatrolState.Idle;
+                this.playPatrolAnimation(enemyAnim.idle);
+                return;
+            }
         } else if (this.scoutType === ScoutType.PathScout && this.patrolPath.length > 0) {
             this.patrolTarget.set(this.patrolPath[this.pathIndex]);
         } else {
@@ -366,6 +380,24 @@ export class soldiersController extends Component {
         const radius = Math.sqrt(Math.random()) * this.rangeRadius;
         out.set(this.patrolOrigin.x + Math.cos(angle) * radius,
             this.patrolOrigin.y + Math.sin(angle) * radius, this.patrolOrigin.z);
+    }
+
+    /**在范围巡逻区域内随机生成点位，并通过寻路校验可达性。 */
+    private pickReachableAreaPoint(out: Vec3) {
+        for (let attempt = 0; attempt < 20; attempt++) {
+            this.pickAreaPoint(this.areaCandidate);
+            this.gameComp?.clampWorldPointToMap(this.node, this.areaCandidate, this.areaCandidate);
+            if (!this.moveCollider || !this.gameComp) {
+                out.set(this.areaCandidate);
+                return true;
+            }
+            this.areaCandidatePath.length = 0;
+            if (!this.collisionMover.findPath(this.node, this.moveCollider, this.gameComp,
+                this.areaCandidate, this.areaCandidatePath)) continue;
+            out.set(this.areaCandidate);
+            return true;
+        }
+        return false;
     }
 
     /**按玩家的朝向规则翻转人物和枪，不影响名字和血条。 */

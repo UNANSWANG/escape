@@ -1,6 +1,6 @@
 import { _decorator, math, Vec2, Vec3 } from 'cc';
 import { ccStorageTools } from '../extention/storageTools';
-import { configData, GameEvent, gmConfig, PropsName, SaveKey } from './configData';
+import { configData, GameEvent, gmConfig, SaveKey } from './configData';
 import { gm, PlatType } from './gm';
 import { httpMgr } from '../sdk/network/httpManager';
 import { urlConfig } from '../sdk/network/netConfig';
@@ -167,35 +167,6 @@ export class playerData {
             gm.API.setUserCloudStorage(kvDataList);
         }
 
-    }
-
-    /**设置道具数量 */
-    setPropsNum(propsName: PropsName, num: number) {
-        if (num < 0) {
-            num = 0;
-        }
-        this.propsNums[propsName] = num;
-        ccStorageTools.setData(SaveKey.props, this.propsNums);
-        gm.Event.emit(GameEvent.refreshProps);
-    }
-
-    /**获取道具数量 */
-    getPropsNum(propsName: PropsName) {
-        return this.propsNums[propsName] || 0;
-    }
-
-    /**修改道具数量 */
-    fixPropsNum(propsName: PropsName, num = 1, isRefresh = true) {
-        let tempNum = this.propsNums[propsName] || 0;
-        tempNum += num;
-        if (tempNum < 0) {
-            tempNum = 0;
-        }
-        this.propsNums[propsName] = tempNum;
-        ccStorageTools.setData(SaveKey.props, this.propsNums);
-        if (isRefresh) {
-            gm.Event.emit(GameEvent.refreshProps);
-        }
     }
 
     /**获取仓库数据 */

@@ -147,7 +147,18 @@ export enum SaveKey {
     isShowEquipment = "isShowEquipment",
 }
 
-/**道具索引 */
-export enum PropsName {
+/**品质颜色 */
+export let QualityColorArr = [
+    /**绿色 */
+    "#92D4B3",
+    /**蓝色 */
+    "#91D1FF",
+    /**紫色 */
+    "#AA8DFF",
+    /**金色 */
+    "#FFEB8D",
+    /**红色 */
+    "#FF5757",
+]
 
-}
+

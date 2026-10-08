@@ -47,6 +47,8 @@ export interface JsonEquipmentData {
     itemId: number;
     /**名字 */
     name: string;
+    /**品质 */
+    quality: number;
     /**价值 */
     value: number;
     /**免伤百分比 */

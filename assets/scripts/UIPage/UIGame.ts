@@ -110,9 +110,6 @@ export class UIGame extends UIBase {
     @property(Node)
     mapNode: Node;
 
-    @property(Sprite)
-    defenseBar: Sprite;
-
     @property(Label)
     skill2RemainLab: Label;
 
@@ -236,18 +233,10 @@ export class UIGame extends UIBase {
     protected onLoad(): void {
         this.bindBtn();
         this.initButtonMasks();
-        this.refreshDefenseBar(0, 0);
         this.updateSkill2RemainLab(0, false);
         this.leaveRemainLab.node.active = false;
         this.initCamera();
         audioMgr.initSceneAudio(this.node);
-    }
-
-    /** 根据角色当前护甲值刷新护甲条。 */
-    refreshDefenseBar(defenseValue: number, maxDefenseValue: number) {
-        if (!this.defenseBar) return;
-        const defensePercent = maxDefenseValue > 0 ? defenseValue / maxDefenseValue : 0;
-        this.defenseBar.fillRange = Math.max(0, Math.min(1, defensePercent));
     }
 
     async onUI_Open(data?: any) {

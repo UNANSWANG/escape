@@ -125,6 +125,14 @@ export class roleController extends Component {
     baseHp: Sprite = null;
     /**血量虚影追赶动画时长 */
     private hpShadowDuration = 0.3;
+    /**护甲节点 */
+    defenseNode: Node = null;
+    /**当前护甲图片 */
+    defenseBar: Sprite = null;
+    /**护甲虚影 */
+    baseDefense: Sprite = null;
+    /**护甲虚影追赶动画时长 */
+    private defenseShadowDuration = 0.3;
     /**角色数据 */
     roleData: JsonRoleData = null;
     /**是否正在使用药品。 */
@@ -154,6 +162,9 @@ export class roleController extends Component {
         this.hpNode = this.node.getChildByName('hpNode');
         this.hpBar = this.hpNode?.getChildByName('bar')?.getComponent(Sprite);
         this.baseHp = this.hpNode?.getChildByName('base')?.getComponent(Sprite);
+        this.defenseNode = this.node.getChildByName('defenseNode');
+        this.defenseBar = this.defenseNode?.getChildByName('bar')?.getComponent(Sprite);
+        this.baseDefense = this.defenseNode?.getChildByName('base')?.getComponent(Sprite);
         const weaponRoot = this.node.getChildByName('weapons');
         const weaponNodes = ['weapons_0', 'weapons_1', 'weapons_2'];
         this.weaponNodes = weaponNodes.map((name) => weaponRoot?.getChildByName(name) ?? null);
@@ -165,6 +176,7 @@ export class roleController extends Component {
 
     protected onDestroy(): void {
         if (this.baseHp) Tween.stopAllByTarget(this.baseHp);
+        if (this.baseDefense) Tween.stopAllByTarget(this.baseDefense);
         // 节点销毁阶段组件引用可能仍存在，但 component.node 已经为空，此处只释放回调数据。
         this.drugCompleteCallback = null;
         gm.Event.off(GameEvent.loadTable, this.onTableLoad, this);
@@ -757,7 +769,7 @@ export class roleController extends Component {
         this.maxDefenseValue = totalDefenseValue;
         this.defenseValue = this.maxDefenseValue;
         this.damageImmunity = Math.min(100, totalDamageImmunity);
-        this.refreshDefense();
+        this.refreshDefense(true);
     }
 
     /**
@@ -855,9 +867,25 @@ export class roleController extends Component {
         return true;
     }
 
-    /** 刷新游戏界面的护甲条。 */
-    private refreshDefense() {
-        this.gameComp?.refreshDefenseBar(this.defenseValue, this.maxDefenseValue);
+    /**刷新护甲条；扣除护甲时护甲虚影会延迟追赶。 */
+    private refreshDefense(isImmediate = false) {
+        if (!this.defenseBar || !this.baseDefense) return;
+
+        const defensePercent = this.maxDefenseValue > 0
+            ? Math.max(0, Math.min(1, this.defenseValue / this.maxDefenseValue))
+            : 0;
+        const isDefenseReduced = defensePercent < this.defenseBar.fillRange;
+        this.defenseBar.fillRange = defensePercent;
+        Tween.stopAllByTarget(this.baseDefense);
+
+        if (isImmediate || !isDefenseReduced) {
+            this.baseDefense.fillRange = defensePercent;
+            return;
+        }
+
+        tween(this.baseDefense)
+            .to(this.defenseShadowDuration, { fillRange: defensePercent }, { easing: 'linear' })
+            .start();
     }
 
     /**恢复生命值，恢复量不会使当前生命超过上限。 */

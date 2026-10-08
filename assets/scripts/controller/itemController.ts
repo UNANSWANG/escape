@@ -1,7 +1,6 @@
 import { _decorator, Component, Label, Node, Sprite, tween, Tween } from 'cc';
 import { ccTools } from '../extention/generalTools';
 import { getItemDataByItemId } from '../json/jsonItemData';
-import { itemConfig, JsonItemData } from '../json/jsonItem';
 import { imgPath } from '../manager/pathConfig';
 const { ccclass } = _decorator;
 
@@ -29,7 +28,8 @@ export class itemController extends Component {
         this.initNodes();
         this.itemId = itemId;
         this.showNormal();
-        const quality = itemConfig.getDataByItemId(itemId)?.quality ?? 4;
+        const itemData = getItemDataByItemId(itemId);
+        const quality = itemData?.quality ?? 4;
         ccTools.loadImg(this.bgSp, imgPath.itemBg + quality);
         if (this.itemImgSp) {
             this.itemImgSp.spriteFrame = null;
@@ -37,7 +37,6 @@ export class itemController extends Component {
             // ccTools.loadImg(this.itemImgSp, imgPath.item + itemId);
         }
 
-        const itemData = getItemDataByItemId(itemId) as JsonItemData;
         if (!itemData) {
             console.warn(`未找到物品配置，itemId: ${itemId}`);
             return;

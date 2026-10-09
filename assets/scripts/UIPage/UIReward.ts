@@ -1,4 +1,4 @@
-import { _decorator, Node, Animation, Prefab, instantiate } from 'cc';
+import { _decorator, Node, Animation, Prefab, instantiate, Layout } from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -61,12 +61,27 @@ export class UIReward extends UIBase {
 
     /**显示奖励（不刷新数据） */
     showReward() {
+        const layout = this.rewardNode.getComponent(Layout);
+        if (layout) {
+            layout.enabled = true;
+        }
         ccTools.destroyAllChild(this.rewardNode);
         for (let i = 0; i < this.rewardData.length; i++) {
             let item = this.rewardData[i];
             let itemNode = instantiate(this.rewardItemPre);
             this.rewardNode.addChild(itemNode);
             itemNode.getComponent(rewardItem).initData(item);
+        }
+
+        if (layout) {
+            layout.updateLayout();
+            if (this.rewardData.length === 1) {
+                const itemNode = this.rewardNode.children[0];
+                if (itemNode) {
+                    itemNode.setPosition(0, itemNode.position.y, itemNode.position.z);
+                }
+                layout.enabled = false;
+            }
         }
     }
 

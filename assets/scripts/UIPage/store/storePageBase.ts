@@ -4,7 +4,7 @@ const { ccclass, property } = _decorator;
 @ccclass('storePageBase')
 export class storePageBase extends Component {
     /**初始化数据 */
-    initData(){
+    initData(): void | Promise<void> {
 
     }
 

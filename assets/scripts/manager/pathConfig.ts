@@ -60,6 +60,8 @@ export enum ItemPath {
     gameAnimItem = "prefabs/Item/gameAnimItem",
     /**特效物体 */
     effectItem = "prefabs/Item/effectItem",
+    /**超武商城物品 */
+    superWeaponItem = "prefabs/Item/superWeaponItem",
 }
 
 /**音效路径 */

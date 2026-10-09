@@ -5,6 +5,7 @@ import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
 import { ccResTools } from '../extention/resTools';
+import { storePageBase } from './store/storePageBase';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIStore')
@@ -102,6 +103,7 @@ export class UIStore extends UIBase {
             return;
         }
         pageNode.active = true;
+        pageNode.getComponent(storePageBase)?.refreshPage();
     }
 
     private async loadStorePage(storeTabIndex: number): Promise<Node | null> {
@@ -118,6 +120,10 @@ export class UIStore extends UIBase {
         pageNode.active = false;
         this.pageContent.addChild(pageNode);
         pageNode.setPosition(0, 0, 0);
+        await pageNode.getComponent(storePageBase)?.initData();
+        if (!this.node.isValid || !pageNode.isValid) {
+            return null;
+        }
         this.storePages.set(storeTabIndex, pageNode);
         return pageNode;
     }

@@ -1,9 +1,10 @@
-import { _decorator, Component, Enum, Label, Node } from 'cc';
+import { _decorator, Component, Enum, Label, Node, Sprite } from 'cc';
 import { pData } from '../manager/playerData';
 import { gm } from '../manager/gm';
 import { GameEvent, MonetaryType } from '../manager/configData';
 import { uiMgr } from '../manager/UIManager';
 import { ccTools } from '../extention/generalTools';
+import { imgPath } from '../manager/pathConfig';
 const { ccclass, property } = _decorator;
 
 @ccclass('moneyController')
@@ -20,6 +21,10 @@ export class moneyController extends Component {
     protected onLoad(): void {
         this.numLabel = this.node.getChildByName("numLab").getComponent(Label);
         this.moneyImg = this.node.getChildByName("img");
+        const moneySprite = this.moneyImg?.getComponent(Sprite);
+        if (moneySprite) {
+            ccTools.loadImg(moneySprite, this.moneyType === MonetaryType.gold ? imgPath.gold : imgPath.money);
+        }
         this.refreshMoney();
     }
 

@@ -8288,10 +8288,7 @@
     "propertyPath": [
       "_spriteFrame"
     ],
-    "value": {
-      "__uuid__": "c0471ed0-4d23-433e-87ee-98b848cc03fe@f9941",
-      "__expectedType__": "cc.SpriteFrame"
-    }
+    "value": null
   },
   {
     "__type__": "cc.TargetInfo",

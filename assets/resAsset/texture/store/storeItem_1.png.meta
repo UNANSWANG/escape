@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "06d6497d-2e5f-46c9-b95b-ed06fae39977",
+  "uuid": "c74f6451-257f-464c-b15b-cf951e0572a3",
   "files": [
     ".json",
     ".png"
@@ -10,14 +10,14 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "06d6497d-2e5f-46c9-b95b-ed06fae39977@6c48a",
-      "displayName": "item_s_0016_juxing_6_kaobei_6",
+      "uuid": "c74f6451-257f-464c-b15b-cf951e0572a3@6c48a",
+      "displayName": "storeItem_1",
       "id": "6c48a",
       "name": "texture",
       "userData": {
         "wrapModeS": "clamp-to-edge",
         "wrapModeT": "clamp-to-edge",
-        "imageUuidOrDatabaseUri": "06d6497d-2e5f-46c9-b95b-ed06fae39977",
+        "imageUuidOrDatabaseUri": "c74f6451-257f-464c-b15b-cf951e0572a3",
         "isUuid": true,
         "visible": false,
         "minfilter": "linear",
@@ -34,8 +34,8 @@
     },
     "f9941": {
       "importer": "sprite-frame",
-      "uuid": "06d6497d-2e5f-46c9-b95b-ed06fae39977@f9941",
-      "displayName": "item_s_0016_juxing_6_kaobei_6",
+      "uuid": "c74f6451-257f-464c-b15b-cf951e0572a3@f9941",
+      "displayName": "storeItem_1",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {
@@ -113,7 +113,7 @@
           ]
         },
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "06d6497d-2e5f-46c9-b95b-ed06fae39977@6c48a",
+        "imageUuidOrDatabaseUri": "c74f6451-257f-464c-b15b-cf951e0572a3@6c48a",
         "atlasUuid": "",
         "trimType": "auto"
       },
@@ -129,6 +129,6 @@
     "type": "sprite-frame",
     "fixAlphaTransparencyArtifacts": false,
     "hasAlpha": true,
-    "redirect": "06d6497d-2e5f-46c9-b95b-ed06fae39977@6c48a"
+    "redirect": "c74f6451-257f-464c-b15b-cf951e0572a3@6c48a"
   }
 }

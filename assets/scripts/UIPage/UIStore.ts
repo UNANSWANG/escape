@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Animation} from 'cc';
+import { _decorator, Component, Node, Animation, Prefab} from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -9,6 +9,12 @@ const { ccclass, property } = _decorator;
 export class UIStore extends UIBase {
     @property(Node)
     closeBtn: Node;
+
+    @property(Node)
+    content: Node;
+
+    @property(Prefab)
+    storeTabPrefab: Prefab;
 
     protected onLoad(): void {
         this.bindBtn();

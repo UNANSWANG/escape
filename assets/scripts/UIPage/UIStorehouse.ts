@@ -731,16 +731,42 @@ export class UIStorehouse extends UIBase {
 
         pData.fixStorehouseDatas(storehouseChanges);
         if (silverPrice > 0) {
-            pData.fixMoney(silverPrice);
+            this.playSellRewardAnimation("money", uiMgr.moneyTargetPos, silverPrice, () => {
+                pData.fixMoney(silverPrice);
+            });
         }
         if (goldPrice > 0) {
-            pData.fixGold(goldPrice);
+            this.playSellRewardAnimation("money2", uiMgr.goldTargetPos, goldPrice, () => {
+                pData.fixGold(goldPrice);
+            });
         }
         this.sellItemCounts.clear();
         this.clickTabBtn(this.selectedTabIndex);
         this.refreshRenderedSellItems();
         this.refreshSellPrice();
         uiMgr.showTips("出售成功");
+    }
+
+    /**播放出售所得货币飞向主界面货币栏的动画。 */
+    private playSellRewardAnimation(
+        currencyNodeName: string,
+        targetPosition: Vec3,
+        amount: number,
+        complete: () => void,
+    ) {
+        const sourceNode = this.sellPriceNode?.getChildByName(currencyNodeName)?.getChildByName("img");
+        if (!sourceNode?.isValid || amount <= 0) {
+            complete();
+            return;
+        }
+
+        const targetNode = new Node(`${currencyNodeName}RewardTarget`);
+        this.node.addChild(targetNode);
+        targetNode.setWorldPosition(targetPosition);
+        uiMgr.playRewardAnim(sourceNode, targetNode, amount, () => {
+            targetNode.destroy();
+            complete();
+        });
     }
 
     /**点击取消批量出售 */

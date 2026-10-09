@@ -69,8 +69,8 @@ export class UIStorehouse extends UIBase {
     @property(Node)
     cancelBtn: Node;
 
-    @property(Label)
-    sellPriceLab: Label;
+    @property(Node)
+    sellPriceNode: Node;
 
     @property(List)
     scrolList: List;
@@ -292,7 +292,7 @@ export class UIStorehouse extends UIBase {
         this.selectAllBtn.active = isBatchSellMode;
         this.sellBtn.active = isBatchSellMode;
         this.cancelBtn.active = isBatchSellMode;
-        this.sellPriceLab.node.active = isBatchSellMode;
+        this.sellPriceNode.active = isBatchSellMode;
         this.refreshSelect();
         this.refreshRenderedSellItems();
         this.refreshSellPrice();
@@ -351,11 +351,32 @@ export class UIStorehouse extends UIBase {
 
     /**根据出售数量刷新总价格。 */
     private refreshSellPrice() {
-        let totalPrice = 0;
+        let silverPrice = 0;
+        let goldPrice = 0;
         for (const [itemId, count] of this.sellItemCounts) {
-            totalPrice += this.getItemSellPrice(itemId) * count;
+            const price = this.getItemSellPrice(itemId) * count;
+            if (this.isGoldSellItem(itemId)) {
+                goldPrice += price;
+            } else {
+                silverPrice += price;
+            }
         }
-        this.sellPriceLab.string = `出售价格：${ccTools.formatMonetaryNum(totalPrice)}`;
+        const silverLabel = this.sellPriceNode.getChildByName("moneyLab1")?.getComponent(Label);
+        const goldLabel = this.sellPriceNode.getChildByName("moneyLab2")?.getComponent(Label);
+        this.sellPriceNode.getChildByName("money").active = true;
+        this.sellPriceNode.getChildByName("moneyLab1").active = true;
+        this.sellPriceNode.getChildByName("money2").active = goldPrice > 0;
+        this.sellPriceNode.getChildByName("moneyLab2").active = goldPrice > 0;
+        if (silverLabel) {
+            silverLabel.string = ccTools.formatMonetaryNum(silverPrice);
+        }
+        if (goldLabel) {
+            goldLabel.string = ccTools.formatMonetaryNum(goldPrice);
+        }
+    }
+
+    private isGoldSellItem(itemId: number): boolean {
+        return weaponsConfig.getDataByItemId(itemId)?.currencyType === 1;
     }
 
     /**获取单个物品的实际出售价格。 */
@@ -685,7 +706,8 @@ export class UIStorehouse extends UIBase {
         }
 
         const storehouseChanges: number[][] = [];
-        let totalPrice = 0;
+        let silverPrice = 0;
+        let goldPrice = 0;
         for (const [itemId, selectedCount] of this.sellItemCounts) {
             const availableCount = Math.max(0, Math.floor(currentItemCounts.get(itemId) ?? 0));
             const sellCount = Math.min(availableCount, Math.max(0, Math.floor(selectedCount)));
@@ -694,7 +716,12 @@ export class UIStorehouse extends UIBase {
             }
 
             storehouseChanges.push([itemId, -sellCount]);
-            totalPrice += this.getItemSellPrice(itemId) * sellCount;
+            const price = this.getItemSellPrice(itemId) * sellCount;
+            if (this.isGoldSellItem(itemId)) {
+                goldPrice += price;
+            } else {
+                silverPrice += price;
+            }
         }
 
         if (storehouseChanges.length === 0) {
@@ -703,7 +730,12 @@ export class UIStorehouse extends UIBase {
         }
 
         pData.fixStorehouseDatas(storehouseChanges);
-        pData.fixMoney(totalPrice);
+        if (silverPrice > 0) {
+            pData.fixMoney(silverPrice);
+        }
+        if (goldPrice > 0) {
+            pData.fixGold(goldPrice);
+        }
         this.sellItemCounts.clear();
         this.clickTabBtn(this.selectedTabIndex);
         this.refreshRenderedSellItems();

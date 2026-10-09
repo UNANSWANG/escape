@@ -1,16 +1,22 @@
 import { _decorator, Node, Label, instantiate } from 'cc';
 import { storePageBase } from './storePageBase';
-import { weaponsConfig } from '../../json/jsonWeapons';
-import { ItemPath } from '../../manager/pathConfig';
+import { weaponsConfig, JsonWeaponsData } from '../../json/jsonWeapons';
+import { ItemPath, UIPath } from '../../manager/pathConfig';
 import { uiMgr } from '../../manager/UIManager';
 import { ccResTools } from '../../extention/resTools';
 import { ccTools } from '../../extention/generalTools';
+import { zoomButton } from '../../extention/zoomButton';
+import { pData } from '../../manager/playerData';
+import { MonetaryType } from '../../manager/configData';
+import { videoMgr } from '../../manager/videoManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('superWeaponStorePage')
 export class superWeaponStorePage extends storePageBase {
     @property(Node)
     content: Node;
+
+    private purchasing = false;
 
     async initData() {
         const content = this.content ?? this.node.getChildByPath("ScrollView/view/content");
@@ -49,8 +55,54 @@ export class superWeaponStorePage extends storePageBase {
                     priceLab.string = ccTools.formatMonetaryNum(weapon.value ?? 0);
                 }
             }
+            if (getBtn) {
+                const button = getBtn.getComponent(zoomButton) ?? getBtn.addComponent(zoomButton);
+                button.onClick = this.clickBuy.bind(this, weapon);
+            }
+        }
+    }
+
+    /**购买一个超武；广告商品在广告完成后发放，货币商品先扣款再发放。 */
+    private clickBuy(weapon: JsonWeaponsData) {
+        if (this.purchasing || !weapon || !Number.isInteger(weapon.itemId)) {
+            return;
+        }
+
+        const rewardData: number[][] = [[weapon.itemId, 1]];
+        if (weapon.isAdBuy === 1) {
+            this.purchasing = true;
+            videoMgr.watchVideo(68, () => {
+                this.openReward(rewardData);
+            }, () => {
+                this.purchasing = false;
+            });
+            return;
+        }
+
+        const price = Math.max(0, Math.floor(Number(weapon.value) || 0));
+        const isGold = Number(weapon.currencyType) === MonetaryType.gold;
+        const balance = isGold ? pData.gold : pData.money;
+        if (balance < price) {
+            uiMgr.showTips(isGold ? "金币不足" : "银币不足");
+            return;
+        }
+
+        this.purchasing = true;
+        if (isGold) {
+            pData.fixGold(-price);
+        } else {
+            pData.fixMoney(-price);
+        }
+        this.openReward(rewardData);
+    }
+
+    private async openReward(rewardData: number[][]) {
+        try {
+            await uiMgr.openPage(UIPath.UIReward, { rewardData });
+        } catch (error) {
+            console.error("打开恭喜获得窗口失败", error);
+        } finally {
+            this.purchasing = false;
         }
     }
 }
-
-

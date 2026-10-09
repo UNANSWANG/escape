@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Animation, Prefab} from 'cc';
+import { _decorator, Component, Node, Animation, Prefab } from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -16,6 +16,11 @@ export class UIStore extends UIBase {
     @property(Prefab)
     storeTabPrefab: Prefab;
 
+    /**页签名称 */
+    private storeTabNames: string[] = ["黑市", "超武", "武器", "装备", "道具"];
+    /**页签数组 */
+    private storeTabsArray: number[] = [1, 2, 3, 4];
+
     protected onLoad(): void {
         this.bindBtn();
     }
@@ -25,7 +30,7 @@ export class UIStore extends UIBase {
     }
 
     initData() {
-        
+
     }
 
     bindBtn() {

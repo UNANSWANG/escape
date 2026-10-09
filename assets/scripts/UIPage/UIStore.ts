@@ -1,8 +1,9 @@
-import { _decorator, Component, Node, Animation, Prefab } from 'cc';
+import { _decorator, Node, Prefab, Label, instantiate } from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
+import { ccTools } from '../extention/generalTools';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIStore')
@@ -11,7 +12,10 @@ export class UIStore extends UIBase {
     closeBtn: Node;
 
     @property(Node)
-    content: Node;
+    tabContent: Node;
+
+    @property(Node)
+    pageContent: Node;
 
     @property(Prefab)
     storeTabPrefab: Prefab;
@@ -30,7 +34,18 @@ export class UIStore extends UIBase {
     }
 
     initData() {
-
+        ccTools.destroyAllChild(this.tabContent);
+        this.storeTabsArray.forEach((tabIndex, index) => {
+            const tabNode = instantiate(this.storeTabPrefab);
+            this.tabContent.addChild(tabNode);
+            const nameLab = tabNode.getChildByName("lab")?.getComponent(Label);
+            if (nameLab) {
+                nameLab.string = this.storeTabNames[tabIndex] ?? "";
+            }
+            const button = tabNode.getComponent(zoomButton) ?? tabNode.addComponent(zoomButton);
+            button.onClick = this.clickTabBtn.bind(this, index);
+        });
+        this.clickTabBtn(0);
     }
 
     bindBtn() {
@@ -40,6 +55,15 @@ export class UIStore extends UIBase {
     ///
     ///点击事件
     ///
+
+    clickTabBtn(index: number) {
+        this.tabContent.children.forEach((tabNode, tabIndex) => {
+            const selectNode = tabNode.getChildByName("select");
+            if (selectNode) {
+                selectNode.active = tabIndex === index;
+            }
+        });
+    }
 
     /**点击关闭 */
     clickCloseBtn() {

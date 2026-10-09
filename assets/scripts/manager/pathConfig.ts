@@ -30,6 +30,8 @@ export enum UIPath {
     UIBackpack = "prefabs/UIPage/UIBackpack",
     /**商店页面 */
     UIStore = "prefabs/UIPage/UIStore",
+    /**商店子页面 */
+    storePage = "prefabs/UIPage/store/storePage",
     /**签到页面 */
     UISign = "prefabs/UIPage/UISign",
     /**仓库页面 */

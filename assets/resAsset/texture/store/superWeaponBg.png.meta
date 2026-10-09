@@ -11,7 +11,7 @@
     "6c48a": {
       "importer": "texture",
       "uuid": "f491b763-2623-486e-bd52-18befdf49b92@6c48a",
-      "displayName": "img_s_0028_xingzhuang_1_kaobei_4",
+      "displayName": "superWeaponBg",
       "id": "6c48a",
       "name": "texture",
       "userData": {
@@ -35,7 +35,7 @@
     "f9941": {
       "importer": "sprite-frame",
       "uuid": "f491b763-2623-486e-bd52-18befdf49b92@f9941",
-      "displayName": "img_s_0028_xingzhuang_1_kaobei_4",
+      "displayName": "superWeaponBg",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {

@@ -4,6 +4,7 @@ import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
+import { ccResTools } from '../extention/resTools';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIStore')
@@ -24,6 +25,11 @@ export class UIStore extends UIBase {
     private storeTabNames: string[] = ["黑市", "超武", "武器", "装备", "道具"];
     /**页签数组 */
     private storeTabsArray: number[] = [1, 2, 3, 4];
+    private pageLoadId = 0;
+    private selectedTabIndex = 0;
+    private tabsInitialized = false;
+    private storePages = new Map<number, Node>();
+    private storePageLoads = new Map<number, Promise<Node | null>>();
 
     protected onLoad(): void {
         this.bindBtn();
@@ -34,6 +40,14 @@ export class UIStore extends UIBase {
     }
 
     initData() {
+        if (!this.tabsInitialized) {
+            this.initTabs();
+            this.tabsInitialized = true;
+        }
+        this.clickTabBtn(this.selectedTabIndex);
+    }
+
+    private initTabs() {
         ccTools.destroyAllChild(this.tabContent);
         this.storeTabsArray.forEach((tabIndex, index) => {
             const tabNode = instantiate(this.storeTabPrefab);
@@ -45,7 +59,6 @@ export class UIStore extends UIBase {
             const button = tabNode.getComponent(zoomButton) ?? tabNode.addComponent(zoomButton);
             button.onClick = this.clickTabBtn.bind(this, index);
         });
-        this.clickTabBtn(0);
     }
 
     bindBtn() {
@@ -56,13 +69,57 @@ export class UIStore extends UIBase {
     ///点击事件
     ///
 
-    clickTabBtn(index: number) {
+    async clickTabBtn(index: number) {
+        const storeTabIndex = this.storeTabsArray[index];
+        if (storeTabIndex === undefined) {
+            return;
+        }
+        this.selectedTabIndex = index;
+        const pageLoadId = ++this.pageLoadId;
+        this.storePages.forEach((pageNode) => {
+            pageNode.active = false;
+        });
         this.tabContent.children.forEach((tabNode, tabIndex) => {
             const selectNode = tabNode.getChildByName("select");
             if (selectNode) {
                 selectNode.active = tabIndex === index;
             }
         });
+        let pageNode = this.storePages.get(storeTabIndex);
+        if (!pageNode?.isValid) {
+            let pageLoad = this.storePageLoads.get(storeTabIndex);
+            if (!pageLoad) {
+                pageLoad = this.loadStorePage(storeTabIndex);
+                this.storePageLoads.set(storeTabIndex, pageLoad);
+            }
+            try {
+                pageNode = await pageLoad;
+            } finally {
+                this.storePageLoads.delete(storeTabIndex);
+            }
+        }
+        if (pageLoadId !== this.pageLoadId || !this.node.isValid || !pageNode?.isValid) {
+            return;
+        }
+        pageNode.active = true;
+    }
+
+    private async loadStorePage(storeTabIndex: number): Promise<Node | null> {
+        const pagePath = UIPath.storePage + storeTabIndex;
+        const pagePrefab = await ccResTools.loadPrefab(uiMgr.resBundle, pagePath);
+        if (!this.node.isValid || !this.pageContent.isValid) {
+            return null;
+        }
+        if (!pagePrefab) {
+            console.warn(`加载商店子界面失败: ${pagePath}`);
+            return null;
+        }
+        const pageNode = instantiate(pagePrefab);
+        pageNode.active = false;
+        this.pageContent.addChild(pageNode);
+        pageNode.setPosition(0, 0, 0);
+        this.storePages.set(storeTabIndex, pageNode);
+        return pageNode;
     }
 
     /**点击关闭 */
@@ -72,6 +129,19 @@ export class UIStore extends UIBase {
 
     onClose() {
         uiMgr.closePage(UIPath.UIStore);
+    }
+
+    onUI_Close() {
+        this.pageLoadId++;
+        this.storePages.forEach((pageNode) => {
+            pageNode.active = false;
+        });
+    }
+
+    protected onDestroy(): void {
+        this.pageLoadId++;
+        this.storePages.clear();
+        this.storePageLoads.clear();
     }
 }
 

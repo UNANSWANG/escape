@@ -649,6 +649,16 @@ export class UIStorehouse extends UIBase {
             const equipmentB = equipmentConfig.getDataByItemId(itemIdB);
             const collectionA = itemConfig.getDataByItemId(itemIdA);
             const collectionB = itemConfig.getDataByItemId(itemIdB);
+            const groupA = weaponA || equipmentA ? 0 : collectionA ? 1 : 2;
+            const groupB = weaponB || equipmentB ? 0 : collectionB ? 1 : 2;
+            if (groupA !== groupB) {
+                return groupA - groupB;
+            }
+            const qualityA = Number(weaponA?.quality ?? equipmentA?.quality ?? collectionA?.quality ?? 0);
+            const qualityB = Number(weaponB?.quality ?? equipmentB?.quality ?? collectionB?.quality ?? 0);
+            if (qualityA !== qualityB) {
+                return qualityB - qualityA;
+            }
             const categoryA = weaponA ? 0 : equipmentA ? 1 : collectionA ? 2 : 3;
             const categoryB = weaponB ? 0 : equipmentB ? 1 : collectionB ? 2 : 3;
 
@@ -660,9 +670,6 @@ export class UIStorehouse extends UIBase {
             }
             if (equipmentA && equipmentB) {
                 return (Number(equipmentA.type) || 0) - (Number(equipmentB.type) || 0);
-            }
-            if (collectionA && collectionB) {
-                return (Number(collectionB.quality) || 0) - (Number(collectionA.quality) || 0);
             }
             return 0;
         });

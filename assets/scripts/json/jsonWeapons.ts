@@ -58,6 +58,8 @@ export interface JsonWeaponsData {
     value: number;
     /**是否广告购买 */
     isAdBuy: number;
+    /**火力值 */
+    firePower: number;
     /**攻击间隔 */
     attackInterval: number;
     /**子弹飞行速度 */

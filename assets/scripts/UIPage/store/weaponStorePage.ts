@@ -51,6 +51,10 @@ export class weaponStorePage extends storePageBase {
             if (bgSprite) {
                 ccTools.loadImg(bgSprite, imgPath.storeItemBg + weapon.quality);
             }
+            const firePowerLab = itemNode.getChildByName("firepowerLayout")?.getChildByName("numLab")?.getComponent(Label);
+            if (firePowerLab) {
+                firePowerLab.string = String(weapon.firePower ?? 0);
+            }
             const buyBtn = itemNode.getChildByName("buyBtn");
             const priceLab = buyBtn?.getChildByName("moneyLayout")?.getChildByName("numLab")?.getComponent(Label);
             if (priceLab) {

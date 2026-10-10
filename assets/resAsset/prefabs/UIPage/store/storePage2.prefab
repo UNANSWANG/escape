@@ -498,8 +498,8 @@
     "brake": 0.75,
     "elastic": true,
     "inertia": true,
-    "horizontal": true,
-    "vertical": false,
+    "horizontal": false,
+    "vertical": true,
     "cancelInnerEvents": true,
     "scrollEvents": [],
     "_content": {

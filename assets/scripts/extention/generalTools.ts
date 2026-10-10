@@ -54,8 +54,8 @@ export class generalTools {
     }
 
     /**
-     * 格式化货币数量：以 k、M、B、T 为单位，向下保留一位小数。
-     * 小数位为 0 时不显示，例如 5006 显示为 5k，5106 显示为 5.1k。
+     * 格式化货币数量：以 k、M、B、T 为单位，新单位达到 10 时切换，向下保留一位小数。
+     * 小数位为 0 时不显示，例如 9999000 显示为 9999k，12000000 显示为 12M。
      */
     formatMonetaryNum(num: number): string {
         if (!Number.isFinite(num)) {
@@ -71,7 +71,7 @@ export class generalTools {
         ];
         const sign = num < 0 ? "-" : "";
         const absoluteNum = Math.abs(num);
-        const unit = units.find((item) => absoluteNum >= item.value) || units[units.length - 1];
+        const unit = units.find((item) => absoluteNum >= item.value * 10) || units[units.length - 1];
         const truncatedNum = Math.floor(absoluteNum / unit.value * 10) / 10;
         const displayNum = Number.isInteger(truncatedNum) ? truncatedNum.toString() : truncatedNum.toFixed(1);
 

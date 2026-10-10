@@ -7,7 +7,7 @@ import { ccResTools } from '../../extention/resTools';
 import { ccTools } from '../../extention/generalTools';
 import { zoomButton } from '../../extention/zoomButton';
 import { pData } from '../../manager/playerData';
-import { QualityColorArr } from '../../manager/configData';
+import { equipmentCommonConfig, QualityColorArr } from '../../manager/configData';
 const { ccclass, property } = _decorator;
 
 @ccclass('equipStorePage')
@@ -73,6 +73,7 @@ export class equipStorePage extends storePageBase {
             this.selectEquipment(equipmentData[0], itemNodes, itemNodes[0]);
         } else {
             this.selectedEquipment = null;
+            this.refreshAttribute(null);
             if (this.showNameLab) {
                 this.showNameLab.string = "";
             }
@@ -104,6 +105,7 @@ export class equipStorePage extends storePageBase {
 
     private selectEquipment(equipment: JsonEquipmentData, itemNodes: Node[], selectedNode: Node) {
         this.selectedEquipment = equipment;
+        this.refreshAttribute(equipment);
         if (this.showNameLab) {
             this.showNameLab.string = this.selectedEquipment.name ?? "";
             this.showNameLab.color = new Color(QualityColorArr[this.selectedEquipment.quality] ?? "#FFFFFF");
@@ -114,6 +116,36 @@ export class equipStorePage extends storePageBase {
                 selectNode.active = itemNode === selectedNode;
             }
         });
+    }
+
+    private refreshAttribute(equipment: JsonEquipmentData | null) {
+        if (!this.attributeNode) {
+            return;
+        }
+        const attributes = [
+            { type: 0, name: "免伤", value: equipment?.damageImmunity, range: equipmentCommonConfig.invincibleRangePercent },
+            { type: 1, name: "护甲值", value: equipment?.defenseValue, range: equipmentCommonConfig.armorRangePercent },
+            { type: 2, name: "容量", value: equipment?.capacity, range: equipmentCommonConfig.capacityRangePercent },
+        ];
+        const attribute = equipment ? attributes.find((entry) => entry.type === Number(equipment.type)) : null;
+        this.attributeNode.active = !!attribute;
+        if (!attribute) {
+            return;
+        }
+        const attributeLab = this.attributeNode.getChildByName("attributeLab")?.getComponent(Label);
+        if (attributeLab) {
+            attributeLab.string = attribute.name;
+        }
+        const bar = this.attributeNode.getChildByName("bar")?.getComponent(Sprite);
+        if (bar) {
+            const value = Number(attribute.value);
+            const min = Number(attribute.range?.[0]);
+            const max = Number(attribute.range?.[1]);
+            const ratio = Number.isFinite(value) && Number.isFinite(min) && Number.isFinite(max) && max > min
+                ? (value - min) / (max - min)
+                : 0;
+            bar.fillRange = Math.max(0, Math.min(1, ratio));
+        }
     }
 }
 

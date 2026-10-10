@@ -1295,9 +1295,17 @@ export class UIGame extends UIBase {
     refreshWeaponNames() {
         const weaponBoxes = [this.weaponBox_0, this.weaponBox_1];
         weaponBoxes.forEach((weaponBox, slotIndex) => {
+            const weaponData = weaponsConfig.getDataById(pData.equipmentIds[slotIndex]);
+            const emptyWeaponNode = weaponBox?.getChildByName('weaponNone');
+            if (emptyWeaponNode) {
+                emptyWeaponNode.active = !weaponData;
+            }
+            const weaponImageNode = weaponBox?.getChildByName('img');
+            if (weaponImageNode) {
+                weaponImageNode.active = !!weaponData;
+            }
             const nameLab = weaponBox?.getChildByName('nameLab')?.getComponent(Label);
             if (!nameLab) return;
-            const weaponData = weaponsConfig.getDataById(pData.equipmentIds[slotIndex]);
             nameLab.string = weaponData?.name ?? '';
         });
     }

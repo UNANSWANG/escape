@@ -80,7 +80,7 @@ export class weaponsController extends Component {
         if (Number.isFinite(stats.attack)) this.attack = Math.max(0, stats.attack);
         if (Number.isFinite(stats.capacity)) this.capacity = Math.max(0, Math.floor(stats.capacity));
         if (Number.isFinite(stats.attackRange)) this.attackRange = Math.max(0, stats.attackRange);
-        if (Number.isFinite(stats.speed)) this.moveSpeedScale = Math.max(0, stats.speed);
+        if (Number.isFinite(stats.speed)) this.moveSpeedScale = Math.max(0, stats.speed / 100);
     }
 
     /** 绑定到角色 Spine 的 G 挂点。 */

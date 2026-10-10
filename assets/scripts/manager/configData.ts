@@ -29,7 +29,7 @@ export const weaponCommonConfig = {
     /**射程区间 */
     attackRangeRangePercent: [50, 700],
     /**移速区间 */
-    speedRangePercent: [0, 1],
+    speedRangePercent: [0, 100],
 }
 
 /**装备通用配置 */

@@ -36,6 +36,10 @@ export class superWeaponStorePage extends storePageBase {
             if (nameLab) {
                 nameLab.string = weapon.name ?? "";
             }
+            const firePowerLab = itemNode.getChildByName("firepowerLayout")?.getChildByName("numLab")?.getComponent(Label);
+            if (firePowerLab) {
+                firePowerLab.string = String(weapon.firePower ?? 0);
+            }
             const getBtn = itemNode.getChildByName("getBtn");
             const adNode = getBtn?.getChildByName("adNode");
             const moneyNode = getBtn?.getChildByName("moneyNode");

@@ -32,6 +32,16 @@ export const weaponCommonConfig = {
     speedRangePercent: [0, 1],
 }
 
+/**装备通用配置 */
+export const equipmentCommonConfig = {
+    /**背包容量区间 */
+    capacityRangePercent: [0, 90],
+    /**护甲值区间 */
+    armorRangePercent: [0, 100],
+    /**免伤区间 */
+    invincibleRangePercent: [0, 60],
+}
+
 /**玩家通用配置（暂不读表） */
 export const playerCommonConfig = {
     /**枪口回正时间（秒） */

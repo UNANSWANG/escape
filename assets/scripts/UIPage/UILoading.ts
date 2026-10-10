@@ -4,7 +4,7 @@ import { gamePath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { jsonMgr } from '../manager/jsonManager';
 import { gm, PlatType } from '../manager/gm';
-import {  configData, GameEvent, playerCommonConfig, soldierCommonConfig, weaponCommonConfig} from '../manager/configData';
+import {  configData, equipmentCommonConfig, GameEvent, playerCommonConfig, soldierCommonConfig, weaponCommonConfig} from '../manager/configData';
 import { pData } from '../manager/playerData';
 import { audioMgr } from '../manager/audioManager';
 import { commonConfig } from '../json/jsonCommon';
@@ -228,6 +228,11 @@ export class UILoading extends Component {
         weaponCommonConfig.capacityRangePercent = JSON.parse(commonConfig.getValue("capacityRangePercent"));
         weaponCommonConfig.attackRangeRangePercent = JSON.parse(commonConfig.getValue("attackRangeRangePercent"));
         weaponCommonConfig.speedRangePercent = JSON.parse(commonConfig.getValue("speedRangePercent"));
+
+        //装备通用配置
+        equipmentCommonConfig.capacityRangePercent = JSON.parse(commonConfig.getValue("capacityRangePercent"));
+        equipmentCommonConfig.armorRangePercent = JSON.parse(commonConfig.getValue("armorRangePercent"));
+        equipmentCommonConfig.invincibleRangePercent = JSON.parse(commonConfig.getValue("invincibleRangePercent"));
         
         console.log("------------>公共配置表数据同步完毕");
     }

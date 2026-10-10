@@ -18,6 +18,20 @@ export const configData = {
     equipmentSellPercent: 0.6,
 }
 
+/**武器通用配置 */
+export const weaponCommonConfig = {
+    /**攻击力区间 */
+    attackRangePercent: [2, 30],
+    /**攻速区间 */
+    attackIntervalRangePercent: [0, 1.5],
+    /**弹夹容量区间 */
+    capacityRangePercent: [0, 90],
+    /**射程区间 */
+    attackRangeRangePercent: [50, 700],
+    /**移速区间 */
+    speedRangePercent: [0, 1],
+}
+
 /**玩家通用配置（暂不读表） */
 export const playerCommonConfig = {
     /**枪口回正时间（秒） */

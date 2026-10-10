@@ -4,7 +4,7 @@ import { gamePath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { jsonMgr } from '../manager/jsonManager';
 import { gm, PlatType } from '../manager/gm';
-import {  configData, GameEvent, playerCommonConfig, soldierCommonConfig} from '../manager/configData';
+import {  configData, GameEvent, playerCommonConfig, soldierCommonConfig, weaponCommonConfig} from '../manager/configData';
 import { pData } from '../manager/playerData';
 import { audioMgr } from '../manager/audioManager';
 import { commonConfig } from '../json/jsonCommon';
@@ -222,7 +222,13 @@ export class UILoading extends Component {
         soldierCommonConfig.npcAttackRangePercent = Number(commonConfig.getValue("npcAttackRangePercent")) / 100;
         soldierCommonConfig.npcFireRatePercent = Number(commonConfig.getValue("npcFireRatePercent")) / 100;
 
-
+        //武器通用配置
+        weaponCommonConfig.attackRangePercent = JSON.parse(commonConfig.getValue("attackRangePercent"));
+        weaponCommonConfig.attackIntervalRangePercent = JSON.parse(commonConfig.getValue("attackIntervalRangePercent"));
+        weaponCommonConfig.capacityRangePercent = JSON.parse(commonConfig.getValue("capacityRangePercent"));
+        weaponCommonConfig.attackRangeRangePercent = JSON.parse(commonConfig.getValue("attackRangeRangePercent"));
+        weaponCommonConfig.speedRangePercent = JSON.parse(commonConfig.getValue("speedRangePercent"));
+        
         console.log("------------>公共配置表数据同步完毕");
     }
 

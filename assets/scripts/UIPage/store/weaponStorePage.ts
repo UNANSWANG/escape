@@ -7,7 +7,7 @@ import { ccResTools } from '../../extention/resTools';
 import { ccTools } from '../../extention/generalTools';
 import { zoomButton } from '../../extention/zoomButton';
 import { pData } from '../../manager/playerData';
-import { QualityColorArr } from '../../manager/configData';
+import { QualityColorArr, weaponCommonConfig } from '../../manager/configData';
 const { ccclass, property } = _decorator;
 
 @ccclass('weaponStorePage')
@@ -106,6 +106,7 @@ export class weaponStorePage extends storePageBase {
 
     private selectWeapon(weapon: JsonWeaponsData, itemNodes: Node[], selectedNode: Node) {
         this.selectedWeapon = weapon;
+        this.refreshAttributes(weapon);
         if (this.showNameLab) {
             this.showNameLab.string = this.selectedWeapon.name ?? "";
             this.showNameLab.color = new Color(QualityColorArr[this.selectedWeapon.quality] ?? "#FFFFFF");
@@ -114,6 +115,42 @@ export class weaponStorePage extends storePageBase {
             const selectNode = itemNode.getChildByName("select");
             if (selectNode) {
                 selectNode.active = itemNode === selectedNode;
+            }
+        });
+    }
+
+    private refreshAttributes(weapon: JsonWeaponsData) {
+        if (!this.attributeLayout || !weapon) {
+            return;
+        }
+        const bulletNum = Number(weapon.bulletNum) > 0 ? Number(weapon.bulletNum) : 1;
+        const attributes = [
+            { nodeName: "attackNode", value: (Number(weapon.attack) || 0) * bulletNum, range: weaponCommonConfig.attackRangePercent },
+            { nodeName: "attackSpeedNode", value: Number(weapon.attackInterval) || 0, range: weaponCommonConfig.attackIntervalRangePercent },
+            { nodeName: "magazinesNode", value: Number(weapon.capacity) || 0, range: weaponCommonConfig.capacityRangePercent },
+            { nodeName: "rangeNode", value: Number(weapon.attackRange) || 0, range: weaponCommonConfig.attackRangeRangePercent },
+            { nodeName: "speedNode", value: Number(weapon.speed) || 0, range: weaponCommonConfig.speedRangePercent },
+        ];
+        attributes.forEach(({ nodeName, value, range }) => {
+            const attributeNode = this.attributeLayout.getChildByName(nodeName);
+            if (!attributeNode) {
+                return;
+            }
+            attributeNode.active = nodeName !== "magazinesNode" || Number(weapon.type) !== 0;
+            if (!attributeNode.active) {
+                return;
+            }
+            const numLab = attributeNode.getChildByName("numLab")?.getComponent(Label);
+            if (numLab) {
+                numLab.string = String(value);
+            }
+            const bar = attributeNode.getChildByName("bar")?.getComponent(Sprite);
+            if (bar) {
+                const min = Number(range?.[0]) || 0;
+                const max = Number(range?.[1]) || min;
+                const ratio = max > min ? (value - min) / (max - min) : 0;
+                const normalizedRatio = Math.max(0, Math.min(1, ratio));
+                bar.fillRange = nodeName === "attackSpeedNode" ? 1 - normalizedRatio : normalizedRatio;
             }
         });
     }

@@ -25,7 +25,7 @@ export class UIStore extends UIBase {
     /**页签名称 */
     private storeTabNames: string[] = ["黑市", "超武", "武器", "装备", "道具"];
     /**页签数组 */
-    private storeTabsArray: number[] = [1, 2, 3, 4];
+    private storeTabsArray: number[] = [1, 2, 3];
     private pageLoadId = 0;
     private selectedTabIndex = 0;
     private tabsInitialized = false;

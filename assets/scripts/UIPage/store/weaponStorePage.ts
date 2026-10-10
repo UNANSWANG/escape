@@ -52,6 +52,10 @@ export class weaponStorePage extends storePageBase {
                 ccTools.loadImg(bgSprite, imgPath.storeItemBg + weapon.quality);
             }
             const firePowerLab = itemNode.getChildByName("firepowerLayout")?.getChildByName("numLab")?.getComponent(Label);
+            const firePowerLayout = itemNode.getChildByName("firepowerLayout");
+            if (firePowerLayout) {
+                firePowerLayout.active = true;
+            }
             if (firePowerLab) {
                 firePowerLab.string = String(weapon.firePower ?? 0);
             }

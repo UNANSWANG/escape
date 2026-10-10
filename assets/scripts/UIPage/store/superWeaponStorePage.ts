@@ -19,24 +19,19 @@ export class superWeaponStorePage extends storePageBase {
     private purchasing = false;
 
     async initData() {
-        const content = this.content ?? this.node.getChildByPath("ScrollView/view/content");
-        if (!content) {
-            console.warn("超武商城缺少商品容器");
-            return;
-        }
         const weaponData = weaponsConfig.getAllData().filter((weapon) => weapon.kinds === 1);
         const itemPrefab = await ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.superWeaponItem);
-        if (!this.node.isValid || !content.isValid) {
+        if (!this.node.isValid || !this.content.isValid) {
             return;
         }
         if (!itemPrefab) {
             console.warn(`加载超武商品预制体失败: ${ItemPath.superWeaponItem}`);
             return;
         }
-        ccTools.destroyAllChild(content);
+        ccTools.destroyAllChild(this.content);
         for (const weapon of weaponData) {
             const itemNode = instantiate(itemPrefab);
-            content.addChild(itemNode);
+            this.content.addChild(itemNode);
             const nameLab = itemNode.getChildByName("nameLab")?.getComponent(Label);
             if (nameLab) {
                 nameLab.string = weapon.name ?? "";

@@ -62,6 +62,8 @@ export enum ItemPath {
     effectItem = "prefabs/Item/effectItem",
     /**超武商城物品 */
     superWeaponItem = "prefabs/Item/superWeaponItem",
+    /**商店通用物品 */
+    storeItem = "prefabs/Item/storeItem",
 }
 
 /**音效路径 */
@@ -104,6 +106,8 @@ export enum imgPath {
     itemBg = "texture/common/itemBg_",
     /**物品 */
     item = "texture/item/item_",
+    /**商店物品背景 */
+    storeItemBg = "texture/store/storeItemBg_",
 }
 
 /**spine路径 */

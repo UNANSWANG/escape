@@ -114,12 +114,23 @@ export class UIStorehouse extends UIBase {
     private refreshWeaponNames() {
         const weaponNodes = [this.weapons_0, this.weapons_1, this.knife];
         weaponNodes.forEach((weaponNode, slotIndex) => {
+            const weaponData = weaponsConfig.getDataById(pData.equipmentIds[slotIndex]);
+            if (slotIndex < 2) {
+                const emptyWeaponNode = weaponNode?.getChildByName("weaponNone");
+                if (emptyWeaponNode) {
+                    emptyWeaponNode.active = !weaponData;
+                }
+                const weaponImageNode = weaponNode?.getChildByName("img");
+                if (weaponImageNode) {
+                    weaponImageNode.active = !!weaponData;
+                }
+            }
+
             const nameLab = weaponNode?.getChildByName("nameLab")?.getComponent(Label);
             if (!nameLab) {
                 return;
             }
 
-            const weaponData = weaponsConfig.getDataById(pData.equipmentIds[slotIndex]);
             nameLab.string = weaponData?.name ?? "";
         });
     }

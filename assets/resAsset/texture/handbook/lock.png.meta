@@ -11,7 +11,7 @@
     "6c48a": {
       "importer": "texture",
       "uuid": "72a19cfb-8332-4601-a7b9-a08617afe88e@6c48a",
-      "displayName": "btn_wj_0002_juxing_2",
+      "displayName": "lock",
       "id": "6c48a",
       "name": "texture",
       "userData": {
@@ -35,7 +35,7 @@
     "f9941": {
       "importer": "sprite-frame",
       "uuid": "72a19cfb-8332-4601-a7b9-a08617afe88e@f9941",
-      "displayName": "btn_wj_0002_juxing_2",
+      "displayName": "lock",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {

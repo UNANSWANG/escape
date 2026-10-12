@@ -1,4 +1,4 @@
-import { _decorator, Node, Prefab, Label, Sprite, instantiate } from 'cc';
+import { _decorator, Node, Prefab, Label, Sprite, Color, instantiate } from 'cc';
 import { UIBase } from './UIBase';
 import { imgPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -6,6 +6,7 @@ import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
 import { ccResTools } from '../extention/resTools';
 import { itemConfig } from '../json/jsonItem';
+import { QualityColorArr } from '../manager/configData';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIHandBook')
@@ -87,10 +88,16 @@ export class UIHandBook extends UIBase {
             const nameLab = itemNode.getChildByName("nameLab")?.getComponent(Label);
             if (nameLab) {
                 nameLab.string = itemData.name;
+                nameLab.color = new Color(QualityColorArr[itemData.quality] ?? "#FFFFFF");
             }
             const valueLab = itemNode.getChildByPath("moneyLayout/numLab")?.getComponent(Label);
             if (valueLab) {
                 valueLab.string = ccTools.formatMonetaryNum(itemData.value);
+            }
+            const itemSprite = itemNode.getChildByName("img")?.getComponent(Sprite);
+            if (itemSprite) {
+                itemSprite.spriteFrame = null;
+                ccTools.loadImg(itemSprite, imgPath.item + itemData.itemId);
             }
             const bgSprite = itemNode.getChildByName("bg")?.getComponent(Sprite);
             if (bgSprite) {

@@ -19,7 +19,7 @@ export class superWeaponStorePage extends storePageBase {
     private purchasing = false;
 
     async initData() {
-        const weaponData = weaponsConfig.getAllData().filter((weapon) => weapon.kinds === 1);
+        const weaponData = weaponsConfig.getAllData().filter((weapon) => weapon.kinds === 1 && weapon.isStore === 1);
         const itemPrefab = await ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.superWeaponItem);
         if (!this.node.isValid || !this.content.isValid) {
             return;

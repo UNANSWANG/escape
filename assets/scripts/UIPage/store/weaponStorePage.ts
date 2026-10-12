@@ -25,7 +25,7 @@ export class weaponStorePage extends storePageBase {
     private purchasing = false;
 
     async initData() {
-        const weaponData = weaponsConfig.getAllData().slice(1).filter((weapon) => weapon.kinds === 0);
+        const weaponData = weaponsConfig.getAllData().slice(1).filter((weapon) => weapon.kinds === 0 && weapon.isStore === 1);
         const itemPrefab = await ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.storeItem);
         if (!this.node.isValid || !this.content?.isValid) {
             return;

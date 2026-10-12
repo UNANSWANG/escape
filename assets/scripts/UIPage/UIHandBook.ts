@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Animation} from 'cc';
+import { _decorator, Component, Node, Animation, Prefab } from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -10,6 +10,23 @@ export class UIHandBook extends UIBase {
     @property(Node)
     closeBtn: Node;
 
+    @property(Node)
+    tabContent: Node;
+
+    @property(Prefab)
+    tabPrefab: Prefab;
+
+    @property(Prefab)
+    bookItemPrefab: Prefab;
+
+    @property([Node])
+    pageList: Node[] = [];
+
+    /**页签名称 */
+    private tabNames: string[] = ["Boss", "藏品"];
+    /**页签数组 */
+    private tabsArray: number[] = [0, 1];
+
     protected onLoad(): void {
         this.bindBtn();
     }
@@ -19,7 +36,7 @@ export class UIHandBook extends UIBase {
     }
 
     initData() {
-        
+
     }
 
     bindBtn() {

@@ -100,7 +100,6 @@ export class UIHandBook extends UIBase {
             const itemSprite = itemNode.getChildByName("img")?.getComponent(Sprite);
             if (itemSprite) {
                 itemSprite.spriteFrame = null;
-                ccTools.loadImg(itemSprite, imgPath.item + itemData.itemId);
             }
             const bgSprite = itemNode.getChildByName("bg")?.getComponent(Sprite);
             if (bgSprite) {
@@ -127,7 +126,14 @@ export class UIHandBook extends UIBase {
             itemNode.setSiblingIndex(index);
             const mask = itemNode.getChildByName("mask");
             if (mask) {
-                mask.active = !pData.isCollectionUnlocked(itemData.itemId);
+                mask.active = false;
+            }
+            const itemSprite = itemNode.getChildByName("img")?.getComponent(Sprite);
+            if (itemSprite) {
+                const imagePath = pData.isCollectionUnlocked(itemData.itemId)
+                    ? imgPath.item + itemData.itemId
+                    : imgPath.unItem;
+                ccTools.loadImg(itemSprite, imagePath);
             }
         });
     }

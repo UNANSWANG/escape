@@ -24,6 +24,9 @@ export class UIHandBook extends UIBase {
     @property(Prefab)
     bookItemPrefab: Prefab;
 
+    @property(Prefab)
+    bookBossItemPrefab: Prefab;
+
     @property([Node])
     pageList: Node[] = [];
 

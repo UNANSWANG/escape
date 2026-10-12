@@ -110,6 +110,8 @@ export enum imgPath {
     item = "texture/item/item_",
     /**商店物品背景 */
     storeItemBg = "texture/store/storeItemBg_",
+    /**图鉴藏品背景 */
+    bookItemBg = "texture/handbook/bookItemBg_",
 }
 
 /**spine路径 */

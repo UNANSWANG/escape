@@ -11,7 +11,7 @@
     "6c48a": {
       "importer": "texture",
       "uuid": "7aa4447f-48e3-4b54-8be0-66ca8eb7c603@6c48a",
-      "displayName": "bookBg_4",
+      "displayName": "bookItemBg_4",
       "id": "6c48a",
       "name": "texture",
       "userData": {
@@ -35,7 +35,7 @@
     "f9941": {
       "importer": "sprite-frame",
       "uuid": "7aa4447f-48e3-4b54-8be0-66ca8eb7c603@f9941",
-      "displayName": "bookBg_4",
+      "displayName": "bookItemBg_4",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {

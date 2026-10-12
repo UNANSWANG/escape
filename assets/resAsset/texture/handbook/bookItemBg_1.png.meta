@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "0859c8e0-73c9-445d-82a6-1c50516b6f36",
+  "uuid": "17e24074-acd7-422c-82cc-7c853d4f4d81",
   "files": [
     ".json",
     ".png"
@@ -10,14 +10,14 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "0859c8e0-73c9-445d-82a6-1c50516b6f36@6c48a",
-      "displayName": "bookBg_2",
+      "uuid": "17e24074-acd7-422c-82cc-7c853d4f4d81@6c48a",
+      "displayName": "bookItemBg_1",
       "id": "6c48a",
       "name": "texture",
       "userData": {
         "wrapModeS": "clamp-to-edge",
         "wrapModeT": "clamp-to-edge",
-        "imageUuidOrDatabaseUri": "0859c8e0-73c9-445d-82a6-1c50516b6f36",
+        "imageUuidOrDatabaseUri": "17e24074-acd7-422c-82cc-7c853d4f4d81",
         "isUuid": true,
         "visible": false,
         "minfilter": "linear",
@@ -34,8 +34,8 @@
     },
     "f9941": {
       "importer": "sprite-frame",
-      "uuid": "0859c8e0-73c9-445d-82a6-1c50516b6f36@f9941",
-      "displayName": "bookBg_2",
+      "uuid": "17e24074-acd7-422c-82cc-7c853d4f4d81@f9941",
+      "displayName": "bookItemBg_1",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {
@@ -113,7 +113,7 @@
           ]
         },
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "0859c8e0-73c9-445d-82a6-1c50516b6f36@6c48a",
+        "imageUuidOrDatabaseUri": "17e24074-acd7-422c-82cc-7c853d4f4d81@6c48a",
         "atlasUuid": "",
         "trimType": "auto"
       },
@@ -129,6 +129,6 @@
     "type": "sprite-frame",
     "fixAlphaTransparencyArtifacts": false,
     "hasAlpha": true,
-    "redirect": "0859c8e0-73c9-445d-82a6-1c50516b6f36@6c48a"
+    "redirect": "17e24074-acd7-422c-82cc-7c853d4f4d81@6c48a"
   }
 }

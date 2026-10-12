@@ -249,6 +249,7 @@ export class UIBackpack extends UIBase {
         } else {
             pData.backpackItems.push([itemId, 1]);
         }
+        pData.unlockCollection(itemId);
         this.itemData[slotIndex] = -1;
         ccTools.destroyAllChild(slot.getChildByName("content"));
         this.initBackpack();

@@ -5,8 +5,9 @@ import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
 import { ccResTools } from '../extention/resTools';
-import { itemConfig } from '../json/jsonItem';
+import { itemConfig, JsonItemData } from '../json/jsonItem';
 import { QualityColorArr } from '../manager/configData';
+import { pData } from '../manager/playerData';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIHandBook')
@@ -33,6 +34,8 @@ export class UIHandBook extends UIBase {
     private selectedTabIndex = 0;
     private tabsInitialized = false;
     private collectionInitialized = false;
+    private collectionItems: JsonItemData[] = [];
+    private collectionNodes = new Map<number, Node>();
 
     protected onLoad(): void {
         this.bindBtn();
@@ -76,14 +79,14 @@ export class UIHandBook extends UIBase {
         if (!content || !this.bookItemPrefab) {
             return;
         }
-        const collectionItems = itemConfig.getAllData()
-            .filter((itemData) => Number.isFinite(itemData?.quality))
-            .sort((first, second) => second.quality - first.quality || second.value - first.value);
+        this.collectionItems = itemConfig.getAllData()
+            .filter((itemData) => Number.isFinite(itemData?.quality));
         this.collectionInitialized = true;
         ccTools.destroyAllChild(content);
-        collectionItems.forEach((itemData) => {
+        this.collectionItems.forEach((itemData) => {
             const itemNode = instantiate(this.bookItemPrefab);
             content.addChild(itemNode);
+            this.collectionNodes.set(itemData.itemId, itemNode);
             itemNode.active = true;
             const nameLab = itemNode.getChildByName("nameLab")?.getComponent(Label);
             if (nameLab) {
@@ -110,6 +113,25 @@ export class UIHandBook extends UIBase {
         });
     }
 
+    private refreshCollection() {
+        pData.unlockStorehouseCollections();
+        this.initCollection();
+        this.collectionItems.sort((first, second) =>
+            Number(pData.isCollectionUnlocked(second.itemId)) - Number(pData.isCollectionUnlocked(first.itemId))
+            || second.quality - first.quality || second.value - first.value);
+        this.collectionItems.forEach((itemData, index) => {
+            const itemNode = this.collectionNodes.get(itemData.itemId);
+            if (!itemNode?.isValid) {
+                return;
+            }
+            itemNode.setSiblingIndex(index);
+            const mask = itemNode.getChildByName("mask");
+            if (mask) {
+                mask.active = !pData.isCollectionUnlocked(itemData.itemId);
+            }
+        });
+    }
+
     ///
     ///点击事件
     ///
@@ -121,7 +143,7 @@ export class UIHandBook extends UIBase {
         }
         this.selectedTabIndex = index;
         if (pageIndex === 1) {
-            this.initCollection();
+            this.refreshCollection();
         }
         this.tabContent.children.forEach((tabNode, tabIndex) => {
             const selectNode = tabNode.getChildByName("select");

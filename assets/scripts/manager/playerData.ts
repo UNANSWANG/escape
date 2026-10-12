@@ -6,6 +6,7 @@ import { httpMgr } from '../sdk/network/httpManager';
 import { urlConfig } from '../sdk/network/netConfig';
 import { ccTimeTools } from '../extention/timeTools';
 import { commonConfig } from '../json/jsonCommon';
+import { itemConfig } from '../json/jsonItem';
 const { ccclass, property } = _decorator;
 
 //用户游戏内数据
@@ -17,6 +18,7 @@ export class playerData {
     propsNums = {};
     /**仓库数据，格式为 [[itemId, 数量], ...] */
     storehouseData: number[][] = [];
+    private unlockedCollections = new Set<number>();
     /**地图半宽高 */
     mapHalfSize: Vec2 = Vec2.ZERO;
     /**银币 */
@@ -174,6 +176,28 @@ export class playerData {
         return this.storehouseData.map((itemData) => [itemData[0], itemData[1]]);
     }
 
+    isCollectionUnlocked(itemId: number): boolean {
+        return this.unlockedCollections.has(itemId);
+    }
+
+    unlockCollection(itemId: number): boolean {
+        if (!Number.isInteger(itemId) || this.isCollectionUnlocked(itemId)
+            || !Number.isFinite(itemConfig.getDataByItemId(itemId)?.quality)) {
+            return false;
+        }
+        this.unlockedCollections.add(itemId);
+        ccStorageTools.setData(SaveKey.unlockedCollections, Array.from(this.unlockedCollections));
+        return true;
+    }
+
+    unlockStorehouseCollections() {
+        this.storehouseData.forEach(([itemId, num]) => {
+            if (num > 0) {
+                this.unlockCollection(itemId);
+            }
+        });
+    }
+
     /**排序仓库数据并保存；比较结果相同时保持原有先后顺序 */
     sortStorehouseData(compareFn: (itemA: number[], itemB: number[]) => number) {
         if (typeof compareFn !== "function" || this.storehouseData.length < 2) {
@@ -241,6 +265,9 @@ export class playerData {
             this.storehouseData[itemIndex][1] = targetNum;
         } else {
             this.storehouseData.push([itemId, targetNum]);
+        }
+        if (num > 0) {
+            this.unlockCollection(itemId);
         }
         return true;
     }
@@ -421,6 +448,10 @@ export class playerData {
     /**初始化存储数据 */
     initData() {
         this.propsNums = ccStorageTools.getData(SaveKey.props) || {};
+        const unlockedCollections = ccStorageTools.getData(SaveKey.unlockedCollections);
+        this.unlockedCollections = new Set<number>(Array.isArray(unlockedCollections)
+            ? unlockedCollections.filter((itemId) => Number.isInteger(itemId) && itemId >= 0)
+            : []);
         this.initStorehouseData(ccStorageTools.getData(SaveKey.storehouse));
         this.initEquipmentIds(ccStorageTools.getData(SaveKey.equipmentIds));
         this.money = Math.max(0, ccStorageTools.getNumberData(SaveKey.money));

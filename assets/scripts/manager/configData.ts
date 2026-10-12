@@ -143,6 +143,8 @@ export enum SaveKey {
     props = "props",
     /**仓库数据 */
     storehouse = "storehouse",
+    /**已解锁藏品的 itemId 列表 */
+    unlockedCollections = "unlockedCollections",
     /**当前装备数据 */
     equipmentIds = "equipmentIds",
     /**引导 */

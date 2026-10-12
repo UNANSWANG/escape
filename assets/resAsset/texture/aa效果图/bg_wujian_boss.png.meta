@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "342be5fa-a52f-463e-bc3b-10c85b762863",
+  "uuid": "5010b8e5-fa47-434f-bbf1-a756ceff6f15",
   "files": [
     ".json",
     ".png"
@@ -10,14 +10,14 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "342be5fa-a52f-463e-bc3b-10c85b762863@6c48a",
-      "displayName": "黑市",
+      "uuid": "5010b8e5-fa47-434f-bbf1-a756ceff6f15@6c48a",
+      "displayName": "bg_wujian_boss",
       "id": "6c48a",
       "name": "texture",
       "userData": {
         "wrapModeS": "clamp-to-edge",
         "wrapModeT": "clamp-to-edge",
-        "imageUuidOrDatabaseUri": "342be5fa-a52f-463e-bc3b-10c85b762863",
+        "imageUuidOrDatabaseUri": "5010b8e5-fa47-434f-bbf1-a756ceff6f15",
         "isUuid": true,
         "visible": false,
         "minfilter": "linear",
@@ -34,8 +34,8 @@
     },
     "f9941": {
       "importer": "sprite-frame",
-      "uuid": "342be5fa-a52f-463e-bc3b-10c85b762863@f9941",
-      "displayName": "黑市",
+      "uuid": "5010b8e5-fa47-434f-bbf1-a756ceff6f15@f9941",
+      "displayName": "bg_wujian_boss",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {
@@ -113,7 +113,7 @@
           ]
         },
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "342be5fa-a52f-463e-bc3b-10c85b762863@6c48a",
+        "imageUuidOrDatabaseUri": "5010b8e5-fa47-434f-bbf1-a756ceff6f15@6c48a",
         "atlasUuid": "",
         "trimType": "auto"
       },
@@ -129,6 +129,6 @@
     "type": "sprite-frame",
     "fixAlphaTransparencyArtifacts": false,
     "hasAlpha": false,
-    "redirect": "342be5fa-a52f-463e-bc3b-10c85b762863@6c48a"
+    "redirect": "5010b8e5-fa47-434f-bbf1-a756ceff6f15@6c48a"
   }
 }

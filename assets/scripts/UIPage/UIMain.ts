@@ -227,7 +227,7 @@ export class UIMain extends UIBase {
 
     /**点击图鉴 */
     clickHandbookBtn() {
-        uiMgr.showTips("打开图鉴");
+        uiMgr.openPage(UIPath.UIHandBook);
     }
 
     /**点击签到 */

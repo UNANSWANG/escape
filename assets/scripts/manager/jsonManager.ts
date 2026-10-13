@@ -11,6 +11,7 @@ import { roleSkinConfig } from '../json/jsonRoleSkin';
 import { signConfig } from '../json/jsonSign';
 import { containerConfig } from '../json/jsonContainer';
 import { armsConfig } from '../json/jsonArms';
+import { bossConfig } from '../json/jsonBoss';
 const { ccclass, property } = _decorator;
 
 @ccclass('jsonManager')
@@ -36,6 +37,7 @@ export class jsonManager  {
         roleSkinConfig.initTable();
         containerConfig.initTable();
         armsConfig.initTable();
+        bossConfig.initTable();
     }
 
     loadCall(name: string){

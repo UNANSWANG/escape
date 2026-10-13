@@ -47,6 +47,9 @@ export class UIMain extends UIBase {
     @property(Node)
     roomBtn: Node = null;
 
+    @property(Node)
+    mapBtn: Node = null;
+
     @property(sp.Skeleton)
     roleAnim: sp.Skeleton = null;
 
@@ -93,6 +96,7 @@ export class UIMain extends UIBase {
         this.storehouseBtn.addComponent(zoomButton).onClick = this.clickStorehouseBtn.bind(this);
         this.roleBtn.addComponent(zoomButton).onClick = this.clickRoleBtn.bind(this);
         this.roomBtn.addComponent(zoomButton).onClick = this.clickRoomBtn.bind(this);
+        this.mapBtn.addComponent(zoomButton).onClick = this.clickMapBtn.bind(this);
     }
 
     /**添加监听 */
@@ -256,6 +260,11 @@ export class UIMain extends UIBase {
     /**点击收藏室 */
     clickRoomBtn() {
         uiMgr.showTips("打开收藏室");
+    }
+
+    /**点击地图 */
+    clickMapBtn() {
+        uiMgr.openPage(UIPath.UIMap);
     }
 }
 

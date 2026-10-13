@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "5010b8e5-fa47-434f-bbf1-a756ceff6f15",
+  "uuid": "ba36d8b1-de69-4d05-8ff4-a0cb6aac7c7d",
   "files": [
     ".json",
     ".png"
@@ -10,14 +10,14 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "5010b8e5-fa47-434f-bbf1-a756ceff6f15@6c48a",
-      "displayName": "bg_wujian_boss",
+      "uuid": "ba36d8b1-de69-4d05-8ff4-a0cb6aac7c7d@6c48a",
+      "displayName": "矩形 6 拷贝",
       "id": "6c48a",
       "name": "texture",
       "userData": {
         "wrapModeS": "clamp-to-edge",
         "wrapModeT": "clamp-to-edge",
-        "imageUuidOrDatabaseUri": "5010b8e5-fa47-434f-bbf1-a756ceff6f15",
+        "imageUuidOrDatabaseUri": "ba36d8b1-de69-4d05-8ff4-a0cb6aac7c7d",
         "isUuid": true,
         "visible": false,
         "minfilter": "linear",
@@ -34,8 +34,8 @@
     },
     "f9941": {
       "importer": "sprite-frame",
-      "uuid": "5010b8e5-fa47-434f-bbf1-a756ceff6f15@f9941",
-      "displayName": "bg_wujian_boss",
+      "uuid": "ba36d8b1-de69-4d05-8ff4-a0cb6aac7c7d@f9941",
+      "displayName": "矩形 6 拷贝",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {
@@ -45,10 +45,10 @@
         "offsetY": 0,
         "trimX": 0,
         "trimY": 0,
-        "width": 1340,
-        "height": 750,
-        "rawWidth": 1340,
-        "rawHeight": 750,
+        "width": 115,
+        "height": 44,
+        "rawWidth": 115,
+        "rawHeight": 44,
         "borderTop": 0,
         "borderBottom": 0,
         "borderLeft": 0,
@@ -60,17 +60,17 @@
         "meshType": 0,
         "vertices": {
           "rawPosition": [
-            -670,
-            -375,
+            -57.5,
+            -22,
             0,
-            670,
-            -375,
+            57.5,
+            -22,
             0,
-            -670,
-            375,
+            -57.5,
+            22,
             0,
-            670,
-            375,
+            57.5,
+            22,
             0
           ],
           "indexes": [
@@ -83,12 +83,12 @@
           ],
           "uv": [
             0,
-            750,
-            1340,
-            750,
+            44,
+            115,
+            44,
             0,
             0,
-            1340,
+            115,
             0
           ],
           "nuv": [
@@ -102,18 +102,18 @@
             1
           ],
           "minPos": [
-            -670,
-            -375,
+            -57.5,
+            -22,
             0
           ],
           "maxPos": [
-            670,
-            375,
+            57.5,
+            22,
             0
           ]
         },
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "5010b8e5-fa47-434f-bbf1-a756ceff6f15@6c48a",
+        "imageUuidOrDatabaseUri": "ba36d8b1-de69-4d05-8ff4-a0cb6aac7c7d@6c48a",
         "atlasUuid": "",
         "trimType": "auto"
       },
@@ -128,7 +128,7 @@
   "userData": {
     "type": "sprite-frame",
     "fixAlphaTransparencyArtifacts": false,
-    "hasAlpha": false,
-    "redirect": "5010b8e5-fa47-434f-bbf1-a756ceff6f15@6c48a"
+    "hasAlpha": true,
+    "redirect": "ba36d8b1-de69-4d05-8ff4-a0cb6aac7c7d@6c48a"
   }
 }

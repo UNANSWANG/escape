@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Animation, Toggle } from 'cc';
+import { _decorator, Component, Node, Animation, Toggle, EditBox } from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -18,6 +18,12 @@ const { ccclass, property } = _decorator;
 export class UIConsole extends UIBase {
     @property(Node)
     closeBtn: Node;
+
+    @property(EditBox)
+    itemEditBox: EditBox;
+
+    @property(Node)
+    itemBtn: Node;
 
     @property(Node)
     fullSkinBtn: Node;
@@ -53,6 +59,7 @@ export class UIConsole extends UIBase {
 
     bindBtn() {
         this.closeBtn.addComponent(zoomButton).onClick = this.clickCloseBtn.bind(this);
+        this.itemBtn.addComponent(zoomButton).onClick = this.clickItemBtn.bind(this);
         this.fullSkinBtn.addComponent(zoomButton).onClick = this.clickFullSkinBtn.bind(this);
         this.addPlayerMonetaryBtn.addComponent(zoomButton).onClick = this.clickAddPlayerMonetaryBtn.bind(this);
         this.adToggle.node.on(Toggle.EventType.TOGGLE, this.clickAdToggle, this);
@@ -79,6 +86,28 @@ export class UIConsole extends UIBase {
     ///
     ///点击事件
     ///
+    clickItemBtn() {
+        const values = this.itemEditBox.string.split(',');
+        const rewardData: number[][] = [];
+        for (let index = 0; index + 1 < values.length; index += 2) {
+            const itemIdText = values[index].trim();
+            const quantityText = values[index + 1].trim();
+            if (!itemIdText || !quantityText) continue;
+
+            const itemId = Number(itemIdText);
+            const quantity = Number(quantityText);
+            if (!Number.isSafeInteger(itemId) || itemId < 0 ||
+                !Number.isSafeInteger(quantity) || quantity <= 0) continue;
+
+            rewardData.push([itemId, quantity]);
+        }
+        if (rewardData.length === 0) {
+            uiMgr.showTips('请输入有效的物品ID和数量');
+            return;
+        }
+        uiMgr.openPage(UIPath.UIReward, { rewardData });
+    }
+
     /**点击增加武器 */
     clickAddWeaponBtn() {
         this.openTableRewards(weaponsConfig.getAllData().slice(1));

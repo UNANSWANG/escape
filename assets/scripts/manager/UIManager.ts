@@ -406,7 +406,7 @@ export class UIManager {
         let startCenter = effectTransform.convertToNodeSpaceAR(startNode.worldPosition);
         let targetPos = effectTransform.convertToNodeSpaceAR(targetNode.worldPosition);
         let iconSpriteFrame = startNode.getComponent(Sprite)?.spriteFrame;
-        let itemCount = Math.min(Math.ceil(num / 10), 10);
+        let itemCount = num <= 10 ? num : Math.min(Math.ceil(num / 10), 10);
         let completedCount = 0;
 
         for (let i = 0; i < itemCount; i++) {

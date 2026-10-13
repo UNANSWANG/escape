@@ -157,6 +157,8 @@ export enum SaveKey {
     storehouse = "storehouse",
     /**已解锁藏品的 itemId 列表 */
     unlockedCollections = "unlockedCollections",
+    /**已领取图鉴奖励的藏品 itemId 列表 */
+    claimedCollectionRewards = "claimedCollectionRewards",
     /**Boss 图鉴状态，按 boss 配置的 id 保存 */
     bossBookStates = "bossBookStates",
     /**当前装备数据 */

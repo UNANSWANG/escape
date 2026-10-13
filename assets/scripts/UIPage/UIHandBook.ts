@@ -142,6 +142,12 @@ export class UIHandBook extends UIBase {
             content.addChild(itemNode);
             this.collectionNodes.set(itemData.itemId, itemNode);
             itemNode.active = true;
+            itemNode.on(Node.EventType.TOUCH_END, () => {
+                if (pData.claimCollectionReward(itemData.itemId)) {
+                    this.refreshCollectionReward(itemData.itemId, itemNode);
+                    this.playCollectionGoldAnimation(itemNode, configData.collectionBookGold[itemData.quality]);
+                }
+            }, this);
             const nameLab = itemNode.getChildByName("nameLab")?.getComponent(Label);
             if (nameLab) {
                 nameLab.string = itemData.name;
@@ -178,6 +184,7 @@ export class UIHandBook extends UIBase {
                 return;
             }
             itemNode.setSiblingIndex(index);
+            this.refreshCollectionReward(itemData.itemId, itemNode);
             const mask = itemNode.getChildByName("mask");
             if (mask) {
                 mask.active = false;
@@ -190,6 +197,28 @@ export class UIHandBook extends UIBase {
                 ccTools.loadImg(itemSprite, imagePath);
             }
         });
+    }
+
+    /**金币从藏品金币图标飞向主界面金币栏；奖励已由领取函数发放 */
+    private playCollectionGoldAnimation(itemNode: Node, gold: number) {
+        const sourceNode = itemNode.getChildByPath("moneyLyout/img");
+        if (!sourceNode?.isValid || gold <= 0) {
+            return;
+        }
+        const targetNode = new Node("collectionGoldRewardTarget");
+        this.node.addChild(targetNode);
+        targetNode.setWorldPosition(uiMgr.goldTargetPos);
+        uiMgr.playRewardAnim(sourceNode, targetNode, gold, () => {
+            targetNode.destroy();
+        });
+    }
+
+    /**刷新藏品奖励红点；仅已解锁且未领取的藏品显示 */
+    private refreshCollectionReward(itemId: number, itemNode: Node) {
+        const red = itemNode.getChildByName("red");
+        if (red) {
+            red.active = pData.canClaimCollectionReward(itemId);
+        }
     }
 
     ///

@@ -19,6 +19,8 @@ export class playerData {
     /**仓库数据，格式为 [[itemId, 数量], ...] */
     storehouseData: number[][] = [];
     private unlockedCollections = new Set<number>();
+    /**未记录的藏品默认未领取奖励 */
+    private claimedCollectionRewards = new Set<number>();
     /**Boss 图鉴状态；未记录的 Boss 默认未解锁 */
     private bossBookStates: { [bossId: string]: BossBookState } = {};
     /**地图半宽高 */
@@ -214,6 +216,34 @@ export class playerData {
 
     isCollectionUnlocked(itemId: number): boolean {
         return this.unlockedCollections.has(itemId);
+    }
+
+    /**判断藏品图鉴奖励是否已领取 */
+    isCollectionRewardClaimed(itemId: number): boolean {
+        return this.claimedCollectionRewards.has(itemId);
+    }
+
+    /**已解锁、未领取且配置了有效金币奖励时才可领取 */
+    canClaimCollectionReward(itemId: number): boolean {
+        if (!Number.isInteger(itemId) || !this.isCollectionUnlocked(itemId)
+            || this.isCollectionRewardClaimed(itemId)) {
+            return false;
+        }
+        const quality = itemConfig.getDataByItemId(itemId)?.quality;
+        const gold = configData.collectionBookGold[quality];
+        return Number.isInteger(quality) && Number.isFinite(gold) && gold > 0;
+    }
+
+    /**领取单个藏品的图鉴金币奖励；重复领取或未解锁时返回 false */
+    claimCollectionReward(itemId: number): boolean {
+        if (!this.canClaimCollectionReward(itemId)) {
+            return false;
+        }
+        const quality = itemConfig.getDataByItemId(itemId).quality;
+        this.claimedCollectionRewards.add(itemId);
+        ccStorageTools.setData(SaveKey.claimedCollectionRewards, Array.from(this.claimedCollectionRewards));
+        this.fixGold(configData.collectionBookGold[quality]);
+        return true;
     }
 
     unlockCollection(itemId: number): boolean {
@@ -484,6 +514,10 @@ export class playerData {
     /**初始化存储数据 */
     initData() {
         this.initBossBookStates(ccStorageTools.getData(SaveKey.bossBookStates));
+        const claimedCollectionRewards = ccStorageTools.getData(SaveKey.claimedCollectionRewards);
+        this.claimedCollectionRewards = new Set<number>(Array.isArray(claimedCollectionRewards)
+            ? claimedCollectionRewards.filter((itemId) => Number.isInteger(itemId) && itemId >= 0)
+            : []);
         this.propsNums = ccStorageTools.getData(SaveKey.props) || {};
         const unlockedCollections = ccStorageTools.getData(SaveKey.unlockedCollections);
         this.unlockedCollections = new Set<number>(Array.isArray(unlockedCollections)

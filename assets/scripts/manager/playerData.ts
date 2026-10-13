@@ -1,6 +1,6 @@
 import { _decorator, math, Vec2, Vec3 } from 'cc';
 import { ccStorageTools } from '../extention/storageTools';
-import { configData, GameEvent, gmConfig, SaveKey } from './configData';
+import { BossBookState, configData, GameEvent, gmConfig, SaveKey } from './configData';
 import { gm, PlatType } from './gm';
 import { httpMgr } from '../sdk/network/httpManager';
 import { urlConfig } from '../sdk/network/netConfig';
@@ -19,6 +19,8 @@ export class playerData {
     /**仓库数据，格式为 [[itemId, 数量], ...] */
     storehouseData: number[][] = [];
     private unlockedCollections = new Set<number>();
+    /**Boss 图鉴状态；未记录的 Boss 默认未解锁 */
+    private bossBookStates: { [bossId: string]: BossBookState } = {};
     /**地图半宽高 */
     mapHalfSize: Vec2 = Vec2.ZERO;
     /**银币 */
@@ -174,6 +176,40 @@ export class playerData {
     /**获取仓库数据 */
     getStorehouseData(): number[][] {
         return this.storehouseData.map((itemData) => [itemData[0], itemData[1]]);
+    }
+
+    /**获取 Boss 图鉴状态，bossId 为 boss 配置的 id */
+    getBossBookState(bossId: number): BossBookState {
+        return this.bossBookStates[bossId] ?? BossBookState.Locked;
+    }
+
+    /**修改 Boss 图鉴状态并保存；返回是否发生修改 */
+    setBossBookState(bossId: number, state: BossBookState): boolean {
+        if (!Number.isInteger(bossId) || bossId < 0
+            || (state !== BossBookState.Locked && state !== BossBookState.Unlocked
+                && state !== BossBookState.Defeated)
+            || this.getBossBookState(bossId) === state) {
+            return false;
+        }
+        this.bossBookStates[bossId] = state;
+        ccStorageTools.setData(SaveKey.bossBookStates, { ...this.bossBookStates });
+        return true;
+    }
+
+    /**读取 Boss 图鉴存档，旧存档或无效状态默认未解锁 */
+    private initBossBookStates(data: any) {
+        this.bossBookStates = {};
+        if (!data || typeof data !== "object" || Array.isArray(data)) {
+            return;
+        }
+        Object.keys(data).forEach((key) => {
+            const bossId = Number(key);
+            const state = data[key];
+            if (Number.isInteger(bossId) && bossId >= 0
+                && (state === BossBookState.Unlocked || state === BossBookState.Defeated)) {
+                this.bossBookStates[bossId] = state;
+            }
+        });
     }
 
     isCollectionUnlocked(itemId: number): boolean {
@@ -447,6 +483,7 @@ export class playerData {
 
     /**初始化存储数据 */
     initData() {
+        this.initBossBookStates(ccStorageTools.getData(SaveKey.bossBookStates));
         this.propsNums = ccStorageTools.getData(SaveKey.props) || {};
         const unlockedCollections = ccStorageTools.getData(SaveKey.unlockedCollections);
         this.unlockedCollections = new Set<number>(Array.isArray(unlockedCollections)

@@ -127,6 +127,16 @@ export enum MonetaryType {
     gold,
 }
 
+/**Boss 图鉴状态 */
+export enum BossBookState {
+    /**未解锁 */
+    Locked = 0,
+    /**已解锁 */
+    Unlocked = 1,
+    /**已击败 */
+    Defeated = 2,
+}
+
 /**存储的键值 */
 export enum SaveKey {
     /**关卡数据 */
@@ -145,6 +155,8 @@ export enum SaveKey {
     storehouse = "storehouse",
     /**已解锁藏品的 itemId 列表 */
     unlockedCollections = "unlockedCollections",
+    /**Boss 图鉴状态，按 boss 配置的 id 保存 */
+    bossBookStates = "bossBookStates",
     /**当前装备数据 */
     equipmentIds = "equipmentIds",
     /**引导 */

@@ -8,7 +8,7 @@ import { ccResTools } from '../extention/resTools';
 import { itemConfig, JsonItemData } from '../json/jsonItem';
 import { bossConfig } from '../json/jsonBoss';
 import { weaponsConfig } from '../json/jsonWeapons';
-import { QualityColorArr } from '../manager/configData';
+import { BossBookState, QualityColorArr } from '../manager/configData';
 import { pData } from '../manager/playerData';
 const { ccclass, property } = _decorator;
 
@@ -86,6 +86,29 @@ export class UIHandBook extends UIBase {
             const itemNode = instantiate(this.bookBossItemPrefab);
             content.addChild(itemNode);
             itemNode.active = true;
+            const state = pData.getBossBookState(bossData.id);
+            const isLocked = state === BossBookState.Locked;
+            const isDefeated = state === BossBookState.Defeated;
+            const img = itemNode.getChildByName("img");
+            if (img) {
+                img.active = !isLocked;
+                const sprite = img.getComponent(Sprite);
+                if (sprite) {
+                    sprite.grayscale = isDefeated;
+                }
+            }
+            const bossMask = itemNode.getChildByName("bossMask");
+            if (bossMask) {
+                bossMask.active = isLocked;
+            }
+            const lock = itemNode.getChildByName("lock");
+            if (lock) {
+                lock.active = isLocked;
+            }
+            const beat = itemNode.getChildByName("beat");
+            if (beat) {
+                beat.active = isDefeated;
+            }
             const nameLab = itemNode.getChildByName("nameLab")?.getComponent(Label);
             if (nameLab) {
                 nameLab.string = bossData.name;

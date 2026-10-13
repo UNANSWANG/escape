@@ -6,6 +6,8 @@ import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
 import { ccResTools } from '../extention/resTools';
 import { itemConfig, JsonItemData } from '../json/jsonItem';
+import { bossConfig } from '../json/jsonBoss';
+import { weaponsConfig } from '../json/jsonWeapons';
 import { QualityColorArr } from '../manager/configData';
 import { pData } from '../manager/playerData';
 const { ccclass, property } = _decorator;
@@ -72,6 +74,32 @@ export class UIHandBook extends UIBase {
 
     bindBtn() {
         this.closeBtn.addComponent(zoomButton).onClick = this.clickCloseBtn.bind(this);
+    }
+
+    private refreshBoss() {
+        const content = this.pageList[0]?.getChildByPath("ScrollView/view/content");
+        if (!content || !this.bookBossItemPrefab) {
+            return;
+        }
+        ccTools.destroyAllChild(content);
+        bossConfig.getAllData().forEach((bossData) => {
+            const itemNode = instantiate(this.bookBossItemPrefab);
+            content.addChild(itemNode);
+            itemNode.active = true;
+            const nameLab = itemNode.getChildByName("nameLab")?.getComponent(Label);
+            if (nameLab) {
+                nameLab.string = bossData.name;
+            }
+            const descLab = itemNode.getChildByName("descLab")?.getComponent(Label);
+            if (descLab) {
+                descLab.string = bossData.desc;
+            }
+            const itemNameLab = itemNode.getChildByName("itemNameLab")?.getComponent(Label);
+            if (itemNameLab) {
+                itemNameLab.string = weaponsConfig.getDataByItemId(bossData.dropItemId)?.name
+                    ?? itemConfig.getDataByItemId(bossData.dropItemId)?.name ?? "";
+            }
+        });
     }
 
     private initCollection() {
@@ -151,7 +179,9 @@ export class UIHandBook extends UIBase {
             return;
         }
         this.selectedTabIndex = index;
-        if (pageIndex === 1) {
+        if (pageIndex === 0) {
+            this.refreshBoss();
+        } else if (pageIndex === 1) {
             this.refreshCollection();
         }
         this.tabContent.children.forEach((tabNode, tabIndex) => {

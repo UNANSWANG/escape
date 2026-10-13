@@ -1,6 +1,5 @@
 import { _decorator, Component, Node } from 'cc';
 import { jsonBase } from './jsonBase';
-import { JsonItemData } from './jsonItem';
 const { ccclass, property } = _decorator;
 
 @ccclass('jsonBoss')
@@ -13,6 +12,13 @@ export class jsonBoss extends jsonBase {
 
     protected processTableData(): void {
         super.processTableData();
+    }
+
+    /** 获取 boss 表的全部配置。 */
+    getAllData(): JsonBossData[] {
+        if (!this.data) return [];
+        const rows = Array.isArray(this.data) ? this.data : Object.values(this.data);
+        return rows as JsonBossData[];
     }
 }
 export let bossConfig = new jsonBoss();

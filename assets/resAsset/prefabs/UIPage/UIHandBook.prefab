@@ -683,7 +683,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": -539,
-      "y": -17,
+      "y": -7,
       "z": 0
     },
     "_lrot": {
@@ -831,7 +831,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 220,
-      "height": -15
+      "height": 0
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -866,7 +866,7 @@
     "_startAxis": 0,
     "_paddingLeft": 0,
     "_paddingRight": 0,
-    "_paddingTop": 0,
+    "_paddingTop": 15,
     "_paddingBottom": 0,
     "_spacingX": 0,
     "_spacingY": 15,
@@ -891,8 +891,6 @@
       "__id__": 0
     },
     "fileId": "415G4UrdZOPb2rcevyZzdH",
-    "instance": null,
-    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {
@@ -3365,7 +3363,7 @@
       "__id__": 30
     },
     "tabPrefab": {
-      "__uuid__": "e86a443c-7787-4ac1-b381-0a46f17d0c86",
+      "__uuid__": "ec19fd59-5730-4522-b15c-5d0cde55d1ef",
       "__expectedType__": "cc.Prefab"
     },
     "bookItemPrefab": {

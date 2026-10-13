@@ -243,25 +243,35 @@ export class playerData {
         this.claimedCollectionRewards.add(itemId);
         ccStorageTools.setData(SaveKey.claimedCollectionRewards, Array.from(this.claimedCollectionRewards));
         this.fixGold(configData.collectionBookGold[quality]);
+        gm.Event.emit(GameEvent.refreshRed);
         return true;
     }
 
     unlockCollection(itemId: number): boolean {
-        if (!Number.isInteger(itemId) || this.isCollectionUnlocked(itemId)
-            || !Number.isFinite(itemConfig.getDataByItemId(itemId)?.quality)) {
+        return this.unlockCollections([itemId]);
+    }
+
+    /**一次获得的藏品批量解锁，仅存在新藏品时保存并刷新一次 */
+    unlockCollections(itemIds: number[]): boolean {
+        const newItemIds = new Set(itemIds.filter((itemId) => Number.isInteger(itemId) && itemId >= 0
+            && !this.isCollectionUnlocked(itemId)
+            && Number.isFinite(itemConfig.getDataByItemId(itemId)?.quality)));
+        if (newItemIds.size === 0) {
             return false;
         }
-        this.unlockedCollections.add(itemId);
+        newItemIds.forEach((itemId) => this.unlockedCollections.add(itemId));
         ccStorageTools.setData(SaveKey.unlockedCollections, Array.from(this.unlockedCollections));
+        gm.Event.emit(GameEvent.refreshRed);
         return true;
     }
 
-    unlockStorehouseCollections() {
-        this.storehouseData.forEach(([itemId, num]) => {
-            if (num > 0) {
-                this.unlockCollection(itemId);
-            }
-        });
+    unlockStorehouseCollections(): boolean {
+        return this.unlockCollections(this.storehouseData.filter(([, num]) => num > 0)
+            .map(([itemId]) => itemId));
+    }
+
+    hasClaimableCollectionReward(): boolean {
+        return Array.from(this.unlockedCollections).some((itemId) => this.canClaimCollectionReward(itemId));
     }
 
     /**排序仓库数据并保存；比较结果相同时保持原有先后顺序 */
@@ -281,6 +291,9 @@ export class playerData {
     fixStorehouseData(itemId: number, num: number) {
         if (this.updateStorehouseData(itemId, num)) {
             this.saveStorehouseData();
+            if (num > 0) {
+                this.unlockCollection(itemId);
+            }
         }
     }
 
@@ -291,17 +304,22 @@ export class playerData {
         }
 
         let isChanged = false;
+        const acquiredItemIds: number[] = [];
         for (const itemData of data) {
             if (!Array.isArray(itemData) || itemData.length < 2) {
                 continue;
             }
             if (this.updateStorehouseData(itemData[0], itemData[1])) {
                 isChanged = true;
+                if (itemData[1] > 0) {
+                    acquiredItemIds.push(itemData[0]);
+                }
             }
         }
 
         if (isChanged) {
             this.saveStorehouseData();
+            this.unlockCollections(acquiredItemIds);
         }
     }
 
@@ -331,9 +349,6 @@ export class playerData {
             this.storehouseData[itemIndex][1] = targetNum;
         } else {
             this.storehouseData.push([itemId, targetNum]);
-        }
-        if (num > 0) {
-            this.unlockCollection(itemId);
         }
         return true;
     }
@@ -425,6 +440,7 @@ export class playerData {
                 this.updateStorehouseData(itemData[0], itemData[1]);
             }
         }
+        this.unlockStorehouseCollections();
     }
 
     /**获取带等级道具的存储键 */

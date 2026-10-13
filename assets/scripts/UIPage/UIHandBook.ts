@@ -8,8 +8,9 @@ import { ccResTools } from '../extention/resTools';
 import { itemConfig, JsonItemData } from '../json/jsonItem';
 import { bossConfig } from '../json/jsonBoss';
 import { weaponsConfig } from '../json/jsonWeapons';
-import { BossBookState, configData, QualityColorArr } from '../manager/configData';
+import { BossBookState, configData, GameEvent, QualityColorArr } from '../manager/configData';
 import { pData } from '../manager/playerData';
+import { gm } from '../manager/gm';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIHandBook')
@@ -47,7 +48,13 @@ export class UIHandBook extends UIBase {
     }
 
     onUI_Open() {
+        gm.Event.on(GameEvent.refreshRed, this.refreshRed, this);
         this.initData();
+        this.refreshRed();
+    }
+
+    onUI_Close() {
+        gm.Event.off(GameEvent.refreshRed, this.refreshRed, this);
     }
 
     initData() {
@@ -144,7 +151,6 @@ export class UIHandBook extends UIBase {
             itemNode.active = true;
             itemNode.on(Node.EventType.TOUCH_END, () => {
                 if (pData.claimCollectionReward(itemData.itemId)) {
-                    this.refreshCollectionReward(itemData.itemId, itemNode);
                     this.playCollectionGoldAnimation(itemNode, configData.collectionBookGold[itemData.quality]);
                 }
             }, this);
@@ -173,7 +179,6 @@ export class UIHandBook extends UIBase {
     }
 
     private refreshCollection() {
-        pData.unlockStorehouseCollections();
         this.initCollection();
         this.collectionItems.sort((first, second) =>
             Number(pData.isCollectionUnlocked(second.itemId)) - Number(pData.isCollectionUnlocked(first.itemId))
@@ -195,6 +200,21 @@ export class UIHandBook extends UIBase {
                     ? imgPath.item + itemData.itemId
                     : imgPath.unItem;
                 ccTools.loadImg(itemSprite, imagePath);
+            }
+        });
+    }
+
+    private refreshRed() {
+        const hasReward = pData.hasClaimableCollectionReward();
+        this.tabContent.children.forEach((tabNode, index) => {
+            const red = tabNode.getChildByName("red");
+            if (red) {
+                red.active = this.tabsArray[index] === 1 && hasReward;
+            }
+        });
+        this.collectionNodes.forEach((itemNode, itemId) => {
+            if (itemNode.isValid) {
+                this.refreshCollectionReward(itemId, itemNode);
             }
         });
     }

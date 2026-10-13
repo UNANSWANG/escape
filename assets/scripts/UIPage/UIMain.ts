@@ -126,7 +126,10 @@ export class UIMain extends UIBase {
 
     /**刷新红点 */
     refreshRed() {
-
+        const red = this.handbookBtn?.getChildByName("red");
+        if (red) {
+            red.active = pData.hasClaimableCollectionReward();
+        }
     }
 
     /**检测复访按钮 */

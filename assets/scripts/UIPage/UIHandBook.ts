@@ -8,7 +8,7 @@ import { ccResTools } from '../extention/resTools';
 import { itemConfig, JsonItemData } from '../json/jsonItem';
 import { bossConfig } from '../json/jsonBoss';
 import { weaponsConfig } from '../json/jsonWeapons';
-import { BossBookState, QualityColorArr } from '../manager/configData';
+import { BossBookState, configData, QualityColorArr } from '../manager/configData';
 import { pData } from '../manager/playerData';
 const { ccclass, property } = _decorator;
 
@@ -147,9 +147,9 @@ export class UIHandBook extends UIBase {
                 nameLab.string = itemData.name;
                 nameLab.color = new Color(QualityColorArr[itemData.quality] ?? "#FFFFFF");
             }
-            const valueLab = itemNode.getChildByPath("moneyLayout/numLab")?.getComponent(Label);
+            const valueLab = itemNode.getChildByPath("moneyLyout/numLab")?.getComponent(Label);
             if (valueLab) {
-                valueLab.string = ccTools.formatMonetaryNum(itemData.value);
+                valueLab.string = ccTools.formatMonetaryNum(configData.collectionBookGold[itemData.quality] ?? 0);
             }
             const itemSprite = itemNode.getChildByName("img")?.getComponent(Sprite);
             if (itemSprite) {

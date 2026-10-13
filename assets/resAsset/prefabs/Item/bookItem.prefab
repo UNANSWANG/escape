@@ -502,7 +502,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "moneyLayout",
+    "_name": "moneyLyout",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {

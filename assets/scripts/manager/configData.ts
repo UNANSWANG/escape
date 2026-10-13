@@ -16,6 +16,8 @@ export const configData = {
     leaveTime: 10,
     /**装备售卖百分比 */
     equipmentSellPercent: 0.6,
+    /**收藏品图鉴金币 */
+    collectionBookGold: [1, 2, 3, 5, 10],
 }
 
 /**武器通用配置 */
@@ -50,7 +52,7 @@ export const playerCommonConfig = {
 
 /**敌人通用配置 */
 export const enemyCommonConfig = {
-    
+
 }
 
 /**小兵通用配置 */

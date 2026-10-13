@@ -211,6 +211,7 @@ export class UILoading extends Component {
         configData.drugUseTimeBig = Number(commonConfig.getValue("drugUseTimeBig"));
         configData.leaveTime = Number(commonConfig.getValue("leaveTime"));
         configData.equipmentSellPercent = Number(commonConfig.getValue("equipmentSellPercent")) / 100;
+        configData.collectionBookGold = JSON.parse(commonConfig.getValue("collectionBookGold"));
 
         //玩家通用配置
         playerCommonConfig.gunResetTime = Number(commonConfig.getValue("gunResetTime"));

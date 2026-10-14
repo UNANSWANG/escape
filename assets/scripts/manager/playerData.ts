@@ -26,6 +26,7 @@ export class playerData {
     private bossBookStates: { [bossId: string]: BossBookState } = {};
     /**地图半宽高 */
     mapHalfSize: Vec2 = Vec2.ZERO;
+    selectMapIdx: number = -1;
     /**银币 */
     money = 0;
     /**金币 */

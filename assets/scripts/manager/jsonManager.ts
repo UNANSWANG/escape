@@ -12,6 +12,7 @@ import { signConfig } from '../json/jsonSign';
 import { containerConfig } from '../json/jsonContainer';
 import { armsConfig } from '../json/jsonArms';
 import { bossConfig } from '../json/jsonBoss';
+import { mapConfig } from '../json/jsonMap';
 const { ccclass, property } = _decorator;
 
 @ccclass('jsonManager')
@@ -38,6 +39,7 @@ export class jsonManager  {
         containerConfig.initTable();
         armsConfig.initTable();
         bossConfig.initTable();
+        mapConfig.initTable();
     }
 
     loadCall(name: string){

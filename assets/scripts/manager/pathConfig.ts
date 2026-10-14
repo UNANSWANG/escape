@@ -68,6 +68,10 @@ export enum ItemPath {
     superWeaponItem = "prefabs/Item/superWeaponItem",
     /**商店通用物品 */
     storeItem = "prefabs/Item/storeItem",
+    /**物品 */
+    item = "prefabs/Item/item",
+    /**显示物品 */
+    showItem = "prefabs/Item/showItem",
 }
 
 /**音效路径 */

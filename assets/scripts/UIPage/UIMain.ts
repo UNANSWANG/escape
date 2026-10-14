@@ -117,6 +117,7 @@ export class UIMain extends UIBase {
         gm.Event.off(GameEvent.refreshMapSelection, this.refreshMapSelection, this);
     }
 
+    /**按本次运行的确认状态刷新地图按钮；未确认时显示默认文本 */
     private refreshMapSelection() {
         const [mapIdx, difficultyType] = pData.selectMapData;
         const mapData = pData.hasConfirmedMapSelection

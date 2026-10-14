@@ -28,6 +28,7 @@ export class playerData {
     mapHalfSize: Vec2 = Vec2.ZERO;
     /**确认后的地图选择，格式为 [地图索引, 难度类型]；默认 [-1, -1]，点击确定时更新并保存到本地 */
     selectMapData: [number, number] = [-1, -1];
+    /**本次运行是否确认过地图选择；仅存内存，重启后为 false，恢复存档不会将其设为 true */
     hasConfirmedMapSelection = false;
     /**银币 */
     money = 0;

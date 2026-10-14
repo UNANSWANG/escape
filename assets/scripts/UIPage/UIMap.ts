@@ -11,6 +11,7 @@ import { gm } from '../manager/gm';
 const { ccclass, property } = _decorator;
 
 
+/**地图选择界面；临时选择随界面保留，点击确定后才更新玩家数据和存档 */
 @ccclass('UIMap')
 export class UIMap extends UIBase {
     @property(Node)
@@ -25,9 +26,13 @@ export class UIMap extends UIBase {
     @property(Node)
     sureBtn: Node;
     
+    /**按地图节点索引保存配置，每组包含该地图的全部难度数据 */
     private mapData: JsonMapData[][] = [];
+    /**界面临时选中的地图索引；-1 表示未选择，不直接修改存档 */
     private selectedMapIdx: number = -1;
+    /**界面临时选中的难度类型；-1 表示未选择 */
     private selectedDifficultyType: number = -1;
+    /**是否已完成首次选择初始化，避免再次打开时用存档覆盖临时选择 */
     private hasInitializedSelection = false;
 
     protected onLoad(): void {
@@ -38,6 +43,7 @@ export class UIMap extends UIBase {
         this.initData();
     }
 
+    /**读取地图配置并更新名称；首次打开可恢复存档，之后保留临时地图和难度 */
     initData() {
         this.mapData = this.mapList.children.map((mapNode, index) => mapConfig.getDataByMapIdx(index));
         this.mapList.children.forEach((mapNode, index) => {
@@ -63,6 +69,7 @@ export class UIMap extends UIBase {
         this.clickMap(this.selectedMapIdx, true);
     }
 
+    /**绑定背景、地图、难度页签及确认和关闭按钮的点击事件 */
     bindBtn() {
         this.node.on(Node.EventType.TOUCH_END, this.clickBlankArea, this);
         this.closeBtn.addComponent(zoomButton).onClick = this.clickCloseBtn.bind(this);
@@ -78,6 +85,7 @@ export class UIMap extends UIBase {
         });
     }
 
+    /**点击空白区域清除临时选择；地图、详情和关闭按钮的点击不清除选择 */
     private clickBlankArea(event: EventTouch) {
         let targetNode = event.target as Node;
         while (targetNode && targetNode !== this.node) {
@@ -89,6 +97,7 @@ export class UIMap extends UIBase {
         this.clickMap(-1);
     }
 
+    /**选择地图或传入 -1 清除选择；未开放地图只提示，preserveDifficulty 用于保留有效的难度选择 */
     clickMap(index: number, preserveDifficulty: boolean = false) {
         if (Number.isInteger(index) && index >= 0 && index < this.mapList.children.length && !this.mapData[index]?.length) {
             uiMgr.showTips('该地图未开放');
@@ -110,6 +119,7 @@ export class UIMap extends UIBase {
         this.detailsNode.active = this.selectedMapIdx !== -1;
     }
 
+    /**仅显示配置中存在的难度页签；保留有效选择，否则默认选中第一个可用页签 */
     private initDifficultyTabs(preserveDifficulty: boolean) {
         const rows = this.mapData[this.selectedMapIdx] ?? [];
         const tabs = this.detailsNode.getChildByName('tabLayout').children;
@@ -122,6 +132,7 @@ export class UIMap extends UIBase {
         this.clickDifficulty(difficultyType);
     }
 
+    /**更新临时难度、难度名称和页签高亮，不保存到玩家数据或本地 */
     private clickDifficulty(difficultyType: number) {
         const rows = this.mapData[this.selectedMapIdx] ?? [];
         this.selectedDifficultyType = rows.some((row) => row.difficultyType === difficultyType) ? difficultyType : -1;
@@ -141,11 +152,12 @@ export class UIMap extends UIBase {
     ///点击事件
     ///
 
-    /**点击关闭 */
+    /**直接关闭界面，保留临时选择，不更新已确认的地图数据 */
     clickCloseBtn() {
         this.onClose();
     }
 
+    /**确认有效选择并保存到本地，标记本次运行已确认，通知主页刷新后关闭界面 */
     clickSureBtn() {
         const rows = this.mapData[this.selectedMapIdx] ?? [];
         if (!rows.some((row) => row.difficultyType === this.selectedDifficultyType)) {
@@ -158,6 +170,7 @@ export class UIMap extends UIBase {
         this.onClose();
     }
 
+    /**关闭界面；界面节点由 UIManager 保留，临时选择随之保留 */
     onClose() {
         uiMgr.closePage(UIPath.UIMap);
     }

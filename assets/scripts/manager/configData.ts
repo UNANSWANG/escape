@@ -119,6 +119,7 @@ export enum GameEvent {
     fullSkin = "fullSkin",
     /**刷新角色皮肤 */
     refreshRoleSkin = "refreshRoleSkin",
+    /**确认地图选择后通知主页刷新地图名称和难度 */
     refreshMapSelection = "refreshMapSelection",
 }
 
@@ -145,6 +146,7 @@ export const difficultyNames = ['常规', '机密', '绝密'];
 
 /**存储的键值 */
 export enum SaveKey {
+    /**已确认的地图选择，格式为 [地图索引, 难度类型] */
     selectMapData = "selectMapData",
     /**关卡数据 */
     level = "level",

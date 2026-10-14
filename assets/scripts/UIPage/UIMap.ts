@@ -5,7 +5,8 @@ import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { pData } from '../manager/playerData';
 import { JsonMapData, mapConfig } from '../json/jsonMap';
-import { difficultyNames, GameEvent } from '../manager/configData';
+import { difficultyNames, GameEvent, SaveKey } from '../manager/configData';
+import { ccStorageTools } from '../extention/storageTools';
 import { gm } from '../manager/gm';
 const { ccclass, property } = _decorator;
 
@@ -27,6 +28,7 @@ export class UIMap extends UIBase {
     private mapData: JsonMapData[][] = [];
     private selectedMapIdx: number = -1;
     private selectedDifficultyType: number = -1;
+    private hasInitializedSelection = false;
 
     protected onLoad(): void {
         this.bindBtn();
@@ -45,6 +47,16 @@ export class UIMap extends UIBase {
                 nameLab.string = mapData.name;
             }
         });
+        if (!this.hasInitializedSelection) {
+            if (!pData.hasConfirmedMapSelection) {
+                const [mapIdx, difficultyType] = pData.selectMapData;
+                if (this.mapData[mapIdx]?.length) {
+                    this.selectedMapIdx = mapIdx;
+                    this.selectedDifficultyType = difficultyType;
+                }
+            }
+            this.hasInitializedSelection = true;
+        }
         if (!this.mapData[this.selectedMapIdx]?.length) {
             this.selectedMapIdx = -1;
         }
@@ -140,6 +152,8 @@ export class UIMap extends UIBase {
             return;
         }
         pData.selectMapData = [this.selectedMapIdx, this.selectedDifficultyType];
+        ccStorageTools.setData(SaveKey.selectMapData, pData.selectMapData.slice());
+        pData.hasConfirmedMapSelection = true;
         gm.Event.emit(GameEvent.refreshMapSelection);
         this.onClose();
     }

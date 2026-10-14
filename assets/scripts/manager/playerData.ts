@@ -26,8 +26,9 @@ export class playerData {
     private bossBookStates: { [bossId: string]: BossBookState } = {};
     /**地图半宽高 */
     mapHalfSize: Vec2 = Vec2.ZERO;
-    /**确认后的地图选择，格式为 [地图索引, 难度类型]；[-1, -1] 表示未确认，仅点击确定时更新，不存储到本地 */
+    /**确认后的地图选择，格式为 [地图索引, 难度类型]；默认 [-1, -1]，点击确定时更新并保存到本地 */
     selectMapData: [number, number] = [-1, -1];
+    hasConfirmedMapSelection = false;
     /**银币 */
     money = 0;
     /**金币 */
@@ -537,6 +538,10 @@ export class playerData {
 
     /**初始化存储数据 */
     initData() {
+        const selectMapData = ccStorageTools.getData(SaveKey.selectMapData);
+        this.selectMapData = Array.isArray(selectMapData) && selectMapData.length === 2
+            && selectMapData.every((value) => Number.isInteger(value) && value >= 0)
+            ? [selectMapData[0], selectMapData[1]] : [-1, -1];
         this.initBossBookStates(ccStorageTools.getData(SaveKey.bossBookStates));
         const claimedCollectionRewards = ccStorageTools.getData(SaveKey.claimedCollectionRewards);
         this.claimedCollectionRewards = new Set<number>(Array.isArray(claimedCollectionRewards)

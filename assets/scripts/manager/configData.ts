@@ -145,6 +145,7 @@ export const difficultyNames = ['常规', '机密', '绝密'];
 
 /**存储的键值 */
 export enum SaveKey {
+    selectMapData = "selectMapData",
     /**关卡数据 */
     level = "level",
     /**银币 */

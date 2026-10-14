@@ -119,7 +119,9 @@ export class UIMain extends UIBase {
 
     private refreshMapSelection() {
         const [mapIdx, difficultyType] = pData.selectMapData;
-        const mapData = mapConfig.getDataByMapIdx(mapIdx).find((row) => row.difficultyType === difficultyType);
+        const mapData = pData.hasConfirmedMapSelection
+            ? mapConfig.getDataByMapIdx(mapIdx).find((row) => row.difficultyType === difficultyType)
+            : null;
         const mapNameLab = this.mapBtn.getChildByName('mapNameLab')?.getComponent(Label);
         const difficultyLab = this.mapBtn.getChildByName('difficultyLab')?.getComponent(Label);
         if (mapNameLab) {
@@ -179,7 +181,7 @@ export class UIMain extends UIBase {
         }
 
         const [mapIdx, difficultyType] = pData.selectMapData;
-        if (!mapConfig.getDataByMapIdx(mapIdx).some((row) => row.difficultyType === difficultyType)) {
+        if (!pData.hasConfirmedMapSelection || !mapConfig.getDataByMapIdx(mapIdx).some((row) => row.difficultyType === difficultyType)) {
             this.clickMapBtn();
             return;
         }

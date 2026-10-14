@@ -1,6 +1,6 @@
-import { _decorator, Component, Node, Animation, EventTouch, Label} from 'cc';
+import { _decorator, Component, Node, Animation, EventTouch, Label, Prefab, instantiate} from 'cc';
 import { UIBase } from './UIBase';
-import { UIPath } from '../manager/pathConfig';
+import { ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { pData } from '../manager/playerData';
@@ -8,6 +8,9 @@ import { JsonMapData, mapConfig } from '../json/jsonMap';
 import { difficultyNames, GameEvent, SaveKey } from '../manager/configData';
 import { ccStorageTools } from '../extention/storageTools';
 import { gm } from '../manager/gm';
+import { ccResTools } from '../extention/resTools';
+import { ccTools } from '../extention/generalTools';
+import { showItemController } from '../controller/showItemController';
 const { ccclass, property } = _decorator;
 
 
@@ -34,6 +37,9 @@ export class UIMap extends UIBase {
     private selectedDifficultyType: number = -1;
     /**是否已完成首次选择初始化，避免再次打开时用存档覆盖临时选择 */
     private hasInitializedSelection = false;
+    private showItemPrefab: Prefab = null;
+    private showItemLoadPromise: Promise<Prefab> = null;
+    private itemListVersion = 0;
 
     protected onLoad(): void {
         this.bindBtn();
@@ -146,6 +152,49 @@ export class UIMap extends UIBase {
                 selectNode.active = index === this.selectedDifficultyType;
             }
         });
+        const selectedData = rows.find((row) => row.difficultyType === this.selectedDifficultyType);
+        this.refreshItemLists(selectedData);
+    }
+
+    private async refreshItemLists(data?: JsonMapData) {
+        const version = ++this.itemListVersion;
+        const itemLayout = this.detailsNode.getChildByName('itemLayout');
+        const equipLayout = this.detailsNode.getChildByName('equipLayout');
+        ccTools.destroyAllChild(itemLayout);
+        ccTools.destroyAllChild(equipLayout);
+        if (!data) return;
+
+        if (!this.showItemPrefab) {
+            if (!this.showItemLoadPromise) {
+                this.showItemLoadPromise = ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.showItem);
+            }
+            this.showItemPrefab = await this.showItemLoadPromise;
+            this.showItemLoadPromise = null;
+        }
+        if (version !== this.itemListVersion || !this.node.isValid) return;
+        if (!this.showItemPrefab) {
+            console.warn(`加载显示物品预制体失败: ${ItemPath.showItem}`);
+            return;
+        }
+        this.initItemList(itemLayout, data.rewardList);
+        this.initItemList(equipLayout, data.equipList);
+    }
+
+    private initItemList(parent: Node, list: string) {
+        let itemIds: unknown;
+        try {
+            itemIds = JSON.parse(list);
+        } catch {
+            console.warn(`地图物品列表格式错误: ${list}`);
+            return;
+        }
+        if (!Array.isArray(itemIds)) return;
+        for (const itemId of itemIds) {
+            if (!Number.isInteger(itemId) || itemId < 0) continue;
+            const itemNode = instantiate(this.showItemPrefab);
+            parent.addChild(itemNode);
+            itemNode.getComponent(showItemController).initData(itemId);
+        }
     }
 
     ///

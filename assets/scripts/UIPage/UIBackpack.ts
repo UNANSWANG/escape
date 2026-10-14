@@ -1,4 +1,4 @@
-import { _decorator, Node, Prefab, instantiate, Label, Sprite, EventTouch } from 'cc';
+import { _decorator, Node, Prefab, instantiate, Label, Sprite, EventTouch, Layout } from 'cc';
 import { UIBase } from './UIBase';
 import { ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -57,6 +57,7 @@ export class UIBackpack extends UIBase {
     protected onLoad(): void {
         this.bindBtn();
         this.bindContainerSlots();
+        this.syncBackpackSlots();
         this.bindBackpackSlots();
         this.discardBtn.active = false;
     }
@@ -124,6 +125,7 @@ export class UIBackpack extends UIBase {
         if (!this.itemPrefab) {
             return;
         }
+        this.syncBackpackSlots();
         const slots = this.getBackpackSlots();
         for (let index = 0; index < slots.length; index++) {
             const itemContainer = slots[index].getChildByName("content");
@@ -139,6 +141,37 @@ export class UIBackpack extends UIBase {
             itemNode.parent = itemContainer;
             itemNode.getComponent(itemController).initData(itemId, num);
         }
+    }
+
+    private syncBackpackSlots() {
+        const slots = this.getBackpackSlots();
+        const slotCount = Math.max(20, pData.backpackItems.length);
+        const slotTemplate = slots[0];
+        if (!slotTemplate) {
+            console.warn("背包缺少用于扩展的物品格子");
+            return;
+        }
+
+        while (slots.length < slotCount) {
+            const slot = instantiate(slotTemplate);
+            ccTools.destroyAllChild(slot.getChildByName("content"));
+            slot.getChildByName("select").active = false;
+            this.backpackContainer.addChild(slot);
+            slot.off(Node.EventType.TOUCH_END, this.clickBackpackSlot, this);
+            slot.on(Node.EventType.TOUCH_END, this.clickBackpackSlot, this);
+        }
+
+        while (slots.length > slotCount) {
+            const slot = slots[slots.length - 1];
+            if (this.selectedBackpackSlot === slot) {
+                this.selectedBackpackSlot = null;
+                this.discardBtn.active = false;
+            }
+            slot.removeFromParent();
+            slot.destroy();
+        }
+
+        this.backpackContainer.getComponent(Layout)?.updateLayout();
     }
 
     /** 根据背包物品重新计算并显示总价值与当前容量。 */
@@ -182,6 +215,7 @@ export class UIBackpack extends UIBase {
     /** 绑定背包格子的点击事件。 */
     private bindBackpackSlots() {
         for (const slot of this.getBackpackSlots()) {
+            slot.off(Node.EventType.TOUCH_END, this.clickBackpackSlot, this);
             slot.on(Node.EventType.TOUCH_END, this.clickBackpackSlot, this);
         }
     }

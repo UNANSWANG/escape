@@ -7,6 +7,7 @@ import { urlConfig } from '../sdk/network/netConfig';
 import { ccTimeTools } from '../extention/timeTools';
 import { commonConfig } from '../json/jsonCommon';
 import { itemConfig } from '../json/jsonItem';
+import { equipmentConfig } from '../json/jsonEquipment';
 const { ccclass, property } = _decorator;
 
 //用户游戏内数据
@@ -76,9 +77,12 @@ export class playerData {
         this.gameStartTime = ccTimeTools.getTime();
 
         //初始化背包内最大容量
-        this.maxBackpackCapacity = 60;
+        const backpackData = equipmentConfig.getDataById(this.equipmentIds[5]);
+        this.maxBackpackCapacity = Math.max(0, Number(backpackData?.capacity) || 0);
         //初始化背包内物品
         this.backpackItems = [];
+        this.backpackValue = 0;
+        this.backpackCapacity = 0;
         //初始化小药品数量
         this.drugCount = Number(commonConfig.getValue("drugCount"));
         //初始化大药品数量

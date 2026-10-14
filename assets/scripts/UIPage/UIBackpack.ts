@@ -1,4 +1,4 @@
-import { _decorator, Node, Prefab, instantiate, Label, Sprite, EventTouch, Layout } from 'cc';
+import { _decorator, Node, Prefab, instantiate, Label, Sprite, EventTouch, Layout, Color } from 'cc';
 import { UIBase } from './UIBase';
 import { ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -8,8 +8,10 @@ import { getItemDataByItemId } from '../json/jsonItemData';
 import { JsonItemData } from '../json/jsonItem';
 import { pData } from '../manager/playerData';
 import { itemController } from '../controller/itemController';
-import { configData } from '../manager/configData';
+import { configData, QualityColorArr } from '../manager/configData';
 import { ccResTools } from '../extention/resTools';
+import { weaponsConfig } from '../json/jsonWeapons';
+import { equipmentConfig } from '../json/jsonEquipment';
 const { ccclass, property } = _decorator;
 
 
@@ -82,10 +84,39 @@ export class UIBackpack extends UIBase {
 
     /** 初始化背包与当前打开容器的显示。 */
     initData() {
+        this.refreshEquipmentDisplay();
         this.initContainer();
         this.initBackpack();
         this.refreshBackpack();
         this.startContainerItemReveal();
+    }
+
+    private refreshEquipmentDisplay() {
+        const equipmentNode = this.node.getChildByName("backpack")?.getChildByName("equipmentNode");
+        const slotNames = ["weapons_0", "weapons_1", "knife", "head", "armor", "backpack"];
+        slotNames.forEach((slotName, slotIndex) => {
+            const slotNode = equipmentNode?.getChildByName(slotName);
+            const equipmentId = pData.equipmentIds[slotIndex];
+            const equipmentData = slotIndex < 3
+                ? weaponsConfig.getDataById(equipmentId)
+                : equipmentConfig.getDataById(equipmentId);
+            if (slotIndex < 2) {
+                const emptyWeaponNode = slotNode?.getChildByName("weaponNone");
+                if (emptyWeaponNode) {
+                    emptyWeaponNode.active = !equipmentData;
+                }
+                const weaponImageNode = slotNode?.getChildByName("img");
+                if (weaponImageNode) {
+                    weaponImageNode.active = !!equipmentData;
+                }
+            }
+
+            const nameLab = slotNode?.getChildByName("nameLab")?.getComponent(Label);
+            if (nameLab) {
+                nameLab.string = equipmentData?.name ?? "";
+                nameLab.color = new Color(QualityColorArr[equipmentData?.quality] ?? "#FFFFFF");
+            }
+        });
     }
 
     bindBtn() {

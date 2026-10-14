@@ -26,7 +26,8 @@ export class playerData {
     private bossBookStates: { [bossId: string]: BossBookState } = {};
     /**地图半宽高 */
     mapHalfSize: Vec2 = Vec2.ZERO;
-    selectMapIdx: number = -1;
+    /**确认后的地图选择，格式为 [地图索引, 难度类型]；[-1, -1] 表示未确认，仅点击确定时更新，不存储到本地 */
+    selectMapData: [number, number] = [-1, -1];
     /**银币 */
     money = 0;
     /**金币 */

@@ -139,6 +139,9 @@ export enum BossBookState {
     Defeated = 2,
 }
 
+/**地图难度名称 */
+export const difficultyNames = ['常规', '机密', '绝密'];
+
 /**存储的键值 */
 export enum SaveKey {
     /**关卡数据 */

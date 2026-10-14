@@ -119,6 +119,7 @@ export enum GameEvent {
     fullSkin = "fullSkin",
     /**刷新角色皮肤 */
     refreshRoleSkin = "refreshRoleSkin",
+    refreshMapSelection = "refreshMapSelection",
 }
 
 /**货币类型 */

@@ -4,7 +4,7 @@ import { uiMgr } from '../manager/UIManager';
 import { UIBase } from './UIBase';
 import { zoomButton } from '../extention/zoomButton';
 import { pData } from '../manager/playerData';
-import { configData, GameEvent, SaveKey } from '../manager/configData';
+import { configData, difficultyNames, GameEvent, SaveKey } from '../manager/configData';
 import { gm, PlatType } from '../manager/gm';
 import { ccStorageTools } from '../extention/storageTools';
 import { TTManager } from '../sdk/plat/tt/TTManager';
@@ -13,6 +13,7 @@ import { userMgr } from '../manager/userManager';
 import { WXManager } from '../sdk/plat/wx/WXManager';
 import { ccTools } from '../extention/generalTools';
 import { roleAnimName } from '../controller/role/roleController';
+import { mapConfig } from '../json/jsonMap';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIMain')
@@ -81,6 +82,7 @@ export class UIMain extends UIBase {
         this.refreshRed();
         this.checkRevisitBtn();
         this.refreshRoleAnim();
+        this.refreshMapSelection();
         gm.Event.emit(GameEvent.refreshPlayerMonetary);
     }
 
@@ -104,6 +106,7 @@ export class UIMain extends UIBase {
         // 监听刷新红点事件
         gm.Event.on(GameEvent.refreshRed, this.refreshRed, this);
         gm.Event.on(GameEvent.refreshRoleSkin, this.refreshRoleAnim, this);
+        gm.Event.on(GameEvent.refreshMapSelection, this.refreshMapSelection, this);
     }
 
     /**删除监听 */
@@ -111,6 +114,20 @@ export class UIMain extends UIBase {
         // 监听刷新红点事件
         gm.Event.off(GameEvent.refreshRed, this.refreshRed, this);
         gm.Event.off(GameEvent.refreshRoleSkin, this.refreshRoleAnim, this);
+        gm.Event.off(GameEvent.refreshMapSelection, this.refreshMapSelection, this);
+    }
+
+    private refreshMapSelection() {
+        const [mapIdx, difficultyType] = pData.selectMapData;
+        const mapData = mapConfig.getDataByMapIdx(mapIdx).find((row) => row.difficultyType === difficultyType);
+        const mapNameLab = this.mapBtn.getChildByName('mapNameLab')?.getComponent(Label);
+        const difficultyLab = this.mapBtn.getChildByName('difficultyLab')?.getComponent(Label);
+        if (mapNameLab) {
+            mapNameLab.string = mapData?.name ?? '请选择地图';
+        }
+        if (difficultyLab) {
+            difficultyLab.string = mapData ? (difficultyNames[difficultyType] ?? '') : '';
+        }
     }
 
     /**刷新主页角色皮肤并循环播放待机动画 */
@@ -158,6 +175,12 @@ export class UIMain extends UIBase {
     /**开始游戏 */
     cliskStartBtn() {
         if (this.isOpeningMatch) {
+            return;
+        }
+
+        const [mapIdx, difficultyType] = pData.selectMapData;
+        if (!mapConfig.getDataByMapIdx(mapIdx).some((row) => row.difficultyType === difficultyType)) {
+            this.clickMapBtn();
             return;
         }
 

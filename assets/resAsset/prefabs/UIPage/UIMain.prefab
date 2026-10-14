@@ -7775,7 +7775,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 84,
+      "width": 104,
       "height": 54.4
     },
     "_anchorPoint": {
@@ -7811,7 +7811,7 @@
       "b": 136,
       "a": 255
     },
-    "_string": "第一章节",
+    "_string": "未选择地图",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
     "_actualFontSize": 20,
@@ -7872,7 +7872,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "noviceLab",
+    "_name": "difficultyLab",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -7934,7 +7934,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 64,
+      "width": 4,
       "height": 54.4
     },
     "_anchorPoint": {
@@ -7970,7 +7970,7 @@
       "b": 136,
       "a": 255
     },
-    "_string": "新手",
+    "_string": "",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
     "_actualFontSize": 30,

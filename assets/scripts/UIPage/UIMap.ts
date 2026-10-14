@@ -5,7 +5,8 @@ import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { pData } from '../manager/playerData';
 import { JsonMapData, mapConfig } from '../json/jsonMap';
-import { difficultyNames } from '../manager/configData';
+import { difficultyNames, GameEvent } from '../manager/configData';
+import { gm } from '../manager/gm';
 const { ccclass, property } = _decorator;
 
 
@@ -139,6 +140,7 @@ export class UIMap extends UIBase {
             return;
         }
         pData.selectMapData = [this.selectedMapIdx, this.selectedDifficultyType];
+        gm.Event.emit(GameEvent.refreshMapSelection);
         this.onClose();
     }
 

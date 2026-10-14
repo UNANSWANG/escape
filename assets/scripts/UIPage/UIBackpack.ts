@@ -143,6 +143,18 @@ export class UIBackpack extends UIBase {
         }
     }
 
+    resetBackpack() {
+        this.stopContainerItemReveal();
+        this.itemData = [];
+        this.revealedItemStates = null;
+        this.hideAllSelect();
+        this.syncBackpackSlots();
+        for (const slot of [...this.getContainerSlots(), ...this.getBackpackSlots()]) {
+            ccTools.destroyAllChild(slot.getChildByName("content"));
+        }
+        this.refreshBackpack();
+    }
+
     private syncBackpackSlots() {
         const slots = this.getBackpackSlots();
         const slotCount = Math.max(20, pData.backpackItems.length);

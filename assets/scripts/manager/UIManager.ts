@@ -1,5 +1,6 @@
 import { _decorator, AnimationClip, AssetManager, Component, instantiate, Node, Prefab, Sprite, tween, UITransform, Vec3 } from 'cc';
 import { UIBase } from '../UIPage/UIBase';
+import { UIBackpack } from '../UIPage/UIBackpack';
 import { animPath, audioPath, gamePath, imgPath, ItemPath, UIPath } from './pathConfig';
 import { ccResTools } from '../extention/resTools';
 import { tipsNotice } from '../UIPage/tips/tipsNotice';
@@ -162,6 +163,8 @@ export class UIManager {
 
     /**关闭游戏 */
     closeGame() {
+        this.clearBackpack();
+        this.closePage(UIPath.UIBackpack);
         let keyName = this.getUIName(gamePath.UIGame);
         if (this.uiMap.has(keyName)) {
             let uiComp = this.uiMap.get(keyName).getComponent(UIBase);
@@ -171,6 +174,14 @@ export class UIManager {
         audioMgr.closeBackgroundMusic();
         audioMgr.playBackgroundMusic(audioPath.background);
         uiMgr.openPage(UIPath.UIMain);
+    }
+
+    clearBackpack() {
+        pData.clearBackpack();
+        const backpackNode = this.uiMap.get(this.getUIName(UIPath.UIBackpack));
+        if (backpackNode?.isValid) {
+            backpackNode.getComponent(UIBackpack)?.resetBackpack();
+        }
     }
 
     /**预加载界面 */

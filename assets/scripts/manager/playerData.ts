@@ -80,9 +80,7 @@ export class playerData {
         const backpackData = equipmentConfig.getDataById(this.equipmentIds[5]);
         this.maxBackpackCapacity = Math.max(0, Number(backpackData?.capacity) || 0);
         //初始化背包内物品
-        this.backpackItems = [];
-        this.backpackValue = 0;
-        this.backpackCapacity = 0;
+        this.clearBackpack();
         //初始化小药品数量
         this.drugCount = Number(commonConfig.getValue("drugCount"));
         //初始化大药品数量
@@ -330,6 +328,10 @@ export class playerData {
     /** 撤离成功时将背包物品批量转入仓库，并清空本局背包数据。 */
     moveBackpackItemsToStorehouse() {
         this.fixStorehouseDatas(this.backpackItems);
+        this.clearBackpack();
+    }
+
+    clearBackpack() {
         this.backpackItems = [];
         this.backpackValue = 0;
         this.backpackCapacity = 0;

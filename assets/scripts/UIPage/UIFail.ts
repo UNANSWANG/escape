@@ -36,6 +36,7 @@ export class UIFail extends UIBase {
     }
 
     initData(data?) {
+        uiMgr.clearBackpack();
         let survivalTime = Math.max(0, Number(data?.survivalTime) || 0);
         this.timeLab.string = `存活时间：${Math.floor(survivalTime)}s`;
 

@@ -1,10 +1,10 @@
-import { _decorator, EventTouch, Label, Node, UITransform, Vec3, view } from 'cc';
+import { _decorator, Color, EventTouch, Label, Node, UITransform, Vec3, view } from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccStorageTools } from '../extention/storageTools';
-import { configData, SaveKey } from '../manager/configData';
+import { configData, QualityColorArr, SaveKey } from '../manager/configData';
 import List from '../sdk/virtualList/List';
 import { pData } from '../manager/playerData';
 import { equipmentConfig } from '../json/jsonEquipment';
@@ -132,6 +132,7 @@ export class UIStorehouse extends UIBase {
             }
 
             nameLab.string = weaponData?.name ?? "";
+            nameLab.color = new Color(QualityColorArr[weaponData?.quality] ?? "#FFFFFF");
         });
     }
 
@@ -147,6 +148,7 @@ export class UIStorehouse extends UIBase {
             const slotIndex = index + 3;
             const equipmentData = equipmentConfig.getDataById(pData.equipmentIds[slotIndex]);
             nameLab.string = equipmentData?.name ?? "";
+            nameLab.color = new Color(QualityColorArr[equipmentData?.quality] ?? "#FFFFFF");
         });
     }
 

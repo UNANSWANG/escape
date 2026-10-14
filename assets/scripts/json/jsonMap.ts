@@ -9,6 +9,26 @@ export class jsonMap extends jsonBase {
     protected tableUrl1: string = "";
     protected tableUrl2: string = "";
 
+    private mapDataByMapIdx: Map<number, JsonMapData[]> = new Map();
+
+    protected processTableData(): void {
+        super.processTableData();
+        this.mapDataByMapIdx.clear();
+
+        const rows = Array.isArray(this.data) ? this.data : Object.values(this.data ?? {});
+        for (const mapData of rows as JsonMapData[]) {
+            if (!Number.isInteger(mapData?.mapIdx) || mapData.mapIdx < 0) continue;
+
+            const maps = this.mapDataByMapIdx.get(mapData.mapIdx) ?? [];
+            maps.push(mapData);
+            this.mapDataByMapIdx.set(mapData.mapIdx, maps);
+        }
+    }
+
+    getDataByMapIdx(mapIdx: number): JsonMapData[] {
+        return this.mapDataByMapIdx.get(mapIdx) ?? [];
+    }
+
     get tableData(): JsonMapData[] {
         return this.data;
     }

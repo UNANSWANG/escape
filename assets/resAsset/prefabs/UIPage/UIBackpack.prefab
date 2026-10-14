@@ -11073,10 +11073,6 @@
     "capacitySp": {
       "__id__": 71
     },
-    "itemPrefab": {
-      "__uuid__": "b1ac032e-2226-4615-a232-d31c584f3a8b",
-      "__expectedType__": "cc.Prefab"
-    },
     "_id": ""
   },
   {

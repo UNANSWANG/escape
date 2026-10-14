@@ -1,6 +1,6 @@
 import { _decorator, Node, Prefab, instantiate, Label, Sprite, EventTouch } from 'cc';
 import { UIBase } from './UIBase';
-import { UIPath } from '../manager/pathConfig';
+import { ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
@@ -9,6 +9,7 @@ import { JsonItemData } from '../json/jsonItem';
 import { pData } from '../manager/playerData';
 import { itemController } from '../controller/itemController';
 import { configData } from '../manager/configData';
+import { ccResTools } from '../extention/resTools';
 const { ccclass, property } = _decorator;
 
 
@@ -38,8 +39,7 @@ export class UIBackpack extends UIBase {
     @property(Sprite)
     capacitySp: Sprite;
 
-    @property(Prefab)
-    itemPrefab: Prefab;
+    private itemPrefab: Prefab = null;
 
     /** 当前打开容器传入的物品 itemId */
     itemData: number[] = [];
@@ -61,15 +61,22 @@ export class UIBackpack extends UIBase {
         this.discardBtn.active = false;
     }
 
-    onUI_Open(data?: { showSearchNode?: boolean; itemData?: number[]; revealedItemStates?: boolean[] }) {
+    async onUI_Open(data?: { showSearchNode?: boolean; itemData?: number[]; revealedItemStates?: boolean[] }) {
         this.stopContainerItemReveal();
         if (this.searchNode) {
             this.searchNode.active = !!data?.showSearchNode;
         }
         this.itemData = data?.itemData ?? [];
         this.revealedItemStates = data?.showSearchNode ? (data.revealedItemStates ?? []) : null;
-        this.initData();
         this.hideAllSelect();
+        if (!this.itemPrefab) {
+            this.itemPrefab = await ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.item);
+        }
+        if (!this.itemPrefab) {
+            console.warn(`加载背包物品预制体失败: ${ItemPath.item}`);
+            return;
+        }
+        this.initData();
     }
 
     /** 初始化背包与当前打开容器的显示。 */
@@ -114,6 +121,9 @@ export class UIBackpack extends UIBase {
 
     /** 根据背包物品及数量刷新背包格子。 */
     private initBackpack() {
+        if (!this.itemPrefab) {
+            return;
+        }
         const slots = this.getBackpackSlots();
         for (let index = 0; index < slots.length; index++) {
             const itemContainer = slots[index].getChildByName("content");

@@ -1,6 +1,6 @@
 import { _decorator, math, Vec2, Vec3 } from 'cc';
 import { ccStorageTools } from '../extention/storageTools';
-import { BossBookState, configData, GameEvent, gmConfig, SaveKey } from './configData';
+import { BossBookState, configData, GameEvent, gmConfig, MonetaryType, SaveKey } from './configData';
 import { gm, PlatType } from './gm';
 import { httpMgr } from '../sdk/network/httpManager';
 import { urlConfig } from '../sdk/network/netConfig';
@@ -8,6 +8,7 @@ import { ccTimeTools } from '../extention/timeTools';
 import { commonConfig } from '../json/jsonCommon';
 import { itemConfig } from '../json/jsonItem';
 import { equipmentConfig } from '../json/jsonEquipment';
+import { getItemDataByItemId } from '../json/jsonItemData';
 const { ccclass, property } = _decorator;
 
 //用户游戏内数据
@@ -68,6 +69,8 @@ export class playerData {
     maxBackpackCapacity = 0;
     /**背包内物品，格式为 [[itemId, 数量], ...] */
     backpackItems: [number, number][] = [];
+    /**最近一次失败丢失的背包物品，独立于本局背包保存。 */
+    lostItems: [number, number][] = [];
     /**小药品数量 */
     drugCount = 0;
     /**大药品数量 */
@@ -335,6 +338,30 @@ export class playerData {
         this.clearBackpack();
     }
 
+    /**失败时先保存背包快照，合并相同物品，供失败展示和后续找回使用。 */
+    saveLostBackpackItems() {
+        const items = new Map<number, number>();
+        for (const [itemId, num] of this.backpackItems) {
+            if (!Number.isInteger(itemId) || itemId < 0 || itemId > 300000
+                || !Number.isInteger(num) || num <= 0) continue;
+            items.set(itemId, (items.get(itemId) || 0) + num);
+        }
+        this.lostItems = Array.from(items.entries());
+        ccStorageTools.setData(SaveKey.lostItems, this.lostItems);
+    }
+
+    /**丢失物品的原始价值总和；金币装备和武器统一换算为银币。 */
+    getLostItemsValue(): number {
+        return this.lostItems.reduce((total, [itemId, num]) => {
+            const itemData = getItemDataByItemId(itemId);
+            if (!itemData) return total;
+            const value = Math.max(0, Number(itemData.value) || 0);
+            const isGold = itemId <= 200000 && 'currencyType' in itemData
+                && itemData.currencyType === MonetaryType.gold;
+            return total + value * num * (isGold ? configData.goldToMoney : 1);
+        }, 0);
+    }
+
     clearBackpack() {
         this.backpackItems = [];
         this.backpackValue = 0;
@@ -553,6 +580,11 @@ export class playerData {
         this.unlockedCollections = new Set<number>(Array.isArray(unlockedCollections)
             ? unlockedCollections.filter((itemId) => Number.isInteger(itemId) && itemId >= 0)
             : []);
+        const lostItems = ccStorageTools.getData(SaveKey.lostItems);
+        this.lostItems = Array.isArray(lostItems) ? lostItems
+            .filter((item) => Array.isArray(item) && Number.isInteger(item[0])
+                && item[0] >= 0 && item[0] <= 300000 && Number.isInteger(item[1]) && item[1] > 0)
+            .map((item): [number, number] => [item[0], item[1]]) : [];
         this.initStorehouseData(ccStorageTools.getData(SaveKey.storehouse));
         this.initEquipmentIds(ccStorageTools.getData(SaveKey.equipmentIds));
         this.money = Math.max(0, ccStorageTools.getNumberData(SaveKey.money));

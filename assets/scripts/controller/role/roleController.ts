@@ -864,6 +864,7 @@ export class roleController extends Component {
         if (hpDamage > 0) this.refreshHp();
         const actualDamage = defenseDamage + hpDamage;
         this.gameComp?.showDamageFloat(this.node, actualDamage);
+        if (this.hp <= 0) this.gameComp?.onPlayerDead();
         return true;
     }
 

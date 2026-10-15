@@ -6,7 +6,11 @@ const { ccclass, property } = _decorator;
 
 @ccclass('showItemController')
 export class showItemController extends Component {
-    initData(itemId: number) {
+    initData(itemId: number, num: number = 1) {
+        const numLab = this.node.getChildByName('numLab')?.getComponent(Label);
+        if (numLab) {
+            numLab.string = `x${num}`;
+        }
         const itemData = getItemDataByItemId(itemId);
         const nameLab = this.node.getChildByName('nameLab')?.getComponent(Label);
         if (nameLab) {

@@ -49,6 +49,8 @@ export interface JsonEquipmentData {
     name: string;
     /**品质 */
     quality: number;
+    /**货币类型，未配置时按银币计算 */
+    currencyType?: number;
     /**价值 */
     value: number;
     /**免伤百分比 */

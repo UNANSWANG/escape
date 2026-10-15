@@ -181,10 +181,12 @@ export class UIGame extends UIBase {
     private isPlayerInLeavePoint = false;
     /**本次撤离剩余时间（秒），离开撤离点后重置。 */
     private leaveRemaining = 0;
-    /**本局已经进行的时间（秒），用于成功界面的存活时间。 */
+    /**本局已经进行的时间（秒），用于结算界面的存活时间。 */
     private survivalTime = 0;
     /**防止倒计时结束后重复打开成功界面。 */
     private isLeaveSuccessTriggered = false;
+    /**防止死亡后重复结算。 */
+    private isFailTriggered = false;
 
     ///
     ///临时变量，不参与重新开始游戏数据恢复
@@ -395,6 +397,7 @@ export class UIGame extends UIBase {
         this.resetLeaveCountdown();
         this.survivalTime = 0;
         this.isLeaveSuccessTriggered = false;
+        this.isFailTriggered = false;
         this.staticColliders.length = 0;
         this.collisionCells.clear();
         this.perspectiveAreas.length = 0;
@@ -945,6 +948,11 @@ export class UIGame extends UIBase {
             return;
         }
 
+        if (playerMgr.playerComp && playerMgr.playerComp.hp <= 0) {
+            this.onPlayerDead();
+            return;
+        }
+
         this.shootCooldownRemaining = Math.max(0, this.shootCooldownRemaining - dt);
         this.survivalTime += dt;
 
@@ -982,6 +990,16 @@ export class UIGame extends UIBase {
             }
             this.shootEnemy(dt);
         }
+    }
+
+    /**玩家死亡时立即停止本局，保存背包后打开失败结算。 */
+    onPlayerDead() {
+        if (this.isFailTriggered || this.isLeaveSuccessTriggered) return;
+        this.isFailTriggered = true;
+        gm.gamePause();
+        pData.saveLostBackpackItems();
+        uiMgr.closePage(UIPath.UIBackpack);
+        uiMgr.openPage(UIPath.UIFail, { survivalTime: this.survivalTime });
     }
 
     /**检测玩家是否站在任意撤离点中，并更新可中断的撤离倒计时。 */

@@ -84,6 +84,8 @@ export class UIFail extends UIBase {
             const itemNode = instantiate(this.showItemPrefab);
             this.itemContent.addChild(itemNode);
             itemNode.getComponent(showItemController).initData(itemId, num);
+            const dropNode = itemNode.getChildByName('drop');
+            if (dropNode) dropNode.active = true;
         }
         this.itemContent.getComponent(Layout)?.updateLayout();
     }

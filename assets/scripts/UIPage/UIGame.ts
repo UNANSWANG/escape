@@ -992,12 +992,12 @@ export class UIGame extends UIBase {
         }
     }
 
-    /**玩家死亡时立即停止本局，保存背包后打开失败结算。 */
+    /**玩家死亡时立即停止本局，保存背包及穿戴装备掉落后打开失败结算。 */
     onPlayerDead() {
         if (this.isFailTriggered || this.isLeaveSuccessTriggered) return;
         this.isFailTriggered = true;
         gm.gamePause();
-        pData.saveLostBackpackItems();
+        pData.saveLostItems();
         uiMgr.closePage(UIPath.UIBackpack);
         uiMgr.openPage(UIPath.UIFail, { survivalTime: this.survivalTime });
     }

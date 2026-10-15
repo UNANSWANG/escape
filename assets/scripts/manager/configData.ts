@@ -164,7 +164,7 @@ export enum SaveKey {
     props = "props",
     /**仓库数据 */
     storehouse = "storehouse",
-    /**最近一次失败丢失的背包物品，格式为 [[itemId, 数量], ...] */
+    /**最近一次失败丢失的背包物品及穿戴装备，格式为 [[itemId, 数量], ...] */
     lostItems = "lostItems",
     /**已解锁藏品的 itemId 列表 */
     unlockedCollections = "unlockedCollections",

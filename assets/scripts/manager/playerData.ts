@@ -9,6 +9,7 @@ import { commonConfig } from '../json/jsonCommon';
 import { itemConfig } from '../json/jsonItem';
 import { equipmentConfig } from '../json/jsonEquipment';
 import { getItemDataByItemId } from '../json/jsonItemData';
+import { weaponsConfig } from '../json/jsonWeapons';
 const { ccclass, property } = _decorator;
 
 //用户游戏内数据
@@ -69,7 +70,7 @@ export class playerData {
     maxBackpackCapacity = 0;
     /**背包内物品，格式为 [[itemId, 数量], ...] */
     backpackItems: [number, number][] = [];
-    /**最近一次失败丢失的背包物品，独立于本局背包保存。 */
+    /**最近一次失败丢失的背包物品及穿戴装备，独立于本局背包保存。 */
     lostItems: [number, number][] = [];
     /**小药品数量 */
     drugCount = 0;
@@ -338,16 +339,32 @@ export class playerData {
         this.clearBackpack();
     }
 
-    /**失败时先保存背包快照，合并相同物品，供失败展示和后续找回使用。 */
-    saveLostBackpackItems() {
+    /**失败时保存背包及穿戴装备，合并同类物品，并将装备栏恢复为默认状态。 */
+    saveLostItems() {
         const items = new Map<number, number>();
         for (const [itemId, num] of this.backpackItems) {
             if (!Number.isInteger(itemId) || itemId < 0 || itemId > 300000
                 || !Number.isInteger(num) || num <= 0) continue;
             items.set(itemId, (items.get(itemId) || 0) + num);
         }
+        for (let slotIndex = 0; slotIndex < this.equipmentIds.length; slotIndex++) {
+            const equipmentId = this.equipmentIds[slotIndex];
+            if (equipmentId < 0) continue;
+            // 前三个槽位使用武器表 id，后三个槽位使用装备表 id。
+            const equipmentData = slotIndex < 3
+                ? weaponsConfig.getDataById(equipmentId)
+                : equipmentConfig.getDataById(equipmentId);
+            if (!equipmentData) {
+                console.warn(`未找到穿戴装备配置，slotIndex: ${slotIndex}, id: ${equipmentId}`);
+                continue;
+            }
+            const itemId = equipmentData.itemId;
+            items.set(itemId, (items.get(itemId) || 0) + 1);
+        }
         this.lostItems = Array.from(items.entries());
         ccStorageTools.setData(SaveKey.lostItems, this.lostItems);
+        this.equipmentIds = this.defaultEquipmentIds.slice();
+        this.saveEquipmentIds();
     }
 
     /**丢失物品的原始价值总和；金币装备和武器统一换算为银币。 */

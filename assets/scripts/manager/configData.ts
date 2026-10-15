@@ -18,6 +18,8 @@ export const configData = {
     equipmentSellPercent: 0.6,
     /**收藏品图鉴金币 */
     collectionBookGold: [1, 2, 3, 5, 10],
+    /**金币银币换算系数（不读表） */
+    goldToMoney: 10000,
 }
 
 /**武器通用配置 */

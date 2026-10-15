@@ -9,6 +9,7 @@ import { pData } from '../manager/playerData';
 import { audioMgr } from '../manager/audioManager';
 import { ccResTools } from '../extention/resTools';
 import { showItemController } from '../controller/showItemController';
+import { videoMgr } from '../manager/videoManager';
 const { ccclass, property } = _decorator;
 
 export enum FailType {
@@ -42,6 +43,7 @@ export class UIFail extends UIBase {
 
     private showItemPrefab: Prefab = null;
     private itemListVersion = 0;
+    private isRetrieving = false;
 
     protected onLoad(): void {
         this.bindBtn();
@@ -60,6 +62,7 @@ export class UIFail extends UIBase {
         const seconds = String(survivalTime % 60).padStart(2, '0');
         this.timeLab.string = `存活时间: ${minutes}:${seconds}`;
         this.dropNumLab.string = ccTools.formatMonetaryNum(pData.getLostItemsValue());
+        this.retrieveBtn.active = pData.lostItems.length > 0;
         this.refreshLostItems();
 
         pData.SDKReportLevelFail();
@@ -96,6 +99,25 @@ export class UIFail extends UIBase {
 
     bindBtn() {
         this.mainBtn.addComponent(zoomButton).onClick = this.clickMainBtn.bind(this);
+        this.retrieveBtn.addComponent(zoomButton).onClick = this.clickRetrieveBtn.bind(this);
+    }
+
+    clickRetrieveBtn() {
+        if (this.isRetrieving || pData.lostItems.length === 0) return;
+        this.isRetrieving = true;
+        let isSettled = false;
+        const finish = (isSuccess: boolean) => {
+            if (isSettled) return;
+            isSettled = true;
+            this.isRetrieving = false;
+            gm.gamePause();
+            if (!isSuccess) return;
+            if (pData.recoverLostItems()) {
+                uiMgr.showTips('物品已找回并放入仓库');
+            }
+            this.clickMainBtn();
+        };
+        videoMgr.watchVideo(68, () => finish(true), () => finish(false));
     }
 
     ///
@@ -103,6 +125,7 @@ export class UIFail extends UIBase {
     ///
     /**点击返回主界面按钮 */
     clickMainBtn() {
+        if (this.isRetrieving) return;
         this.onClose();
         uiMgr.closeGame();
     }

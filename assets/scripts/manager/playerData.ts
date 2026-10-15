@@ -367,6 +367,14 @@ export class playerData {
         this.saveEquipmentIds();
     }
 
+    recoverLostItems(): boolean {
+        if (this.lostItems.length === 0) return false;
+        this.fixStorehouseDatas(this.lostItems);
+        this.lostItems = [];
+        ccStorageTools.setData(SaveKey.lostItems, this.lostItems);
+        return true;
+    }
+
     /**丢失物品的原始价值总和；金币装备和武器统一换算为银币。 */
     getLostItemsValue(): number {
         return this.lostItems.reduce((total, [itemId, num]) => {

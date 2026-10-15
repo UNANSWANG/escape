@@ -1,17 +1,15 @@
-import { _decorator, Label, Node, sp, tween, Tween, Vec3 } from 'cc';
+import { _decorator, instantiate, Label, Layout, Node, Prefab } from 'cc';
 import { UIBase } from './UIBase';
-import { audioPath, spinePath, UIPath } from '../manager/pathConfig';
+import { audioPath, ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { pData } from '../manager/playerData';
 import { gm } from '../manager/gm';
 import { audioMgr } from '../manager/audioManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
-import { videoMgr } from '../manager/videoManager';
-import { loop_anim, loopAnimation } from '../controller/loopAnimation';
-import { ccStorageTools } from '../extention/storageTools';
-import { SaveKey } from '../manager/configData';
-import { roleAnimName } from '../controller/role/roleController';
+import { ccResTools } from '../extention/resTools';
+import { showItemController } from '../controller/showItemController';
+import { itemConfig } from '../json/jsonItem';
 const { ccclass, property } = _decorator;
 
 @ccclass('UISuccess')
@@ -34,6 +32,9 @@ export class UISuccess extends UIBase {
     @property(Node)
     itemContent: Node;
 
+    private showItemPrefab: Prefab = null;
+    private itemListVersion = 0;
+
     protected onLoad(): void {
         this.bindBtn();
     }
@@ -45,11 +46,47 @@ export class UISuccess extends UIBase {
     }
 
     initData(data?) {
-        let survivalTime = Math.max(0, Number(data?.survivalTime) || 0);
-        this.timeLab.string = `存活时间：${Math.floor(survivalTime)}s`;
+        const survivalTime = Math.floor(Math.max(0, Number(data?.survivalTime) || 0));
+        const minutes = String(Math.floor(survivalTime / 60)).padStart(2, '0');
+        const seconds = String(survivalTime % 60).padStart(2, '0');
+        this.timeLab.string = `存活时间: ${minutes}:${seconds}`;
+        const items: [number, number][] = Array.isArray(data?.backpackItems)
+            ? data.backpackItems.map(([itemId, num]): [number, number] => [itemId, num]) : [];
+        const collectionValue = items.reduce((total, [itemId, num]) => {
+            const itemData = itemConfig.getDataByItemId(itemId);
+            return total + Math.max(0, Number(itemData?.value) || 0) * Math.max(0, Math.floor(num));
+        }, 0);
+        this.getNumLab.string = ccTools.formatMonetaryNum(collectionValue);
+        this.refreshItems(items);
 
         pData.SDKReportLevelComplete();
         pData.addLevel();
+    }
+
+    private async refreshItems(items: [number, number][]) {
+        const version = ++this.itemListVersion;
+        ccTools.destroyAllChild(this.itemContent);
+        if (items.length === 0) return;
+        if (!this.showItemPrefab) {
+            this.showItemPrefab = await ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.showItem, false);
+        }
+        if (version !== this.itemListVersion || !this.node.isValid || !this.node.activeInHierarchy) return;
+        if (!this.showItemPrefab) {
+            console.warn(`加载显示物品预制体失败: ${ItemPath.showItem}`);
+            return;
+        }
+        for (const [itemId, num] of items) {
+            const itemNode = instantiate(this.showItemPrefab);
+            this.itemContent.addChild(itemNode);
+            itemNode.getComponent(showItemController).initData(itemId, num);
+            const dropNode = itemNode.getChildByName('drop');
+            if (dropNode) dropNode.active = false;
+        }
+        this.itemContent.getComponent(Layout)?.updateLayout();
+    }
+
+    onUI_Close() {
+        ++this.itemListVersion;
     }
 
     bindBtn() {

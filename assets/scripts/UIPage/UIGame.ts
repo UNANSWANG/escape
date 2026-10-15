@@ -1037,10 +1037,12 @@ export class UIGame extends UIBase {
         if (this.leaveRemaining > 0) return;
 
         this.isLeaveSuccessTriggered = true;
+        const backpackItems = pData.backpackItems.map(([itemId, num]) => [itemId, num]);
         pData.moveBackpackItemsToStorehouse();
         uiMgr.openPage(UIPath.UISuccess, {
             survivalTime: this.survivalTime,
             skinId: pData.skinId,
+            backpackItems,
         });
     }
 

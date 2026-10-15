@@ -522,7 +522,7 @@
       "__uuid__": "97839301-8356-40de-8c46-826d78e60e23@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
-    "_type": 0,
+    "_type": 1,
     "_fillType": 0,
     "_sizeMode": 0,
     "_fillCenter": {
@@ -2150,7 +2150,7 @@
       "__uuid__": "c34282b2-1cf4-4aa4-9431-ec08a37457c0@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
-    "_type": 0,
+    "_type": 1,
     "_fillType": 0,
     "_sizeMode": 0,
     "_fillCenter": {

@@ -17,10 +17,22 @@ const { ccclass, property } = _decorator;
 @ccclass('UISuccess')
 export class UISuccess extends UIBase {
     @property(Node)
-    closeBtn: Node;
+    mainBtn: Node;
 
     @property(Label)
     timeLab: Label;
+
+    @property(Label)
+    getNumLab: Label;
+
+    @property(Label)
+    curRankNumLab: Label;
+
+    @property(Label)
+    addRankNumLab: Label;
+
+    @property(Node)
+    itemContent: Node;
 
     protected onLoad(): void {
         this.bindBtn();
@@ -41,15 +53,15 @@ export class UISuccess extends UIBase {
     }
 
     bindBtn() {
-        this.closeBtn.addComponent(zoomButton).onClick = this.clickCloseBtn.bind(this);
+        this.mainBtn.addComponent(zoomButton).onClick = this.clickMainBtn.bind(this);
     }
 
     ///
     ///点击事件
     ///
 
-    /**点击关闭按钮 */
-    clickCloseBtn() {
+    /**点击返回主界面按钮 */
+    clickMainBtn() {
         this.onClose();
         uiMgr.closeGame();
     }

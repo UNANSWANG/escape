@@ -383,7 +383,7 @@ export class playerData {
             const value = Math.max(0, Number(itemData.value) || 0);
             const isGold = itemId <= 200000 && 'currencyType' in itemData
                 && itemData.currencyType === MonetaryType.gold;
-            return total + value * num * (isGold ? configData.goldToMoney : 1);
+            return total + value * num * (isGold ? commonConfig.getValueNumber("goldToMoney") : 1);
         }, 0);
     }
 

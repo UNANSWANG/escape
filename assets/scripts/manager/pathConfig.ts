@@ -42,6 +42,8 @@ export enum UIPath {
     UIHandBook = "prefabs/UIPage/UIHandBook",
     /**地图页面 */
     UIMap = "prefabs/UIPage/UIMap",
+    /**礼包页面 */
+    UIGift = "prefabs/UIPage/UIGift",
 }
 
 /**物品路径 */

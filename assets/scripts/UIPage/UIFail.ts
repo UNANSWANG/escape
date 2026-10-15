@@ -1,4 +1,4 @@
-import { _decorator, instantiate, Label, Layout, Node, Prefab } from 'cc';
+import { _decorator, instantiate, Label, Layout, Node, Prefab, Animation } from 'cc';
 import { audioPath, ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { UIBase } from './UIBase';
@@ -50,6 +50,8 @@ export class UIFail extends UIBase {
     }
 
     onUI_Open(data?: any) {
+        let anim = this.getComponent(Animation);
+        anim.play();
         gm.gamePause();
         audioMgr.playEffect(audioPath.fail);
         this.initData(data);

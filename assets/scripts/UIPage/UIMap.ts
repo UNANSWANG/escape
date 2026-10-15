@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Animation, EventTouch, Label, Prefab, instantiate} from 'cc';
+import { _decorator, Component, Node, Animation, EventTouch, Label, Prefab, instantiate, Vec3, UITransform, Widget, tween, Tween} from 'cc';
 import { UIBase } from './UIBase';
 import { ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -28,6 +28,9 @@ export class UIMap extends UIBase {
 
     @property(Node)
     sureBtn: Node;
+
+    @property(Node)
+    bg: Node;
     
     /**按地图节点索引保存配置，每组包含该地图的全部难度数据 */
     private mapData: JsonMapData[][] = [];
@@ -40,12 +43,27 @@ export class UIMap extends UIBase {
     private showItemPrefab: Prefab = null;
     private showItemLoadPromise: Promise<Prefab> = null;
     private itemListVersion = 0;
+    private mapFocusTween: Tween<Node> = null;
 
     protected onLoad(): void {
         this.bindBtn();
+        // 首次适配或后续尺寸变化后，使用最新的界面边界重新定位。
+        this.bg.parent.on(Node.EventType.SIZE_CHANGED, this.refreshMapFocus, this);
+    }
+
+    protected onDestroy(): void {
+        this.mapFocusTween?.stop();
+        this.bg.parent?.off(Node.EventType.SIZE_CHANGED, this.refreshMapFocus, this);
+    }
+
+    onUI_Close() {
+        this.mapFocusTween?.stop();
+        this.mapFocusTween = null;
     }
 
     onUI_Open() {
+        // 首次打开时先完成 Widget 适配，避免按预制体尺寸计算默认选择的位置。
+        this.bg.parent.getComponent(Widget)?.updateAlignment();
         this.initData();
     }
 
@@ -109,6 +127,7 @@ export class UIMap extends UIBase {
             uiMgr.showTips('该地图未开放');
             return;
         }
+        const previousMapIdx = this.selectedMapIdx;
         this.selectedMapIdx = Number.isInteger(index) && index >= 0 && index < this.mapList.children.length ? index : -1;
         this.mapList.children.forEach((mapNode, mapIndex) => {
             const selectNode = mapNode.getChildByName('select');
@@ -116,6 +135,7 @@ export class UIMap extends UIBase {
                 selectNode.active = mapIndex === this.selectedMapIdx;
             }
         });
+        this.refreshMapFocus(previousMapIdx !== this.selectedMapIdx);
         const selectedMapData = this.mapData[this.selectedMapIdx]?.[0];
         const nameLab = this.detailsNode.getChildByName('nameLab')?.getComponent(Label);
         if (nameLab) {
@@ -123,6 +143,46 @@ export class UIMap extends UIBase {
         }
         this.initDifficultyTabs(preserveDifficulty);
         this.detailsNode.active = this.selectedMapIdx !== -1;
+    }
+
+    /**选择时放大并尽量居中地图，背景到达界面边缘时停止移动，未选择时恢复背景。 */
+    private refreshMapFocus(animate: boolean = false) {
+        this.mapFocusTween?.stop();
+        this.mapFocusTween = null;
+        const startPosition = this.bg.position.clone();
+        const startScale = this.bg.scale.clone();
+        const selectedMap = this.mapList.children[this.selectedMapIdx];
+        this.bg.setPosition(0, 0, 0);
+        this.bg.setScale(selectedMap ? 1.5 : 1, selectedMap ? 1.5 : 1, 1);
+        if (selectedMap) {
+            const mapPosition = this.bg.parent.inverseTransformPoint(new Vec3(), selectedMap.worldPosition);
+            let x = -mapPosition.x;
+            let y = -mapPosition.y;
+            const viewport = this.bg.parent.getComponent(UITransform);
+            const background = this.bg.getComponent(UITransform);
+            if (viewport && background) {
+                const width = background.width * this.bg.scale.x;
+                const height = background.height * this.bg.scale.y;
+                // 背景的四条边必须覆盖界面；背景小于界面时，该方向保持居中。
+                const minX = viewport.width * (1 - viewport.anchorX) - width * (1 - background.anchorX);
+                const maxX = -viewport.width * viewport.anchorX + width * background.anchorX;
+                const minY = viewport.height * (1 - viewport.anchorY) - height * (1 - background.anchorY);
+                const maxY = -viewport.height * viewport.anchorY + height * background.anchorY;
+                x = minX <= maxX ? Math.min(maxX, Math.max(minX, x)) : (minX + maxX) / 2;
+                y = minY <= maxY ? Math.min(maxY, Math.max(minY, y)) : (minY + maxY) / 2;
+            }
+            this.bg.setPosition(x, y, 0);
+        }
+        if (animate) {
+            const targetPosition = this.bg.position.clone();
+            const targetScale = this.bg.scale.clone();
+            this.bg.setPosition(startPosition);
+            this.bg.setScale(startScale);
+            this.mapFocusTween = tween(this.bg)
+                .to(0.3, { position: targetPosition, scale: targetScale }, { easing: 'quadOut' })
+                .call(() => { this.mapFocusTween = null; })
+                .start();
+        }
     }
 
     /**仅显示配置中存在的难度页签；保留有效选择，否则默认选中第一个可用页签 */

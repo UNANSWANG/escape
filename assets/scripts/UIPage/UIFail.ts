@@ -20,10 +20,25 @@ export enum FailType {
 @ccclass('UIFail')
 export class UIFail extends UIBase {
     @property(Node)
-    closeBtn: Node;
+    mainBtn: Node;
+
+    @property(Node)
+    retrieveBtn: Node;
 
     @property(Label)
     timeLab: Label;
+
+    @property(Label)
+    dropNumLab: Label;
+
+    @property(Label)
+    curRankNumLab: Label;
+
+    @property(Label)
+    addRankNumLab: Label;
+
+    @property(Node)
+    itemContent: Node;
 
     protected onLoad(): void {
         this.bindBtn();
@@ -45,14 +60,14 @@ export class UIFail extends UIBase {
     }
 
     bindBtn() {
-        this.closeBtn.addComponent(zoomButton).onClick = this.clickCloseBtn.bind(this);
+        this.mainBtn.addComponent(zoomButton).onClick = this.clickMainBtn.bind(this);
     }
 
     ///
     ///点击事件
     ///
-    /**点击关闭按钮 */
-    clickCloseBtn() {
+    /**点击返回主界面按钮 */
+    clickMainBtn() {
         this.onClose();
         uiMgr.closeGame();
     }

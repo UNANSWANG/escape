@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Animation} from 'cc';
+import { _decorator, Component, Node, Animation, Prefab } from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -10,18 +10,22 @@ export class UIRoleStore extends UIBase {
     @property(Node)
     closeBtn: Node;
 
+    @property(Node)
+    tabContent: Node;
+
+    @property(Prefab)
+    tabPrefab: Prefab;
+
     protected onLoad(): void {
         this.bindBtn();
     }
 
     onUI_Open() {
-        let anim = this.getComponent(Animation);
-        anim.play();
         this.initData();
     }
 
     initData() {
-        
+
     }
 
     bindBtn() {

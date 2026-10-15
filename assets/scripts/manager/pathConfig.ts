@@ -122,6 +122,8 @@ export enum imgPath {
     bookItemBg = "texture/handbook/bookItemBg_",
     /**未解锁图鉴物品 */
     unItem = "texture/handbook/unItem",
+    /**角色类型 */
+    roleType = "texture/roleStore/roleType_",
 }
 
 /**spine路径 */

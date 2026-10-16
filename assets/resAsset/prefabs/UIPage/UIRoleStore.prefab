@@ -46,9 +46,6 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 132
-      },
-      {
         "__id__": 134
       },
       {
@@ -56,10 +53,13 @@
       },
       {
         "__id__": 138
+      },
+      {
+        "__id__": 140
       }
     ],
     "_prefab": {
-      "__id__": 140
+      "__id__": 142
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -2347,10 +2347,13 @@
       },
       {
         "__id__": 129
+      },
+      {
+        "__id__": 131
       }
     ],
     "_prefab": {
-      "__id__": 131
+      "__id__": 133
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -2814,6 +2817,42 @@
     "fileId": "c8FNEjC+pAoJRy3JsGVbL4"
   },
   {
+    "__type__": "cc.Widget",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "node": {
+      "__id__": 108
+    },
+    "_enabled": true,
+    "__prefab": {
+      "__id__": 132
+    },
+    "_alignFlags": 40,
+    "_target": null,
+    "_left": 189.5,
+    "_right": 401.5,
+    "_top": 0,
+    "_bottom": 0,
+    "_horizontalCenter": 0,
+    "_verticalCenter": 0,
+    "_isAbsLeft": true,
+    "_isAbsRight": true,
+    "_isAbsTop": true,
+    "_isAbsBottom": true,
+    "_isAbsHorizontalCenter": true,
+    "_isAbsVerticalCenter": true,
+    "_originalWidth": 743,
+    "_originalHeight": 0,
+    "_alignMode": 2,
+    "_lockFlags": 0,
+    "_id": ""
+  },
+  {
+    "__type__": "cc.CompPrefabInfo",
+    "fileId": "4fTAdqukBLjIZGtXDKBc2W"
+  },
+  {
     "__type__": "cc.PrefabInfo",
     "root": {
       "__id__": 1
@@ -2836,7 +2875,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 133
+      "__id__": 135
     },
     "_contentSize": {
       "__type__": "cc.Size",
@@ -2864,7 +2903,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 135
+      "__id__": 137
     },
     "_alignFlags": 45,
     "_target": null,
@@ -2900,7 +2939,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 137
+      "__id__": 139
     },
     "closeBtn": {
       "__id__": 15
@@ -2911,6 +2950,9 @@
     "tabPrefab": {
       "__uuid__": "ba095039-189f-486f-820b-5686af53b717",
       "__expectedType__": "cc.Prefab"
+    },
+    "roleAvatarContent": {
+      "__id__": 110
     },
     "_id": ""
   },
@@ -2928,7 +2970,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 139
+      "__id__": 141
     },
     "_id": ""
   },

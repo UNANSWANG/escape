@@ -43,6 +43,7 @@ export class UIRoleStore extends UIBase {
     /**-1 表示全部，其余对应角色表的 type */
     private tabTypes: number[] = [-1, 0, 1, 2, 3];
     private selectedRoleType = -1;
+    private selectedPageIndex = 0;
     private tabsInitialized = false;
     private selectedRole: JsonRoleData | null = null;
     private roleAvatarItems: roleAvatarItemController[] = [];
@@ -89,6 +90,7 @@ export class UIRoleStore extends UIBase {
         const refreshId = ++this.roleAvatarRefreshId;
         this.selectedRole = null;
         this.roleAvatarItems = [];
+        this.clickPageTab(this.selectedPageIndex);
         this.refreshRoleSwitchButtons();
         ccTools.destroyAllChild(this.roleAvatarContent);
         const roles = (roleConfig.roleAllData ?? []).filter((role) =>
@@ -133,6 +135,11 @@ export class UIRoleStore extends UIBase {
         leftButton.onClick = this.clickLeftBtn.bind(this);
         const rightButton = this.rightBtn.getComponent(zoomButton) ?? this.rightBtn.addComponent(zoomButton);
         rightButton.onClick = this.clickRightBtn.bind(this);
+        this.tabList.forEach((tabNode, index) => {
+            tabNode.on(Node.EventType.TOUCH_END, () => {
+                this.clickPageTab(index);
+            }, this);
+        });
     }
 
     ///
@@ -162,7 +169,45 @@ export class UIRoleStore extends UIBase {
         }
         this.selectedRole = selectedItem.roleData;
         this.roleAvatarItems.forEach((item) => item.setSelected(item === selectedItem));
+        this.clickPageTab(this.selectedPageIndex);
         this.refreshRoleSwitchButtons();
+    }
+
+    /**切换详情窗口页签：0 基础信息，1 皮肤 */
+    clickPageTab(index: number) {
+        if (index === 0) {
+            this.showInfoPage();
+        } else if (index === 1) {
+            this.showSkinPage();
+        }
+    }
+
+    /**显示当前角色的基础信息页面 */
+    showInfoPage() {
+        this.setDetailPage(0);
+        const descLab = this.pageList[0]?.getChildByName("descLab")?.getComponent(Label);
+        if (descLab) {
+            descLab.string = this.selectedRole?.infoDesc ?? "";
+        }
+    }
+
+    /**显示当前角色的皮肤页面 */
+    showSkinPage() {
+        this.setDetailPage(1);
+    }
+
+    /**同步详情页面显隐和页签选中状态 */
+    private setDetailPage(index: number) {
+        this.selectedPageIndex = index;
+        this.pageList.forEach((pageNode, pageIndex) => {
+            pageNode.active = pageIndex === index;
+        });
+        this.tabList.forEach((tabNode, tabIndex) => {
+            const selectNode = tabNode.getChildByName("select");
+            if (selectNode) {
+                selectNode.active = tabIndex === index;
+            }
+        });
     }
 
     /**根据当前角色在页签列表中的位置更新切换按钮 */

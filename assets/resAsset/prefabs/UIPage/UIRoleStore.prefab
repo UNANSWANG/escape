@@ -2954,6 +2954,12 @@
     "roleAvatarContent": {
       "__id__": 110
     },
+    "leftBtn": {
+      "__id__": 88
+    },
+    "rightBtn": {
+      "__id__": 98
+    },
     "_id": ""
   },
   {

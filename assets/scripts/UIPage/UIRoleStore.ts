@@ -23,6 +23,12 @@ export class UIRoleStore extends UIBase {
     @property(Node)
     roleAvatarContent: Node;
 
+    @property(Node)
+    leftBtn: Node;
+
+    @property(Node)
+    rightBtn: Node;
+
     /**页签名称，与角色类型一一对应 */
     private tabNames: string[] = ["全部", "突击", "治疗", "肉盾", "功能"];
     /**-1 表示全部，其余对应角色表的 type */
@@ -74,6 +80,7 @@ export class UIRoleStore extends UIBase {
         const refreshId = ++this.roleAvatarRefreshId;
         this.selectedRole = null;
         this.roleAvatarItems = [];
+        this.refreshRoleSwitchButtons();
         ccTools.destroyAllChild(this.roleAvatarContent);
         const roles = (roleConfig.roleAllData ?? []).filter((role) =>
             this.selectedRoleType === -1 || role.type === this.selectedRoleType);
@@ -113,6 +120,10 @@ export class UIRoleStore extends UIBase {
 
     bindBtn() {
         this.closeBtn.addComponent(zoomButton).onClick = this.clickCloseBtn.bind(this);
+        const leftButton = this.leftBtn.getComponent(zoomButton) ?? this.leftBtn.addComponent(zoomButton);
+        leftButton.onClick = this.clickLeftBtn.bind(this);
+        const rightButton = this.rightBtn.getComponent(zoomButton) ?? this.rightBtn.addComponent(zoomButton);
+        rightButton.onClick = this.clickRightBtn.bind(this);
     }
 
     ///
@@ -142,6 +153,34 @@ export class UIRoleStore extends UIBase {
         }
         this.selectedRole = selectedItem.roleData;
         this.roleAvatarItems.forEach((item) => item.setSelected(item === selectedItem));
+        this.refreshRoleSwitchButtons();
+    }
+
+    /**根据当前角色在页签列表中的位置更新切换按钮 */
+    private refreshRoleSwitchButtons() {
+        const index = this.roleAvatarItems.findIndex((item) => item.roleData === this.selectedRole);
+        this.leftBtn.active = index > 0;
+        this.rightBtn.active = index >= 0 && index < this.roleAvatarItems.length - 1;
+    }
+
+    /**选择当前页签中的相邻角色，不循环切换 */
+    private switchRole(offset: number) {
+        const index = this.roleAvatarItems.findIndex((item) => item.roleData === this.selectedRole);
+        if (index < 0) {
+            return;
+        }
+        const role = this.roleAvatarItems[index + offset]?.roleData;
+        if (role) {
+            this.clickRoleAvatar(role.roleId);
+        }
+    }
+
+    clickLeftBtn() {
+        this.switchRole(-1);
+    }
+
+    clickRightBtn() {
+        this.switchRole(1);
     }
 
     /**点击关闭 */

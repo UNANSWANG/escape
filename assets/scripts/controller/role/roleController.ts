@@ -10,6 +10,7 @@ import { sniperController } from '../sniperController';
 import { weaponsController } from '../weaponsController';
 import { uiMgr } from '../../manager/UIManager';
 import { JsonRoleData, roleConfig } from '../../json/jsonRole';
+import { JsonRoleLevelData, roleLevelConfig } from '../../json/jsonRoleLevel';
 import { weaponsConfig } from '../../json/jsonWeapons';
 import { equipmentConfig } from '../../json/jsonEquipment';
 import { pData } from '../../manager/playerData';
@@ -135,6 +136,8 @@ export class roleController extends Component {
     private defenseShadowDuration = 0.3;
     /**角色数据 */
     roleData: JsonRoleData = null;
+    /**当前角色存档等级对应的被动和主动技能配置 */
+    roleLevelData: JsonRoleLevelData = null;
     /**是否正在使用药品。 */
     private isUsingDrug = false;
     /**本次打药剩余时间（秒）。 */
@@ -689,6 +692,7 @@ export class roleController extends Component {
         this.roleId = id;
         this.skinId = skinId;
         this.roleData = roleConfig.getRoleDataById(this.roleId);
+        this.roleLevelData = roleLevelConfig.getRoleLevelData(this.roleId, pData.getRoleLevel(this.roleId));
         if (!this.roleData) return;
 
         //TODO 临时降低血量
@@ -796,6 +800,10 @@ export class roleController extends Component {
     private onTableLoad(tableName: string) {
         if (tableName === 'weapons') this.applyEquippedWeaponStats();
         if (tableName === 'equipment') this.applyEquippedDefenseStats();
+        if (tableName === 'roleLevel' && this.roleData) {
+            this.roleLevelData = roleLevelConfig.getRoleLevelData(this.roleId, pData.getRoleLevel(this.roleId));
+            this.initData();
+        }
     }
 
     /** 刷新角色初始状态，同时通知枪械重新绑定角色挂点。 */

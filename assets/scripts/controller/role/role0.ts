@@ -70,9 +70,8 @@ export class role0 extends roleController {
     }
 
     initData(): void {
-        //TODO 临时1s
-        this.skill1Cooldown = 1//this.roleData?.passiveCd ?? 15;
-        this.skill2Cooldown = this.roleData?.initiativeCd ?? 50;
+        this.skill1Cooldown = this.roleLevelData?.passiveCd ?? 15;
+        this.skill2Cooldown = this.roleLevelData?.initiativeCd ?? 50;
         const values = this.getInitiativeValues();
         this.skill2MoveSpeedPercent = values[0] ?? 0;
         this.skill2KillHealPercent = (values[1] ?? 0) / 100;
@@ -83,7 +82,7 @@ export class role0 extends roleController {
     useSkill2() {
         if (this.isUsingSkill2 || this.isSkillCooling(2)) return false;
 
-        this.skill2Duration = Math.max(0, this.roleData?.initiativeTime ?? 0);
+        this.skill2Duration = Math.max(0, this.roleLevelData?.initiativeTime ?? 0);
         if (this.skill2Duration <= 0) return false;
 
         this.isUsingSkill2 = true;
@@ -105,9 +104,9 @@ export class role0 extends roleController {
         this.finishSkill2();
     }
 
-    /**将角色表的主动数值兼容解析为数值数组。 */
+    /**将角色等级表的主动数值兼容解析为数值数组。 */
     private getInitiativeValues() {
-        const rawValue: unknown = this.roleData?.initiativeValue;
+        const rawValue: unknown = this.roleLevelData?.initiativeValue;
         let values: unknown[] = [];
         if (Array.isArray(rawValue)) {
             values = rawValue;

@@ -58,22 +58,6 @@ export interface JsonRoleData {
     type: number;
     /**生命值 */
     hp: number;
-    /**被动持续时间 */
-    passiveTime: number;
-    /**被动冷却时间 */
-    passiveCd: number;
-    /**被动数值 */
-    passiveValue: string;
-    /**主动持续时间 */
-    initiativeTime: number;
-    /**主动冷却时间 */
-    initiativeCd: number;
-    /**主动数值 */
-    initiativeValue: number[] | string;
-    /**被动描述 */
-    passiveDesc: string;
-    /**主动描述 */
-    initiativeDesc: string;
     /**人物描述 */
     infoDesc: string;
 }

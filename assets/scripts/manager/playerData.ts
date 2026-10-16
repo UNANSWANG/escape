@@ -339,7 +339,7 @@ export class playerData {
         this.clearBackpack();
     }
 
-    /**失败时保存背包及穿戴装备，合并同类物品，并将装备栏恢复为默认状态。 */
+    /**失败时保存背包及非默认穿戴装备，合并同类物品，并将装备栏恢复为默认状态。 */
     saveLostItems() {
         const items = new Map<number, number>();
         for (const [itemId, num] of this.backpackItems) {
@@ -349,7 +349,8 @@ export class playerData {
         }
         for (let slotIndex = 0; slotIndex < this.equipmentIds.length; slotIndex++) {
             const equipmentId = this.equipmentIds[slotIndex];
-            if (equipmentId < 0) continue;
+            // 默认装备会在结算后保留，不计入丢失清单。
+            if (equipmentId < 0 || equipmentId === this.getDefaultEquipmentId(slotIndex)) continue;
             // 前三个槽位使用武器表 id，后三个槽位使用装备表 id。
             const equipmentData = slotIndex < 3
                 ? weaponsConfig.getDataById(equipmentId)

@@ -74,6 +74,8 @@ export interface JsonRoleData {
     passiveDesc: string;
     /**主动描述 */
     initiativeDesc: string;
+    /**人物描述 */
+    infoDesc: string;
 }
 
 

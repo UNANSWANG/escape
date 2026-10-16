@@ -44,8 +44,10 @@ export class UIFail extends UIBase {
     private showItemPrefab: Prefab = null;
     private itemListVersion = 0;
     private isRetrieving = false;
+    private mainBtnDefaultX = 0;
 
     protected onLoad(): void {
+        this.mainBtnDefaultX = this.mainBtn.position.x;
         this.bindBtn();
     }
 
@@ -63,8 +65,12 @@ export class UIFail extends UIBase {
         const minutes = String(Math.floor(survivalTime / 60)).padStart(2, '0');
         const seconds = String(survivalTime % 60).padStart(2, '0');
         this.timeLab.string = `存活时间: ${minutes}:${seconds}`;
-        this.dropNumLab.string = ccTools.formatMonetaryNum(pData.getLostItemsValue());
-        this.retrieveBtn.active = pData.lostItems.length > 0;
+        const lostItemsValue = pData.getLostItemsValue();
+        this.dropNumLab.string = ccTools.formatMonetaryNum(lostItemsValue);
+        const canRetrieve = lostItemsValue > 0 && pData.lostItems.length > 0;
+        this.retrieveBtn.active = canRetrieve;
+        this.mainBtn.setPosition(canRetrieve ? this.mainBtnDefaultX : 0,
+            this.mainBtn.position.y, this.mainBtn.position.z);
         this.refreshLostItems();
 
         pData.SDKReportLevelFail();

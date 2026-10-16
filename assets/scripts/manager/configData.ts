@@ -172,6 +172,8 @@ export enum SaveKey {
     bossBookStates = "bossBookStates",
     /**当前装备数据 */
     equipmentIds = "equipmentIds",
+    /**角色等级，按角色 id 保存 */
+    roleLevels = "roleLevels",
     /**引导 */
     guide = "guide",
     /**音效开关 */

@@ -40,6 +40,8 @@ export class playerData {
     adNum = 0;
     /**角色id */
     roleId = 0;
+    /**角色等级，按角色 id 保存；未记录的角色默认为 1 级 */
+    roleLevels: { [roleId: string]: number } = {};
     /**当前皮肤id */
     skinId = 0;
     /**已解锁角色皮肤 */
@@ -546,6 +548,21 @@ export class playerData {
         }
     }
 
+    /**获取角色等级，未记录或无效时默认为 1 级 */
+    getRoleLevel(roleId: number): number {
+        const level = Number(this.roleLevels[roleId]);
+        return Number.isInteger(level) && level > 0 ? level : 1;
+    }
+
+    /**设置角色等级并保存到本地 */
+    setRoleLevel(roleId: number, level: number) {
+        if (!Number.isInteger(roleId) || roleId < 0 || !Number.isInteger(level) || level < 1) {
+            return;
+        }
+        this.roleLevels[roleId] = level;
+        ccStorageTools.setData(SaveKey.roleLevels, { ...this.roleLevels });
+    }
+
     /**判断角色皮肤是否已解锁 */
     isSkinUnlocked(skinId: number) {
         return !!this.unlockedRoleSkin[skinId + ""];
@@ -602,6 +619,16 @@ export class playerData {
             ? claimedCollectionRewards.filter((itemId) => Number.isInteger(itemId) && itemId >= 0)
             : []);
         this.propsNums = ccStorageTools.getData(SaveKey.props) || {};
+        const roleLevels = ccStorageTools.getData(SaveKey.roleLevels);
+        this.roleLevels = {};
+        if (roleLevels && typeof roleLevels === "object" && !Array.isArray(roleLevels)) {
+            Object.keys(roleLevels).forEach((roleId) => {
+                const level = Number(roleLevels[roleId]);
+                if (Number.isInteger(Number(roleId)) && Number(roleId) >= 0 && Number.isInteger(level) && level > 0) {
+                    this.roleLevels[roleId] = level;
+                }
+            });
+        }
         const unlockedCollections = ccStorageTools.getData(SaveKey.unlockedCollections);
         this.unlockedCollections = new Set<number>(Array.isArray(unlockedCollections)
             ? unlockedCollections.filter((itemId) => Number.isInteger(itemId) && itemId >= 0)

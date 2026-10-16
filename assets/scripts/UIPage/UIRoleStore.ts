@@ -7,6 +7,9 @@ import { ccTools } from '../extention/generalTools';
 import { ccResTools } from '../extention/resTools';
 import { JsonRoleData, roleConfig } from '../json/jsonRole';
 import { roleAvatarItemController } from '../controller/roleAvatarItemController';
+import { showItemController } from '../controller/showItemController';
+import { pData } from '../manager/playerData';
+import { roleLevelConfig, JsonRoleLevelData } from '../json/jsonRoleLevel';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIRoleStore')
@@ -50,6 +53,8 @@ export class UIRoleStore extends UIBase {
     private roleAvatarPrefab: Prefab | null = null;
     private roleAvatarPrefabLoad: Promise<Prefab> | null = null;
     private roleAvatarRefreshId = 0;
+    private showItemPrefab: Prefab | null = null;
+    private showItemPrefabLoad: Promise<Prefab> | null = null;
 
     protected onLoad(): void {
         this.bindBtn();
@@ -189,6 +194,54 @@ export class UIRoleStore extends UIBase {
         if (descLab) {
             descLab.string = this.selectedRole?.infoDesc ?? "";
         }
+        this.refreshRoleLevelInfo();
+    }
+
+    /**刷新当前角色等级对应的技能描述和升级材料 */
+    private async refreshRoleLevelInfo() {
+        const page = this.pageList[0];
+        const roleId = this.selectedRole?.roleId;
+        if (!page || roleId === undefined) return;
+        const levelData = roleLevelConfig.getRoleLevelData(roleId, pData.getRoleLevel(roleId));
+        const setLabel = (name: string, value: string) => {
+            const label = page.getChildByName(name)?.getComponent(Label);
+            if (label) label.string = value ?? "";
+        };
+        setLabel("passiveUpgradeLab", levelData?.passiveUpgradeDesc);
+        setLabel("passiveDescLab", levelData?.passiveDesc);
+        setLabel("initiativeUpgradeLab", levelData?.initiativeUpgradeDesc);
+        setLabel("initiativeDescLab", levelData?.initiativeDesc);
+        await this.refreshUpgradeItems(page.getChildByName("rewardLayout"), levelData);
+    }
+
+    /**根据升级材料字符串创建 showItem 展示物品名称和数量 */
+    private async refreshUpgradeItems(rewardLayout: Node | null, levelData: JsonRoleLevelData | null) {
+        if (!rewardLayout) return;
+        ccTools.destroyAllChild(rewardLayout);
+        if (!levelData?.upgradeItem) return;
+        let upgradeItems: number[][];
+        try {
+            const parsed = typeof levelData.upgradeItem === "string"
+                ? JSON.parse(levelData.upgradeItem) : levelData.upgradeItem;
+            upgradeItems = Array.isArray(parsed) ? parsed : [];
+        } catch {
+            upgradeItems = [];
+        }
+        if (!this.showItemPrefab) {
+            if (!this.showItemPrefabLoad) {
+                this.showItemPrefabLoad = ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.showItem);
+            }
+            this.showItemPrefab = await this.showItemPrefabLoad;
+            this.showItemPrefabLoad = null;
+        }
+        if (!this.showItemPrefab || !rewardLayout.isValid) return;
+        upgradeItems.forEach((itemData) => {
+            if (!Array.isArray(itemData) || itemData.length < 2) return;
+            const itemNode = instantiate(this.showItemPrefab);
+            rewardLayout.addChild(itemNode);
+            (itemNode.getComponent(showItemController) ?? itemNode.addComponent(showItemController))
+                .initData(Number(itemData[0]), Number(itemData[1]));
+        });
     }
 
     /**显示当前角色的皮肤页面 */

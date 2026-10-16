@@ -6157,7 +6157,7 @@
       "b": 88,
       "a": 255
     },
-    "_string": "被动技能:",
+    "_string": "主动技能:",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 18,
@@ -7571,6 +7571,25 @@
     },
     "rightBtn": {
       "__id__": 38
+    },
+    "tabList": [
+      {
+        "__id__": 142
+      },
+      {
+        "__id__": 166
+      }
+    ],
+    "pageList": [
+      {
+        "__id__": 190
+      },
+      {
+        "__id__": 302
+      }
+    ],
+    "upgradeBtn": {
+      "__id__": 209
     },
     "_id": ""
   },

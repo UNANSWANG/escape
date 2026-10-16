@@ -29,17 +29,11 @@ export class UIRoleStore extends UIBase {
     @property(Node)
     rightBtn: Node;
 
-    @property(Node)
-    infoBtn: Node;
+    @property([Node])
+    tabList: Node[] = [];
 
-    @property(Node)
-    skinBtn: Node;
-
-    @property(Node)
-    infoPage: Node;
-
-    @property(Node)
-    skinPage: Node;
+    @property([Node])
+    pageList: Node[] = [];
 
     @property(Node)
     upgradeBtn: Node;

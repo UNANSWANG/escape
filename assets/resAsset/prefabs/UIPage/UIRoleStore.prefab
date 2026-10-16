@@ -6668,7 +6668,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "moneyLyout",
+    "_name": "moneyLayout",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {

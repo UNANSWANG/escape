@@ -10,6 +10,7 @@ import { roleAvatarItemController } from '../controller/roleAvatarItemController
 import { showItemController } from '../controller/showItemController';
 import { pData } from '../manager/playerData';
 import { roleLevelConfig, JsonRoleLevelData } from '../json/jsonRoleLevel';
+import { getItemDataByItemId } from '../json/jsonItemData';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIRoleStore')
@@ -140,6 +141,10 @@ export class UIRoleStore extends UIBase {
         leftButton.onClick = this.clickLeftBtn.bind(this);
         const rightButton = this.rightBtn.getComponent(zoomButton) ?? this.rightBtn.addComponent(zoomButton);
         rightButton.onClick = this.clickRightBtn.bind(this);
+        const upgradeButton = this.upgradeBtn?.getComponent(zoomButton) ?? this.upgradeBtn?.addComponent(zoomButton);
+        if (upgradeButton) {
+            upgradeButton.onClick = this.clickUpgradeBtn.bind(this);
+        }
         this.tabList.forEach((tabNode, index) => {
             tabNode.on(Node.EventType.TOUCH_END, () => {
                 this.clickPageTab(index);
@@ -202,7 +207,22 @@ export class UIRoleStore extends UIBase {
         const page = this.pageList[0];
         const roleId = this.selectedRole?.roleId;
         if (!page || roleId === undefined) return;
-        const levelData = roleLevelConfig.getRoleLevelData(roleId, pData.getRoleLevel(roleId));
+        const roleLevel = pData.getRoleLevel(roleId);
+        const levelData = roleLevelConfig.getRoleLevelData(roleId, roleLevel);
+        const isMaxLevel = roleLevel >= roleLevelConfig.getMaxLevel(roleId);
+        const levelLab = page.getChildByName("levelLab")?.getComponent(Label);
+        if (levelLab) {
+            levelLab.string = `LV.${roleLevel}`;
+        }
+        const moneyLab = page.getChildByPath("moneyLayout/numLab")?.getComponent(Label);
+        if (moneyLab) {
+            moneyLab.string = `${Number(levelData?.upgradeMoney) || 0}`;
+        }
+        const moneyLayout = page.getChildByName("moneyLayout");
+        const rewardLayout = page.getChildByName("rewardLayout");
+        if (moneyLayout) moneyLayout.active = !isMaxLevel;
+        if (rewardLayout) rewardLayout.active = !isMaxLevel;
+        if (this.upgradeBtn) this.upgradeBtn.active = !isMaxLevel;
         const setLabel = (name: string, value: string) => {
             const label = page.getChildByName(name)?.getComponent(Label);
             if (label) label.string = value ?? "";
@@ -211,7 +231,65 @@ export class UIRoleStore extends UIBase {
         setLabel("passiveDescLab", levelData?.passiveDesc);
         setLabel("initiativeUpgradeLab", levelData?.initiativeUpgradeDesc);
         setLabel("initiativeDescLab", levelData?.initiativeDesc);
-        await this.refreshUpgradeItems(page.getChildByName("rewardLayout"), levelData);
+        await this.refreshUpgradeItems(rewardLayout, levelData);
+    }
+
+    /**点击升级按钮，扣除升级材料和银币并保存新等级 */
+    private clickUpgradeBtn() {
+        const roleId = this.selectedRole?.roleId;
+        if (roleId === undefined) return;
+        const currentLevel = pData.getRoleLevel(roleId);
+        const maxLevel = roleLevelConfig.getMaxLevel(roleId);
+        if (currentLevel >= maxLevel) return;
+        const levelData = roleLevelConfig.getRoleLevelData(roleId, currentLevel);
+        if (!levelData) return;
+        const upgradeItems = this.parseUpgradeItems(levelData.upgradeItem);
+        const upgradeMoney = Math.max(0, Number(levelData.upgradeMoney) || 0);
+        const storehouse = pData.getStorehouseData();
+        const missingItems = upgradeItems.reduce((items: string[], [itemId, itemNum]) => {
+            const storedNum = storehouse.find(([storedItemId]) => storedItemId === itemId)?.[1] ?? 0;
+            const missingNum = itemNum - storedNum;
+            if (missingNum > 0) {
+                const itemName = getItemDataByItemId(itemId)?.name ?? `物品${itemId}`;
+                items.push(`${itemName}x${missingNum}`);
+            }
+            return items;
+        }, []);
+        if (missingItems.length > 0) {
+            uiMgr.showTips(`材料不足：${missingItems.join("、")}`);
+            return;
+        }
+        if (pData.money < upgradeMoney) {
+            uiMgr.showTips("银币不足");
+            return;
+        }
+        if (upgradeItems.length > 0) {
+            pData.fixStorehouseDatas(upgradeItems.map(([itemId, itemNum]) => [itemId, -itemNum]));
+        }
+        if (upgradeMoney > 0) {
+            pData.fixMoney(-upgradeMoney);
+        }
+        pData.setRoleLevel(roleId, currentLevel + 1);
+        uiMgr.showTips("升级成功");
+        this.refreshRoleLevelInfo();
+    }
+
+    /**解析升级材料配置 */
+    private parseUpgradeItems(upgradeItem: string | number[][]): [number, number][] {
+        try {
+            const parsed = typeof upgradeItem === "string" ? JSON.parse(upgradeItem) : upgradeItem;
+            if (!Array.isArray(parsed)) return [];
+            return parsed.reduce((items: [number, number][], itemData: any) => {
+                const itemId = Number(itemData?.[0]);
+                const itemNum = Number(itemData?.[1]);
+                if (Number.isInteger(itemId) && itemId >= 0 && Number.isFinite(itemNum) && itemNum > 0) {
+                    items.push([itemId, itemNum]);
+                }
+                return items;
+            }, []);
+        } catch {
+            return [];
+        }
     }
 
     /**根据升级材料字符串创建 showItem 展示物品名称和数量 */
@@ -219,14 +297,7 @@ export class UIRoleStore extends UIBase {
         if (!rewardLayout) return;
         ccTools.destroyAllChild(rewardLayout);
         if (!levelData?.upgradeItem) return;
-        let upgradeItems: number[][];
-        try {
-            const parsed = typeof levelData.upgradeItem === "string"
-                ? JSON.parse(levelData.upgradeItem) : levelData.upgradeItem;
-            upgradeItems = Array.isArray(parsed) ? parsed : [];
-        } catch {
-            upgradeItems = [];
-        }
+        const upgradeItems = this.parseUpgradeItems(levelData.upgradeItem);
         if (!this.showItemPrefab) {
             if (!this.showItemPrefabLoad) {
                 this.showItemPrefabLoad = ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.showItem);
@@ -235,12 +306,11 @@ export class UIRoleStore extends UIBase {
             this.showItemPrefabLoad = null;
         }
         if (!this.showItemPrefab || !rewardLayout.isValid) return;
-        upgradeItems.forEach((itemData) => {
-            if (!Array.isArray(itemData) || itemData.length < 2) return;
+        upgradeItems.forEach(([itemId, itemNum]) => {
             const itemNode = instantiate(this.showItemPrefab);
             rewardLayout.addChild(itemNode);
             (itemNode.getComponent(showItemController) ?? itemNode.addComponent(showItemController))
-                .initData(Number(itemData[0]), Number(itemData[1]));
+                .initData(itemId, itemNum);
         });
     }
 

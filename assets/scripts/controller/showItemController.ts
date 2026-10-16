@@ -9,7 +9,8 @@ export class showItemController extends Component {
     initData(itemId: number, num: number = 1) {
         const numLab = this.node.getChildByName('numLab')?.getComponent(Label);
         if (numLab) {
-            numLab.string = `x${num}`;
+            numLab.node.active = true;
+            numLab.string = `x${Math.max(0, Number(num) || 0)}`;
         }
         const itemData = getItemDataByItemId(itemId);
         const nameLab = this.node.getChildByName('nameLab')?.getComponent(Label);

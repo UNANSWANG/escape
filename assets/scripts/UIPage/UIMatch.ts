@@ -20,13 +20,7 @@ type MatchTarget = {
 @ccclass('UIMatch')
 export class UIMatch extends UIBase {
     @property(Node)
-    closeBtn: Node;
-
-    @property(Node)
-    readyBtn: Node;
-
-    @property(Node)
-    readyedBtn: Node;
+    cancelBtn: Node;
 
     @property(Label)
     timeLab: Label;
@@ -35,10 +29,7 @@ export class UIMatch extends UIBase {
     titleLab: Label;
 
     @property(Node)
-    enemyItem: Node;
-
-    @property(Node)
-    roleLayout: Node;
+    contentLayout: Node;
 
     /**匹配经过时间 */
     private matchTime = 0;
@@ -187,6 +178,13 @@ export class UIMatch extends UIBase {
         }
     }
 
+    bindBtn() {
+        this.cancelBtn.addComponent(zoomButton).onClick = this.clickCloseBtn.bind(this);
+        let readyComp = this.readyBtn.addComponent(zoomButton);
+        readyComp.onClick = this.clickReadyBtn.bind(this);
+        readyComp.setPlayClickSound(false);
+    }
+
     /**为本次匹配创建去重后的临时昵称池 */
     private initNicknamePool() {
         let nicknameSet = new Set<string>();
@@ -329,13 +327,6 @@ export class UIMatch extends UIBase {
         this.timeLab.string = this.matchTime < 1
             ? "匹配中..."
             : `匹配中${Math.floor(this.matchTime)}s`;
-    }
-
-    bindBtn() {
-        this.closeBtn.addComponent(zoomButton).onClick = this.clickCloseBtn.bind(this);
-        let readyComp = this.readyBtn.addComponent(zoomButton);
-        readyComp.onClick = this.clickReadyBtn.bind(this);
-        readyComp.setPlayClickSound(false);
     }
 
     openGame() {

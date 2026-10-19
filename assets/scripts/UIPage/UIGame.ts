@@ -1,4 +1,4 @@
-import { _decorator, AnimationClip, Camera, Canvas, EventKeyboard, EventTouch, Input, input, instantiate, KeyCode, Label, Layout, Node, UITransform, Vec2, Vec3, NodeEventType, director, TiledMap, TiledObjectGroup, Prefab, Sprite, Tween, UIOpacity, tween, sp, view, Size, PolygonCollider2D } from 'cc';
+import { _decorator, AnimationClip, Camera, Canvas, EventKeyboard, EventTouch, Input, input, instantiate, KeyCode, Label, Layout, Node, UITransform, Vec2, Vec3, NodeEventType, director, TiledMap, TiledObjectGroup, Sprite, Tween, UIOpacity, tween, sp, view, Size, PolygonCollider2D } from 'cc';
 import { uiMgr } from '../manager/UIManager';
 import { pData } from '../manager/playerData';
 import { UIBase } from './UIBase';
@@ -64,12 +64,6 @@ export class UIGame extends UIBase {
 
     @property(Node)
     gameUINode: Node;
-
-    @property(Prefab)
-    rolePre: Prefab;
-
-    @property(Prefab)
-    soldiersPre: Prefab;
 
     @property(Node)
     shootBtn: Node;
@@ -262,6 +256,16 @@ export class UIGame extends UIBase {
         let version = ++this.openVersion;
         this.clearData();
         pData.levelInit();
+        this.isGamePause = true;
+
+        try {
+            await uiMgr.preLoadGame();
+        } catch (error) {
+            if (version == this.openVersion && this.node.activeInHierarchy) {
+                console.error('加载游戏资源失败', error);
+            }
+            return;
+        }
 
         if (version != this.openVersion || !this.node.activeInHierarchy) {
             return;
@@ -725,7 +729,7 @@ export class UIGame extends UIBase {
 
     /**初始化玩家 */
     initPlayer() {
-        playerMgr.player = instantiate(this.rolePre);
+        playerMgr.player = instantiate(uiMgr.rolePrefab);
         this.roleNode.addChild(playerMgr.player);
         playerMgr.cameraFollow = true;
         this.initRolePos(playerMgr.player);
@@ -764,12 +768,12 @@ export class UIGame extends UIBase {
     /**按地图中 soldiersList 的子节点生成小兵 */
     private initSoldier() {
         const soldiersList = this.mapNode?.getChildByName('soldiersList');
-        if (!this.soldiersPre || !soldiersList || !this.roleNode) return;
+        if (!uiMgr.soldierPrefab || !soldiersList || !this.roleNode) return;
 
         for (const spawnNode of soldiersList.children) {
             const data = spawnNode.getComponent(soldiersData);
             const soldierId = enemyMgr.soldierId++;
-            const soldierNode = instantiate(this.soldiersPre);
+            const soldierNode = instantiate(uiMgr.soldierPrefab);
             this.roleNode.addChild(soldierNode);
             soldierNode.setWorldPosition(spawnNode.worldPosition);
             this.keepNodeInsideMap(soldierNode);

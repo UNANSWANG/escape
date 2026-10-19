@@ -117,7 +117,6 @@ export class UILoading extends Component {
         this.loadTable();
 
         this.preLoadPage();
-        uiMgr.preLoadGame();
     }
 
     /**预加载bundle */

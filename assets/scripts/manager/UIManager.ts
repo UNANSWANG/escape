@@ -11,22 +11,41 @@ import { MonetaryType } from './configData';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIManager')
+/**统一管理界面缓存、页面切换、预制体加载和奖励动画 */
 export class UIManager {
+    /**界面与游戏资源所在的资源包 */
     resBundle: AssetManager.Bundle = null;
+    /**通用文字提示预制体 */
     tipsPrefab: Prefab = null;
+    /**游戏子弹预制体 */
     bulletPrefab: Prefab = null;
+    /**游戏连线预制体 */
     gameLinePrefab: Prefab = null;
+    /**货币和奖励飞行动画使用的特效预制体 */
     effectItemPrefab: Prefab = null;
+    /**游戏通用图片节点预制体 */
     gameSpriteItemPrefab: Prefab = null;
+    /**游戏通用文本节点预制体，也用于伤害飘字 */
     gameLabelItemPrefab: Prefab = null;
+    /**游戏通用 Spine 动画节点预制体 */
     gameSpineItemPrefab: Prefab = null;
+    /**游戏通用 Animation 动画节点预制体 */
     gameAnimItemPrefab: Prefab = null;
+    /**通过 ItemPath.role 加载，供游戏界面创建玩家 */
+    rolePrefab: Prefab = null;
+    /**通过 ItemPath.soldier 加载，供游戏界面创建士兵 */
+    soldierPrefab: Prefab = null;
 
+    /**游戏页面挂载节点 */
     private gamePage: Node = null;
+    /**普通界面挂载节点 */
     private uiPage: Node = null;
+    /**提示界面挂载节点 */
     private noticePage: Node = null;
+    /**货币和奖励动画挂载节点 */
     private effectNode: Node = null;
 
+    /**以路径末段名称为键缓存界面实例，关闭后保留供再次打开 */
     private uiMap: Map<string, Node> = new Map();
     /**等待依次打开的界面队列 */
     private queuePageArr: queuePageData[] = [];
@@ -37,10 +56,12 @@ export class UIManager {
     /**游戏资源是否已全部预加载 */
     private gamePreloadComplete = false;
 
+    /**从场景容器中初始化各类页面和特效的挂载节点 */
     initData(node) {
         this.initPage(node);
     }
 
+    /**获取父节点下的 Game、UI、Notice 和 Effect 容器 */
     initPage(parent) {
         this.gamePage = parent.getChildByName('Game');
         this.uiPage = parent.getChildByName('UI');
@@ -64,7 +85,7 @@ export class UIManager {
         this.effectItemPrefab = await ccResTools.loadPrefab(this.resBundle, ItemPath.effectItem, false);
     }
 
-    /**预加载游戏页及游戏内使用的页面、预制体和动画 */
+    /**预加载结算界面、游戏预制体和动画；并发调用共享任务，失败后允许重试 */
     async preLoadGame() {
         if (this.gamePreloadComplete) {
             return;
@@ -78,6 +99,7 @@ export class UIManager {
             await this.gamePreloadPromise;
             this.gamePreloadComplete = true;
         } catch (error) {
+            // 清除失败任务，避免后续调用一直复用已失败的 Promise。
             this.gamePreloadPromise = null;
             throw error;
         }
@@ -98,7 +120,7 @@ export class UIManager {
         ]);
     }
 
-    /**加载游戏内动态创建的预制体 */
+    /**并行加载游戏内动态创建的预制体，全部成功后写入公共字段 */
     private async loadGamePrefab() {
         let prefabs = await Promise.all([
             ccResTools.loadPrefab(this.resBundle, ItemPath.bullet, false),
@@ -107,6 +129,8 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, ItemPath.gameLabelItem, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.gameSpineItem, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.gameAnimItem, false),
+            ccResTools.loadPrefab(this.resBundle, ItemPath.role, false),
+            ccResTools.loadPrefab(this.resBundle, ItemPath.soldier, false),
         ]);
 
         if (prefabs.some((prefab) => !prefab)) {
@@ -119,6 +143,8 @@ export class UIManager {
         this.gameLabelItemPrefab = prefabs[3];
         this.gameSpineItemPrefab = prefabs[4];
         this.gameAnimItemPrefab = prefabs[5];
+        this.rolePrefab = prefabs[6];
+        this.soldierPrefab = prefabs[7];
     }
 
     /**加载游戏动画 */
@@ -141,7 +167,7 @@ export class UIManager {
         notice.initData(str);
     }
 
-    /**开始游戏 */
+    /**激活已预加载的游戏页面，切换背景音乐并将参数传给 onUI_Open */
     startGame(data?: any) {
         if (!this.resBundle) {
             return;
@@ -161,7 +187,7 @@ export class UIManager {
         uiComp.onUI_Open(data);
     }
 
-    /**关闭游戏 */
+    /**清理本局背包并关闭游戏，恢复主页和主页背景音乐 */
     closeGame() {
         this.clearBackpack();
         this.closePage(UIPath.UIBackpack);
@@ -176,6 +202,7 @@ export class UIManager {
         uiMgr.openPage(UIPath.UIMain);
     }
 
+    /**清除玩家背包数据，并同步重置已创建的背包界面 */
     clearBackpack() {
         pData.clearBackpack();
         const backpackNode = this.uiMap.get(this.getUIName(UIPath.UIBackpack));
@@ -184,7 +211,7 @@ export class UIManager {
         }
     }
 
-    /**预加载界面 */
+    /**加载并实例化界面后缓存，保持隐藏；已缓存的界面直接复用 */
     async preLoadPage(pagePath: string) {
         if (!this.resBundle) {
             throw new Error("资源包尚未加载");
@@ -202,7 +229,7 @@ export class UIManager {
         pageNode.active = false;
     }
 
-    /**打开界面 */
+    /**复用或加载界面实例，挂载到 UI 容器并调用 onUI_Open(data) */
     async openPage(pagePath: string, data?: any) {
         if (!this.resBundle) {
             return;
@@ -233,7 +260,7 @@ export class UIManager {
         this.openNextQueuePage();
     }
 
-    /**打开下一个排队界面 */
+    /**队列中同时只打开一个界面；加载失败时继续处理下一项 */
     private async openNextQueuePage() {
         if (this.currentQueuePage || this.queuePageArr.length == 0) {
             return;
@@ -252,7 +279,7 @@ export class UIManager {
         }
     }
 
-    /**关闭界面 */
+    /**调用关闭回调并隐藏、移出界面；保留缓存，队列界面关闭后继续下一项 */
     closePage(pagePath: string) {
         let keyName = this.getUIName(pagePath);
         let isCurrentQueuePage = this.currentQueuePage
@@ -280,7 +307,7 @@ export class UIManager {
         return !!pageNode && pageNode.activeInHierarchy;
     }
 
-    /**获取界面名称 */
+    /**取资源路径的最后一段作为界面缓存键 */
     getUIName(str) {
         let strs = str.split('/');
         return strs[strs.length - 1];
@@ -457,9 +484,13 @@ export class UIManager {
     }
 }
 
+/**等待按顺序打开的界面及其初始化参数 */
 interface queuePageData {
+    /**界面预制体资源路径 */
     pagePath: string;
+    /**传递给界面 onUI_Open 的参数 */
     data?: any;
 }
 
+/**全局共用的界面管理器实例 */
 export let uiMgr = new UIManager();

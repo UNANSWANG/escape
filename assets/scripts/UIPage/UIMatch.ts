@@ -44,6 +44,9 @@ export class UIMatch extends UIBase {
     initData(count: number) {
         this.unscheduleAllCallbacks();
         this.clearItems();
+        uiMgr.preLoadGame().catch((error) => {
+            console.error('匹配界面预加载游戏资源失败', error);
+        });
         this.matchTime = 0;
         this.currentMatchIndex = 0;
         this.isMatching = true;

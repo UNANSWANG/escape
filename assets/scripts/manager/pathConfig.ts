@@ -76,6 +76,12 @@ export enum ItemPath {
     showItem = "prefabs/Item/showItem",
     /**角色头像物品 */
     roleAvatarItem = "prefabs/Item/roleAvatarItem",
+    /**角色预制体 */
+    role = "prefabs/common/role",
+    /**士兵预制体 */
+    soldier = "prefabs/common/soldier",
+    /**角色显示预制体 */
+    roleShow = "prefabs/common/roleShow",
 }
 
 /**音效路径 */

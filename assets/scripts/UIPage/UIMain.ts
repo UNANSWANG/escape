@@ -51,8 +51,8 @@ export class UIMain extends UIBase {
     @property(Node)
     mapBtn: Node = null;
 
-    @property(sp.Skeleton)
-    roleAnim: sp.Skeleton = null;
+    @property(Node)
+    roleNode: Node = null;
 
     /**是否展示过复访按钮 */
     isShowRevisit = false;
@@ -135,17 +135,7 @@ export class UIMain extends UIBase {
 
     /**刷新主页角色皮肤并循环播放待机动画 */
     private async refreshRoleAnim() {
-        if (!this.roleAnim) {
-            return;
-        }
-
-        // this.roleAnim.skeletonData = null;
-        // let isLoaded = await ccTools.loadSpine(this.roleAnim, spinePath.role + pData.skinId);
-        // if (!isLoaded || !this.roleAnim || !this.roleAnim.isValid) {
-        //     return;
-        // }
-
-        this.roleAnim.setAnimation(0, roleAnimName.idle, true);
+        
     }
 
     /**刷新红点 */

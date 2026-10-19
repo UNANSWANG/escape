@@ -1,4 +1,4 @@
-import { _decorator, Node, Animation, Label, Prefab, instantiate } from 'cc';
+import { _decorator, Node, Animation, Label, Prefab, instantiate, UITransform, tween, Tween } from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -85,6 +85,12 @@ export class UIMatch extends UIBase {
 
     showMatchItem(item: Node, nickname: string) {
         this.setItemVisible(item, true);
+        const lightTransform = item.getChildByName('light')?.getComponent(UITransform);
+        if (lightTransform) {
+            Tween.stopAllByTarget(lightTransform);
+            lightTransform.width = 130;
+            tween(lightTransform).to(0.1, { width: 166 }).start();
+        }
         const nameLab = item.getChildByName('nameLab')?.getComponent(Label);
         if (nameLab) {
             nameLab.string = nickname;
@@ -125,6 +131,10 @@ export class UIMatch extends UIBase {
 
     private clearItems() {
         for (const item of this.matchItems) {
+            const lightTransform = item.getChildByName('light')?.getComponent(UITransform);
+            if (lightTransform) {
+                Tween.stopAllByTarget(lightTransform);
+            }
             item.removeFromParent();
             item.destroy();
         }

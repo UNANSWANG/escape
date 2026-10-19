@@ -3,7 +3,7 @@ export const configData = {
     /**人物移动速度 */
     moveSpeed: 300,
     /**人机匹配显示时间区间（秒）不做读表 */
-    roleMatchTime: [0.5, 1.2],
+    roleMatchTime: [0.5, 2],
     /**上报排名值的模式系数（rank = 模式ID * 系数 + 该模式关卡数）不做读表 */
     rankModeFactor: 100000,
     /**搜索物品加载单圈时间 */

@@ -190,18 +190,13 @@ export class UIMain extends UIBase {
         this.isOpeningMatch = true;
         this.startBtnComp.interactable = false;
 
-        uiMgr.startGame();
-        // if (!this.node.activeInHierarchy) {
-        //     this.resetStartButton();
-        //     return;
-        // }
-
-        // try {
-        //     uiMgr.openPage(UIPath.UIMatch);
-        // } catch (error) {
-        //     console.error("打开匹配界面失败", error);
-        //     this.resetStartButton();
-        // }
+        // uiMgr.startGame();
+        uiMgr.openPage(UIPath.UIMatch, 6).then(() => {
+            uiMgr.closePage(UIPath.UIMain);
+        }).catch((error) => {
+            this.resetStartButton();
+            console.error('打开匹配界面失败', error);
+        });
     }
 
     /**回到主页或打开匹配页失败时恢复开始按钮 */

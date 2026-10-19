@@ -30,6 +30,7 @@ export class UIMatch extends UIBase {
     private currentMatchIndex = 0;
     private matchItems: Node[] = [];
     private nicknamePool: string[] = [];
+    private roleShowVersion = 0;
 
     protected onLoad(): void {
         this.bindBtn();
@@ -42,6 +43,7 @@ export class UIMatch extends UIBase {
     }
 
     initData(count: number) {
+        const version = ++this.roleShowVersion;
         this.unscheduleAllCallbacks();
         this.clearItems();
         uiMgr.preLoadGame().catch((error) => {
@@ -88,6 +90,7 @@ export class UIMatch extends UIBase {
 
     showMatchItem(item: Node, nickname: string) {
         this.setItemVisible(item, true);
+        this.addRoleShow(item, version => version == this.roleShowVersion);
         const lightTransform = item.getChildByName('light')?.getComponent(UITransform);
         if (lightTransform) {
             Tween.stopAllByTarget(lightTransform);
@@ -98,6 +101,18 @@ export class UIMatch extends UIBase {
         if (nameLab) {
             nameLab.string = nickname;
         }
+    }
+
+    private async addRoleShow(item: Node, isCurrent: (version: number) => boolean) {
+        await uiMgr.preLoadGame();
+        if (!item?.isValid || !isCurrent(this.roleShowVersion) || !uiMgr.roleShowPrefab) {
+            return;
+        }
+        const roleContent = item.getChildByName('roleContent');
+        if (!roleContent || roleContent.children.length > 0) {
+            return;
+        }
+        roleContent.addChild(instantiate(uiMgr.roleShowPrefab));
     }
 
     private scheduleNextMatch() {
@@ -145,6 +160,7 @@ export class UIMatch extends UIBase {
     }
 
     onUI_Close() {
+        this.roleShowVersion++;
         this.isMatching = false;
         this.unscheduleAllCallbacks();
         this.clearItems();

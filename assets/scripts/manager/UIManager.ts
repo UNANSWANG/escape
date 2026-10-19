@@ -35,6 +35,8 @@ export class UIManager {
     rolePrefab: Prefab = null;
     /**通过 ItemPath.soldier 加载，供游戏界面创建士兵 */
     soldierPrefab: Prefab = null;
+    /**通过 ItemPath.roleShow 加载，供匹配界面显示角色 */
+    roleShowPrefab: Prefab = null;
 
     /**游戏页面挂载节点 */
     private gamePage: Node = null;
@@ -131,6 +133,7 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, ItemPath.gameAnimItem, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.role, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.soldier, false),
+            ccResTools.loadPrefab(this.resBundle, ItemPath.roleShow, false),
         ]);
 
         if (prefabs.some((prefab) => !prefab)) {
@@ -145,6 +148,7 @@ export class UIManager {
         this.gameAnimItemPrefab = prefabs[5];
         this.rolePrefab = prefabs[6];
         this.soldierPrefab = prefabs[7];
+        this.roleShowPrefab = prefabs[8];
     }
 
     /**加载游戏动画 */

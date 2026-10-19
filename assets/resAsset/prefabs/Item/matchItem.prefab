@@ -660,7 +660,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": 0,
+      "y": 13,
       "z": 0
     },
     "_lrot": {
@@ -672,8 +672,8 @@
     },
     "_lscale": {
       "__type__": "cc.Vec3",
-      "x": 1,
-      "y": 1,
+      "x": 1.8,
+      "y": 1.8,
       "z": 1
     },
     "_mobility": 0,
@@ -764,6 +764,7 @@
       "__id__": 0
     },
     "fileId": "95X71R4KVKjI+FUrJoJRWI",
+    "instance": null,
     "targetOverrides": null
   }
 ]

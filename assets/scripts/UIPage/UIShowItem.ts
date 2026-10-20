@@ -11,6 +11,15 @@ export class UIShowItem extends UIBase {
     @property(Node)
     closeBtn: Node;
 
+    @property(Node)
+    useBtn: Node;
+
+    @property(Node)
+    removeBtn: Node;
+
+    @property(Node)
+    content: Node;
+
     protected onLoad(): void {
         this.bindBtn();
     }

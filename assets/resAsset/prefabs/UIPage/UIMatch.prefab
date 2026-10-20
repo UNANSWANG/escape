@@ -47,13 +47,10 @@
       },
       {
         "__id__": 48
-      },
-      {
-        "__id__": 50
       }
     ],
     "_prefab": {
-      "__id__": 52
+      "__id__": 50
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -1122,35 +1119,6 @@
     "fileId": "82LTDlF+pJnbo3hAwl9jXg"
   },
   {
-    "__type__": "cc.Animation",
-    "_name": "",
-    "_objFlags": 0,
-    "__editorExtras__": {},
-    "node": {
-      "__id__": 1
-    },
-    "_enabled": true,
-    "__prefab": {
-      "__id__": 47
-    },
-    "playOnLoad": false,
-    "_clips": [
-      {
-        "__uuid__": "07379fe3-387c-46cd-8b84-f4a2e0602a7d",
-        "__expectedType__": "cc.AnimationClip"
-      }
-    ],
-    "_defaultClip": {
-      "__uuid__": "07379fe3-387c-46cd-8b84-f4a2e0602a7d",
-      "__expectedType__": "cc.AnimationClip"
-    },
-    "_id": ""
-  },
-  {
-    "__type__": "cc.CompPrefabInfo",
-    "fileId": "bahalknA5Cw5bLESXcHeeA"
-  },
-  {
     "__type__": "ce2aenyaadIJY0a6i2jacLR",
     "_name": "",
     "_objFlags": 0,
@@ -1160,7 +1128,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 49
+      "__id__": 47
     },
     "cancelBtn": {
       "__id__": 8
@@ -1194,7 +1162,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 51
+      "__id__": 49
     },
     "_id": ""
   },

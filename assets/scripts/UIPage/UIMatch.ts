@@ -35,9 +35,7 @@ export class UIMatch extends UIBase {
         this.bindBtn();
     }
 
-    onUI_Open(count: number = 6) {
-        let anim = this.getComponent(Animation);
-        anim?.play();
+    onUI_Open(count: number = 4) {
         this.initData(count);
     }
 

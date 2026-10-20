@@ -29,6 +29,11 @@ export class jsonMap extends jsonBase {
         return this.mapDataByMapIdx.get(mapIdx) ?? [];
     }
 
+    /**根据地图索引和难度获取配置，未找到时返回 null */
+    getMapData(mapIdx: number, difficultyType: number): JsonMapData | null {
+        return this.getDataByMapIdx(mapIdx).find((row) => row.difficultyType === difficultyType) ?? null;
+    }
+
     get tableData(): JsonMapData[] {
         return this.data;
     }
@@ -52,6 +57,8 @@ export interface JsonMapData {
     bossId: number;
     /**游戏人数 */
     gameNumber: number;
+    /**游戏时长 */
+    gameTime: number;
 }
 
 

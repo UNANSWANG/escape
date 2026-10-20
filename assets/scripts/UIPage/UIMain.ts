@@ -121,7 +121,7 @@ export class UIMain extends UIBase {
     private refreshMapSelection() {
         const [mapIdx, difficultyType] = pData.selectMapData;
         const mapData = pData.hasConfirmedMapSelection
-            ? mapConfig.getDataByMapIdx(mapIdx).find((row) => row.difficultyType === difficultyType)
+            ? mapConfig.getMapData(mapIdx, difficultyType)
             : null;
         const mapNameLab = this.mapBtn.getChildByName('mapNameLab')?.getComponent(Label);
         const difficultyLab = this.mapBtn.getChildByName('difficultyLab')?.getComponent(Label);
@@ -172,7 +172,8 @@ export class UIMain extends UIBase {
         }
 
         const [mapIdx, difficultyType] = pData.selectMapData;
-        if (!pData.hasConfirmedMapSelection || !mapConfig.getDataByMapIdx(mapIdx).some((row) => row.difficultyType === difficultyType)) {
+        const mapData = mapConfig.getMapData(mapIdx, difficultyType);
+        if (!pData.hasConfirmedMapSelection || !mapData) {
             this.clickMapBtn();
             return;
         }
@@ -181,7 +182,7 @@ export class UIMain extends UIBase {
         this.startBtnComp.interactable = false;
 
         // uiMgr.startGame();
-        uiMgr.openPage(UIPath.UIMatch, 6).then(() => {
+        uiMgr.openPage(UIPath.UIMatch, mapData.gameNumber).then(() => {
             uiMgr.closePage(UIPath.UIMain);
         }).catch((error) => {
             this.resetStartButton();

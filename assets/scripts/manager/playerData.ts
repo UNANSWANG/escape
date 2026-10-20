@@ -21,6 +21,44 @@ export class playerData {
     propsNums = {};
     /**仓库数据，格式为 [[itemId, 数量], ...] */
     storehouseData: number[][] = [];
+    private showItems: { [key: string]: { itemId: number } } = {};
+
+    getShowItem(slotIndex: number): number | null {
+        return this.showItems[`item${slotIndex}`]?.itemId ?? null;
+    }
+
+    setShowItem(slotIndex: number, itemId: number): boolean {
+        if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= 5
+            || !itemConfig.getDataByItemId(itemId)
+            || !this.storehouseData.some(([storedId, num]) => storedId === itemId && num >= 1)) {
+            return false;
+        }
+        const previousItemId = this.getShowItem(slotIndex);
+        const changes = [[itemId, -1]];
+        if (previousItemId !== null) {
+            changes.push([previousItemId, 1]);
+        }
+        this.showItems[`item${slotIndex}`] = { itemId };
+        this.fixStorehouseDatas(changes);
+        this.saveShowItems();
+        return true;
+    }
+
+    removeShowItem(slotIndex: number): boolean {
+        const itemId = this.getShowItem(slotIndex);
+        if (itemId === null) {
+            return false;
+        }
+        delete this.showItems[`item${slotIndex}`];
+        this.fixStorehouseData(itemId, 1);
+        this.saveShowItems();
+        return true;
+    }
+
+    private saveShowItems() {
+        ccStorageTools.setData(SaveKey.showItems, this.showItems);
+        gm.Event.emit(GameEvent.refreshShowContent);
+    }
     private unlockedCollections = new Set<number>();
     /**未记录的藏品默认未领取奖励 */
     private claimedCollectionRewards = new Set<number>();
@@ -609,6 +647,16 @@ export class playerData {
 
     /**初始化存储数据 */
     initData() {
+        const showItems = ccStorageTools.getData(SaveKey.showItems);
+        this.showItems = {};
+        if (showItems && typeof showItems === 'object' && !Array.isArray(showItems)) {
+            for (let slotIndex = 0; slotIndex < 5; slotIndex++) {
+                const itemId = showItems[`item${slotIndex}`]?.itemId;
+                if (Number.isInteger(itemId) && itemId >= 0) {
+                    this.showItems[`item${slotIndex}`] = { itemId };
+                }
+            }
+        }
         const selectMapData = ccStorageTools.getData(SaveKey.selectMapData);
         this.selectMapData = Array.isArray(selectMapData) && selectMapData.length === 2
             && selectMapData.every((value) => Number.isInteger(value) && value >= 0)

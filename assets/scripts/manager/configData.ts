@@ -121,6 +121,7 @@ export enum GameEvent {
     refreshRoleSkin = "refreshRoleSkin",
     /**确认地图选择后通知主页刷新地图名称和难度 */
     refreshMapSelection = "refreshMapSelection",
+    refreshShowContent = "refreshShowContent",
 }
 
 /**货币类型 */
@@ -162,6 +163,7 @@ export enum SaveKey {
     props = "props",
     /**仓库数据 */
     storehouse = "storehouse",
+    showItems = "showItems",
     /**最近一次失败丢失的背包物品及穿戴装备，格式为 [[itemId, 数量], ...] */
     lostItems = "lostItems",
     /**已解锁藏品的 itemId 列表 */

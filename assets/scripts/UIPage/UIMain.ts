@@ -1,5 +1,5 @@
-import { _decorator, Button, Component, EventKeyboard, input, Input, KeyCode, Label, Node, NodeEventType, sp, tween, Tween, Vec3 } from 'cc';
-import { gamePath, spinePath, UIPath } from '../manager/pathConfig';
+import { _decorator, Button, Component, EventKeyboard, input, Input, KeyCode, Label, Node, NodeEventType, sp, Sprite, tween, Tween, Vec3 } from 'cc';
+import { gamePath, imgPath, spinePath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { UIBase } from './UIBase';
 import { zoomButton } from '../extention/zoomButton';
@@ -14,6 +14,7 @@ import { WXManager } from '../sdk/plat/wx/WXManager';
 import { ccTools } from '../extention/generalTools';
 import { roleAnimName } from '../controller/role/roleController';
 import { mapConfig } from '../json/jsonMap';
+import { itemConfig } from '../json/jsonItem';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIMain')
@@ -103,29 +104,39 @@ export class UIMain extends UIBase {
         this.roleBtn.addComponent(zoomButton).onClick = this.clickRoleBtn.bind(this);
         this.roomBtn.addComponent(zoomButton).onClick = this.clickRoomBtn.bind(this);
         this.mapBtn.addComponent(zoomButton).onClick = this.clickMapBtn.bind(this);
-        this.showContent?.children.forEach((showNode) => {
+        this.showContent?.children.forEach((showNode, slotIndex) => {
             const button = showNode.getComponent(zoomButton) || showNode.addComponent(zoomButton);
-            button.onClick = this.clickShowItem.bind(this);
+            button.onClick = this.clickShowItem.bind(this, slotIndex);
         });
     }
 
     private refreshShowContent() {
-        this.showContent?.children.forEach((showNode) => {
+        this.showContent?.children.forEach((showNode, slotIndex) => {
+            const itemId = pData.getShowItem(slotIndex);
+            const itemData = itemId !== null ? itemConfig.getDataByItemId(itemId) : null;
             const background = showNode.getChildByName('bg');
             background?.children.forEach((stateNode) => {
-                stateNode.active = stateNode.name === 'normal';
+                stateNode.active = stateNode.name === (itemData ? 'show' : 'normal');
             });
             const setLab = showNode.getChildByName('setLab');
             if (setLab) {
-                setLab.active = true;
+                setLab.active = !itemData;
             }
             const image = showNode.getChildByName('img');
             if (image) {
-                image.active = false;
+                image.active = !!itemData;
+                const sprite = image.getComponent(Sprite);
+                if (sprite) {
+                    ccTools.cancelAssetLoad(sprite);
+                    sprite.spriteFrame = null;
+                    if (itemData) {
+                        ccTools.loadImg(sprite, imgPath.item + itemId);
+                    }
+                }
             }
             const nameLab = showNode.getChildByName('nameLab')?.getComponent(Label);
             if (nameLab) {
-                nameLab.string = '';
+                nameLab.string = itemData?.name ?? '';
             }
         });
     }
@@ -136,6 +147,7 @@ export class UIMain extends UIBase {
         gm.Event.on(GameEvent.refreshRed, this.refreshRed, this);
         gm.Event.on(GameEvent.refreshRoleSkin, this.refreshRoleAnim, this);
         gm.Event.on(GameEvent.refreshMapSelection, this.refreshMapSelection, this);
+        gm.Event.on(GameEvent.refreshShowContent, this.refreshShowContent, this);
     }
 
     /**删除监听 */
@@ -144,6 +156,7 @@ export class UIMain extends UIBase {
         gm.Event.off(GameEvent.refreshRed, this.refreshRed, this);
         gm.Event.off(GameEvent.refreshRoleSkin, this.refreshRoleAnim, this);
         gm.Event.off(GameEvent.refreshMapSelection, this.refreshMapSelection, this);
+        gm.Event.off(GameEvent.refreshShowContent, this.refreshShowContent, this);
     }
 
     /**按本次运行的确认状态刷新地图按钮；未确认时显示默认文本 */
@@ -308,8 +321,8 @@ export class UIMain extends UIBase {
         uiMgr.openPage(UIPath.UIMap);
     }
 
-    clickShowItem() {
-        uiMgr.openPage(UIPath.UIShowItem);
+    clickShowItem(slotIndex: number) {
+        uiMgr.openPage(UIPath.UIShowItem, slotIndex);
     }
 }
 

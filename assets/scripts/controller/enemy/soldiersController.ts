@@ -587,10 +587,27 @@ export class soldiersController extends Component {
         if (this.hp <= 0) {
             this.stopAttack();
             this.patrolState = PatrolState.Idle;
-            this.playPatrolAnimation(enemyAnim.idle);
+            this.playDeath();
         }
         this.gameComp?.showDamageFloat(this.node, actualDamage);
         return true;
+    }
+
+    private playDeath() {
+        if (this.weaponNode) this.weaponNode.active = false;
+        if (this.hpNode) this.hpNode.active = false;
+        if (this.roleNameLab) this.roleNameLab.node.active = false;
+        if (this.effectNode) this.effectNode.active = false;
+        const finish = () => {
+            if (this.isValid && this.hp <= 0) this.node.active = false;
+        };
+        if (!this.roleAnim?.skeletonData || !this.roleAnim.findAnimation('die')) {
+            finish();
+            return;
+        }
+        this.roleAnim.timeScale = 1;
+        const entry = this.roleAnim.setAnimation(0, 'die', false);
+        this.roleAnim.setTrackCompleteListener(entry, finish);
     }
 
     /**刷新血量 */

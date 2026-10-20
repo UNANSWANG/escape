@@ -1031,7 +1031,14 @@ export class UIGame extends UIBase {
 
     /**玩家死亡时进入本局失败结算。 */
     onPlayerDead() {
-        this.onGameFail();
+        if (this.isFailTriggered || this.isLeaveSuccessTriggered) return;
+        const player = playerMgr.playerComp;
+        if (!player) {
+            this.onGameFail();
+            return;
+        }
+        gm.gamePause();
+        player.playDeath(() => this.onGameFail());
     }
 
     /**死亡或撤离超时后停止本局，保存背包及穿戴装备掉落并打开失败结算。 */

@@ -20,6 +20,7 @@ const { ccclass } = _decorator;
 export enum roleAnimName {
     idle = 'idle',
     move = 'move',
+    die = 'die',
     /**使用技能1 */
     useSkill1 = 'skill1',
     /**使用技能2 */
@@ -66,6 +67,7 @@ export class roleController extends Component {
     private moveCollider: UITransform = null;
     /**角色当前播放的动画名 */
     protected curRoleAnimName = '';
+    private isPlayingDeath = false;
 
     /**角色类型 */
     roleType: roleType = roleType.advance;
@@ -531,6 +533,7 @@ export class roleController extends Component {
     }
 
     protected update(dt: number): void {
+        if (this.hp <= 0) return;
         this.updateBattleState(dt);
         this.updateCommonSkill1(dt);
         this.updateSkillCooldown(dt);
@@ -688,6 +691,13 @@ export class roleController extends Component {
 
     /** 初始化角色所属界面、身份数据和初始动画。 */
     init(comp: UIGame, id: number, skinId: number, nickname = '') {
+        this.isPlayingDeath = false;
+        this.node.active = true;
+        if (this.hpNode) this.hpNode.active = true;
+        if (this.defenseNode) this.defenseNode.active = true;
+        if (this.roleNameLab) this.roleNameLab.node.active = true;
+        const weaponRoot = this.node.getChildByName('weapons');
+        if (weaponRoot) weaponRoot.active = true;
         this.gameComp = comp;
         this.roleId = id;
         this.skinId = skinId;
@@ -872,7 +882,10 @@ export class roleController extends Component {
         if (hpDamage > 0) this.refreshHp();
         const actualDamage = defenseDamage + hpDamage;
         this.gameComp?.showDamageFloat(this.node, actualDamage);
-        if (this.hp <= 0) this.gameComp?.onPlayerDead();
+        if (this.hp <= 0) {
+            if (this.gameComp) this.gameComp.onPlayerDead();
+            else this.playDeath();
+        }
         return true;
     }
 
@@ -931,9 +944,35 @@ export class roleController extends Component {
 
     /** 播放角色本体 Spine 动画。 */
     playRoleAnim(animName: string, loop = true) {
+        if (this.isPlayingDeath) return;
         if (!this.roleAnim || !this.roleAnim.skeletonData || this.curRoleAnimName === animName) return;
         this.curRoleAnimName = animName;
         this.roleAnim.setAnimation(0, animName, loop);
+    }
+
+    playDeath(onComplete?: () => void) {
+        if (this.isPlayingDeath) return;
+        this.isPlayingDeath = true;
+        this.finishCommonSkill1();
+        this.interruptDrugUse();
+        const weaponRoot = this.node.getChildByName('weapons');
+        if (weaponRoot) weaponRoot.active = false;
+        if (this.hpNode) this.hpNode.active = false;
+        if (this.defenseNode) this.defenseNode.active = false;
+        if (this.roleNameLab) this.roleNameLab.node.active = false;
+        const finish = () => {
+            if (!this.isValid || !this.isPlayingDeath) return;
+            this.node.active = false;
+            onComplete?.();
+        };
+        if (!this.roleAnim?.skeletonData || !this.roleAnim.findAnimation(roleAnimName.die)) {
+            finish();
+            return;
+        }
+        this.curRoleAnimName = roleAnimName.die;
+        this.roleAnim.timeScale = 1;
+        const entry = this.roleAnim.setAnimation(0, roleAnimName.die, false);
+        this.roleAnim.setTrackCompleteListener(entry, finish);
     }
 
     /**

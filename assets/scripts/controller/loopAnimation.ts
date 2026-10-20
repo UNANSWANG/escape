@@ -57,6 +57,14 @@ export class loopAnimation extends Component {
 
     @property({
         visible() {
+            return this.animType == loop_anim.floating;
+        },
+        tooltip: '从原位浮动到最高点的时间（秒）'
+    })
+    floatDuration: number = 0.1;
+
+    @property({
+        visible() {
             return this.animType == loop_anim.rotate;
         },
         tooltip: '是否正向'
@@ -97,6 +105,18 @@ export class loopAnimation extends Component {
         this.initAnimData();
     }
 
+    protected onEnable(): void {
+        if (this.animType == loop_anim.floating && this.startPlay) {
+            this.playAni();
+        }
+    }
+
+    protected onDisable(): void {
+        if (this.animType == loop_anim.floating) {
+            this.stopAni();
+        }
+    }
+
     start() {
         if (this.animType == loop_anim.breathe) {
             this.uiOpacity = this.node.getComponent(UIOpacity);
@@ -104,7 +124,7 @@ export class loopAnimation extends Component {
                 this.uiOpacity = this.node.addComponent(UIOpacity);
             }
         }
-        if (this.animType == loop_anim.drop || this.animType == loop_anim.floating) {
+        if ((this.animType == loop_anim.drop || this.animType == loop_anim.floating) && !this.rootPos) {
             this.rootPos = new Vec3(this.node.position);
         }
         if (this.startPlay) this.playAni();
@@ -145,6 +165,7 @@ export class loopAnimation extends Component {
     }
 
     stopAni() {
+        this.unscheduleAllCallbacks();
         this.initAnimData();
         //只停止自身动画
         if (this.animTag == -1) {
@@ -153,6 +174,9 @@ export class loopAnimation extends Component {
             Tween.stopAllByTag(this.animTag);
         }
         this.isPlaying = false;
+        if (this.animType == loop_anim.floating && this.rootPos) {
+            this.node.setPosition(this.rootPos);
+        }
         if (this.animType == loop_anim.breathe) {
             this.uiOpacity.opacity = 255;
         } else {
@@ -353,14 +377,14 @@ export class loopAnimation extends Component {
 
     /**循环浮动 */
     playFloatAni() {
-        let upPos = new Vec3(this.rootPos.x, this.rootPos.y + this.offsetY, 0);
-        let downPos = new Vec3(this.rootPos.x, this.rootPos.y - this.offsetY, 0);
+        let upPos = new Vec3(this.rootPos.x, this.rootPos.y + this.offsetY, this.rootPos.z);
+        let downPos = new Vec3(this.rootPos.x, this.rootPos.y - this.offsetY, this.rootPos.z);
         this.node.setPosition(this.rootPos);
         tween(this.node)
             .tag(this.animTag)
-            .to(0.1, { position: upPos })
-            .to(0.2, { position: downPos })
-            .to(0.1, { position: this.rootPos })
+            .to(this.floatDuration, { position: upPos }, { easing: 'sineOut' })
+            .to(this.floatDuration * 2, { position: downPos }, { easing: 'sineInOut' })
+            .to(this.floatDuration, { position: this.rootPos }, { easing: 'sineIn' })
             .union()
             .repeatForever()
             .start();

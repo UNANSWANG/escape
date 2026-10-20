@@ -29,7 +29,8 @@ export class showItemController extends Component {
             return;
         }
         ccTools.loadImg(bgSp, imgPath.itemBg + itemData.quality);
-        ccTools.loadImg(itemSp, imgPath.item + itemId);
+        //TODO 物品图片不齐，暂时先屏蔽
+        // ccTools.loadImg(itemSp, imgPath.item + itemId);
     }
 }
 

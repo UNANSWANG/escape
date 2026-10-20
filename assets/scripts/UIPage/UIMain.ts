@@ -8,7 +8,6 @@ import { configData, difficultyNames, GameEvent, SaveKey } from '../manager/conf
 import { gm, PlatType } from '../manager/gm';
 import { ccStorageTools } from '../extention/storageTools';
 import { TTManager } from '../sdk/plat/tt/TTManager';
-import { loopAnimation } from '../controller/loopAnimation';
 import { userMgr } from '../manager/userManager';
 import { WXManager } from '../sdk/plat/wx/WXManager';
 import { ccTools } from '../extention/generalTools';

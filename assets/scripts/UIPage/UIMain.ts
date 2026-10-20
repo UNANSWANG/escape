@@ -222,7 +222,8 @@ export class UIMain extends UIBase {
         this.isOpeningMatch = true;
         this.startBtnComp.interactable = false;
 
-        // uiMgr.startGame();
+        uiMgr.startGame();
+        return;
         uiMgr.openPage(UIPath.UIMatch, mapData.gameNumber).then(() => {
             uiMgr.closePage(UIPath.UIMain);
         }).catch((error) => {

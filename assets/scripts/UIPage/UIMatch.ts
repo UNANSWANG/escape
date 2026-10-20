@@ -30,7 +30,6 @@ export class UIMatch extends UIBase {
     private currentMatchIndex = 0;
     private matchItems: Node[] = [];
     private nicknamePool: string[] = [];
-    private roleShowVersion = 0;
 
     protected onLoad(): void {
         this.bindBtn();
@@ -43,7 +42,6 @@ export class UIMatch extends UIBase {
     }
 
     initData(count: number) {
-        const version = ++this.roleShowVersion;
         this.unscheduleAllCallbacks();
         this.clearItems();
         uiMgr.preLoadGame().catch((error) => {
@@ -90,7 +88,7 @@ export class UIMatch extends UIBase {
 
     showMatchItem(item: Node, nickname: string) {
         this.setItemVisible(item, true);
-        this.addRoleShow(item, version => version == this.roleShowVersion);
+        this.addRoleShow(item);
         const lightTransform = item.getChildByName('light')?.getComponent(UITransform);
         if (lightTransform) {
             Tween.stopAllByTarget(lightTransform);
@@ -103,9 +101,10 @@ export class UIMatch extends UIBase {
         }
     }
 
-    private async addRoleShow(item: Node, isCurrent: (version: number) => boolean) {
+    private async addRoleShow(item: Node) {
         await uiMgr.preLoadGame();
-        if (!item?.isValid || !isCurrent(this.roleShowVersion) || !uiMgr.roleShowPrefab) {
+        // 加载期间可能已关闭界面或重新匹配，仅为当前列表中的条目添加角色。
+        if (!item?.isValid || !this.matchItems.includes(item) || !uiMgr.roleShowPrefab) {
             return;
         }
         const roleContent = item.getChildByName('roleContent');
@@ -160,7 +159,6 @@ export class UIMatch extends UIBase {
     }
 
     onUI_Close() {
-        this.roleShowVersion++;
         this.isMatching = false;
         this.unscheduleAllCallbacks();
         this.clearItems();

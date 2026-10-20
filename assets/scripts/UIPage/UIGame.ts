@@ -23,6 +23,7 @@ import { videoMgr } from '../manager/videoManager';
 import { soldiersController } from '../controller/enemy/soldiersController';
 import { soldiersData } from '../data/soldiersData';
 import { commonConfig } from '../json/jsonCommon';
+import { mapConfig } from '../json/jsonMap';
 const { ccclass, property } = _decorator;
 
 /** 静态障碍物的世界坐标数据。points 为 null 时直接使用矩形包围盒。 */
@@ -110,6 +111,9 @@ export class UIGame extends UIBase {
     @property(Label)
     leaveRemainLab: Label;
 
+    @property(Label)
+    gameTimeLab: Label;
+
     ///
     ///需要获取的节点
     ///
@@ -177,6 +181,8 @@ export class UIGame extends UIBase {
     private leaveRemaining = 0;
     /**本局已经进行的时间（秒），用于结算界面的存活时间。 */
     private survivalTime = 0;
+    /**本局距离撤离截止的剩余时间（秒）。 */
+    private gameTimeRemaining = 0;
     /**防止倒计时结束后重复打开成功界面。 */
     private isLeaveSuccessTriggered = false;
     /**防止死亡后重复结算。 */
@@ -366,6 +372,7 @@ export class UIGame extends UIBase {
         this.initRockerArea();
         this.initPlayer();
         this.initSoldier();
+        this.initGameCountdown();
         this.refreshDrugButtons();
         this.updateContainerOpenButton();
     }
@@ -400,6 +407,8 @@ export class UIGame extends UIBase {
         this.currentContainer = null;
         this.resetLeaveCountdown();
         this.survivalTime = 0;
+        this.gameTimeRemaining = 0;
+        this.refreshGameTimeLab();
         this.isLeaveSuccessTriggered = false;
         this.isFailTriggered = false;
         this.staticColliders.length = 0;
@@ -959,6 +968,12 @@ export class UIGame extends UIBase {
 
         this.shootCooldownRemaining = Math.max(0, this.shootCooldownRemaining - dt);
         this.survivalTime += dt;
+        this.gameTimeRemaining = Math.max(0, this.gameTimeRemaining - Math.max(0, dt));
+        this.refreshGameTimeLab();
+        if (this.gameTimeRemaining <= 0) {
+            this.onGameFail();
+            return;
+        }
 
         const moveDirectionLocked = this.isMoveDirectionLocked();
         if (this.wasMoveDirectionLocked && !moveDirectionLocked) {
@@ -996,8 +1011,31 @@ export class UIGame extends UIBase {
         }
     }
 
-    /**玩家死亡时立即停止本局，保存背包及穿戴装备掉落后打开失败结算。 */
+    /**根据当前地图和难度初始化本局时限，配置单位为秒。 */
+    private initGameCountdown(): void {
+        const [mapIdx, difficultyType] = pData.selectMapData;
+        const gameTime = Number(mapConfig.getMapData(mapIdx, difficultyType)?.gameTime);
+        this.gameTimeRemaining = Number.isFinite(gameTime) ? Math.max(0, gameTime) : 0;
+        this.refreshGameTimeLab();
+    }
+
+    /**剩余秒数向上取整，显示为“撤离倒计时：分:秒”。 */
+    private refreshGameTimeLab(): void {
+        if (!this.gameTimeLab) return;
+        const totalSeconds = Math.ceil(this.gameTimeRemaining);
+        const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+        const seconds = String(totalSeconds % 60).padStart(2, '0');
+        const text = `撤离倒计时：${minutes}:${seconds}`;
+        if (this.gameTimeLab.string !== text) this.gameTimeLab.string = text;
+    }
+
+    /**玩家死亡时进入本局失败结算。 */
     onPlayerDead() {
+        this.onGameFail();
+    }
+
+    /**死亡或撤离超时后停止本局，保存背包及穿戴装备掉落并打开失败结算。 */
+    private onGameFail(): void {
         if (this.isFailTriggered || this.isLeaveSuccessTriggered) return;
         this.isFailTriggered = true;
         gm.gamePause();

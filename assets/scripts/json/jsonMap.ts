@@ -50,6 +50,8 @@ export interface JsonMapData {
     equipList: string;
     /**boss索引 */
     bossId: number;
+    /**游戏人数 */
+    gameNumber: number;
 }
 
 

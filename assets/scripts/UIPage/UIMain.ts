@@ -54,6 +54,9 @@ export class UIMain extends UIBase {
     @property(Node)
     roleNode: Node = null;
 
+    @property(Node)
+    showContent: Node = null;
+
     /**是否展示过复访按钮 */
     isShowRevisit = false;
     /**是否已经点击开始并等待打开匹配界面 */
@@ -83,6 +86,7 @@ export class UIMain extends UIBase {
         this.checkRevisitBtn();
         this.refreshRoleAnim();
         this.refreshMapSelection();
+        this.refreshShowContent();
         gm.Event.emit(GameEvent.refreshPlayerMonetary);
     }
 
@@ -99,6 +103,31 @@ export class UIMain extends UIBase {
         this.roleBtn.addComponent(zoomButton).onClick = this.clickRoleBtn.bind(this);
         this.roomBtn.addComponent(zoomButton).onClick = this.clickRoomBtn.bind(this);
         this.mapBtn.addComponent(zoomButton).onClick = this.clickMapBtn.bind(this);
+        this.showContent?.children.forEach((showNode) => {
+            const button = showNode.getComponent(zoomButton) || showNode.addComponent(zoomButton);
+            button.onClick = this.clickShowItem.bind(this);
+        });
+    }
+
+    private refreshShowContent() {
+        this.showContent?.children.forEach((showNode) => {
+            const background = showNode.getChildByName('bg');
+            background?.children.forEach((stateNode) => {
+                stateNode.active = stateNode.name === 'normal';
+            });
+            const setLab = showNode.getChildByName('setLab');
+            if (setLab) {
+                setLab.active = true;
+            }
+            const image = showNode.getChildByName('img');
+            if (image) {
+                image.active = false;
+            }
+            const nameLab = showNode.getChildByName('nameLab')?.getComponent(Label);
+            if (nameLab) {
+                nameLab.string = '';
+            }
+        });
     }
 
     /**添加监听 */
@@ -277,6 +306,10 @@ export class UIMain extends UIBase {
     /**点击地图 */
     clickMapBtn() {
         uiMgr.openPage(UIPath.UIMap);
+    }
+
+    clickShowItem() {
+        uiMgr.openPage(UIPath.UIShowItem);
     }
 }
 

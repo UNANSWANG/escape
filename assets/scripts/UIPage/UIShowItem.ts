@@ -50,7 +50,7 @@ export class UIShowItem extends UIBase {
         this.refreshButtons();
         this.content.destroyAllChildren();
         const collections = pData.getStorehouseData()
-            .filter(([itemId, num]) => num > 0 && !!itemConfig.getDataByItemId(itemId));
+            .filter(([itemId, num]) => num > 0 && itemConfig.getDataByItemId(itemId)?.quality === 4);
         if (!collections.length) {
             return;
         }

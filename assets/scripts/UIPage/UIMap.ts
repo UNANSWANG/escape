@@ -31,6 +31,9 @@ export class UIMap extends UIBase {
 
     @property(Node)
     bg: Node;
+
+    @property({ tooltip: '选中地图放大后的水平偏移，负数向左' })
+    mapFocusOffsetX: number = -120;
     
     /**按地图节点索引保存配置，每组包含该地图的全部难度数据 */
     private mapData: JsonMapData[][] = [];
@@ -156,7 +159,7 @@ export class UIMap extends UIBase {
         this.bg.setScale(selectedMap ? 1.5 : 1, selectedMap ? 1.5 : 1, 1);
         if (selectedMap) {
             const mapPosition = this.bg.parent.inverseTransformPoint(new Vec3(), selectedMap.worldPosition);
-            let x = -mapPosition.x;
+            let x = this.mapFocusOffsetX - mapPosition.x;
             let y = -mapPosition.y;
             const viewport = this.bg.parent.getComponent(UITransform);
             const background = this.bg.getComponent(UITransform);

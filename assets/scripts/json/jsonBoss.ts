@@ -32,6 +32,12 @@ export interface JsonBossData {
     dropItemId: number;
     /**描述 */
     desc: string;
+    /**血量 */
+    hp: number;
+    /**攻击力 */
+    attack: number;
+    /**移动速度 */
+    speed: number;
 }
 
 

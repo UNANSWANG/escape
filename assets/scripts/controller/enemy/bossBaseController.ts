@@ -29,6 +29,13 @@ export class bossBaseController extends Component {
     /** 攻击时长（秒），期间禁止移动。 */
     attackDuration = 0.5;
 
+    /** 怒气上限，从 boss 表的 rage 读取。 */
+    maxRage = 100;
+    /** 每秒自然增长怒气。 */
+    ragePerSecond = 1;
+    /** 当前怒气，满值后下一次普攻替换为技能。 */
+    rage = 0;
+
     /** 当前游戏页。 */
     gameComp: UIGame = null;
     /** Boss 本体动画。 */
@@ -59,6 +66,12 @@ export class bossBaseController extends Component {
     protected hpBar: Sprite = null;
     /** 血条虚影。 */
     protected baseHp: Sprite = null;
+    /** 怒气条根节点。 */
+    protected angerNode: Node = null;
+    /** 怒气进度条。 */
+    protected angerBar: Sprite = null;
+    /** 怒气虚影，消耗后缓动追赶。 */
+    protected angerBase: Sprite = null;
     /** 脚底碰撞区域。 */
     private moveCollider: UITransform = null;
     /** 静态碰撞移动器。 */
@@ -91,6 +104,10 @@ export class bossBaseController extends Component {
         this.hpNode = this.node.getChildByName('hpNode');
         this.hpBar = this.hpNode?.getChildByName('bar')?.getComponent(Sprite);
         this.baseHp = this.hpNode?.getChildByName('base')?.getComponent(Sprite);
+        this.angerNode = this.node.getChildByName('angerNode');
+        this.angerBar = this.angerNode?.getChildByName('bar')?.getComponent(Sprite);
+        this.angerBase = this.angerNode?.getChildByName('base')?.getComponent(Sprite);
+        this.refreshRage(true);
         this.moveCollider = this.node.getChildByName('colliderBox')?.getComponent(UITransform);
         this.facingX = this.roleAnim?.node.scale.x < 0 ? 1 : -1;
         gm.Event.on(GameEvent.loadTable, this.onTableLoad, this);
@@ -100,6 +117,7 @@ export class bossBaseController extends Component {
     protected onDestroy(): void {
         gm.Event.off(GameEvent.loadTable, this.onTableLoad, this);
         if (this.baseHp) Tween.stopAllByTarget(this.baseHp);
+        if (this.angerBase) Tween.stopAllByTarget(this.angerBase);
     }
 
     /** 设置出生位置后调用初始化。 */
@@ -108,11 +126,15 @@ export class bossBaseController extends Component {
         this.patrolOrigin.set(this.node.worldPosition);
         this.attackCooldown = 0;
         this.attackRemaining = 0;
+        this.rage = 0;
+        this.refreshRage();
+        this.stopSkill();
         this.currentAnim = '';
         this.clearNavigationPath();
         this.bossState = BossState.Patrol;
         this.initialized = this.applyBossData(true);
         if (this.hpNode) this.hpNode.active = true;
+        if (this.angerNode) this.angerNode.active = true;
         if (this.roleNameLab) this.roleNameLab.node.active = true;
         this.playAnimation('idle');
     }
@@ -133,6 +155,10 @@ export class bossBaseController extends Component {
         this.attackInterval = Number.isFinite(interval) && interval > 0 ? Math.max(0.01, interval) : 1;
         this.chaseRange = Math.max(0, Number(data.chaseRange) || 0);
         this.validRange = Math.max(0, Number(data.validRange) || 0);
+        const maxRage = Number(data.rage);
+        this.maxRage = Number.isFinite(maxRage) && maxRage > 0 ? maxRage : 100;
+        this.rage = Math.max(0, Math.min(this.rage, this.maxRage));
+        this.refreshRage();
         if (this.roleNameLab) this.roleNameLab.string = data.name;
         this.refreshHp(true);
         return true;
@@ -148,7 +174,9 @@ export class bossBaseController extends Component {
     /** 更新攻击计时和行为状态。 */
     protected update(dt: number): void {
         if (!this.initialized || this.hp <= 0) return;
+        this.addRage(this.ragePerSecond * Math.max(0, dt));
         this.attackCooldown = Math.max(0, this.attackCooldown - dt);
+        this.updateSkill(dt);
         const wasAttacking = this.isAttacking;
         this.attackRemaining = Math.max(0, this.attackRemaining - dt);
         // 攻击期间锁定行为，冷却继续计时。
@@ -178,16 +206,22 @@ export class bossBaseController extends Component {
         // 有效范围始终以出生点为圆心。
         if (!hasPlayer || !this.isInsideOriginRange(player.node.worldPosition, this.validRange)) {
             this.bossState = BossState.Return;
+            this.stopSkill();
             this.clearNavigationPath();
             return;
         }
         const target = player.node.worldPosition;
+        if (this.isUsingSkill) {
+            this.chaseDuringSkill(target, dt);
+            return;
+        }
         const dx = target.x - this.node.worldPosition.x;
         const dy = target.y - this.node.worldPosition.y;
         // 隔墙时继续寻路。
         const blocked = this.gameComp?.isWorldSegmentBlocked(this.node.worldPosition.x,
             this.node.worldPosition.y, target.x, target.y) ?? false;
-        if (dx * dx + dy * dy <= this.attackDistance * this.attackDistance && !blocked) {
+        const enterDistance = this.attackDistance * 0.8;
+        if (dx * dx + dy * dy <= enterDistance * enterDistance && !blocked) {
             this.faceTarget(target);
             if (this.attackCooldown <= 0) this.normalAttack();
             else this.playAnimation('idle');
@@ -208,9 +242,33 @@ export class bossBaseController extends Component {
         return this.attackRemaining > 0;
     }
 
+    /** 累计自然增长与受伤怒气，不超过上限。 */
+    addRage(amount: number) {
+        if (this.hp <= 0 || !Number.isFinite(amount) || amount <= 0) return;
+        this.rage = Math.min(this.maxRage, this.rage + amount);
+        this.refreshRage();
+    }
+
+    /** 子类实现技能，返回是否成功释放。 */
+    protected startSkill(): boolean { return false; }
+    protected updateSkill(dt: number): void {}
+    protected stopSkill(): void {}
+    get isUsingSkill(): boolean { return false; }
+
+    /** 技能期间仍可追击，不进入普攻锁定。 */
+    protected chaseDuringSkill(target: Vec3, dt: number) {
+        this.moveToward(target, dt);
+    }
+
     /** 攻击前方半圆，开始时结算伤害。 */
     protected normalAttack() {
-        if (this.isAttacking || this.attackCooldown > 0 || this.hp <= 0) return;
+        if (this.isAttacking || this.isUsingSkill || this.attackCooldown > 0 || this.hp <= 0) return;
+        if (this.maxRage > 0 && this.rage >= this.maxRage && this.startSkill()) {
+            this.rage = 0;
+            this.refreshRage();
+            this.attackCooldown = Math.max(0.01, this.attackInterval);
+            return;
+        }
         // 两套计时同时开始，均结束后才能再次攻击。
         this.attackCooldown = Math.max(0.01, this.attackInterval);
         this.attackRemaining = Number.isFinite(this.attackDuration) ? Math.max(0, this.attackDuration) : 0.5;
@@ -314,6 +372,7 @@ export class bossBaseController extends Component {
         if (gmConfig.isBossInvincible || !Number.isFinite(damage) || damage <= 0 || this.hp <= 0) return false;
         const actualDamage = Math.min(this.hp, damage);
         this.hp -= actualDamage;
+        this.addRage(actualDamage);
         this.refreshHp();
         this.gameComp?.showDamageFloat(this.node, actualDamage);
         if (this.hp <= 0) this.playDeath();
@@ -322,14 +381,33 @@ export class bossBaseController extends Component {
 
     /** 播放死亡动画后隐藏。 */
     protected playDeath() {
+        this.stopSkill();
         this.attackRemaining = 0;
         this.clearNavigationPath();
         if (this.hpNode) this.hpNode.active = false;
+        if (this.angerNode) this.angerNode.active = false;
         if (this.roleNameLab) this.roleNameLab.node.active = false;
         const finish = () => { if (this.isValid && this.hp <= 0) this.node.active = false; };
         if (!this.roleAnim?.skeletonData || !this.roleAnim.findAnimation('die')) { finish(); return; }
         const entry = this.roleAnim.setAnimation(0, 'die', false);
         this.roleAnim.setTrackCompleteListener(entry, finish);
+    }
+
+    /** 怒气减少时虚影追赶，immediate 表示立即同步。 */
+    refreshRage(immediate = false) {
+        const percent = this.maxRage > 0
+            ? Math.max(0, Math.min(1, this.rage / this.maxRage)) : 0;
+        const reduced = this.angerBar && percent < this.angerBar.fillRange;
+        if (this.angerBar) this.angerBar.fillRange = percent;
+        if (!this.angerBase) return;
+        // 自然增长不打断尚未追上的虚影。
+        if (!immediate && !reduced && this.angerBase.fillRange > percent) return;
+        Tween.stopAllByTarget(this.angerBase);
+        if (immediate || !reduced) this.angerBase.fillRange = percent;
+        else tween(this.angerBase)
+            .to(0.3, { fillRange: percent }, { easing: 'linear' })
+            .call(() => this.refreshRage(true))
+            .start();
     }
 
     /** 刷新血条，immediate 表示立即同步虚影。 */

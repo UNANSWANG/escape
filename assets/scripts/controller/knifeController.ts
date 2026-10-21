@@ -66,7 +66,7 @@ export class knifeController extends weaponsController {
             }
             return true;
         }
-        for (const enemy of enemyMgr.soldiersArr) {
+        for (const enemy of enemyMgr.allEnemies) {
             if (!enemy?.node?.isValid || !enemy.node.activeInHierarchy || enemy.hp <= 0) continue;
             enemy.node.getWorldPosition(this.tempTargetWorldPos);
             const offsetX = this.tempTargetWorldPos.x - this.tempRoleWorldPos.x;

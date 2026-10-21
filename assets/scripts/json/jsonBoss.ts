@@ -52,6 +52,8 @@ export interface JsonBossData {
     chaseRange: number;
     /**有效范围 */
     validRange: number;
+    /**怒气上限 */
+    rage: number;
 }
 
 

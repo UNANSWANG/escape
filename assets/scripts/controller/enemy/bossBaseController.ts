@@ -241,6 +241,7 @@ export class bossBaseController extends Component {
             this.node.worldPosition.y, target.x, target.y) ?? false;
         const enterDistance = this.attackDistance * 0.8;
         if (dx * dx + dy * dy <= enterDistance * enterDistance && !blocked) {
+            this.clearNavigationPath();
             this.faceTarget(target);
             if (this.attackCooldown <= 0) this.normalAttack();
             else this.playAnimation('idle');
@@ -359,7 +360,10 @@ export class bossBaseController extends Component {
         this.navigationReplanRemaining = Math.max(0, this.navigationReplanRemaining - dt);
         // 目标偏移超过 24 时，按 0.35 秒间隔重规划。
         const targetMoved = Math.hypot(target.x - this.navigationTarget.x, target.y - this.navigationTarget.y) > 24;
-        if (this.navigationReplanRemaining <= 0
+        const pathFinished = this.navigationPath.length > 0
+            && this.navigationIndex >= this.navigationPath.length;
+        // 已走完路线立即更新；寻路失败仍按间隔重试。
+        if (pathFinished || this.navigationReplanRemaining <= 0
             && (this.navigationIndex >= this.navigationPath.length || targetMoved)) {
             this.navigationPath.length = 0;
             this.navigationIndex = 0;
@@ -383,7 +387,11 @@ export class bossBaseController extends Component {
             distance = Math.hypot(waypoint.x - current.x, waypoint.y - current.y);
         }
         const step = Math.min(distance, this.moveSpeed * Math.max(0, dt));
-        if (distance < 0.001 || step <= 0) return false;
+        if (distance < 0.001) {
+            this.clearNavigationPath();
+            return false;
+        }
+        if (step <= 0) return false;
         const dx = (waypoint.x - current.x) / distance * step;
         const dy = (waypoint.y - current.y) / distance * step;
         this.faceTarget(waypoint);

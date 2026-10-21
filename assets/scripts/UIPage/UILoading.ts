@@ -116,6 +116,8 @@ export class UILoading extends Component {
         audioMgr.playBackgroundMusic();
         this.loadTable();
 
+        //TODO 临时加载游戏部分
+        uiMgr.preLoadGame();
         this.preLoadPage();
     }
 

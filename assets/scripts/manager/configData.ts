@@ -52,7 +52,12 @@ export const playerCommonConfig = {
 
 /**敌人通用配置 */
 export const enemyCommonConfig = {
-
+    /**每秒回血量百分比 */
+    hpRegenPercent: 0.1,
+    /**每秒怒气自然增长值 */
+    rageRegen: 1,
+    /**每秒怒气自然缩减值 */
+    rageDecay: 5,
 }
 
 /**小兵通用配置 */

@@ -1,6 +1,6 @@
 import { _decorator, CCInteger, Component, Label, Node, sp, Sprite, Tween, tween, UITransform, Vec3 } from 'cc';
 import { bossConfig } from '../../json/jsonBoss';
-import { GameEvent, gmConfig } from '../../manager/configData';
+import { enemyCommonConfig, GameEvent, gmConfig } from '../../manager/configData';
 import { gm } from '../../manager/gm';
 import { playerMgr } from '../../manager/playerManager';
 import { UIGame } from '../../UIPage/UIGame';
@@ -31,8 +31,6 @@ export class bossBaseController extends Component {
 
     /** 怒气上限，从 boss 表的 rage 读取。 */
     maxRage = 100;
-    /** 每秒自然增长怒气。 */
-    ragePerSecond = 1;
     /** 当前怒气，满值后下一次普攻替换为技能。 */
     rage = 0;
 
@@ -96,6 +94,10 @@ export class bossBaseController extends Component {
     private facingX = -1;
     /** 是否初始化成功。 */
     private initialized = false;
+    /** 返回、站岗恢复的累计秒数。 */
+    private recoveryElapsed = 0;
+    /** 追击期间自然增怒的累计秒数。 */
+    private rageRegenElapsed = 0;
 
     /** 缓存节点并监听表格加载。 */
     protected onLoad(): void {
@@ -127,6 +129,8 @@ export class bossBaseController extends Component {
         this.attackCooldown = 0;
         this.attackRemaining = 0;
         this.rage = 0;
+        this.recoveryElapsed = 0;
+        this.rageRegenElapsed = 0;
         this.refreshRage();
         this.stopSkill();
         this.currentAnim = '';
@@ -174,7 +178,17 @@ export class bossBaseController extends Component {
     /** 更新攻击计时和行为状态。 */
     protected update(dt: number): void {
         if (!this.initialized || this.hp <= 0) return;
-        this.addRage(this.ragePerSecond * Math.max(0, dt));
+        if (this.bossState === BossState.Chase) {
+            this.recoveryElapsed = 0;
+            this.rageRegenElapsed += Math.max(0, dt);
+            const seconds = Math.floor(this.rageRegenElapsed + 1e-9);
+            if (seconds > 0) {
+                this.rageRegenElapsed = Math.max(0, this.rageRegenElapsed - seconds);
+                this.addRage(Math.max(0, Number(enemyCommonConfig.rageRegen) || 0) * seconds);
+            }
+        } else {
+            this.rageRegenElapsed = 0;
+        }
         this.attackCooldown = Math.max(0, this.attackCooldown - dt);
         this.updateSkill(dt);
         const wasAttacking = this.isAttacking;
@@ -186,6 +200,7 @@ export class bossBaseController extends Component {
         const hasPlayer = player?.node?.isValid && player.node.activeInHierarchy && player.hp > 0;
         // 返回完成后恢复站岗。
         if (this.bossState === BossState.Return) {
+            this.updateRecovery(dt);
             if (this.moveToward(this.patrolOrigin, dt)) {
                 this.bossState = BossState.Patrol;
                 this.playAnimation('idle');
@@ -199,13 +214,17 @@ export class bossBaseController extends Component {
                 && this.isInsideOriginRange(player.node.worldPosition, this.chaseRange)
                 && this.isInsideOriginRange(player.node.worldPosition, this.validRange)) {
                 this.bossState = BossState.Chase;
+                this.recoveryElapsed = 0;
                 this.clearNavigationPath();
+            } else {
+                this.updateRecovery(dt);
             }
             return;
         }
         // 有效范围始终以出生点为圆心。
         if (!hasPlayer || !this.isInsideOriginRange(player.node.worldPosition, this.validRange)) {
             this.bossState = BossState.Return;
+            this.rageRegenElapsed = 0;
             this.stopSkill();
             this.clearNavigationPath();
             return;
@@ -227,6 +246,26 @@ export class bossBaseController extends Component {
             else this.playAnimation('idle');
         } else {
             this.moveToward(target, dt);
+        }
+    }
+
+    /** 返回、站岗时每满 1 秒回血、减怒。 */
+    protected updateRecovery(dt: number) {
+        this.recoveryElapsed += Math.max(0, dt);
+        const elapsed = Math.floor(this.recoveryElapsed + 1e-9);
+        if (elapsed <= 0) return;
+        this.recoveryElapsed = Math.max(0, this.recoveryElapsed - elapsed);
+        const regen = Math.max(0, Number(enemyCommonConfig.hpRegenPercent) || 0);
+        const decay = Math.max(0, Number(enemyCommonConfig.rageDecay) || 0);
+        const hp = Math.min(this.maxHp, this.hp + this.maxHp * regen * elapsed);
+        if (hp !== this.hp) {
+            this.hp = hp;
+            this.refreshHp();
+        }
+        const rage = Math.max(0, this.rage - decay * elapsed);
+        if (rage !== this.rage) {
+            this.rage = rage;
+            this.refreshRage();
         }
     }
 

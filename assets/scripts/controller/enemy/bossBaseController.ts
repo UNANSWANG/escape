@@ -89,6 +89,7 @@ export class bossBaseController extends Component {
     private attackCooldown = 0;
     /** 攻击状态剩余时间。 */
     private attackRemaining = 0;
+    private isInAttackRange = false;
     /** 当前动画名称。 */
     private currentAnim = '';
     /** 水平朝向：1 向右，-1 向左。 */
@@ -129,6 +130,7 @@ export class bossBaseController extends Component {
         this.patrolOrigin.set(this.node.worldPosition);
         this.attackCooldown = 0;
         this.attackRemaining = 0;
+        this.isInAttackRange = false;
         this.rage = 0;
         this.recoveryElapsed = 0;
         this.rageRegenElapsed = 0;
@@ -173,6 +175,7 @@ export class bossBaseController extends Component {
     private onTableLoad(tableName: string) {
         if (tableName !== 'boss' || !this.gameComp) return;
         this.initialized = this.applyBossData(!this.initialized);
+        this.isInAttackRange = false;
         this.clearNavigationPath();
     }
 
@@ -225,6 +228,7 @@ export class bossBaseController extends Component {
         // 有效范围始终以出生点为圆心。
         if (!hasPlayer || !this.isInsideOriginRange(player.node.worldPosition, this.validRange)) {
             this.bossState = BossState.Return;
+            this.isInAttackRange = false;
             this.rageRegenElapsed = 0;
             this.stopSkill();
             this.clearNavigationPath();
@@ -232,6 +236,7 @@ export class bossBaseController extends Component {
         }
         const target = player.node.worldPosition;
         if (this.isUsingSkill) {
+            this.isInAttackRange = false;
             this.chaseDuringSkill(target, dt);
             return;
         }
@@ -240,8 +245,9 @@ export class bossBaseController extends Component {
         // 隔墙时继续寻路。
         const blocked = this.gameComp?.isWorldSegmentBlocked(this.node.worldPosition.x,
             this.node.worldPosition.y, target.x, target.y) ?? false;
-        const enterDistance = this.attackDistance * 0.8;
-        if (dx * dx + dy * dy <= enterDistance * enterDistance && !blocked) {
+        const stopDistance = this.attackDistance * (this.isInAttackRange ? 1 : 0.8);
+        this.isInAttackRange = !blocked && dx * dx + dy * dy <= stopDistance * stopDistance;
+        if (this.isInAttackRange) {
             this.clearNavigationPath();
             this.faceTarget(target);
             if (this.attackCooldown <= 0) this.normalAttack();

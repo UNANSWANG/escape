@@ -17,11 +17,13 @@ export class bossController0 extends bossBaseController {
     skillDamageScale = 0.1;
     private skillRemaining = 0;
     private skillTickRemaining = 0;
+    private isInSkillRange = false;
 
     get isUsingSkill(): boolean { return this.skillRemaining > 0; }
 
     protected startSkill(): boolean {
         if (this.isUsingSkill || this.skillDuration <= 0 || this.skillInterval <= 0) return false;
+        this.isInSkillRange = false;
         this.skillRemaining = this.skillDuration;
         this.skillTickRemaining = this.skillInterval;
         return true;
@@ -42,14 +44,18 @@ export class bossController0 extends bossBaseController {
     protected stopSkill(): void {
         this.skillRemaining = 0;
         this.skillTickRemaining = 0;
+        this.isInSkillRange = false;
     }
 
     /** 追到技能半径的 80%，避免停在伤害范围外。 */
     protected chaseDuringSkill(target: Vec3, dt: number): void {
         const dx = target.x - this.node.worldPosition.x;
         const dy = target.y - this.node.worldPosition.y;
-        if (dx * dx + dy * dy > (this.skillRadius * 0.8) ** 2) this.moveToward(target, dt);
+        const stopDistance = this.skillRadius * (this.isInSkillRange ? 1 : 0.8);
+        this.isInSkillRange = dx * dx + dy * dy <= stopDistance * stopDistance;
+        if (!this.isInSkillRange) this.moveToward(target, dt);
         else {
+            this.clearNavigationPath();
             this.faceTarget(target);
             this.playAnimation('idle');
         }

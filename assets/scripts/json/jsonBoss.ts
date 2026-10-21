@@ -38,6 +38,12 @@ export interface JsonBossData {
     attack: number;
     /**移动速度 */
     speed: number;
+    /**攻击距离 */
+    attackDistance: number;
+    /**追击范围 */
+    chaseRange: number;
+    /**有效范围 */
+    validRange: number;
 }
 
 

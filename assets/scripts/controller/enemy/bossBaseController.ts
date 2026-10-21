@@ -1,8 +1,9 @@
 import { _decorator, CCInteger, Component, Label, Node, sp, Sprite, Tween, tween, UITransform, Vec3 } from 'cc';
 import { bossConfig } from '../../json/jsonBoss';
-import { enemyCommonConfig, GameEvent, gmConfig } from '../../manager/configData';
+import { BossBookState, enemyCommonConfig, GameEvent, gmConfig } from '../../manager/configData';
 import { gm } from '../../manager/gm';
 import { playerMgr } from '../../manager/playerManager';
+import { pData } from '../../manager/playerData';
 import { UIGame } from '../../UIPage/UIGame';
 import { StaticCollisionMover } from '../staticCollisionMover';
 const { ccclass, property } = _decorator;
@@ -428,6 +429,9 @@ export class bossBaseController extends Component {
 
     /** 播放死亡动画后隐藏。 */
     protected playDeath() {
+        if (pData.getBossBookState(this.id) !== BossBookState.Defeated) {
+            pData.setBossBookState(this.id, BossBookState.Defeated);
+        }
         this.stopSkill();
         this.attackRemaining = 0;
         this.clearNavigationPath();

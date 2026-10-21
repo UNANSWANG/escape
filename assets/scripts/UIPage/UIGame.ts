@@ -3,7 +3,7 @@ import { uiMgr } from '../manager/UIManager';
 import { pData } from '../manager/playerData';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
-import { configData, GameEvent } from '../manager/configData';
+import { BossBookState, configData, GameEvent } from '../manager/configData';
 import { gm } from '../manager/gm';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
@@ -378,6 +378,13 @@ export class UIGame extends UIBase {
         this.initGameCountdown();
         this.refreshDrugButtons();
         this.updateContainerOpenButton();
+
+        const [mapIdx, difficultyType] = pData.selectMapData;
+        const bossId = mapConfig.getMapData(mapIdx, difficultyType)?.bossId;
+        if (Number.isInteger(bossId) && bossId >= 0
+            && pData.getBossBookState(bossId) === BossBookState.Locked) {
+            pData.setBossBookState(bossId, BossBookState.Unlocked);
+        }
     }
 
     /**从地图节点获取容器和碰撞节点。 */

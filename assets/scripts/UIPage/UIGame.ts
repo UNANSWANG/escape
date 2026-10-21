@@ -21,6 +21,8 @@ import { gunController } from '../controller/gunController';
 import { weaponsConfig } from '../json/jsonWeapons';
 import { videoMgr } from '../manager/videoManager';
 import { soldiersController } from '../controller/enemy/soldiersController';
+import { bossBaseController } from '../controller/enemy/bossBaseController';
+import type { EnemyTarget } from '../manager/enemyManager';
 import { soldiersData } from '../data/soldiersData';
 import { commonConfig } from '../json/jsonCommon';
 import { mapConfig } from '../json/jsonMap';
@@ -154,7 +156,7 @@ export class UIGame extends UIBase {
     /**当前是否正在攻击瞄准 */
     private isAttackAiming = false;
     /**本轮持续攻击锁定的目标；离开检测范围后仍保留至松开攻击键 */
-    private autoAttackTarget: soldiersController = null;
+    private autoAttackTarget: EnemyTarget = null;
     /**非攻击状态下的角色朝向 */
     private normalFacingRight = false;
     /**地图层相机，用于把瓦片世界坐标转成屏幕坐标 */
@@ -372,6 +374,7 @@ export class UIGame extends UIBase {
         this.initRockerArea();
         this.initPlayer();
         this.initSoldier();
+        this.initBoss();
         this.initGameCountdown();
         this.refreshDrugButtons();
         this.updateContainerOpenButton();
@@ -422,6 +425,7 @@ export class UIGame extends UIBase {
 
         playerMgr.clearPlayer();
         enemyMgr.soldiersArr = [];
+        enemyMgr.bossesArr = [];
         enemyMgr.soldierId = 0;
         enemyMgr.enemyBornPosArr = [];
         this.rockerReset(true);
@@ -549,7 +553,7 @@ export class UIGame extends UIBase {
     /**玩家和 NPC 分别根据自身所在的透视区域更新透明度。 */
     private updateRolePerspectives() {
         this.updateRolePerspective(playerMgr.player);
-        for (const soldier of enemyMgr.soldiersArr) {
+        for (const soldier of enemyMgr.allEnemies) {
             this.updateRolePerspective(soldier?.node);
         }
     }
@@ -792,6 +796,24 @@ export class UIGame extends UIBase {
                 soldierComp.init(this, soldierId, data.armsId, data);
                 enemyMgr.soldiersArr.push(soldierComp);
             }
+        }
+    }
+
+    /** bossList 子节点作为模板，复制到角色层，在原点位站岗。 */
+    private initBoss() {
+        const bossList = this.mapNode?.getChildByName('bossList');
+        if (!bossList || !this.roleNode) return;
+        // 隐藏模板，防止与运行中的 Boss 重复显示；重新开局时仍可复用模板。
+        bossList.active = false;
+        for (const template of bossList.children) {
+            if (!template.active || !template.getComponent(bossBaseController)) continue;
+            const bossNode = instantiate(template);
+            this.roleNode.addChild(bossNode);
+            bossNode.setWorldPosition(template.worldPosition);
+            this.keepNodeInsideMap(bossNode);
+            const boss = bossNode.getComponent(bossBaseController);
+            boss.init(this);
+            enemyMgr.bossesArr.push(boss);
         }
     }
 
@@ -1203,7 +1225,7 @@ export class UIGame extends UIBase {
     }
 
     /**锁定目标是否仍可攻击；锁定后不再受自动瞄准范围限制 */
-    private isValidAttackTarget(target: soldiersController) {
+    private isValidAttackTarget(target: EnemyTarget) {
         return !!target && target.node?.isValid && target.node.activeInHierarchy && target.hp > 0;
     }
 

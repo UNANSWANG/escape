@@ -14,7 +14,7 @@ import { JsonRoleLevelData, roleLevelConfig } from '../../json/jsonRoleLevel';
 import { weaponsConfig } from '../../json/jsonWeapons';
 import { equipmentConfig } from '../../json/jsonEquipment';
 import { pData } from '../../manager/playerData';
-import { soldiersController } from '../enemy/soldiersController';
+import type { EnemyTarget } from '../../manager/enemyManager';
 const { ccclass } = _decorator;
 
 export enum roleAnimName {
@@ -674,9 +674,9 @@ export class roleController extends Component {
         if (!this.currentWeaponComp) return null;
         const rolePos = this.node.position;
         const rangeSquared = this.currentWeaponComp.attackRange ** 2;
-        let nearestEnemy: soldiersController = null;
+        let nearestEnemy: EnemyTarget = null;
         let nearestDistanceSquared = rangeSquared;
-        for (const enemy of enemyMgr.soldiersArr) {
+        for (const enemy of enemyMgr.allEnemies) {
             if (!enemy || !enemy.node?.isValid || !enemy.node.activeInHierarchy || enemy.hp <= 0) continue;
             const offsetX = enemy.node.position.x - rolePos.x;
             const offsetY = enemy.node.position.y - rolePos.y;

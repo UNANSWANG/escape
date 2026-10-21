@@ -1,7 +1,7 @@
 import { _decorator } from 'cc';
 import { roleAnimName, roleController, roleType } from './roleController';
 import { enemyMgr } from '../../manager/enemyManager';
-import { soldiersController } from '../enemy/soldiersController';
+import type { EnemyTarget } from '../../manager/enemyManager';
 const { ccclass, property } = _decorator;
 
 /**技能2倒计时变更事件，参数依次为剩余秒数和是否显示。 */
@@ -37,7 +37,7 @@ export class role0 extends roleController {
     /**技能2期间每次击杀延长的时间（秒）。 */
     private skill2KillExtendTime = 0;
     /**已记录死亡的敌人，避免同一敌人重复结算。 */
-    private defeatedEnemies = new Set<soldiersController>();
+    private defeatedEnemies = new Set<EnemyTarget>();
 
     get isMoveDirectionLocked() { return this.isUsingSkill1; }
 
@@ -137,14 +137,14 @@ export class role0 extends roleController {
 
     /**记录当前已死亡的敌人，或结算技能期间首次死亡的敌人。 */
     private rememberDefeatedEnemies() {
-        for (const enemy of enemyMgr.soldiersArr) {
+        for (const enemy of enemyMgr.allEnemies) {
             if (enemy?.hp <= 0) this.defeatedEnemies.add(enemy);
         }
     }
 
     /**检查技能2生效期间的新击杀。 */
     private checkSkill2EnemyDefeats() {
-        for (const enemy of enemyMgr.soldiersArr) {
+        for (const enemy of enemyMgr.allEnemies) {
             if (!enemy || enemy.hp > 0 || this.defeatedEnemies.has(enemy)) continue;
 
             this.defeatedEnemies.add(enemy);

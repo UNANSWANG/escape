@@ -14,6 +14,12 @@ export class jsonBoss extends jsonBase {
         super.processTableData();
     }
 
+    /** 按配置编号读取 Boss 数据。 */
+    getDataById(id: number): JsonBossData | null {
+        if (!Number.isFinite(id)) return null;
+        return this.getAllData().find(row => Number(row?.id) === id) ?? null;
+    }
+
     /** 获取 boss 表的全部配置。 */
     getAllData(): JsonBossData[] {
         if (!this.data) return [];
@@ -40,6 +46,8 @@ export interface JsonBossData {
     speed: number;
     /**攻击距离 */
     attackDistance: number;
+    /**攻击间隔 */
+    attackInterval: number;
     /**追击范围 */
     chaseRange: number;
     /**有效范围 */

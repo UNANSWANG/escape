@@ -11,9 +11,9 @@ import { playerMgr } from '../manager/playerManager';
 import { CameraController } from '../controller/CameraController';
 import { enemyMgr } from '../manager/enemyManager';
 import { audioMgr } from '../manager/audioManager';
-import { roleAnimName } from '../controller/role/roleController';
+import { roleAnimName, roleController } from '../controller/role/roleController';
 import { role0Skill2RemainEvent } from '../controller/role/role0';
-import { addRoleScript } from '../controller/role/roleScriptFactory';
+import { addAIRoleScript, addRoleScript } from '../controller/role/roleScriptFactory';
 import { poolMgr } from '../manager/poolManager';
 import { containerController } from '../controller/containerController';
 import { sniperController } from '../controller/sniperController';
@@ -56,6 +56,8 @@ interface ShelterArea {
 
 @ccclass('UIGame')
 export class UIGame extends UIBase {
+    aiRoles: roleController[] = [];
+
     @property(Node)
     setBtn: Node;
 
@@ -373,6 +375,7 @@ export class UIGame extends UIBase {
 
         this.initRockerArea();
         this.initPlayer();
+        this.initAI();
         this.initSoldier();
         this.initBoss();
         this.initGameCountdown();
@@ -429,6 +432,7 @@ export class UIGame extends UIBase {
         this.isDrugAdWatching = false;
 
         ccTools.destroyAllChild(this.roleNode);
+        this.aiRoles.length = 0;
 
         playerMgr.clearPlayer();
         enemyMgr.soldiersArr = [];
@@ -560,6 +564,9 @@ export class UIGame extends UIBase {
     /**玩家和 NPC 分别根据自身所在的透视区域更新透明度。 */
     private updateRolePerspectives() {
         this.updateRolePerspective(playerMgr.player);
+        for (const ai of this.aiRoles) {
+            this.updateRolePerspective(ai.node);
+        }
         for (const soldier of enemyMgr.allEnemies) {
             this.updateRolePerspective(soldier?.node);
         }
@@ -763,6 +770,40 @@ export class UIGame extends UIBase {
         this.refreshWeaponNums();
         this.bindCurrentGunReloadEvent();
         roleComp.onCurrentWeaponEquipped();
+        this.updateRolePerspectives();
+    }
+
+    private initAI() {
+        const [mapIdx, difficultyType] = pData.selectMapData;
+        const gameNumber = Number(mapConfig.getMapData(mapIdx, difficultyType)?.gameNumber);
+        const aiCount = Number.isFinite(gameNumber) ? Math.max(0, Math.floor(gameNumber) - 1) : 0;
+        if (!aiCount) return;
+
+        const bornList = this.mapNode?.getChildByName('aiBornList');
+        const bornPoints = bornList?.children.filter(point => point.activeInHierarchy
+            && !point.worldPosition.equals(playerMgr.player.worldPosition)) ?? [];
+        if (!bornPoints.length) {
+            console.warn('地图缺少有效的 AI 出生点，无法生成 AI');
+            return;
+        }
+        if (bornPoints.length < aiCount) console.warn('AI 出生点不足，将重复使用出生点');
+
+        const availablePoints = bornPoints.slice();
+        // AI 暂时统一使用 0 号角色。
+        const roleId = 0;
+        for (let index = 0; index < aiCount; index++) {
+            if (!availablePoints.length) availablePoints.push(...bornPoints);
+            const pointIndex = Math.floor(Math.random() * availablePoints.length);
+            const bornPoint = availablePoints.splice(pointIndex, 1)[0];
+            const aiNode = instantiate(uiMgr.rolePrefab);
+            aiNode.name = `ai_${index + 1}`;
+            this.roleNode.addChild(aiNode);
+            aiNode.setWorldPosition(bornPoint.worldPosition);
+            this.keepNodeInsideMap(aiNode);
+            const aiComp = addAIRoleScript(aiNode, roleId);
+            aiComp.init(this, roleId, 0, `人机${index + 1}`);
+            this.aiRoles.push(aiComp);
+        }
         this.updateRolePerspectives();
     }
 

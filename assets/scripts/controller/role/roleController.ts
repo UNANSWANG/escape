@@ -48,6 +48,10 @@ export enum roleBattleState {
 
 @ccclass('roleController')
 export class roleController extends Component {
+    get isAI(): boolean { return false; }
+
+    get isPlayer(): boolean { return !this.isAI; }
+
     /**角色当前游戏内 id */
     roleId = 0;
     /**角色皮肤 id */
@@ -713,7 +717,7 @@ export class roleController extends Component {
         this.applyEquippedWeaponStats();
         this.refreshRoleSpine();
         this.initData();
-        if (this.roleNameLab) this.roleNameLab.string = this.roleId === 0 ? '你' : (nickname || `人机${this.roleId}`);
+        if (this.roleNameLab) this.roleNameLab.string = this.isPlayer ? '你' : (nickname || `人机${this.roleId}`);
     }
 
     /**初始化数据 */
@@ -802,6 +806,7 @@ export class roleController extends Component {
 
     /** 当前武器为狙击枪时扩大视野；切换为其他武器后恢复默认视野。 */
     private updateWeaponViewScale() {
+        if (!this.isPlayer) return;
         const sniper = this.currentWeaponComp?.node.getComponent(sniperController);
         this.gameComp?.setGameViewScale(sniper?.viewScale ?? 1);
     }
@@ -883,7 +888,7 @@ export class roleController extends Component {
         const actualDamage = defenseDamage + hpDamage;
         this.gameComp?.showDamageFloat(this.node, actualDamage);
         if (this.hp <= 0) {
-            if (this.gameComp) this.gameComp.onPlayerDead();
+            if (this.isPlayer && this.gameComp) this.gameComp.onPlayerDead();
             else this.playDeath();
         }
         return true;

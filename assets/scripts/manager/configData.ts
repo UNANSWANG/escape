@@ -60,6 +60,12 @@ export const enemyCommonConfig = {
     rageDecay: 10,
 }
 
+/**AI通用配置 */
+export const aiCommonConfig = {
+    /**巡逻范围 */
+    patrolRange: 600,
+}
+
 /**小兵通用配置 */
 export const soldierCommonConfig = {
     /**巡逻等待时间（秒） */

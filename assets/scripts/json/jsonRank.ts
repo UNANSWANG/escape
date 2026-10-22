@@ -10,6 +10,20 @@ export class jsonRank extends jsonBase {
     protected tableUrl1: string = "";
     protected tableUrl2: string = "";
 
+    /**超出基础段位后，沿用最后一个段位的积分配置。 */
+    getRankData(rank: number): JsonRankData | null {
+        const ranks = this.tableData;
+        if (!ranks?.length) return null;
+        return ranks[Math.min(rank, ranks.length - 1)];
+    }
+
+    getRankName(rank: number): string {
+        const rankData = this.getRankData(rank);
+        if (!rankData) return '';
+        const lastRank = this.tableData.length - 1;
+        return rank > lastRank ? rankData.name + (rank - lastRank + 1) : rankData.name;
+    }
+
     get tableData(): JsonRankData[] {
         return this.data;
     }

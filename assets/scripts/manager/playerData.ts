@@ -10,6 +10,7 @@ import { itemConfig } from '../json/jsonItem';
 import { equipmentConfig } from '../json/jsonEquipment';
 import { getItemDataByItemId } from '../json/jsonItemData';
 import { weaponsConfig } from '../json/jsonWeapons';
+import { rankConfig } from '../json/jsonRank';
 const { ccclass, property } = _decorator;
 
 //用户游戏内数据
@@ -17,6 +18,10 @@ const { ccclass, property } = _decorator;
 export class playerData {
     /**当前已通关关卡数 */
     level = 0;
+    /**当前段位；超过基础段位后继续递增，表示王者2、王者3等 */
+    rank = 0;
+    /**当前段位内的积分 */
+    rankScore = 0;
     /**道具集合 */
     propsNums = {};
     /**仓库数据，格式为 [[itemId, 数量], ...] */
@@ -552,6 +557,24 @@ export class playerData {
     }
 
 
+    /**修改段位积分，达到目标后持续晋升；扣分最低为 0，不降段。 */
+    fixRankScore(score: number): number {
+        if (!Number.isFinite(score)) return 0;
+        const previousScore = this.rankScore;
+        this.rankScore = Math.max(0, this.rankScore + Math.trunc(score));
+        const actualChange = this.rankScore - previousScore;
+        let targetScore = rankConfig.getRankData(this.rank)?.rankScore;
+        while (Number.isFinite(targetScore) && targetScore > 0 && this.rankScore >= targetScore) {
+            this.rankScore -= targetScore;
+            this.rank++;
+            targetScore = rankConfig.getRankData(this.rank)?.rankScore;
+        }
+        ccStorageTools.setData(SaveKey.rank, this.rank);
+        ccStorageTools.setData(SaveKey.rankScore, this.rankScore);
+        gm.Event.emit(GameEvent.refreshRank);
+        return actualChange;
+    }
+
     /**修改银币*/
     fixMoney(money: number) {
         this.money += money;
@@ -647,6 +670,12 @@ export class playerData {
 
     /**初始化存储数据 */
     initData() {
+        const rank = ccStorageTools.getNumberData(SaveKey.rank);
+        const rankScore = ccStorageTools.getNumberData(SaveKey.rankScore);
+        this.rank = Number.isSafeInteger(rank) && rank >= 0 ? rank : 0;
+        this.rankScore = Number.isSafeInteger(rankScore) && rankScore >= 0 ? rankScore : 0;
+        ccStorageTools.setData(SaveKey.rank, this.rank);
+        ccStorageTools.setData(SaveKey.rankScore, this.rankScore);
         const showItems = ccStorageTools.getData(SaveKey.showItems);
         this.showItems = {};
         if (showItems && typeof showItems === 'object' && !Array.isArray(showItems)) {

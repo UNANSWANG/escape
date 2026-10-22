@@ -127,6 +127,8 @@ export enum GameEvent {
     /**确认地图选择后通知主页刷新地图名称和难度 */
     refreshMapSelection = "refreshMapSelection",
     refreshShowContent = "refreshShowContent",
+    /**刷新当前段位及积分 */
+    refreshRank = "refreshRank",
 }
 
 /**货币类型 */
@@ -152,6 +154,10 @@ export const difficultyNames = ['常规', '机密', '绝密'];
 
 /**存储的键值 */
 export enum SaveKey {
+    /**当前段位，0 为青铜，8 为王者2，之后依次递增 */
+    rank = "rank",
+    /**当前段位内的积分 */
+    rankScore = "rankScore",
     /**已确认的地图选择，格式为 [地图索引, 难度类型] */
     selectMapData = "selectMapData",
     /**关卡数据 */

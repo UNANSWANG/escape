@@ -14,6 +14,7 @@ import { ccTools } from '../extention/generalTools';
 import { roleAnimName } from '../controller/role/roleController';
 import { mapConfig } from '../json/jsonMap';
 import { itemConfig } from '../json/jsonItem';
+import { rankConfig } from '../json/jsonRank';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIMain')
@@ -92,6 +93,7 @@ export class UIMain extends UIBase {
     /**初始化数据 */
     initData() {
         this.refreshRed();
+        this.refreshRank();
         this.checkRevisitBtn();
         this.refreshRoleAnim();
         this.refreshMapSelection();
@@ -156,6 +158,7 @@ export class UIMain extends UIBase {
         gm.Event.on(GameEvent.refreshRoleSkin, this.refreshRoleAnim, this);
         gm.Event.on(GameEvent.refreshMapSelection, this.refreshMapSelection, this);
         gm.Event.on(GameEvent.refreshShowContent, this.refreshShowContent, this);
+        gm.Event.on(GameEvent.refreshRank, this.refreshRank, this);
     }
 
     /**删除监听 */
@@ -165,6 +168,7 @@ export class UIMain extends UIBase {
         gm.Event.off(GameEvent.refreshRoleSkin, this.refreshRoleAnim, this);
         gm.Event.off(GameEvent.refreshMapSelection, this.refreshMapSelection, this);
         gm.Event.off(GameEvent.refreshShowContent, this.refreshShowContent, this);
+        gm.Event.off(GameEvent.refreshRank, this.refreshRank, this);
     }
 
     /**按本次运行的确认状态刷新地图按钮；未确认时显示默认文本 */
@@ -180,6 +184,17 @@ export class UIMain extends UIBase {
         }
         if (difficultyLab) {
             difficultyLab.string = mapData ? (difficultyNames[difficultyType] ?? '') : '';
+        }
+    }
+
+    /**显示当前段位名称、段内积分及晋升进度。 */
+    private refreshRank() {
+        const targetScore = rankConfig.getRankData(pData.rank)?.rankScore ?? 0;
+        if (this.rankNameLab) this.rankNameLab.string = rankConfig.getRankName(pData.rank);
+        if (this.rankLab) this.rankLab.string = pData.rankScore + '/' + targetScore;
+        if (this.rankBar) {
+            this.rankBar.fillRange = targetScore > 0
+                ? Math.max(0, Math.min(1, pData.rankScore / targetScore)) : 0;
         }
     }
 

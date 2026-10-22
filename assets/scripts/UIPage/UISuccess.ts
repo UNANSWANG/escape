@@ -3,6 +3,7 @@ import { UIBase } from './UIBase';
 import { audioPath, ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { pData } from '../manager/playerData';
+import { configData } from '../manager/configData';
 import { gm } from '../manager/gm';
 import { audioMgr } from '../manager/audioManager';
 import { zoomButton } from '../extention/zoomButton';
@@ -44,6 +45,9 @@ export class UISuccess extends UIBase {
         anim.play();
         gm.gamePause();
         audioMgr.playEffect(audioPath.success);
+        const scoreChange = pData.fixRankScore(20);
+        if (this.curRankNumLab) this.curRankNumLab.string = String(pData.rankScore);
+        if (this.addRankNumLab) this.addRankNumLab.string = '+' + scoreChange;
         this.initData(data);
     }
 

@@ -6,6 +6,7 @@ import { gm } from '../manager/gm';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
 import { pData } from '../manager/playerData';
+import { configData } from '../manager/configData';
 import { audioMgr } from '../manager/audioManager';
 import { ccResTools } from '../extention/resTools';
 import { showItemController } from '../controller/showItemController';
@@ -56,6 +57,9 @@ export class UIFail extends UIBase {
         anim.play();
         gm.gamePause();
         audioMgr.playEffect(audioPath.fail);
+        const scoreChange = pData.fixRankScore(-10);
+        if (this.curRankNumLab) this.curRankNumLab.string = String(pData.rankScore);
+        if (this.addRankNumLab) this.addRankNumLab.string = String(scoreChange);
         this.initData(data);
     }
 

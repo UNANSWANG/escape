@@ -565,7 +565,7 @@ export class UIGame extends UIBase {
     private updateRolePerspectives() {
         this.updateRolePerspective(playerMgr.player);
         for (const ai of this.aiRoles) {
-            this.updateRolePerspective(ai.node);
+            this.updateRolePerspective(ai.node, this.isAIHiddenByShelter(ai.node));
         }
         for (const soldier of enemyMgr.allEnemies) {
             this.updateRolePerspective(soldier?.node);
@@ -573,10 +573,14 @@ export class UIGame extends UIBase {
     }
 
     /**角色进入任意透视区域时半透明，离开所有区域后恢复不透明。 */
-    private updateRolePerspective(roleNode: Node) {
+    private updateRolePerspective(roleNode: Node, isHidden = false) {
         if (!roleNode?.isValid) return;
         const opacity = roleNode.getComponent(UIOpacity);
         if (!opacity) return;
+        if (isHidden) {
+            if (opacity.opacity !== 0) opacity.opacity = 0;
+            return;
+        }
 
         roleNode.getWorldPosition(this.tempPerspectiveWorldPos);
         const x = this.tempPerspectiveWorldPos.x;
@@ -586,6 +590,27 @@ export class UIGame extends UIBase {
             && this.pointInsideStaticPolygon(x, y, area.points));
         const targetOpacity = isInside ? 120 : 255;
         if (opacity.opacity !== targetOpacity) opacity.opacity = targetOpacity;
+    }
+
+    private isAIHiddenByShelter(aiNode: Node) {
+        if (!aiNode?.isValid) return false;
+        const aiTransform = aiNode.getChildByName('colliderBox')?.getComponent(UITransform)
+            ?? aiNode.getComponent(UITransform);
+        if (!aiTransform) return false;
+        const playerNode = playerMgr.player;
+        const playerTransform = playerNode?.getChildByName('colliderBox')?.getComponent(UITransform)
+            ?? playerNode?.getComponent(UITransform);
+        const aiBounds = aiTransform.getBoundingBoxToWorld();
+        const playerBounds = playerTransform?.getBoundingBoxToWorld();
+        let isInsideShelter = false;
+        for (const shelter of this.shelterAreas) {
+            if (!shelter.imgNode?.isValid || !shelter.colliderTransform?.isValid) continue;
+            const shelterBounds = shelter.colliderTransform.getBoundingBoxToWorld();
+            if (!aiBounds.intersects(shelterBounds)) continue;
+            isInsideShelter = true;
+            if (playerBounds?.intersects(shelterBounds)) return false;
+        }
+        return isInsideShelter;
     }
 
     /**缓存 shelterList 直属子节点中的 collider 和 img。 */

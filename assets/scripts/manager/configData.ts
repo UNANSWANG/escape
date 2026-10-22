@@ -64,6 +64,8 @@ export const enemyCommonConfig = {
 export const aiCommonConfig = {
     /**巡逻范围 */
     patrolRange: 600,
+    /**巡逻停留时间（秒） */
+    patrolStayTime: 2,
 }
 
 /**小兵通用配置 */

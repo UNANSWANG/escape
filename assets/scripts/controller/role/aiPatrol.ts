@@ -12,11 +12,13 @@ export class AIPatrol {
     private target = new Vec3();
     private actualMove = new Vec3();
     private retryRemaining = 0;
+    private stayRemaining = 0;
 
     reset() {
         this.path.length = 0;
         this.pathIndex = 0;
         this.retryRemaining = 0;
+        this.stayRemaining = 0;
     }
 
     update(role: roleController, dt: number) {
@@ -24,6 +26,11 @@ export class AIPatrol {
         const collider = role.node.getChildByName('colliderBox')?.getComponent(UITransform);
         if (!collider) return;
         this.retryRemaining = Math.max(0, this.retryRemaining - dt);
+        if (this.stayRemaining > 0) {
+            this.stayRemaining = Math.max(0, this.stayRemaining - dt);
+            role.playRoleAnim(roleAnimName.idle, true);
+            return;
+        }
         if (!this.path.length) {
             if (this.retryRemaining > 0) return;
             if (!this.pickTarget(role, collider)) {
@@ -41,7 +48,10 @@ export class AIPatrol {
         while (distance < 0.5) {
             this.pathIndex++;
             if (this.pathIndex >= this.path.length) {
-                this.reset();
+                this.path.length = 0;
+                this.pathIndex = 0;
+                this.stayRemaining = this.getStayTime();
+                role.playRoleAnim(roleAnimName.idle, true);
                 return;
             }
             waypoint = this.path[this.pathIndex];
@@ -95,5 +105,10 @@ export class AIPatrol {
             return true;
         }
         return false;
+    }
+
+    private getStayTime() {
+        const stayTime = Number(aiCommonConfig.patrolStayTime);
+        return Number.isFinite(stayTime) ? Math.max(0, stayTime) : 0;
     }
 }

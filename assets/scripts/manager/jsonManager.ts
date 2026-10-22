@@ -14,6 +14,7 @@ import { containerConfig } from '../json/jsonContainer';
 import { armsConfig } from '../json/jsonArms';
 import { bossConfig } from '../json/jsonBoss';
 import { mapConfig } from '../json/jsonMap';
+import { rankConfig } from '../json/jsonRank';
 const { ccclass, property } = _decorator;
 
 @ccclass('jsonManager')
@@ -42,6 +43,7 @@ export class jsonManager  {
         armsConfig.initTable();
         bossConfig.initTable();
         mapConfig.initTable();
+        rankConfig.initTable();
     }
 
     loadCall(name: string){

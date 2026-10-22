@@ -393,6 +393,7 @@
     "dropY": 300,
     "delayTime": 1,
     "offsetY": 20,
+    "floatDuration": 0.1,
     "isForward": true,
     "rotateSpeed": 5,
     "scaleOffset": 0.1,

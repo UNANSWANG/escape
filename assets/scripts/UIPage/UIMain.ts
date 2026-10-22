@@ -57,6 +57,15 @@ export class UIMain extends UIBase {
     @property(Node)
     showContent: Node = null;
 
+    @property(Label)
+    rankNameLab: Label = null;
+
+    @property(Label)
+    rankLab: Label = null;
+
+    @property(Sprite)
+    rankBar: Sprite = null;
+
     /**是否展示过复访按钮 */
     isShowRevisit = false;
     /**是否已经点击开始并等待打开匹配界面 */

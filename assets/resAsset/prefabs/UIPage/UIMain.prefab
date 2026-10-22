@@ -5331,7 +5331,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "rankLab",
+    "_name": "rankNameLab",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -5394,7 +5394,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 68,
-      "height": 54.4
+      "height": 29.2
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -5435,7 +5435,7 @@
     "_actualFontSize": 16,
     "_fontSize": 16,
     "_fontFamily": "Arial",
-    "_lineHeight": 40,
+    "_lineHeight": 20,
     "_overflow": 0,
     "_enableWrapText": true,
     "_font": null,
@@ -14907,6 +14907,15 @@
     },
     "showContent": {
       "__id__": 412
+    },
+    "rankNameLab": {
+      "__id__": 221
+    },
+    "rankLab": {
+      "__id__": 234
+    },
+    "rankBar": {
+      "__id__": 228
     },
     "_id": ""
   },

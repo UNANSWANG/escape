@@ -1,0 +1,111 @@
+
+boss1.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+1
+  rotate: false
+  xy: 634, 180
+  size: 115, 144
+  orig: 115, 144
+  offset: 0, 0
+  index: -1
+10
+  rotate: false
+  xy: 202, 227
+  size: 211, 197
+  orig: 222, 205
+  offset: 0, 8
+  index: -1
+11
+  rotate: false
+  xy: 495, 117
+  size: 137, 157
+  orig: 137, 157
+  offset: 0, 0
+  index: -1
+12
+  rotate: false
+  xy: 415, 276
+  size: 150, 158
+  orig: 150, 158
+  offset: 0, 0
+  index: -1
+13
+  rotate: false
+  xy: 2, 11
+  size: 248, 138
+  orig: 248, 169
+  offset: 0, 0
+  index: -1
+14
+  rotate: false
+  xy: 440, 437
+  size: 111, 125
+  orig: 112, 125
+  offset: 1, 0
+  index: -1
+15
+  rotate: false
+  xy: 553, 468
+  size: 102, 94
+  orig: 104, 94
+  offset: 1, 0
+  index: -1
+2
+  rotate: false
+  xy: 2, 426
+  size: 288, 586
+  orig: 288, 586
+  offset: 0, 0
+  index: -1
+3
+  rotate: false
+  xy: 440, 2
+  size: 130, 104
+  orig: 130, 105
+  offset: 0, 0
+  index: -1
+4
+  rotate: false
+  xy: 2, 151
+  size: 198, 273
+  orig: 198, 273
+  offset: 0, 0
+  index: -1
+5
+  rotate: false
+  xy: 252, 15
+  size: 186, 91
+  orig: 186, 91
+  offset: 0, 0
+  index: -1
+6
+  rotate: false
+  xy: 292, 564
+  size: 330, 448
+  orig: 381, 459
+  offset: 0, 11
+  index: -1
+7
+  rotate: false
+  xy: 252, 108
+  size: 241, 117
+  orig: 243, 118
+  offset: 0, 1
+  index: -1
+8
+  rotate: false
+  xy: 567, 326
+  size: 147, 140
+  orig: 147, 140
+  offset: 0, 0
+  index: -1
+9
+  rotate: false
+  xy: 292, 436
+  size: 146, 126
+  orig: 148, 126
+  offset: 2, 0
+  index: -1

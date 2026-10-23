@@ -233,8 +233,12 @@ export class UIHandBook extends UIBase {
         });
     }
 
-    /**刷新藏品奖励红点；仅已解锁且未领取的藏品显示 */
+    /**刷新藏品奖励显示；已领取后隐藏金币区域。 */
     private refreshCollectionReward(itemId: number, itemNode: Node) {
+        const moneyLyout = itemNode.getChildByName("moneyLyout");
+        if (moneyLyout) {
+            moneyLyout.active = !pData.isCollectionRewardClaimed(itemId);
+        }
         const red = itemNode.getChildByName("red");
         if (red) {
             red.active = pData.canClaimCollectionReward(itemId);

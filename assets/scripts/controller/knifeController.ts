@@ -1,4 +1,4 @@
-import { _decorator, Node, Vec3 } from 'cc';
+import { _decorator, Node, UITransform, Vec3 } from 'cc';
 import { enemyMgr } from '../manager/enemyManager';
 import { playerMgr } from '../manager/playerManager';
 import { weaponsAnimName, weaponsController } from './weaponsController';
@@ -53,29 +53,39 @@ export class knifeController extends weaponsController {
         this.playAttackAnim();
         originNode.updateWorldTransform();
         originNode.getWorldPosition(this.tempRoleWorldPos);
-        const rangeSquared = this.attackRange ** 2;
         // 以角色本体的当前朝向作为扇形正前方，而非武器节点自身的缩放状态。
         const facingX = this.roleAnim?.node?.scale.x < 0 ? 1 : -1;
         if (this.targetPlayer) {
             const player = playerMgr.playerComp;
             if (player?.node?.isValid && player.node.activeInHierarchy && player.hp > 0) {
-                player.node.getWorldPosition(this.tempTargetWorldPos);
-                const dx = this.tempTargetWorldPos.x - this.tempRoleWorldPos.x;
-                const dy = this.tempTargetWorldPos.y - this.tempRoleWorldPos.y;
-                if (dx * dx + dy * dy <= rangeSquared && dx * facingX >= 0) player.takeDamage(this.attack);
+                if (this.intersectsAttackArea(player.roleAnim?.node || player.node, facingX)) {
+                    player.takeDamage(this.attack);
+                }
             }
             return true;
         }
         for (const enemy of enemyMgr.allEnemies) {
             if (!enemy?.node?.isValid || !enemy.node.activeInHierarchy || enemy.hp <= 0) continue;
-            enemy.node.getWorldPosition(this.tempTargetWorldPos);
-            const offsetX = this.tempTargetWorldPos.x - this.tempRoleWorldPos.x;
-            const offsetY = this.tempTargetWorldPos.y - this.tempRoleWorldPos.y;
-            const distanceSquared = offsetX * offsetX + offsetY * offsetY;
-            if (distanceSquared > rangeSquared || offsetX * facingX < 0) continue;
+            if (!this.intersectsAttackArea(enemy.roleAnim?.node || enemy.node, facingX)) continue;
             enemy.takeDamage(this.attack);
         }
         return true;
+    }
+
+    private intersectsAttackArea(targetNode: Node, facingX: number) {
+        const targetTransform = targetNode.getComponent(UITransform);
+        if (!targetTransform) return false;
+        const bounds = targetTransform.getBoundingBoxToWorld();
+        const originX = this.tempRoleWorldPos.x;
+        const originY = this.tempRoleWorldPos.y;
+        const minX = facingX > 0 ? Math.max(bounds.x, originX) : bounds.x;
+        const maxX = facingX < 0 ? Math.min(bounds.x + bounds.width, originX) : bounds.x + bounds.width;
+        if (minX > maxX) return false;
+        const nearestX = Math.max(minX, Math.min(originX, maxX));
+        const nearestY = Math.max(bounds.y, Math.min(originY, bounds.y + bounds.height));
+        const offsetX = nearestX - originX;
+        const offsetY = nearestY - originY;
+        return offsetX * offsetX + offsetY * offsetY <= this.attackRange * this.attackRange;
     }
 
     /** 播放一次攻击动画，结束后回到待机动画。 */

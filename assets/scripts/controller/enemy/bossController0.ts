@@ -1,6 +1,6 @@
 import { _decorator, Vec3 } from 'cc';
 import { playerMgr } from '../../manager/playerManager';
-import { bossBaseController } from './bossBaseController';
+import { BossAnimName, bossBaseController } from './bossBaseController';
 const { ccclass } = _decorator;
 
 @ccclass('bossController0')
@@ -57,7 +57,7 @@ export class bossController0 extends bossBaseController {
         else {
             this.clearNavigationPath();
             this.faceTarget(target);
-            this.playAnimation('idle');
+            this.playAnimation(BossAnimName.idle);
         }
     }
 

@@ -9,6 +9,18 @@ import { UIGame } from '../../UIPage/UIGame';
 import { StaticCollisionMover } from '../staticCollisionMover';
 const { ccclass, executeInEditMode, property } = _decorator;
 
+/** Boss 通用动画名称。 */
+export enum BossAnimName {
+    /** 待机。 */
+    idle = 'idle',
+    /** 移动。 */
+    move = 'move',
+    /** 普通攻击。 */
+    attack = 'attack',
+    /** 死亡。 */
+    die = 'die',
+}
+
 /** Boss 行为状态。 */
 export enum BossState {
     /** 定点站岗。 */
@@ -145,7 +157,7 @@ export class bossBaseController extends Component {
     private attackAnimationPlaying = false;
     private isInAttackRange = false;
     /** 当前动画名称。 */
-    private currentAnim = '';
+    private currentAnim: BossAnimName | '' = '';
     /** 水平朝向：1 向右，-1 向左。 */
     private facingX = -1;
     /** 是否初始化成功。 */
@@ -200,7 +212,7 @@ export class bossBaseController extends Component {
         if (this.hpNode) this.hpNode.active = true;
         if (this.angerNode) this.angerNode.active = true;
         if (this.roleNameLab) this.roleNameLab.node.active = true;
-        this.playAnimation('idle');
+        this.playAnimation(BossAnimName.idle);
     }
 
     /** 读取配置，resetHp 决定是否回满血。 */
@@ -262,13 +274,13 @@ export class bossBaseController extends Component {
             this.updateRecovery(dt);
             if (this.moveToward(this.patrolOrigin, dt)) {
                 this.bossState = BossState.Patrol;
-                this.playAnimation('idle');
+                this.playAnimation(BossAnimName.idle);
             }
             return;
         }
         // 仅站岗时检测追击范围。
         if (this.bossState === BossState.Patrol) {
-            this.playAnimation('idle');
+            this.playAnimation(BossAnimName.idle);
             if (hasPlayer && this.chaseRange > 0
                 && this.isInsideOriginRange(player.node.worldPosition, this.chaseRange)
                 && this.isInsideOriginRange(player.node.worldPosition, this.validRange)) {
@@ -306,7 +318,7 @@ export class bossBaseController extends Component {
             this.clearNavigationPath();
             this.faceTarget(target);
             if (this.attackCooldown <= 0) this.normalAttack();
-            else this.playAnimation('idle');
+            else this.playAnimation(BossAnimName.idle);
         } else {
             this.moveToward(target, dt);
         }
@@ -385,12 +397,12 @@ export class bossBaseController extends Component {
 
     /** 播放一次攻击动画；动画结束后才解除攻击锁定并开始攻击间隔计时。 */
     private playAttackAnimation() {
-        if (!this.roleAnim?.skeletonData || !this.roleAnim.findAnimation('attack')) {
+        if (!this.roleAnim?.skeletonData || !this.roleAnim.findAnimation(BossAnimName.attack)) {
             this.finishAttackAnimation();
             return;
         }
-        this.currentAnim = 'attack';
-        const entry = this.roleAnim.setAnimation(0, 'attack', false);
+        this.currentAnim = BossAnimName.attack;
+        const entry = this.roleAnim.setAnimation(0, BossAnimName.attack, false);
         if (entry) this.roleAnim.setTrackCompleteListener(entry, () => this.finishAttackAnimation());
         else this.finishAttackAnimation();
     }
@@ -399,7 +411,7 @@ export class bossBaseController extends Component {
         if (!this.attackAnimationPlaying) return;
         this.attackAnimationPlaying = false;
         this.attackCooldown = Math.max(0.01, this.attackInterval);
-        this.playAnimation('idle');
+        this.playAnimation(BossAnimName.idle);
     }
 
     /** 翻转本体朝向。 */
@@ -413,7 +425,7 @@ export class bossBaseController extends Component {
     }
 
     /** 播放动画，force 表示强制重播。 */
-    protected playAnimation(name: string, loop = true, force = false) {
+    protected playAnimation(name: BossAnimName, loop = true, force = false) {
         if (!this.roleAnim?.skeletonData || !this.roleAnim.findAnimation(name)) return;
         if (!force && this.currentAnim === name) return;
         this.currentAnim = name;
@@ -456,7 +468,7 @@ export class bossBaseController extends Component {
         }
         let waypoint = this.navigationPath[this.navigationIndex];
         if (!waypoint) {
-            this.playAnimation('idle');
+            this.playAnimation(BossAnimName.idle);
             return false;
         }
         let distance = Math.hypot(waypoint.x - current.x, waypoint.y - current.y);
@@ -474,7 +486,7 @@ export class bossBaseController extends Component {
         const dx = (waypoint.x - current.x) / distance * step;
         const dy = (waypoint.y - current.y) / distance * step;
         this.faceTarget(waypoint);
-        this.playAnimation('move');
+        this.playAnimation(BossAnimName.move);
         if (this.moveCollider && this.gameComp) {
             this.collisionMover.moveWorld(this.node, this.moveCollider, this.gameComp, dx, dy, this.actualMove);
             // 向前进度不足 20% 时重新寻路。
@@ -517,8 +529,8 @@ export class bossBaseController extends Component {
         if (this.angerNode) this.angerNode.active = false;
         if (this.roleNameLab) this.roleNameLab.node.active = false;
         const finish = () => { if (this.isValid && this.hp <= 0) this.node.active = false; };
-        if (!this.roleAnim?.skeletonData || !this.roleAnim.findAnimation('die')) { finish(); return; }
-        const entry = this.roleAnim.setAnimation(0, 'die', false);
+        if (!this.roleAnim?.skeletonData || !this.roleAnim.findAnimation(BossAnimName.die)) { finish(); return; }
+        const entry = this.roleAnim.setAnimation(0, BossAnimName.die, false);
         this.roleAnim.setTrackCompleteListener(entry, finish);
     }
 

@@ -59,6 +59,8 @@ export interface JsonMapData {
     gameNumber: number;
     /**游戏时长 */
     gameTime: number;
+    /**ai等级列表 */
+    agentList: string;
 }
 
 

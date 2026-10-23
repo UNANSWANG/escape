@@ -814,9 +814,13 @@ export class UIGame extends UIBase {
         if (bornPoints.length < aiCount) console.warn('AI 出生点不足，将重复使用出生点');
 
         const availablePoints = bornPoints.slice();
-        // AI 暂时统一使用 0 号角色。
-        const roleId = 0;
         for (let index = 0; index < aiCount; index++) {
+            const agentData = playerMgr.matchedAIRoles[index];
+            if (!agentData) {
+                console.warn(`缺少匹配阶段的第 ${index + 1} 个 AI 配置`);
+                continue;
+            }
+            const roleId = agentData.roleId;
             if (!availablePoints.length) availablePoints.push(...bornPoints);
             const pointIndex = Math.floor(Math.random() * availablePoints.length);
             const bornPoint = availablePoints.splice(pointIndex, 1)[0];
@@ -826,7 +830,8 @@ export class UIGame extends UIBase {
             aiNode.setWorldPosition(bornPoint.worldPosition);
             this.keepNodeInsideMap(aiNode);
             const aiComp = addAIRoleScript(aiNode, roleId);
-            aiComp.init(this, roleId, 0, `人机${index + 1}`);
+            aiComp.setAIEquipment(agentData.weaponId, agentData.helmetId, agentData.armorId);
+            aiComp.init(this, roleId, agentData.skinId, `人机${index + 1}`);
             this.aiRoles.push(aiComp);
         }
         this.updateRolePerspectives();

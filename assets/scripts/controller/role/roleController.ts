@@ -52,6 +52,18 @@ export class roleController extends Component {
 
     get isPlayer(): boolean { return !this.isAI; }
 
+    /** AI 使用独立装备槽，不读取玩家装备；缺省槽位表示未装备。 */
+    private aiEquipmentIds: number[] = [-1, -1, -1, -1, -1];
+
+    setAIEquipment(weaponId: number, helmetId?: number, armorId?: number) {
+        const equippedId = (id: number) => Number.isInteger(id) && id >= 0 ? id : -1;
+        this.aiEquipmentIds = [equippedId(weaponId), -1, -1, equippedId(helmetId), equippedId(armorId)];
+    }
+
+    private get equipmentIds(): number[] {
+        return this.isAI ? this.aiEquipmentIds : pData.equipmentIds;
+    }
+
     /**角色当前游戏内 id */
     roleId = 0;
     /**角色皮肤 id */
@@ -208,7 +220,7 @@ export class roleController extends Component {
 
     /**指定武器槽是否已装备武器。 */
     private hasEquippedWeapon(slotIndex: number) {
-        const weaponId = pData.equipmentIds[slotIndex];
+        const weaponId = this.equipmentIds[slotIndex];
         return slotIndex >= 0 && slotIndex < this.weaponNodes.length
             && Number.isInteger(weaponId) && weaponId >= 0;
     }
@@ -729,7 +741,7 @@ export class roleController extends Component {
     private applyEquippedWeaponStats() {
         this.weaponNodes.forEach((node, slotIndex) => {
             if (!node) return;
-            const weaponId = pData.equipmentIds[slotIndex];
+            const weaponId = this.equipmentIds[slotIndex];
             if (!this.hasEquippedWeapon(slotIndex)) {
                 node.active = false;
                 return;
@@ -773,7 +785,7 @@ export class roleController extends Component {
         let totalDefenseValue = 0;
         let totalDamageImmunity = 0;
         for (const slotIndex of [3, 4]) {
-            const equipmentData = equipmentConfig.getDataById(pData.equipmentIds[slotIndex]);
+            const equipmentData = equipmentConfig.getDataById(this.equipmentIds[slotIndex]);
             const defenseValue = Number(equipmentData?.defenseValue);
             const damageImmunity = Number(equipmentData?.damageImmunity);
             if (Number.isFinite(defenseValue) && defenseValue > 0) {

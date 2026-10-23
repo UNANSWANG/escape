@@ -6,6 +6,10 @@ import { zoomButton } from '../extention/zoomButton';
 import { configData } from '../manager/configData';
 import { ccTools } from '../extention/generalTools';
 import { nicknameConfig } from '../json/jsonNickname';
+import { agentRoleConfig } from '../json/jsonAgentRole';
+import { mapConfig } from '../json/jsonMap';
+import { pData } from '../manager/playerData';
+import { playerMgr } from '../manager/playerManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIMatch')
@@ -58,6 +62,24 @@ export class UIMatch extends UIBase {
         ccTools.shuffleArray(this.nicknamePool);
 
         const itemCount = Number.isFinite(count) ? Math.max(1, Math.floor(count)) : 6;
+        playerMgr.matchedAIRoles = [];
+        const [mapIdx, difficultyType] = pData.selectMapData;
+        const rawTypes: unknown = mapConfig.getMapData(mapIdx, difficultyType)?.agentList;
+        let agentTypes: number[] = [];
+        try {
+            const parsed: unknown = typeof rawTypes === 'string' ? JSON.parse(rawTypes) : rawTypes;
+            if (Array.isArray(parsed)) agentTypes = parsed.filter(value => Number.isInteger(value));
+        } catch {
+            console.warn('地图 agentList 配置格式错误', rawTypes);
+        }
+        playerMgr.matchedAIRoles = agentRoleConfig.randomRoles(agentTypes, itemCount - 1);
+        console.log('本局随机人机表 ID:', playerMgr.matchedAIRoles.map(data => data.id));
+        if (playerMgr.matchedAIRoles.length !== itemCount - 1) {
+            this.isMatching = false;
+            this.titleLab.string = '未找到可用的 AI 配置';
+            console.warn('agentRole 表中没有符合地图 agentList 的 AI 配置', agentTypes);
+            return;
+        }
         for (let index = 0; index < itemCount; index++) {
             const item = instantiate(this.itemPre);
             this.contentLayout.addChild(item);
@@ -167,6 +189,7 @@ export class UIMatch extends UIBase {
     }
 
     clickCloseBtn() {
+        playerMgr.matchedAIRoles = [];
         this.onClose();
         uiMgr.openPage(UIPath.UIMain);
     }

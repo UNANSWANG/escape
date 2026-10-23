@@ -1,9 +1,13 @@
 import { _decorator, Component, Node } from 'cc';
 import { roleController } from '../controller/role/roleController';
+import type { JsonAgentRoleData } from '../json/jsonAgentRole';
 const { ccclass, property } = _decorator;
 
 @ccclass('playerManager')
 export class playerManager {
+    /** 匹配时确定的本局 AI 配置，进入游戏时直接复用。 */
+    matchedAIRoles: JsonAgentRoleData[] = [];
+
     /**玩家节点 */
     player: Node = null;
     /**当前角色实际挂载的控制脚本 */

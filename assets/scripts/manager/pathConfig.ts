@@ -134,6 +134,8 @@ export enum imgPath {
     unItem = "texture/handbook/unItem",
     /**角色类型 */
     roleType = "texture/roleStore/roleType_",
+    /**血条 */
+    hpBar = "texture/game/hpBar",
 }
 
 /**spine路径 */

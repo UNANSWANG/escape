@@ -14,6 +14,8 @@ import { JsonRoleLevelData, roleLevelConfig } from '../../json/jsonRoleLevel';
 import { weaponsConfig } from '../../json/jsonWeapons';
 import { equipmentConfig } from '../../json/jsonEquipment';
 import { pData } from '../../manager/playerData';
+import { ccTools } from '../../extention/generalTools';
+import { imgPath } from '../../manager/pathConfig';
 import type { EnemyTarget } from '../../manager/enemyManager';
 const { ccclass } = _decorator;
 
@@ -713,6 +715,9 @@ export class roleController extends Component {
         this.isPlayingDeath = false;
         this.node.active = true;
         if (this.hpNode) this.hpNode.active = true;
+        const hpBarPath = imgPath.hpBar + (this.isAI ? 2 : 1);
+        ccTools.loadImg(this.hpBar, hpBarPath);
+        ccTools.loadImg(this.baseHp, hpBarPath);
         if (this.defenseNode) this.defenseNode.active = true;
         if (this.roleNameLab) this.roleNameLab.node.active = true;
         const weaponRoot = this.node.getChildByName('weapons');

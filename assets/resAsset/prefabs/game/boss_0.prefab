@@ -179,11 +179,11 @@
       "a": 255
     },
     "_skeletonData": {
-      "__uuid__": "95feb69e-0706-4004-bc13-6c4bac3110f1",
+      "__uuid__": "5e998334-1c9b-471e-ac23-4791467f7a14",
       "__expectedType__": "sp.SkeletonData"
     },
-    "defaultSkin": "",
-    "defaultAnimation": "",
+    "defaultSkin": "default",
+    "defaultAnimation": "idle",
     "_premultipliedAlpha": true,
     "_timeScale": 1,
     "_preCacheMode": 0,
@@ -1350,6 +1350,7 @@
     "__prefab": {
       "__id__": 59
     },
+    "_previewRadius": 800,
     "_id": ""
   },
   {

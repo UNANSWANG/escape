@@ -1,4 +1,5 @@
-import { _decorator, CCInteger, Component, Label, Node, sp, Sprite, Tween, tween, UITransform, Vec3 } from 'cc';
+import { _decorator, CCFloat, CCInteger, Color, Component, Graphics, Label, Node, sp, Sprite, Tween, tween, UITransform, Vec3 } from 'cc';
+import { EDITOR, PREVIEW } from 'cc/env';
 import { bossConfig } from '../../json/jsonBoss';
 import { BossBookState, enemyCommonConfig, GameEvent, gmConfig } from '../../manager/configData';
 import { gm } from '../../manager/gm';
@@ -6,7 +7,7 @@ import { playerMgr } from '../../manager/playerManager';
 import { pData } from '../../manager/playerData';
 import { UIGame } from '../../UIPage/UIGame';
 import { StaticCollisionMover } from '../staticCollisionMover';
-const { ccclass, property } = _decorator;
+const { ccclass, executeInEditMode, property } = _decorator;
 
 /** Boss 行为状态。 */
 export enum BossState {
@@ -20,7 +21,63 @@ export enum BossState {
 
 /** Boss 通用行为基类，子类通过 id 选择配置。 */
 @ccclass('bossBaseController')
+@executeInEditMode
 export class bossBaseController extends Component {
+    private rangeGraphics: Graphics = null;
+    private isFocusedInEditor = false;
+
+    @property({ type: CCFloat, visible: false })
+    private _previewRadius = 800;
+
+    @property({ type: CCFloat, displayName: '显示范围半径', tooltip: '仅用于编辑器选中时显示圆形范围，不影响 Boss 行为' })
+    get previewRadius() {
+        return this._previewRadius;
+    }
+
+    set previewRadius(value: number) {
+        this._previewRadius = Number.isFinite(value) ? Math.max(0, value) : 0;
+        this.refreshRangePreview();
+    }
+
+    onFocusInEditor() {
+        if (!EDITOR || PREVIEW) return;
+        this.isFocusedInEditor = true;
+        this.refreshRangePreview();
+    }
+
+    onLostFocusInEditor() {
+        this.isFocusedInEditor = false;
+        this.hideRangePreview();
+    }
+
+    protected onDisable() {
+        this.isFocusedInEditor = false;
+        this.hideRangePreview();
+    }
+
+    private refreshRangePreview() {
+        if (!EDITOR || PREVIEW || !this.isFocusedInEditor) return;
+        if (this.previewRadius <= 0) {
+            this.hideRangePreview();
+            return;
+        }
+        this.rangeGraphics = this.rangeGraphics ?? this.addComponent(Graphics);
+        this.rangeGraphics.enabled = true;
+        this.rangeGraphics.clear();
+        this.rangeGraphics.lineWidth = 6;
+        this.rangeGraphics.strokeColor = new Color(89, 0, 255, 220);
+        this.rangeGraphics.circle(0, 0, this.previewRadius);
+        this.rangeGraphics.stroke();
+    }
+
+    private hideRangePreview() {
+        if (!this.rangeGraphics) return;
+        this.rangeGraphics.clear();
+        this.rangeGraphics.enabled = false;
+        this.rangeGraphics.destroy();
+        this.rangeGraphics = null;
+    }
+
     /** Boss 表编号，由子类指定。 */
     id = 0;
 
@@ -100,6 +157,7 @@ export class bossBaseController extends Component {
 
     /** 缓存节点并监听表格加载。 */
     protected onLoad(): void {
+        if (EDITOR && !PREVIEW) return;
         this.roleAnim = (this.node.getChildByName('anim') ?? this.node.getChildByName('roleAnim'))?.getComponent(sp.Skeleton);
         this.roleNameLab = (this.node.getChildByName('nameLab') ?? this.node.getChildByName('roleNameLab'))?.getComponent(Label);
         this.hpNode = this.node.getChildByName('hpNode');
@@ -116,6 +174,8 @@ export class bossBaseController extends Component {
 
     /** 移除监听并停止缓动。 */
     protected onDestroy(): void {
+        this.hideRangePreview();
+        if (EDITOR && !PREVIEW) return;
         gm.Event.off(GameEvent.loadTable, this.onTableLoad, this);
         if (this.baseHp) Tween.stopAllByTarget(this.baseHp);
         if (this.angerBase) Tween.stopAllByTarget(this.angerBase);
@@ -178,6 +238,7 @@ export class bossBaseController extends Component {
 
     /** 更新攻击计时和行为状态。 */
     protected update(dt: number): void {
+        if (EDITOR && !PREVIEW) return;
         if (!this.initialized || this.hp <= 0) return;
         if (this.bossState === BossState.Chase) {
             this.recoveryElapsed = 0;

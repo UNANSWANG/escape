@@ -39,6 +39,10 @@ export interface JsonAgentRoleData {
     helmetId: number;
     /**护甲id */
     armorId: number;
+    /**检测范围 */
+    detectRange: number;
+    /**伤害倍率 */
+    damageRatio: number;
 }
 
 

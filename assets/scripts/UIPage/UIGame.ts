@@ -437,6 +437,7 @@ export class UIGame extends UIBase {
         playerMgr.clearPlayer();
         enemyMgr.soldiersArr = [];
         enemyMgr.bossesArr = [];
+        enemyMgr.aiRoles = [];
         enemyMgr.soldierId = 0;
         enemyMgr.enemyBornPosArr = [];
         this.rockerReset(true);
@@ -567,7 +568,7 @@ export class UIGame extends UIBase {
         for (const ai of this.aiRoles) {
             this.updateRolePerspective(ai.node, this.isAIHiddenByShelter(ai.node));
         }
-        for (const soldier of enemyMgr.allEnemies) {
+        for (const soldier of [...enemyMgr.soldiersArr, ...enemyMgr.bossesArr]) {
             this.updateRolePerspective(soldier?.node);
         }
     }
@@ -831,8 +832,13 @@ export class UIGame extends UIBase {
             this.keepNodeInsideMap(aiNode);
             const aiComp = addAIRoleScript(aiNode, roleId);
             aiComp.setAIEquipment(agentData.weaponId, agentData.helmetId, agentData.armorId);
+            const detectRange = Number(agentData.detectRange);
+            aiComp.aiDetectRange = Number.isFinite(detectRange) ? Math.max(0, detectRange) : 0;
+            const damageRatio = Number(agentData.damageRatio);
+            aiComp.aiDamageRatio = Number.isFinite(damageRatio) ? Math.max(0, damageRatio) : 1;
             aiComp.init(this, roleId, agentData.skinId, `人机${index + 1}`);
             this.aiRoles.push(aiComp);
+            enemyMgr.aiRoles.push(aiComp);
         }
         this.updateRolePerspectives();
     }

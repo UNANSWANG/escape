@@ -1,9 +1,10 @@
 import { _decorator, Node, Vec2 } from 'cc';
 import { soldiersController } from '../controller/enemy/soldiersController';
 import type { bossBaseController } from '../controller/enemy/bossBaseController';
+import type { roleController } from '../controller/role/roleController';
 
 /** 玩家攻击、自动瞄准和技能共同使用的敌人类型。 */
-export type EnemyTarget = soldiersController | bossBaseController;
+export type EnemyTarget = soldiersController | bossBaseController | roleController;
 const { ccclass, property } = _decorator;
 
 @ccclass('enemyManager')
@@ -13,9 +14,11 @@ export class enemyManager {
     /** 本局生成的 Boss。 */
     bossesArr: bossBaseController[] = [];
 
+    aiRoles: roleController[] = [];
+
     /** 统一受击目标。士兵与 Boss 保留各自的管理列表。 */
     get allEnemies(): EnemyTarget[] {
-        return [...this.soldiersArr, ...this.bossesArr];
+        return [...this.soldiersArr, ...this.bossesArr, ...this.aiRoles];
     }
 
     /**小兵id(单局累加) */

@@ -1,6 +1,8 @@
 import { UITransform, Vec3 } from 'cc';
 import { aiCommonConfig } from '../../manager/configData';
 import { gm } from '../../manager/gm';
+import { playerMgr } from '../../manager/playerManager';
+import { sniperController } from '../sniperController';
 import { StaticCollisionMover } from '../staticCollisionMover';
 import { roleAnimName } from './roleController';
 import type { roleController } from './roleController';
@@ -13,12 +15,20 @@ export class AIPatrol {
     private actualMove = new Vec3();
     private retryRemaining = 0;
     private stayRemaining = 0;
+    private isChasing = false;
+    private isAttacking = false;
+    private attackCooldown = 0;
+    private replanRemaining = 0;
 
     reset() {
         this.path.length = 0;
         this.pathIndex = 0;
         this.retryRemaining = 0;
         this.stayRemaining = 0;
+        this.isChasing = false;
+        this.isAttacking = false;
+        this.attackCooldown = 0;
+        this.replanRemaining = 0;
     }
 
     update(role: roleController, dt: number) {
@@ -26,7 +36,43 @@ export class AIPatrol {
         const collider = role.node.getChildByName('colliderBox')?.getComponent(UITransform);
         if (!collider) return;
         this.retryRemaining = Math.max(0, this.retryRemaining - dt);
-        if (this.stayRemaining > 0) {
+        this.attackCooldown = Math.max(0, this.attackCooldown - dt);
+        const player = playerMgr.playerComp;
+        const hasPlayer = player?.node?.isValid && player.node.activeInHierarchy && player.hp > 0;
+        if (hasPlayer && !this.isChasing && role.aiDetectRange > 0) {
+            const current = role.node.worldPosition;
+            const target = player.node.worldPosition;
+            if ((target.x - current.x) ** 2 + (target.y - current.y) ** 2 <= role.aiDetectRange ** 2) {
+                this.isChasing = true;
+                this.path.length = 0;
+                this.pathIndex = 0;
+                this.retryRemaining = 0;
+                this.stayRemaining = 0;
+            }
+        }
+        if (this.isChasing) {
+            if (!hasPlayer) {
+                this.stopAttack(role);
+                role.playRoleAnim(roleAnimName.idle, true);
+                return;
+            }
+            if (this.updateAttack(role, player, dt)) return;
+            this.replanRemaining = Math.max(0, this.replanRemaining - dt);
+            const target = player.node.worldPosition;
+            const targetMoved = (target.x - this.target.x) ** 2 + (target.y - this.target.y) ** 2 > 24 * 24;
+            if (this.replanRemaining <= 0 && (!this.path.length || targetMoved)) {
+                this.target.set(target);
+                this.path.length = 0;
+                this.pathIndex = 0;
+                this.mover.findPath(role.node, collider, role.gameComp, this.target, this.path);
+                this.replanRemaining = 0.35;
+            }
+            if (!this.path.length) {
+                role.playRoleAnim(roleAnimName.idle, true);
+                return;
+            }
+        }
+        if (!this.isChasing && this.stayRemaining > 0) {
             this.stayRemaining = Math.max(0, this.stayRemaining - dt);
             role.playRoleAnim(roleAnimName.idle, true);
             return;
@@ -50,7 +96,7 @@ export class AIPatrol {
             if (this.pathIndex >= this.path.length) {
                 this.path.length = 0;
                 this.pathIndex = 0;
-                this.stayRemaining = this.getStayTime();
+                this.stayRemaining = this.isChasing ? 0 : this.getStayTime();
                 role.playRoleAnim(roleAnimName.idle, true);
                 return;
             }
@@ -87,6 +133,39 @@ export class AIPatrol {
                 this.retryRemaining = 1;
             }
         }
+    }
+
+    private updateAttack(role: roleController, player: roleController, dt: number) {
+        const weapon = role.weaponsController;
+        if (!weapon) return false;
+        const current = role.node.worldPosition;
+        const target = player.node.worldPosition;
+        const enterRange = Math.max(0, weapon.attackRange - Math.min(20, weapon.attackRange * 0.1));
+        const range = this.isAttacking ? weapon.attackRange : enterRange;
+        const blocked = role.gameComp.isWorldSegmentBlocked(current.x, current.y, target.x, target.y);
+        if ((target.x - current.x) ** 2 + (target.y - current.y) ** 2 > range * range || blocked) {
+            this.stopAttack(role);
+            return false;
+        }
+        this.isAttacking = true;
+        role.refreshCombatState();
+        weapon.stopResetRotationTween();
+        role.playRoleAnim(roleAnimName.idle, true);
+        role.aimGunAt(player.node);
+        if (this.attackCooldown <= 0 && role.attack(dt)) {
+            this.attackCooldown = weapon.attackInterval;
+        }
+        return true;
+    }
+
+    private stopAttack(role: roleController) {
+        if (!this.isAttacking) return;
+        this.isAttacking = false;
+        role.weaponsController?.node.getComponent(sniperController)?.cancelCharge();
+        role.clearGunAimTarget();
+        this.path.length = 0;
+        this.pathIndex = 0;
+        this.replanRemaining = 0;
     }
 
     private pickTarget(role: roleController, collider: UITransform) {

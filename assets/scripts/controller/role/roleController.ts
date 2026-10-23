@@ -52,6 +52,9 @@ export class roleController extends Component {
 
     get isPlayer(): boolean { return !this.isAI; }
 
+    aiDetectRange = 0;
+    aiDamageRatio = 1;
+
     /** AI 使用独立装备槽，不读取玩家装备；缺省槽位表示未装备。 */
     private aiEquipmentIds: number[] = [-1, -1, -1, -1, -1];
 
@@ -755,6 +758,8 @@ export class roleController extends Component {
             const weapon = this.assignWeaponController(node, weaponData.type);
             if (!weapon) return;
             weapon.applyStats(weaponData);
+            if (this.isAI) weapon.attack *= this.aiDamageRatio;
+            weapon.targetPlayer = this.isAI;
         });
 
         // 配置表可能在角色创建后才加载；重新缓存以保证切换武器时拿到新挂载的组件。

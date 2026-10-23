@@ -25,10 +25,7 @@ export class bossBaseController extends Component {
     id = 0;
 
     /** 攻击间隔（秒） */
-    attackInterval = 2;
-
-    /** 攻击时长（秒），期间禁止移动。 */
-    attackDuration = 0.5;
+    attackInterval = 1;
 
     /** 怒气上限，从 boss 表的 rage 读取。 */
     maxRage = 100;
@@ -87,8 +84,8 @@ export class bossBaseController extends Component {
     private navigationReplanRemaining = 0;
     /** 攻击冷却剩余时间。 */
     private attackCooldown = 0;
-    /** 攻击状态剩余时间。 */
-    private attackRemaining = 0;
+    /** 攻击动画是否正在播放；播放期间禁止移动和再次攻击。 */
+    private attackAnimationPlaying = false;
     private isInAttackRange = false;
     /** 当前动画名称。 */
     private currentAnim = '';
@@ -129,7 +126,7 @@ export class bossBaseController extends Component {
         this.gameComp = comp;
         this.patrolOrigin.set(this.node.worldPosition);
         this.attackCooldown = 0;
-        this.attackRemaining = 0;
+        this.attackAnimationPlaying = false;
         this.isInAttackRange = false;
         this.rage = 0;
         this.recoveryElapsed = 0;
@@ -193,13 +190,10 @@ export class bossBaseController extends Component {
         } else {
             this.rageRegenElapsed = 0;
         }
-        this.attackCooldown = Math.max(0, this.attackCooldown - dt);
+        if (!this.isAttacking) this.attackCooldown = Math.max(0, this.attackCooldown - dt);
         this.updateSkill(dt);
-        const wasAttacking = this.isAttacking;
-        this.attackRemaining = Math.max(0, this.attackRemaining - dt);
-        // 攻击期间锁定行为，冷却继续计时。
+        // 攻击动画期间锁定行为，攻击间隔从动画结束后开始计时。
         if (this.isAttacking) return;
-        if (wasAttacking) this.playAnimation('idle');
         const player = playerMgr.playerComp;
         const hasPlayer = player?.node?.isValid && player.node.activeInHierarchy && player.hp > 0;
         // 返回完成后恢复站岗。
@@ -286,7 +280,7 @@ export class bossBaseController extends Component {
 
     /** 是否处于攻击状态。 */
     get isAttacking() {
-        return this.attackRemaining > 0;
+        return this.attackAnimationPlaying;
     }
 
     /** 累计自然增长与受伤怒气，不超过上限。 */
@@ -316,10 +310,8 @@ export class bossBaseController extends Component {
             this.attackCooldown = Math.max(0.01, this.attackInterval);
             return;
         }
-        // 两套计时同时开始，均结束后才能再次攻击。
-        this.attackCooldown = Math.max(0.01, this.attackInterval);
-        this.attackRemaining = Number.isFinite(this.attackDuration) ? Math.max(0, this.attackDuration) : 0.5;
-        this.playAnimation('attack', false, true);
+        this.attackAnimationPlaying = true;
+        this.playAttackAnimation();
         const player = playerMgr.playerComp;
         if (!player?.node?.isValid || !player.node.activeInHierarchy || player.hp <= 0) return;
         const dx = player.node.worldPosition.x - this.node.worldPosition.x;
@@ -328,6 +320,25 @@ export class bossBaseController extends Component {
         if (dx * dx + dy * dy <= this.attackDistance * this.attackDistance && dx * this.facingX >= 0) {
             player.takeDamage(this.attackDamage);
         }
+    }
+
+    /** 播放一次攻击动画；动画结束后才解除攻击锁定并开始攻击间隔计时。 */
+    private playAttackAnimation() {
+        if (!this.roleAnim?.skeletonData || !this.roleAnim.findAnimation('attack')) {
+            this.finishAttackAnimation();
+            return;
+        }
+        this.currentAnim = 'attack';
+        const entry = this.roleAnim.setAnimation(0, 'attack', false);
+        if (entry) this.roleAnim.setTrackCompleteListener(entry, () => this.finishAttackAnimation());
+        else this.finishAttackAnimation();
+    }
+
+    private finishAttackAnimation() {
+        if (!this.attackAnimationPlaying) return;
+        this.attackAnimationPlaying = false;
+        this.attackCooldown = Math.max(0.01, this.attackInterval);
+        this.playAnimation('idle');
     }
 
     /** 翻转本体朝向。 */
@@ -439,7 +450,7 @@ export class bossBaseController extends Component {
             pData.setBossBookState(this.id, BossBookState.Defeated);
         }
         this.stopSkill();
-        this.attackRemaining = 0;
+        this.attackAnimationPlaying = false;
         this.clearNavigationPath();
         if (this.hpNode) this.hpNode.active = false;
         if (this.angerNode) this.angerNode.active = false;

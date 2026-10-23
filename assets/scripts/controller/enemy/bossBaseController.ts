@@ -11,6 +11,10 @@ const { ccclass, executeInEditMode, property } = _decorator;
 
 /** Boss 通用动画名称。 */
 export enum BossAnimName {
+    /** 技能第一段前摇。 */
+    skill1 = 'skill1',
+    /** 技能第二段前摇。 */
+    skill2 = 'skill2',
     /** 待机。 */
     idle = 'idle',
     /** 移动。 */
@@ -429,7 +433,7 @@ export class bossBaseController extends Component {
         if (!this.roleAnim?.skeletonData || !this.roleAnim.findAnimation(name)) return;
         if (!force && this.currentAnim === name) return;
         this.currentAnim = name;
-        this.roleAnim.setAnimation(0, name, loop);
+        return this.roleAnim.setAnimation(0, name, loop);
     }
 
     /** 清空路线，允许立即重新寻路。 */
@@ -441,7 +445,7 @@ export class bossBaseController extends Component {
     }
 
     /** 沿路线移动并处理静态碰撞。 */
-    protected moveToward(target: Vec3, dt: number) {
+    protected moveToward(target: Vec3, dt: number, animation = BossAnimName.move) {
         if (this.isAttacking) return false;
         const current = this.node.worldPosition;
         if (Math.hypot(target.x - current.x, target.y - current.y) < 0.5) {
@@ -486,7 +490,7 @@ export class bossBaseController extends Component {
         const dx = (waypoint.x - current.x) / distance * step;
         const dy = (waypoint.y - current.y) / distance * step;
         this.faceTarget(waypoint);
-        this.playAnimation(BossAnimName.move);
+        this.playAnimation(animation);
         if (this.moveCollider && this.gameComp) {
             this.collisionMover.moveWorld(this.node, this.moveCollider, this.gameComp, dx, dy, this.actualMove);
             // 向前进度不足 20% 时重新寻路。

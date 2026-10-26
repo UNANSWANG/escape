@@ -16,6 +16,12 @@ export class knifeController extends weaponsController {
     @property({ tooltip: '刀的默认角度（绝对值）' })
     defaultAngle = 10;
 
+    /** 近战武器隐藏左手节点。 */
+    protected onLoad(): void {
+        super.onLoad();
+        if (this.leftHandNode) this.leftHandNode.active = false;
+    }
+
     /**自动攻击时根据最近敌人的方向改变人物朝向，刀保持默认角度。 */
     aimAt(target: Node) {
         if (!target?.isValid) return false;

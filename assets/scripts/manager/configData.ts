@@ -135,6 +135,8 @@ export enum GameEvent {
     /**确认地图选择后通知主页刷新地图名称和难度 */
     refreshMapSelection = "refreshMapSelection",
     refreshShowContent = "refreshShowContent",
+    /**刷新角色头盔和护甲的显示状态 */
+    refreshEquipmentDisplay = "refreshEquipmentDisplay",
     /**刷新当前段位及积分 */
     refreshRank = "refreshRank",
 }

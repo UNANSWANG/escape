@@ -1,7 +1,8 @@
 import { _decorator, Component, Label, Mat4, Node, sp, Sprite, tween, Tween, UITransform, Vec3 } from 'cc';
 import { enemyMgr } from '../../manager/enemyManager';
 import { UIGame, StaticCollisionShape } from '../../UIPage/UIGame';
-import { configData, GameEvent, playerCommonConfig } from '../../manager/configData';
+import { configData, GameEvent, playerCommonConfig, SaveKey } from '../../manager/configData';
+import { ccStorageTools } from '../../extention/storageTools';
 import { gm } from '../../manager/gm';
 import { gunController } from '../gunController';
 import { knifeController } from '../knifeController';
@@ -197,6 +198,8 @@ export class roleController extends Component {
         this.weaponComps = this.weaponNodes.map((node) => node?.getComponent(weaponsController) ?? null);
         this.currentWeaponComp = this.weaponComps.find((weapon) => weapon?.node.activeInHierarchy) ?? null;
         this.gunComp = this.currentWeaponComp?.node.getComponent(gunController) ?? null;
+        this.refreshEquipmentDisplay();
+        gm.Event.on(GameEvent.refreshEquipmentDisplay, this.refreshEquipmentDisplay, this);
         gm.Event.on(GameEvent.loadTable, this.onTableLoad, this);
     }
 
@@ -205,7 +208,18 @@ export class roleController extends Component {
         if (this.baseDefense) Tween.stopAllByTarget(this.baseDefense);
         // 节点销毁阶段组件引用可能仍存在，但 component.node 已经为空，此处只释放回调数据。
         this.drugCompleteCallback = null;
+        gm.Event.off(GameEvent.refreshEquipmentDisplay, this.refreshEquipmentDisplay, this);
         gm.Event.off(GameEvent.loadTable, this.onTableLoad, this);
+    }
+
+    /** 玩家自身跟随仓库装备显示设置，AI 始终显示装备图片。 */
+    private refreshEquipmentDisplay(): void {
+        const isVisible = this.isAI || ccStorageTools.getNumberData(SaveKey.isShowEquipment) !== 1;
+        const roleAnimNode = this.node.getChildByName('roleAnim');
+        for (const name of ['head', 'armor']) {
+            const imageNode = roleAnimNode?.getChildByName(name)?.getChildByName('img');
+            if (imageNode) imageNode.active = isVisible;
+        }
     }
 
     /**当前装备的枪械组件 */

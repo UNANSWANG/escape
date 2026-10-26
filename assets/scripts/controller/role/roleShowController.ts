@@ -1,14 +1,45 @@
 import { _decorator, Component, Node, sp, UITransform, Vec3 } from 'cc';
+import { ccStorageTools } from '../../extention/storageTools';
+import { GameEvent, SaveKey } from '../../manager/configData';
+import { gm } from '../../manager/gm';
 const { ccclass } = _decorator;
 
 @ccclass('roleShowController')
 export class roleShowController extends Component {
+    /** 当前展示的是否为玩家自身数据。 */
+    private isPlayerData = true;
+
+    /** 切换展示数据来源时同步刷新装备显示。 */
+    setIsPlayerData(isPlayerData: boolean): void {
+        this.isPlayerData = isPlayerData;
+        this.refreshEquipmentDisplay();
+    }
+
     private roleAnim: sp.Skeleton = null;
     private weaponNode: Node = null;
     private weaponSocketBone: any = null;
     private tempSocketLocalPos = new Vec3();
     private tempSocketWorldPos = new Vec3();
     private tempSocketParentLocalPos = new Vec3();
+
+    protected onLoad(): void {
+        this.refreshEquipmentDisplay();
+        gm.Event.on(GameEvent.refreshEquipmentDisplay, this.refreshEquipmentDisplay, this);
+    }
+
+    protected onDestroy(): void {
+        gm.Event.off(GameEvent.refreshEquipmentDisplay, this.refreshEquipmentDisplay, this);
+    }
+
+    /** 玩家自身跟随仓库装备显示设置，AI 始终显示装备图片。 */
+    private refreshEquipmentDisplay(): void {
+        const isVisible = !this.isPlayerData || ccStorageTools.getNumberData(SaveKey.isShowEquipment) !== 1;
+        const roleAnimNode = this.node.getChildByName('roleAnim');
+        for (const name of ['head', 'armor']) {
+            const imageNode = roleAnimNode?.getChildByName(name)?.getChildByName('img');
+            if (imageNode) imageNode.active = isVisible;
+        }
+    }
 
     protected start(): void {
         this.bindWeaponToRole();

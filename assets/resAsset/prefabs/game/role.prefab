@@ -34,26 +34,26 @@
         "__id__": 72
       },
       {
-        "__id__": 158
+        "__id__": 159
       },
       {
-        "__id__": 164
+        "__id__": 165
       },
       {
-        "__id__": 170
+        "__id__": 171
       }
     ],
     "_active": true,
     "_components": [
       {
-        "__id__": 174
+        "__id__": 175
       },
       {
-        "__id__": 176
+        "__id__": 177
       }
     ],
     "_prefab": {
-      "__id__": 178
+      "__id__": 179
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -1715,11 +1715,11 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 155
+        "__id__": 156
       }
     ],
     "_prefab": {
-      "__id__": 157
+      "__id__": 158
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -2386,7 +2386,7 @@
         "__id__": 112
       }
     ],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 122
@@ -3006,7 +3006,7 @@
         "__id__": 140
       }
     ],
-    "_active": false,
+    "_active": true,
     "_components": [
       {
         "__id__": 150
@@ -3016,7 +3016,7 @@
       }
     ],
     "_prefab": {
-      "__id__": 154
+      "__id__": 155
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -3071,8 +3071,8 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 15.876,
-      "y": -1.624,
+      "x": -32.06842803955078,
+      "y": 33.78070068359375,
       "z": 0
     },
     "_lrot": {
@@ -3299,8 +3299,8 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 17.347,
-      "y": 2.752,
+      "x": 10.337813377380371,
+      "y": -2.804436206817627,
       "z": 0
     },
     "_lrot": {
@@ -3402,7 +3402,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "a6nn6obelGzaQXWjH1/w/j"
+    "fileId": "78ML+DkxJDcLrE3hIBEb5b"
   },
   {
     "__type__": "cc.Sprite",
@@ -3447,7 +3447,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "b6zxebmCRHL4uu8KCYeuCT"
+    "fileId": "4ah7NfOKxD3aCrcx+9IYSX"
   },
   {
     "__type__": "cc.PrefabInfo",
@@ -3457,7 +3457,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "7bA8zImEZPLp72pjZrV8Fm",
+    "fileId": "98WlvEIUlHvY/T+72XJv2Q",
     "instance": null,
     "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
@@ -3488,7 +3488,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "472Oz7CFlO65JXbYK4quu/"
+    "fileId": "d5vHxzMQNMyazpmUGfuIOc"
   },
   {
     "__type__": "cc.PrefabInfo",
@@ -3498,7 +3498,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "72s3q2eH9HM4S8m+xlCQFi",
+    "fileId": "fd0ycI45BJ5ocB+QMw6wsy",
     "instance": null,
     "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
@@ -3563,7 +3563,11 @@
     "_timeScale": 1,
     "_preCacheMode": 0,
     "_cacheMode": 0,
-    "_sockets": [],
+    "_sockets": [
+      {
+        "__id__": 154
+      }
+    ],
     "_useTint": false,
     "_debugMesh": false,
     "_debugBones": false,
@@ -3575,6 +3579,13 @@
   {
     "__type__": "cc.CompPrefabInfo",
     "fileId": "50hCdCueJDyZxpi0H1JN3o"
+  },
+  {
+    "__type__": "sp.Skeleton.SpineSocket",
+    "path": "root/all2/bone18/bone5/G2/zuoshou",
+    "target": {
+      "__id__": 130
+    }
   },
   {
     "__type__": "cc.PrefabInfo",
@@ -3599,7 +3610,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 156
+      "__id__": 157
     },
     "_contentSize": {
       "__type__": "cc.Size",
@@ -3642,14 +3653,14 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 159
+        "__id__": 160
       },
       {
-        "__id__": 161
+        "__id__": 162
       }
     ],
     "_prefab": {
-      "__id__": 163
+      "__id__": 164
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -3686,11 +3697,11 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "node": {
-      "__id__": 158
+      "__id__": 159
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 160
+      "__id__": 161
     },
     "_contentSize": {
       "__type__": "cc.Size",
@@ -3714,11 +3725,11 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "node": {
-      "__id__": 158
+      "__id__": 159
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 162
+      "__id__": 163
     },
     "_customMaterial": null,
     "_srcBlendFactor": 2,
@@ -3801,14 +3812,14 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 165
+        "__id__": 166
       },
       {
-        "__id__": 167
+        "__id__": 168
       }
     ],
     "_prefab": {
-      "__id__": 169
+      "__id__": 170
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -3845,11 +3856,11 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "node": {
-      "__id__": 164
+      "__id__": 165
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 166
+      "__id__": 167
     },
     "_contentSize": {
       "__type__": "cc.Size",
@@ -3873,11 +3884,11 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "node": {
-      "__id__": 164
+      "__id__": 165
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 168
+      "__id__": 169
     },
     "_customMaterial": null,
     "_srcBlendFactor": 2,
@@ -3937,11 +3948,11 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 171
+        "__id__": 172
       }
     ],
     "_prefab": {
-      "__id__": 173
+      "__id__": 174
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -3978,11 +3989,11 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "node": {
-      "__id__": 170
+      "__id__": 171
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 172
+      "__id__": 173
     },
     "_contentSize": {
       "__type__": "cc.Size",
@@ -4023,7 +4034,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 175
+      "__id__": 176
     },
     "_contentSize": {
       "__type__": "cc.Size",
@@ -4051,7 +4062,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 177
+      "__id__": 178
     },
     "_opacity": 255,
     "_id": ""

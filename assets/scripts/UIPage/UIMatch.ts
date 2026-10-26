@@ -10,6 +10,7 @@ import { agentRoleConfig } from '../json/jsonAgentRole';
 import { mapConfig } from '../json/jsonMap';
 import { pData } from '../manager/playerData';
 import { playerMgr } from '../manager/playerManager';
+import { roleShowController } from '../controller/role/roleShowController';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIMatch')
@@ -88,7 +89,7 @@ export class UIMatch extends UIBase {
         }
 
         ccTools.shuffleArray(this.matchItems);
-        this.showMatchItem(this.matchItems[0], '你');
+        this.showMatchItem(this.matchItems[0], '你', true);
         this.currentMatchIndex = 1;
         this.scheduleNextMatch();
     }
@@ -106,9 +107,9 @@ export class UIMatch extends UIBase {
         }
     }
 
-    showMatchItem(item: Node, nickname: string) {
+    showMatchItem(item: Node, nickname: string, isPlayerData = false) {
         this.setItemVisible(item, true);
-        this.addRoleShow(item);
+        this.addRoleShow(item, isPlayerData);
         const lightTransform = item.getChildByName('light')?.getComponent(UITransform);
         if (lightTransform) {
             Tween.stopAllByTarget(lightTransform);
@@ -121,7 +122,7 @@ export class UIMatch extends UIBase {
         }
     }
 
-    private async addRoleShow(item: Node) {
+    private async addRoleShow(item: Node, isPlayerData: boolean) {
         await uiMgr.preLoadGame();
         // 加载期间可能已关闭界面或重新匹配，仅为当前列表中的条目添加角色。
         if (!item?.isValid || !this.matchItems.includes(item) || !uiMgr.roleShowPrefab) {
@@ -131,7 +132,9 @@ export class UIMatch extends UIBase {
         if (!roleContent || roleContent.children.length > 0) {
             return;
         }
-        roleContent.addChild(instantiate(uiMgr.roleShowPrefab));
+        const roleNode = instantiate(uiMgr.roleShowPrefab);
+        roleNode.getComponent(roleShowController)?.setIsPlayerData(isPlayerData);
+        roleContent.addChild(roleNode);
     }
 
     private scheduleNextMatch() {

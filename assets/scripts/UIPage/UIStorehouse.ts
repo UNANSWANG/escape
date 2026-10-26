@@ -4,7 +4,8 @@ import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccStorageTools } from '../extention/storageTools';
-import { configData, QualityColorArr, SaveKey } from '../manager/configData';
+import { configData, GameEvent, QualityColorArr, SaveKey } from '../manager/configData';
+import { gm } from '../manager/gm';
 import List from '../sdk/virtualList/List';
 import { pData } from '../manager/playerData';
 import { equipmentConfig } from '../json/jsonEquipment';
@@ -873,6 +874,7 @@ export class UIStorehouse extends UIBase {
         this.isShowEquipment = this.isShowEquipment === 0 ? 1 : 0;
         ccStorageTools.setData(SaveKey.isShowEquipment, this.isShowEquipment);
         this.refreshEquipmentDisplay();
+        gm.Event.emit(GameEvent.refreshEquipmentDisplay);
     }
 
     /**点击页签 */

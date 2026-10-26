@@ -1,7 +1,7 @@
 import { _decorator, Node, UITransform, Vec3 } from 'cc';
 import { enemyMgr } from '../manager/enemyManager';
 import { playerMgr } from '../manager/playerManager';
-import { weaponsAnimName, weaponsController } from './weaponsController';
+import { WeaponStats, weaponsAnimName, weaponsController } from './weaponsController';
 const { ccclass, property } = _decorator;
 
 /**
@@ -12,6 +12,9 @@ const { ccclass, property } = _decorator;
  */
 @ccclass('knifeController')
 export class knifeController extends weaponsController {
+    private isAttacking = false;
+    private attackAnimationVersion = 0;
+
     /** 刀待机时相对水平线的角度绝对值；左右朝向会自动取相反符号。 */
     @property({ tooltip: '刀的默认角度（绝对值）' })
     defaultAngle = 10;
@@ -20,6 +23,31 @@ export class knifeController extends weaponsController {
     protected onLoad(): void {
         super.onLoad();
         if (this.leftHandNode) this.leftHandNode.active = false;
+        this.updateAttackInterval();
+    }
+
+    /** 近战攻击间隔由动画决定，不使用表中的攻击间隔。 */
+    applyStats(stats: WeaponStats) {
+        super.applyStats(stats);
+        this.updateAttackInterval();
+    }
+
+    private updateAttackInterval() {
+        const duration = this.weaponSkeleton?.findAnimation(weaponsAnimName.attack)?.duration ?? 0;
+        const timeScale = this.weaponSkeleton?.timeScale ?? 1;
+        this.attackInterval = timeScale > 0 ? duration / timeScale : 0;
+    }
+
+    protected onDisable(): void {
+        this.attackAnimationVersion++;
+        this.isAttacking = false;
+        this.playIdleAnim();
+    }
+
+    /** 攻击动画结束前，不允许外部待机请求打断攻击。 */
+    playIdleAnim() {
+        if (this.isAttacking) return;
+        super.playIdleAnim();
     }
 
     /**自动攻击时根据最近敌人的方向改变人物朝向，刀保持默认角度。 */
@@ -54,9 +82,7 @@ export class knifeController extends weaponsController {
      */
     attackInFacingDirection() {
         const originNode = this.roleAnim?.node ?? this.node.parent;
-        if (!originNode) return false;
-
-        this.playAttackAnim();
+        if (!originNode || this.isAttacking || !this.playAttackAnim()) return false;
         originNode.updateWorldTransform();
         originNode.getWorldPosition(this.tempRoleWorldPos);
         // 以角色本体的当前朝向作为扇形正前方，而非武器节点自身的缩放状态。
@@ -94,13 +120,22 @@ export class knifeController extends weaponsController {
         return offsetX * offsetX + offsetY * offsetY <= this.attackRange * this.attackRange;
     }
 
-    /** 播放一次攻击动画，结束后回到待机动画。 */
-    private playAttackAnim() {
-        if (!this.weaponSkeleton?.skeletonData) return;
+    /** 攻击动画完整播放后才解锁下一次攻击，并回到待机。 */
+    private playAttackAnim(): boolean {
+        if (!this.weaponSkeleton?.skeletonData || !this.weaponSkeleton.findAnimation(weaponsAnimName.attack)) return false;
+        const entry = this.weaponSkeleton.setAnimation(0, weaponsAnimName.attack, false);
+        if (!entry) return false;
+
+        this.updateAttackInterval();
+        this.isAttacking = true;
         this.curWeaponAnimName = weaponsAnimName.attack;
-        this.weaponSkeleton.setAnimation(0, weaponsAnimName.attack, false);
-        this.weaponSkeleton.addAnimation(0, weaponsAnimName.idle, true, 0);
-        this.curWeaponAnimName = weaponsAnimName.idle;
+        const version = ++this.attackAnimationVersion;
+        this.weaponSkeleton.setTrackCompleteListener(entry, () => {
+            if (version !== this.attackAnimationVersion) return;
+            this.isAttacking = false;
+            this.playIdleAnim();
+        });
+        return true;
     }
 
     /** 使用配置的刀默认角度，并随角色左右朝向镜像。 */

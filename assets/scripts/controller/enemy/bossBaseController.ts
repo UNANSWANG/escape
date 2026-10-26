@@ -517,7 +517,10 @@ export class bossBaseController extends Component {
         this.addRage(actualDamage);
         this.refreshHp();
         this.gameComp?.showDamageFloat(this.node, actualDamage);
-        if (this.hp <= 0) this.playDeath();
+        if (this.hp <= 0) {
+            this.gameComp?.spawnDeathBox('boss', this.node.worldPosition);
+            this.playDeath();
+        }
         return true;
     }
 

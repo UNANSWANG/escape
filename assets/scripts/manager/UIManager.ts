@@ -37,6 +37,10 @@ export class UIManager {
     soldierPrefab: Prefab = null;
     /**通过 ItemPath.roleShow 加载，供匹配界面显示角色 */
     roleShowPrefab: Prefab = null;
+    /**死亡掉落容器预制体。 */
+    soldierBoxPrefab: Prefab = null;
+    eliminationBoxPrefab: Prefab = null;
+    bossBoxPrefab: Prefab = null;
 
     /**游戏页面挂载节点 */
     private gamePage: Node = null;
@@ -134,6 +138,9 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, ItemPath.role, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.soldier, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.roleShow, false),
+            ccResTools.loadPrefab(this.resBundle, ItemPath.soldierBox, false),
+            ccResTools.loadPrefab(this.resBundle, ItemPath.eliminationBox, false),
+            ccResTools.loadPrefab(this.resBundle, ItemPath.bossBox, false),
         ]);
 
         if (prefabs.some((prefab) => !prefab)) {
@@ -149,6 +156,9 @@ export class UIManager {
         this.rolePrefab = prefabs[6];
         this.soldierPrefab = prefabs[7];
         this.roleShowPrefab = prefabs[8];
+        this.soldierBoxPrefab = prefabs[9];
+        this.eliminationBoxPrefab = prefabs[10];
+        this.bossBoxPrefab = prefabs[11];
     }
 
     /**加载游戏动画 */

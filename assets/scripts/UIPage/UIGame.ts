@@ -399,6 +399,18 @@ export class UIGame extends UIBase {
         this.leaveList = this.mapNode?.getChildByName('leaveList') ?? null;
     }
 
+    /** 在死亡位置生成对应盒子，统一归入地图容器列表。 */
+    spawnDeathBox(type: 'soldier' | 'ai' | 'boss', worldPosition: Vec3): Node | null {
+        if (!this.containerList?.isValid) return null;
+        const prefab = type === 'soldier' ? uiMgr.soldierBoxPrefab
+            : type === 'ai' ? uiMgr.eliminationBoxPrefab : uiMgr.bossBoxPrefab;
+        if (!prefab) return null;
+        const boxNode = instantiate(prefab);
+        this.containerList.addChild(boxNode);
+        boxNode.setWorldPosition(worldPosition);
+        return boxNode;
+    }
+
     clearData() {
         this.unscheduleAllCallbacks();
         this.gameCameraComp?.unlockCameraPos();

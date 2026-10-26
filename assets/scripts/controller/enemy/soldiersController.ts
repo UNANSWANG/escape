@@ -585,6 +585,7 @@ export class soldiersController extends Component {
         this.hp -= actualDamage;
         this.refreshHp();
         if (this.hp <= 0) {
+            this.gameComp?.spawnDeathBox('soldier', this.node.worldPosition);
             this.stopAttack();
             this.patrolState = PatrolState.Idle;
             this.playDeath();

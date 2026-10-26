@@ -85,11 +85,11 @@ export enum ItemPath {
     /**角色显示预制体 */
     roleShow = "prefabs/common/roleShow",
     /**淘汰盒 */
-    eliminationBox = "prefabs/common/eliminationBox",
+    eliminationBox = "prefabs/game/eliminationBox",
     /**士兵盒 */
-    soldierBox = "prefabs/common/soldierBox",
+    soldierBox = "prefabs/game/soldierBox",
     /**Boss盒 */
-    bossBox = "prefabs/common/bossBox",
+    bossBox = "prefabs/game/bossBox",
 }
 
 /**音效路径 */

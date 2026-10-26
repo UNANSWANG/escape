@@ -994,6 +994,7 @@ export class roleController extends Component {
     playDeath(onComplete?: () => void) {
         if (this.isPlayingDeath) return;
         this.isPlayingDeath = true;
+        if (this.isAI) this.gameComp?.spawnDeathBox('ai', this.node.worldPosition);
         this.finishCommonSkill1();
         this.interruptDrugUse();
         const weaponRoot = this.node.getChildByName('weapons');

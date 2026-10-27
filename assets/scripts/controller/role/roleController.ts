@@ -143,6 +143,8 @@ export class roleController extends Component {
     defenseValue = 0;
     /** 角色总免伤百分比。 */
     damageImmunity = 0;
+    /**受到治疗时的效果倍率，1 为原始治疗量，1.2 表示增加 20%。 */
+    get healingEffectScale(): number { return 1; }
     /**血量节点 */
     hpNode: Node = null;
     /**当前血量图片 */
@@ -957,7 +959,8 @@ export class roleController extends Component {
     /**恢复生命值，恢复量不会使当前生命超过上限。 */
     heal(healAmount: number) {
         if (!Number.isFinite(healAmount) || healAmount <= 0 || this.hp <= 0 || this.hp >= this.maxHp) return false;
-        const actualHeal = Math.min(healAmount, this.maxHp - this.hp);
+        const enhancedHeal = healAmount * this.healingEffectScale;
+        const actualHeal = Math.min(enhancedHeal, this.maxHp - this.hp);
         this.hp += actualHeal;
         this.refreshHp();
         if (this.isPlayer) this.gameComp?.showHealFloat(this.node, actualHeal);

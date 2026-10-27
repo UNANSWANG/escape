@@ -23,6 +23,7 @@ const { ccclass } = _decorator;
 export enum roleAnimName {
     idle = 'idle',
     move = 'move',
+    run = 'run',
     die = 'die',
     /**使用技能1 */
     useSkill1 = 'skill1',
@@ -117,7 +118,7 @@ export class roleController extends Component {
     /**是否正在按住攻击键。按住期间保持战斗状态，但不逐帧刷新计时。 */
     private isAttackHeld = false;
     /**技能1的持续时长（秒）。 */
-    skill1Duration = 3;
+    skill1Duration = 5;
     /**技能1的速度倍率 */
     skill1SpeedScale = 1.2;
     /**通用技能1是否正在生效。专属角色重写 useSkill1 时不使用此状态。 */
@@ -702,6 +703,7 @@ export class roleController extends Component {
         if (!this.isUsingCommonSkill1) return;
         this.isUsingCommonSkill1 = false;
         this.commonSkill1RemainTime = 0;
+        if (this.curRoleAnimName === roleAnimName.run) this.playRoleAnim(roleAnimName.move, true);
     }
 
     /**查找当前枪械自动攻击范围内最近的有效敌人 */
@@ -989,6 +991,7 @@ export class roleController extends Component {
     /** 播放角色本体 Spine 动画。 */
     playRoleAnim(animName: string, loop = true) {
         if (this.isPlayingDeath) return;
+        if (animName === roleAnimName.move && this.isUsingCommonSkill1) animName = roleAnimName.run;
         if (!this.roleAnim || !this.roleAnim.skeletonData || this.curRoleAnimName === animName) return;
         this.curRoleAnimName = animName;
         this.roleAnim.setAnimation(0, animName, loop);
@@ -1029,6 +1032,7 @@ export class roleController extends Component {
 
         this.isUsingCommonSkill1 = true;
         this.commonSkill1RemainTime = this.skill1Duration;
+        if (this.curRoleAnimName === roleAnimName.move) this.playRoleAnim(roleAnimName.move, true);
         this.startSkillCooldown(1);
         return true;
     }

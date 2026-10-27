@@ -90,6 +90,8 @@ export enum ItemPath {
     soldierBox = "prefabs/game/soldierBox",
     /**Boss盒 */
     bossBox = "prefabs/game/bossBox",
+    /**角色1无人机 */
+    drone = "prefabs/game/drone",
 }
 
 /**音效路径 */

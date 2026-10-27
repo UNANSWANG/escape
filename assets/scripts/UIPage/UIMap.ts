@@ -1,11 +1,11 @@
-import { _decorator, Component, Node, Animation, EventTouch, Label, Prefab, instantiate, Vec3, UITransform, Widget, tween, Tween} from 'cc';
+import { _decorator, Component, Node, Animation, EventTouch, Color, Label, Prefab, instantiate, Vec3, UITransform, Widget, tween, Tween } from 'cc';
 import { UIBase } from './UIBase';
 import { ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { pData } from '../manager/playerData';
 import { JsonMapData, mapConfig } from '../json/jsonMap';
-import { difficultyNames, GameEvent, SaveKey } from '../manager/configData';
+import { difficultyNames, mapDifficultyColorArr, GameEvent, SaveKey } from '../manager/configData';
 import { ccStorageTools } from '../extention/storageTools';
 import { gm } from '../manager/gm';
 import { ccResTools } from '../extention/resTools';
@@ -19,10 +19,10 @@ const { ccclass, property } = _decorator;
 export class UIMap extends UIBase {
     @property(Node)
     closeBtn: Node;
-    
+
     @property(Node)
     mapList: Node;
-    
+
     @property(Node)
     detailsNode: Node;
 
@@ -34,7 +34,7 @@ export class UIMap extends UIBase {
 
     @property({ tooltip: '选中地图放大后的水平偏移，负数向左' })
     mapFocusOffsetX: number = -120;
-    
+
     /**按地图节点索引保存配置，每组包含该地图的全部难度数据 */
     private mapData: JsonMapData[][] = [];
     /**界面临时选中的地图索引；-1 表示未选择，不直接修改存档 */
@@ -208,6 +208,7 @@ export class UIMap extends UIBase {
         const difficultyLab = this.detailsNode.getChildByPath('mapDifficulty/difficultyLab')?.getComponent(Label);
         if (difficultyLab) {
             difficultyLab.string = difficultyNames[this.selectedDifficultyType] ?? '';
+            difficultyLab.color = new Color(mapDifficultyColorArr[this.selectedDifficultyType] ?? '#FFFFFF');
         }
         this.detailsNode.getChildByName('tabLayout').children.forEach((tabNode, index) => {
             const selectNode = tabNode.getChildByName('select');

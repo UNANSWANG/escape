@@ -27,43 +27,6 @@ export class playerData {
     /**仓库数据，格式为 [[itemId, 数量], ...] */
     storehouseData: number[][] = [];
     private showItems: { [key: string]: { itemId: number } } = {};
-
-    getShowItem(slotIndex: number): number | null {
-        return this.showItems[`item${slotIndex}`]?.itemId ?? null;
-    }
-
-    setShowItem(slotIndex: number, itemId: number): boolean {
-        if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= 5
-            || !itemConfig.getDataByItemId(itemId)
-            || !this.storehouseData.some(([storedId, num]) => storedId === itemId && num >= 1)) {
-            return false;
-        }
-        const previousItemId = this.getShowItem(slotIndex);
-        const changes = [[itemId, -1]];
-        if (previousItemId !== null) {
-            changes.push([previousItemId, 1]);
-        }
-        this.showItems[`item${slotIndex}`] = { itemId };
-        this.fixStorehouseDatas(changes);
-        this.saveShowItems();
-        return true;
-    }
-
-    removeShowItem(slotIndex: number): boolean {
-        const itemId = this.getShowItem(slotIndex);
-        if (itemId === null) {
-            return false;
-        }
-        delete this.showItems[`item${slotIndex}`];
-        this.fixStorehouseData(itemId, 1);
-        this.saveShowItems();
-        return true;
-    }
-
-    private saveShowItems() {
-        ccStorageTools.setData(SaveKey.showItems, this.showItems);
-        gm.Event.emit(GameEvent.refreshShowContent);
-    }
     private unlockedCollections = new Set<number>();
     /**未记录的藏品默认未领取奖励 */
     private claimedCollectionRewards = new Set<number>();
@@ -82,7 +45,7 @@ export class playerData {
     /**当前关卡所看广告数 */
     adNum = 0;
     /**角色id */
-    roleId = 0;
+    roleId = 1;
     /**角色等级，按角色 id 保存；未记录的角色默认为 1 级 */
     roleLevels: { [roleId: string]: number } = {};
     /**当前皮肤id */
@@ -228,6 +191,43 @@ export class playerData {
             gm.API.setUserCloudStorage(kvDataList);
         }
 
+    }
+
+    getShowItem(slotIndex: number): number | null {
+        return this.showItems[`item${slotIndex}`]?.itemId ?? null;
+    }
+
+    setShowItem(slotIndex: number, itemId: number): boolean {
+        if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= 5
+            || !itemConfig.getDataByItemId(itemId)
+            || !this.storehouseData.some(([storedId, num]) => storedId === itemId && num >= 1)) {
+            return false;
+        }
+        const previousItemId = this.getShowItem(slotIndex);
+        const changes = [[itemId, -1]];
+        if (previousItemId !== null) {
+            changes.push([previousItemId, 1]);
+        }
+        this.showItems[`item${slotIndex}`] = { itemId };
+        this.fixStorehouseDatas(changes);
+        this.saveShowItems();
+        return true;
+    }
+
+    removeShowItem(slotIndex: number): boolean {
+        const itemId = this.getShowItem(slotIndex);
+        if (itemId === null) {
+            return false;
+        }
+        delete this.showItems[`item${slotIndex}`];
+        this.fixStorehouseData(itemId, 1);
+        this.saveShowItems();
+        return true;
+    }
+
+    private saveShowItems() {
+        ccStorageTools.setData(SaveKey.showItems, this.showItems);
+        gm.Event.emit(GameEvent.refreshShowContent);
     }
 
     /**获取仓库数据 */

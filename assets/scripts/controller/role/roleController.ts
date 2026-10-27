@@ -145,6 +145,8 @@ export class roleController extends Component {
     damageImmunity = 0;
     /**受到治疗时的效果倍率，1 为原始治疗量，1.2 表示增加 20%。 */
     get healingEffectScale(): number { return 1; }
+    /**受到伤害时的效果倍率，1 为原始伤害，0.85 表示减少 15%。 */
+    get damageTakenScale(): number { return 1; }
     /**血量节点 */
     hpNode: Node = null;
     /**当前血量图片 */
@@ -917,7 +919,7 @@ export class roleController extends Component {
     /** 受到伤害时先扣护甲再扣生命，并在角色头顶显示实际伤害数值。 */
     takeDamage(damage: number) {
         if (!Number.isFinite(damage) || damage <= 0 || this.hp <= 0) return false;
-        const damageAfterImmunity = damage * (1 - this.damageImmunity / 100);
+        const damageAfterImmunity = damage * this.damageTakenScale * (1 - this.damageImmunity / 100);
         const defenseDamage = Math.min(this.defenseValue, damageAfterImmunity);
         this.defenseValue -= defenseDamage;
 

@@ -1,6 +1,7 @@
 import { Node } from 'cc';
 import { role0 } from './role0';
 import { role1 } from './role1';
+import { role2 } from './role2';
 import { aiRole0 } from './aiRole0';
 import { aiRole1 } from './aiRole1';
 import { roleController } from './roleController';
@@ -9,6 +10,7 @@ import { roleController } from './roleController';
 const roleScriptMap: Record<number, typeof roleController> = {
     0: role0,
     1: role1,
+    2: role2,
 };
 
 const aiRoleScriptMap: Record<number, typeof roleController> = {

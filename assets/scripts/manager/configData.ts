@@ -163,7 +163,7 @@ export enum BossBookState {
 export const difficultyNames = ['常规', '机密', '绝密'];
 /**地图难度颜色 */
 export const mapDifficultyColorArr = ["#71F452", "#FFD709", "#FF0635"];
-/**飘字颜色 */
+/**飘字颜色：0 为玩家受到治疗，1 为所有目标受到伤害。 */
 export const floatColorArr = ["#71F452", "#FF0635","#8809ff",];
 
 /**存储的键值 */

@@ -1,9 +1,9 @@
-import { _decorator, AnimationClip, Camera, Canvas, EventKeyboard, EventTouch, Input, input, instantiate, KeyCode, Label, Layout, Node, UITransform, Vec2, Vec3, NodeEventType, director, TiledMap, TiledObjectGroup, Sprite, Tween, UIOpacity, tween, sp, view, Size, PolygonCollider2D } from 'cc';
+import { _decorator, AnimationClip, Camera, Canvas, Color, EventKeyboard, EventTouch, Input, input, instantiate, KeyCode, Label, Layout, Node, UITransform, Vec2, Vec3, NodeEventType, director, TiledMap, TiledObjectGroup, Sprite, Tween, UIOpacity, tween, sp, view, Size, PolygonCollider2D } from 'cc';
 import { uiMgr } from '../manager/UIManager';
 import { pData } from '../manager/playerData';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
-import { BossBookState, configData, GameEvent } from '../manager/configData';
+import { BossBookState, configData, floatColorArr, GameEvent } from '../manager/configData';
 import { gm } from '../manager/gm';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
@@ -965,6 +965,16 @@ export class UIGame extends UIBase {
 
     /**在受击目标头顶播放伤害飘字，动画结束后回收至标签对象池。 */
     showDamageFloat(targetNode: Node, damage: number) {
+        this.showHpFloat(targetNode, damage, false);
+    }
+
+    /**在玩家头顶播放实际治疗量。 */
+    showHealFloat(targetNode: Node, healAmount: number) {
+        this.showHpFloat(targetNode, healAmount, true);
+    }
+
+    /**共用生命变化飘字动画，每次设置颜色以避免对象池复用时残留。 */
+    private showHpFloat(targetNode: Node, damage: number, isHeal: boolean) {
         if (!targetNode?.isValid || !Number.isFinite(damage) || damage <= 0
             || !this.gameUINode?.isValid || !uiMgr.gameLabelItemPrefab) {
             return;
@@ -998,7 +1008,8 @@ export class UIGame extends UIBase {
         const flyOffsetX = flyDirection * (24 + Math.random() * 40);
         floatNode.setPosition(this.tempDamageFloatLocalPos.x + spawnOffsetX, this.tempDamageFloatLocalPos.y, 0);
         floatNode.setScale(0.8, 0.8, 1);
-        label.string = `${Math.ceil(damage)}`;
+        label.string = isHeal ? `+${Math.ceil(damage)}` : `${Math.ceil(damage)}`;
+        label.color = new Color(floatColorArr[isHeal ? 0 : 1]);
 
         const opacity = floatNode.getComponent(UIOpacity) || floatNode.addComponent(UIOpacity);
         opacity.opacity = 255;

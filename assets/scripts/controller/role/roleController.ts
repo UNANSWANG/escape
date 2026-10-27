@@ -955,8 +955,10 @@ export class roleController extends Component {
     /**恢复生命值，恢复量不会使当前生命超过上限。 */
     heal(healAmount: number) {
         if (!Number.isFinite(healAmount) || healAmount <= 0 || this.hp <= 0 || this.hp >= this.maxHp) return false;
-        this.hp = Math.min(this.maxHp, this.hp + healAmount);
+        const actualHeal = Math.min(healAmount, this.maxHp - this.hp);
+        this.hp += actualHeal;
         this.refreshHp();
+        if (this.isPlayer) this.gameComp?.showHealFloat(this.node, actualHeal);
         return true;
     }
 

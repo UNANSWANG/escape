@@ -1723,8 +1723,8 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": -5,
-      "y": 23,
+      "x": -3.232,
+      "y": 18.92,
       "z": 0
     },
     "_lrot": {
@@ -1766,7 +1766,7 @@
         "__id__": 84
       }
     ],
-    "_active": false,
+    "_active": true,
     "_components": [
       {
         "__id__": 94
@@ -2318,7 +2318,7 @@
       "__expectedType__": "sp.SkeletonData"
     },
     "defaultSkin": "default",
-    "defaultAnimation": "",
+    "defaultAnimation": "<None>",
     "_premultipliedAlpha": true,
     "_timeScale": 1,
     "_preCacheMode": 0,
@@ -3003,7 +3003,7 @@
         "__id__": 130
       }
     ],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 140

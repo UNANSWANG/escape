@@ -748,7 +748,7 @@ export class roleController extends Component {
         this.refreshHp(true);
         this.applyEquippedDefenseStats();
         this.originalMoveSpeed = configData.moveSpeed;
-        this.applyEquippedWeaponStats();
+        this.applyEquippedWeaponStats(true);
         this.refreshRoleSpine();
         this.initData();
         if (this.roleNameLab) this.roleNameLab.string = this.isPlayer ? '你' : (nickname || `人机${this.roleId}`);
@@ -760,7 +760,7 @@ export class roleController extends Component {
     }
 
     /** 将游戏外装备栏前三项（主武器、副武器、近战武器）应用到对应武器节点。 */
-    private applyEquippedWeaponStats() {
+    private applyEquippedWeaponStats(useDefaultPriority = false) {
         this.weaponNodes.forEach((node, slotIndex) => {
             if (!node) return;
             const weaponId = this.equipmentIds[slotIndex];
@@ -789,7 +789,8 @@ export class roleController extends Component {
         const activeSlotIndex = this.weaponNodes.findIndex((node, slotIndex) => {
             return node?.active && !!this.weaponComps[slotIndex];
         });
-        const defaultSlotIndex = activeSlotIndex >= 0
+        // 入场按主武器、副武器、近战武器的顺序选择；后续刷新配置保留当前槽位。
+        const defaultSlotIndex = !useDefaultPriority && activeSlotIndex >= 0
             ? activeSlotIndex
             : this.weaponComps.findIndex((weapon) => !!weapon);
         if (defaultSlotIndex >= 0) {

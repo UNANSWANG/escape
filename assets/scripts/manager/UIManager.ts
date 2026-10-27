@@ -41,6 +41,8 @@ export class UIManager {
     soldierBoxPrefab: Prefab = null;
     eliminationBoxPrefab: Prefab = null;
     bossBoxPrefab: Prefab = null;
+    /**role1 主动技能使用的无人机预制体。 */
+    dronePrefab: Prefab = null;
 
     /**游戏页面挂载节点 */
     private gamePage: Node = null;
@@ -141,6 +143,7 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, ItemPath.soldierBox, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.eliminationBox, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.bossBox, false),
+            ccResTools.loadPrefab(this.resBundle, ItemPath.drone, false),
         ]);
 
         if (prefabs.some((prefab) => !prefab)) {
@@ -159,6 +162,7 @@ export class UIManager {
         this.soldierBoxPrefab = prefabs[9];
         this.eliminationBoxPrefab = prefabs[10];
         this.bossBoxPrefab = prefabs[11];
+        this.dronePrefab = prefabs[12];
     }
 
     /**加载游戏动画 */

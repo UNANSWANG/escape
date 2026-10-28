@@ -749,7 +749,9 @@ export class roleController extends Component {
         this.roleLevelData = roleLevelConfig.getRoleLevelData(this.roleId, pData.getRoleLevel(this.roleId));
         if (!this.roleData) return;
 
-        //TODO 临时降低血量
+        // 按角色表设置生命上限，入场时恢复满血；无效配置沿用默认上限。
+        const configuredHp = this.roleData.hp;
+        this.maxHp = Number.isFinite(configuredHp) && configuredHp > 0 ? configuredHp : 100;
         this.hp = this.maxHp;
         this.refreshHp(true);
         this.applyEquippedDefenseStats();

@@ -43,6 +43,8 @@ export interface JsonAgentRoleData {
     detectRange: number;
     /**伤害倍率 */
     damageRatio: number;
+    /**攻击间隔倍率 */
+    attackIntervalRatio: number;
 }
 
 

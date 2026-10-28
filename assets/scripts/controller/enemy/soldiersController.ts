@@ -59,6 +59,8 @@ export class soldiersController extends Component {
     hp: number = 0;
     /**攻击伤害 */
     attackDamage: number = 0;
+    /**兵种表配置的基础移动速度。 */
+    private moveSpeed = configData.moveSpeed;
 
     ///
     ///节点
@@ -171,9 +173,11 @@ export class soldiersController extends Component {
         }
     }
 
-    /** 兵种的生命值和追击参数与武器装配分开初始化。 */
+    /** 兵种的生命值、移速和追击参数与武器装配分开初始化。 */
     private initArmsData() {
         const arms = armsConfig.getDataById(this.armsId);
+        const speed = Number(arms?.speed);
+        this.moveSpeed = Number.isFinite(speed) ? Math.max(0, speed) : configData.moveSpeed;
         if (!arms) return;
         this.maxHp = Math.max(1, arms.hp);
         this.hp = this.maxHp;
@@ -437,10 +441,7 @@ export class soldiersController extends Component {
         const targetDx = target.x - current.x;
         const targetDy = target.y - current.y;
         const targetDistance = Math.hypot(targetDx, targetDy);
-        const speedPercent = Number.isFinite(soldierCommonConfig.npcSpeedPercent)
-            ? Math.max(0, soldierCommonConfig.npcSpeedPercent) : 1;
-        const step = Math.max(0, configData.moveSpeed * speedPercent
-            * (this.weaponComp?.moveSpeedScale ?? 1) * dt);
+        const step = Math.max(0, this.moveSpeed * dt);
         if (targetDistance < 0.5) {
             this.clearNavigationPath();
             return true;

@@ -74,8 +74,6 @@ export const soldierCommonConfig = {
     patrolWaitTime: [2, 5],
     /**npc攻击力百分比 */
     npcAttackPercent: 0.2,
-    /**npc速度百分比 */
-    npcSpeedPercent: 0.8,
     /**npc的攻击范围百分比 */
     npcAttackRangePercent: 0.8,
     /**npc的射速百分比 */

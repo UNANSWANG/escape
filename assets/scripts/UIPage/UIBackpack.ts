@@ -12,6 +12,7 @@ import { configData, QualityColorArr } from '../manager/configData';
 import { ccResTools } from '../extention/resTools';
 import { weaponsConfig } from '../json/jsonWeapons';
 import { equipmentConfig } from '../json/jsonEquipment';
+import { containerController } from '../controller/containerController';
 const { ccclass, property } = _decorator;
 
 
@@ -47,6 +48,8 @@ export class UIBackpack extends UIBase {
     itemData: number[] = [];
     /** 当前容器各物品是否已经完成加载展示。 */
     private revealedItemStates: boolean[] = null;
+    /** 当前搜索的容器，用于将完成事件发给对应的场景节点。 */
+    private sourceContainer: containerController = null;
     /** 当前正在播放加载动画的物品。 */
     private loadingItem: itemController = null;
     /** 当前页面是否正在依次展示容器物品。 */
@@ -64,13 +67,14 @@ export class UIBackpack extends UIBase {
         this.discardBtn.active = false;
     }
 
-    async onUI_Open(data?: { showSearchNode?: boolean; itemData?: number[]; revealedItemStates?: boolean[] }) {
+    async onUI_Open(data?: { showSearchNode?: boolean; itemData?: number[]; revealedItemStates?: boolean[]; sourceContainer?: containerController }) {
         this.stopContainerItemReveal();
         if (this.searchNode) {
             this.searchNode.active = !!data?.showSearchNode;
         }
         this.itemData = data?.itemData ?? [];
         this.revealedItemStates = data?.showSearchNode ? (data.revealedItemStates ?? []) : null;
+        this.sourceContainer = data?.showSearchNode ? (data.sourceContainer ?? null) : null;
         this.hideAllSelect();
         if (!this.itemPrefab) {
             this.itemPrefab = await ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.item);
@@ -178,6 +182,7 @@ export class UIBackpack extends UIBase {
         this.stopContainerItemReveal();
         this.itemData = [];
         this.revealedItemStates = null;
+        this.sourceContainer = null;
         this.hideAllSelect();
         this.syncBackpackSlots();
         for (const slot of [...this.getContainerSlots(), ...this.getBackpackSlots()]) {
@@ -423,6 +428,7 @@ export class UIBackpack extends UIBase {
 
         this.loadingItem = null;
         this.isRevealingContainerItems = false;
+        if (this.sourceContainer?.isValid) this.sourceContainer.completeSearch();
     }
 
     /** 停止当前容器物品加载；未完成物品不会记录为已展示。 */
@@ -473,5 +479,6 @@ export class UIBackpack extends UIBase {
 
     onUI_Close() {
         this.stopContainerItemReveal();
+        this.sourceContainer = null;
     }
 }

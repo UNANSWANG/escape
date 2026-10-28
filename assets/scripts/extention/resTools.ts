@@ -131,11 +131,12 @@ export class resTools {
     /**
      * 加载一张图片,
      * @param $bundle 
-     * @param $path 资源路径
+     * @param $path 资源路径，默认补上 /spriteFrame 后缀
      * @param call 回调
      * @returns 
      */
     async loadPic($bundle: AssetManager.Bundle, $path: string, call?): Promise<SpriteFrame> {
+        $path += '/spriteFrame';
         let cacheKey = `local:${$path}`;
         if (this.picMap.has(cacheKey)) {
             let cached = this.picMap.get(cacheKey);

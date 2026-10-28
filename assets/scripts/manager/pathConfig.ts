@@ -144,6 +144,8 @@ export enum imgPath {
     roleType = "texture/roleStore/roleType_",
     /**血条 */
     hpBar = "texture/game/hpBar",
+    /**盒子品质光 */
+    boxLight = "texture/game/boxLight/light_",
 }
 
 /**spine路径 */

@@ -706,12 +706,13 @@ export class UIGame extends UIBase {
         const playerBounds = playerTransform.getBoundingBoxToWorld();
         this.currentContainer = null;
         for (const containerNode of this.containerList.children) {
-            if (!containerNode.activeInHierarchy || !containerNode.getComponent(containerController)) {
+            const container = containerNode.getComponent(containerController);
+            if (!containerNode.activeInHierarchy || !container) {
                 continue;
             }
-            const containerTransform = containerNode.getComponent(UITransform);
-            if (containerTransform && playerBounds.intersects(containerTransform.getBoundingBoxToWorld())) {
-                this.currentContainer = containerNode.getComponent(containerController);
+            const containerBounds = container.getInteractionBounds();
+            if (containerBounds && playerBounds.intersects(containerBounds)) {
+                this.currentContainer = container;
                 break;
             }
         }
@@ -1853,8 +1854,10 @@ export class UIGame extends UIBase {
     clickOpenContainerBtn() {
         if (!this.currentContainer) return;
         this.clearKeyboardGameInput();
+        this.currentContainer.open();
         uiMgr.openPage(UIPath.UIBackpack, {
             showSearchNode: true,
+            sourceContainer: this.currentContainer,
             itemData: this.currentContainer.getItemData(),
             revealedItemStates: this.currentContainer.getRevealedItemStates(),
         });

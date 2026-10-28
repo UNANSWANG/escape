@@ -169,7 +169,7 @@ export class UIHandBook extends UIBase {
             }
             const bgSprite = itemNode.getChildByName("bg")?.getComponent(Sprite);
             if (bgSprite) {
-                ccResTools.loadPic(uiMgr.resBundle, imgPath.bookItemBg + itemData.quality + "/spriteFrame", (spriteFrame) => {
+                ccResTools.loadPic(uiMgr.resBundle, imgPath.bookItemBg + itemData.quality, (spriteFrame) => {
                     if (bgSprite.isValid && spriteFrame) {
                         bgSprite.spriteFrame = spriteFrame;
                     }

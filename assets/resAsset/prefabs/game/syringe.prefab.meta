@@ -2,12 +2,12 @@
   "ver": "1.1.50",
   "importer": "prefab",
   "imported": true,
-  "uuid": "9ae3c165-c328-4bd4-8b4d-f0508d6d141b",
+  "uuid": "98fa6870-1230-4ce9-8697-d4054547dfab",
   "files": [
     ".json"
   ],
   "subMetas": {},
   "userData": {
-    "syncNodeName": "soldierBox"
+    "syncNodeName": "syringe"
   }
 }

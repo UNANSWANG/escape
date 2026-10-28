@@ -11,9 +11,6 @@ export enum gunAnimName { idle = 'idle', attack = 'attack', reload = 'reload' }
 /** 远程武器控制器：处理弹匣、换弹和子弹生成。 */
 @ccclass('gunController')
 export class gunController extends weaponsController {
-    /** 换弹动画时长。 */
-    reloadTime = 0;
-
     /**当前弹匣内的剩余子弹数量。 */
     private currentAmmo = 0;
     /**当前是否正在换弹。 */
@@ -32,7 +29,6 @@ export class gunController extends weaponsController {
     protected onLoad(): void {
         super.onLoad();
         this.currentAmmo = this.capacity;
-        this.updateReloadTime();
     }
 
     get ammo() { return this.currentAmmo; }
@@ -56,11 +52,6 @@ export class gunController extends weaponsController {
         super.applyStats(stats);
         this.currentAmmo = this.capacity;
         this.emitAmmoChange();
-    }
-
-    private updateReloadTime() {
-        const reloadAnimation = this.weaponSkeleton?.findAnimation(gunAnimName.reload);
-        this.reloadTime = reloadAnimation?.duration ?? 0;
     }
 
     /** 按枪口骨骼而非节点中心修正瞄准角度。 */
@@ -166,8 +157,13 @@ export class gunController extends weaponsController {
         if (this.isReloading || this.currentAmmo >= this.capacity) return false;
         this.isReloading = true;
         this.node.emit('reload-start', this.reloadTime);
-        const reloadEntry = afterCurrentAnimation ? this.queueReloadAnim() : this.playReloadAnim();
+        const reloadAnimation = this.weaponSkeleton?.findAnimation(gunAnimName.reload);
+        const reloadEntry = this.reloadTime > 0 && reloadAnimation?.duration > 0
+            ? (afterCurrentAnimation ? this.queueReloadAnim() : this.playReloadAnim())
+            : null;
         if (reloadEntry && this.weaponSkeleton) {
+            // 只调整本次换弹轨道，避免影响开火和待机动画的速度。
+            reloadEntry.timeScale = reloadAnimation.duration / this.reloadTime;
             this.weaponSkeleton.setTrackCompleteListener(reloadEntry, () => this.finishReload());
         } else {
             this.finishReload();

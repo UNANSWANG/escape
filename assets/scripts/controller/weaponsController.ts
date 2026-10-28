@@ -22,6 +22,8 @@ export interface WeaponStats {
     bulletNum?: number;
     /** 蓄力时间（秒）；仅狙击枪等蓄力武器使用。 */
     chargeTime?: number;
+    /** 换弹时间（秒）；未配置时为 0。 */
+    reloadTime?: number;
 }
 
 /**
@@ -41,6 +43,8 @@ export class weaponsController extends Component {
     attack = 5;
     /** 弹匣容量；近战武器可配置为 1。 */
     capacity = 20;
+    /** 换弹时间（秒），由 weapons 表 reloadTime 配置；未配置时为 0。 */
+    reloadTime = 0;
     /** 攻击距离：用于自动索敌，并限制远程子弹的最大飞行距离。 */
     attackRange = 600;
     /** 装备该武器时的角色移动速度倍率。 */
@@ -81,6 +85,7 @@ export class weaponsController extends Component {
         if (Number.isFinite(stats.capacity)) this.capacity = Math.max(0, Math.floor(stats.capacity));
         if (Number.isFinite(stats.attackRange)) this.attackRange = Math.max(0, stats.attackRange);
         if (Number.isFinite(stats.speed)) this.moveSpeedScale = Math.max(0, stats.speed / 100);
+        this.reloadTime = Number.isFinite(stats.reloadTime) ? Math.max(0, stats.reloadTime) : 0;
     }
 
     /** 绑定到角色 Spine 的 weapons 挂点。 */

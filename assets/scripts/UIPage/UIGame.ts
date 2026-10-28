@@ -402,7 +402,7 @@ export class UIGame extends UIBase {
     /** 在死亡位置生成对应盒子，统一归入地图容器列表。 */
     spawnDeathBox(type: 'soldier' | 'ai' | 'boss', worldPosition: Vec3): Node | null {
         if (!this.containerList?.isValid) return null;
-        const prefab = type === 'soldier' ? uiMgr.soldierBoxPrefab
+        const prefab = type === 'soldier' ? uiMgr.supplyBoxPrefab
             : type === 'ai' ? uiMgr.eliminationBoxPrefab : uiMgr.bossBoxPrefab;
         if (!prefab) return null;
         const boxNode = instantiate(prefab);

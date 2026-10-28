@@ -38,7 +38,7 @@ export class UIManager {
     /**通过 ItemPath.roleShow 加载，供匹配界面显示角色 */
     roleShowPrefab: Prefab = null;
     /**死亡掉落容器预制体。 */
-    soldierBoxPrefab: Prefab = null;
+    supplyBoxPrefab: Prefab = null;
     eliminationBoxPrefab: Prefab = null;
     bossBoxPrefab: Prefab = null;
     /**role1 主动技能使用的无人机预制体。 */
@@ -140,7 +140,7 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, ItemPath.role, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.soldier, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.roleShow, false),
-            ccResTools.loadPrefab(this.resBundle, ItemPath.soldierBox, false),
+            ccResTools.loadPrefab(this.resBundle, ItemPath.supplyBox, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.eliminationBox, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.bossBox, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.drone, false),
@@ -159,7 +159,7 @@ export class UIManager {
         this.rolePrefab = prefabs[6];
         this.soldierPrefab = prefabs[7];
         this.roleShowPrefab = prefabs[8];
-        this.soldierBoxPrefab = prefabs[9];
+        this.supplyBoxPrefab = prefabs[9];
         this.eliminationBoxPrefab = prefabs[10];
         this.bossBoxPrefab = prefabs[11];
         this.dronePrefab = prefabs[12];

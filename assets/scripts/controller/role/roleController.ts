@@ -109,9 +109,6 @@ export class roleController extends Component {
     private weaponComps: Array<weaponsController | null> = [];
     /** 主武器、副武器、近战武器的显示节点，索引与 equipmentIds 前三项一致。 */
     private weaponNodes: Array<Node | null> = [];
-    /**缓存预制体的枪械和近战骨骼，供不同槽位按武器类型切换。 */
-    private gunSkeletonData: sp.SkeletonData = null;
-    private knifeSkeletonData: sp.SkeletonData = null;
     /** 当前激活的武器控制器。 */
     private currentWeaponComp: weaponsController = null;
     /** 当前装备为枪械时的专用控制器，供既有射击和换弹逻辑使用。 */
@@ -205,8 +202,6 @@ export class roleController extends Component {
         const weaponRoot = this.node.getChildByName('weapons');
         const weaponNodes = ['weapons_0', 'weapons_1', 'weapons_2'];
         this.weaponNodes = weaponNodes.map((name) => weaponRoot?.getChildByName(name) ?? null);
-        this.gunSkeletonData = this.weaponNodes[0]?.getComponent(sp.Skeleton)?.skeletonData ?? null;
-        this.knifeSkeletonData = this.weaponNodes[2]?.getComponent(sp.Skeleton)?.skeletonData ?? null;
         this.weaponComps = this.weaponNodes.map((node) => node?.getComponent(weaponsController) ?? null);
         this.currentWeaponComp = this.weaponComps.find((weapon) => weapon?.node.activeInHierarchy) ?? null;
         this.gunComp = this.currentWeaponComp?.node.getComponent(gunController) ?? null;
@@ -847,19 +842,12 @@ export class roleController extends Component {
 
     /**
      * 按 weapons 表的类型给武器节点挂载控制脚本：0 为刀、4 为霰弹枪、5 为狙击枪，其余为普通枪械。
+     * 武器外观沿用预制体绑定的 Spine 资源。
      * 切换装备数据时统一移除旧的武器基类组件，避免同一节点同时存在多个武器控制器。
      */
     private assignWeaponController(node: Node, weaponType: number) {
         const oldWeapon = node.getComponent(weaponsController);
         if (oldWeapon) node.removeComponent(oldWeapon);
-
-        const skeleton = node.getComponent(sp.Skeleton);
-        const skeletonData = weaponType === 0 ? this.knifeSkeletonData : this.gunSkeletonData;
-        if (skeleton && skeletonData && skeleton.skeletonData !== skeletonData) {
-            // 人机近战也可能放在主武器槽，必须先换骨骼，再初始化控制器。
-            skeleton.sockets = [];
-            skeleton.skeletonData = skeletonData;
-        }
 
         if (weaponType === 0) return node.addComponent(knifeController);
         if (weaponType === 4) return node.addComponent(shotgunController);

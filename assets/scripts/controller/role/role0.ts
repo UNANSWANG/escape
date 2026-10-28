@@ -1,6 +1,7 @@
 import { _decorator } from 'cc';
 import { roleAnimName, roleController, roleType } from './roleController';
 import { enemyMgr } from '../../manager/enemyManager';
+import { gm } from '../../manager/gm';
 import type { EnemyTarget } from '../../manager/enemyManager';
 const { ccclass, property } = _decorator;
 
@@ -95,6 +96,7 @@ export class role0 extends roleController {
     }
 
     protected update(dt: number): void {
+        if (gm.isGamePause) return;
         super.update(dt);
         this.updateSkill2(dt);
     }

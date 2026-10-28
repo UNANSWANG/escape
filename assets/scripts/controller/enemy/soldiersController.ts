@@ -150,7 +150,7 @@ export class soldiersController extends Component {
     }
 
     protected update(dt: number): void {
-        if (this.hp <= 0) return;
+        if (gm.isGamePause || this.hp <= 0) return;
         this.attackCooldown = Math.max(0, this.attackCooldown - dt);
         this.updateGunReset(dt);
         if (this.soldierState === SoldierState.Chase) {

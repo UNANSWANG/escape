@@ -580,7 +580,7 @@ export class roleController extends Component {
     }
 
     protected update(dt: number): void {
-        if (this.hp <= 0) return;
+        if (gm.isGamePause || this.hp <= 0) return;
         this.updateBattleState(dt);
         this.updateCommonSkill1(dt);
         this.updateSkillCooldown(dt);
@@ -926,6 +926,7 @@ export class roleController extends Component {
 
     /** 当前武器执行一次攻击：刀使用扇形近战攻击，枪械发射子弹。 */
     attack(deltaTime = 0, fireSniperOnChargeComplete = true) {
+        if (gm.isGamePause) return false;
         const knife = this.currentWeaponComp?.node.getComponent(knifeController);
         const isAttacked = knife?.attackInFacingDirection()
             ?? this.fireBullet(deltaTime, fireSniperOnChargeComplete);

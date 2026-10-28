@@ -2,6 +2,7 @@ import { _decorator, Component, UITransform, Vec3 } from 'cc';
 import { enemyMgr } from '../manager/enemyManager';
 import { poolMgr } from '../manager/poolManager';
 import { playerMgr } from '../manager/playerManager';
+import { gm } from '../manager/gm';
 import type { StaticCollisionShape } from '../UIPage/UIGame';
 const { ccclass, property } = _decorator;
 
@@ -57,6 +58,7 @@ export class bulletController extends Component {
     }
 
     protected update(dt: number): void {
+        if (gm.isGamePause) return;
         if (this.straightMoveRemainDistance <= 0) {
             this.recycle();
             return;

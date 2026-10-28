@@ -255,7 +255,7 @@ export class bossBaseController extends Component {
     /** 更新攻击计时和行为状态。 */
     protected update(dt: number): void {
         if (EDITOR && !PREVIEW) return;
-        if (!this.initialized || this.hp <= 0) return;
+        if (gm.isGamePause || !this.initialized || this.hp <= 0) return;
         if (this.bossState === BossState.Chase) {
             this.recoveryElapsed = 0;
             this.rageRegenElapsed += Math.max(0, dt);
@@ -380,6 +380,7 @@ export class bossBaseController extends Component {
 
     /** 攻击前方半圆，开始时结算伤害。 */
     protected normalAttack() {
+        if (gm.isGamePause) return;
         if (this.isAttacking || this.isUsingSkill || this.attackCooldown > 0 || this.hp <= 0) return;
         if (this.maxRage > 0 && this.rage >= this.maxRage && this.startSkill()) {
             this.rage = 0;

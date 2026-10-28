@@ -14917,6 +14917,9 @@
     "rankBar": {
       "__id__": 228
     },
+    "roleMoveLeftRange": 250,
+    "roleMoveRightRange": 200,
+    "roleMoveSpeed": 60,
     "_id": ""
   },
   {

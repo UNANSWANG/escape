@@ -67,6 +67,23 @@ export class UIMain extends UIBase {
     @property(Sprite)
     rankBar: Sprite = null;
 
+    @property({ tooltip: '主页角色向左移动的范围' })
+    roleMoveLeftRange = 250;
+
+    @property({ tooltip: '主页角色向右移动的范围' })
+    roleMoveRightRange = 200;
+
+    @property({ tooltip: '主页角色移动速度（每秒本地坐标单位）' })
+    roleMoveSpeed = 60;
+
+    private roleOrigin = new Vec3();
+    private roleSkeleton: sp.Skeleton = null;
+    private isRoleWalking = false;
+    private isRoleResting = false;
+    private roleStateRemaining = 0;
+    private roleMoveDirection = -1;
+    private currentRoleAnimation = '';
+
     /**是否展示过复访按钮 */
     isShowRevisit = false;
     /**是否已经点击开始并等待打开匹配界面 */
@@ -76,6 +93,7 @@ export class UIMain extends UIBase {
 
     onLoad() {
         this.bindBtn();
+        if (this.roleNode) this.roleOrigin.set(this.roleNode.position);
     }
 
     onUI_Open(data?: any): void {
@@ -86,6 +104,7 @@ export class UIMain extends UIBase {
 
     onUI_Close(data?: any): void {
         this.resetStartButton();
+        this.stopRoleWalking();
         this.unscheduleAllCallbacks();
         this.removeListener();
     }
@@ -198,9 +217,77 @@ export class UIMain extends UIBase {
         }
     }
 
-    /**刷新主页角色皮肤并循环播放待机动画 */
-    private async refreshRoleAnim() {
-        
+    /**从场景中的初始位置开始左右往返移动。 */
+    private refreshRoleAnim() {
+        this.stopRoleWalking();
+        if (!this.roleNode?.isValid) return;
+        this.roleSkeleton = this.roleNode.getChildByName('roleAnim')?.getComponent(sp.Skeleton)
+            ?? this.roleNode.getComponent(sp.Skeleton);
+        this.roleNode.setPosition(this.roleOrigin);
+        this.roleMoveDirection = -1;
+        this.isRoleResting = false;
+        this.roleStateRemaining = 5 + Math.random() * 5;
+        this.isRoleWalking = true;
+        this.updateRoleFacing();
+        this.playRoleAnimation(roleAnimName.move);
+    }
+
+    protected update(dt: number): void {
+        if (!this.isRoleWalking || !this.roleNode?.isValid) return;
+        let remaining = Math.max(0, dt);
+        while (remaining > 0) {
+            const step = Math.min(remaining, this.roleStateRemaining);
+            if (!this.isRoleResting) this.moveRole(step);
+            remaining -= step;
+            this.roleStateRemaining -= step;
+            if (this.roleStateRemaining <= 0) {
+                this.isRoleResting = !this.isRoleResting;
+                this.roleStateRemaining = this.isRoleResting ? 2 : 5 + Math.random() * 5;
+                this.playRoleAnimation(this.isRoleResting ? roleAnimName.idle : roleAnimName.move);
+            }
+        }
+    }
+
+    private moveRole(dt: number) {
+        const minX = this.roleOrigin.x - Math.max(0, this.roleMoveLeftRange);
+        const maxX = this.roleOrigin.x + Math.max(0, this.roleMoveRightRange);
+        if (maxX <= minX) return;
+        let x = this.roleNode.position.x + this.roleMoveDirection * Math.max(0, this.roleMoveSpeed) * dt;
+        // 保留越过边界的移动距离，低帧率时也能连续往返。
+        while (x > maxX || x < minX) {
+            if (x > maxX) {
+                x = maxX - (x - maxX);
+                this.roleMoveDirection = -1;
+            } else {
+                x = minX + (minX - x);
+                this.roleMoveDirection = 1;
+            }
+        }
+        this.roleNode.setPosition(x, this.roleOrigin.y, this.roleOrigin.z);
+        this.updateRoleFacing();
+    }
+
+    private updateRoleFacing() {
+        // 角色原始朝向为左；翻转整个展示节点，使武器和装备一起转向。
+        const scale = this.roleNode.scale;
+        this.roleNode.setScale(-this.roleMoveDirection * Math.abs(scale.x), scale.y, scale.z);
+    }
+
+    private playRoleAnimation(animation: roleAnimName) {
+        if (!this.roleSkeleton?.skeletonData || this.currentRoleAnimation === animation) return;
+        if (!this.roleSkeleton.findAnimation(animation)) return;
+        this.roleSkeleton.setAnimation(0, animation, true);
+        this.currentRoleAnimation = animation;
+    }
+
+    private stopRoleWalking() {
+        this.isRoleWalking = false;
+        this.playRoleAnimation(roleAnimName.idle);
+        this.currentRoleAnimation = '';
+    }
+
+    protected onDisable(): void {
+        this.stopRoleWalking();
     }
 
     /**刷新红点 */

@@ -70,8 +70,7 @@ export class role0 extends roleController {
     }
 
     initData(): void {
-        //TODO 临时将滑铲缩短cd
-        this.skill1Cooldown = 1//this.roleLevelData?.passiveCd ?? 15;
+        this.skill1Cooldown = this.roleLevelData?.passiveCd ?? 15;
         this.skill2Cooldown = this.roleLevelData?.initiativeCd ?? 50;
         const values = this.getInitiativeValues();
         this.skill2MoveSpeedPercent = values[0] ?? 0;

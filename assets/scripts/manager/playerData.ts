@@ -44,7 +44,7 @@ export class playerData {
     gold = 0;
     /**当前关卡所看广告数 */
     adNum = 0;
-    /**角色id */
+    /**当前出战角色 id，保存到本地 */
     roleId = 0;
     /**角色等级，按角色 id 保存；未记录的角色默认为 1 级 */
     roleLevels: { [roleId: string]: number } = {};
@@ -609,6 +609,13 @@ export class playerData {
         }
     }
 
+    /**设置当前出战角色并保存到本地 */
+    setRoleId(roleId: number) {
+        if (!Number.isInteger(roleId) || roleId < 0) return;
+        this.roleId = roleId;
+        ccStorageTools.setData(SaveKey.roleId, this.roleId);
+    }
+
     /**获取角色等级，未记录或无效时默认为 1 级 */
     getRoleLevel(roleId: number): number {
         const level = Number(this.roleLevels[roleId]);
@@ -696,6 +703,8 @@ export class playerData {
             ? claimedCollectionRewards.filter((itemId) => Number.isInteger(itemId) && itemId >= 0)
             : []);
         this.propsNums = ccStorageTools.getData(SaveKey.props) || {};
+        const roleId = ccStorageTools.getNumberData(SaveKey.roleId);
+        this.roleId = Number.isInteger(roleId) && roleId >= 0 ? roleId : 0;
         const roleLevels = ccStorageTools.getData(SaveKey.roleLevels);
         this.roleLevels = {};
         if (roleLevels && typeof roleLevels === "object" && !Array.isArray(roleLevels)) {

@@ -42,6 +42,9 @@ export class UIRoleStore extends UIBase {
     @property(Node)
     upgradeBtn: Node;
 
+    @property(Node)
+    useBtn: Node;
+
     /**页签名称，与角色类型一一对应 */
     private tabNames: string[] = ["全部", "突击", "治疗", "肉盾", "功能"];
     /**-1 表示全部，其余对应角色表的 type */
@@ -70,7 +73,7 @@ export class UIRoleStore extends UIBase {
             this.initTabs();
             this.tabsInitialized = true;
         }
-        this.clickTabBtn(this.selectedRoleType);
+        this.clickTabBtn(-1);
     }
 
     private initTabs() {
@@ -91,10 +94,11 @@ export class UIRoleStore extends UIBase {
         });
     }
 
-    /**刷新当前类型的角色头像，并默认选择表中第一个角色 */
+    /**刷新当前类型的角色头像，优先选择当前出战角色 */
     private async refreshRoleAvatars() {
         const refreshId = ++this.roleAvatarRefreshId;
         this.selectedRole = null;
+        this.refreshUseButton();
         this.roleAvatarItems = [];
         this.clickPageTab(this.selectedPageIndex);
         this.refreshRoleSwitchButtons();
@@ -132,7 +136,8 @@ export class UIRoleStore extends UIBase {
             const button = itemNode.getComponent(zoomButton) ?? itemNode.addComponent(zoomButton);
             button.onClick = this.clickRoleAvatar.bind(this, role.roleId);
         });
-        this.clickRoleAvatar(roles[0].roleId);
+        const defaultRole = roles.find((role) => role.roleId === pData.roleId) ?? roles[0];
+        this.clickRoleAvatar(defaultRole.roleId);
     }
 
     bindBtn() {
@@ -144,6 +149,10 @@ export class UIRoleStore extends UIBase {
         const upgradeButton = this.upgradeBtn?.getComponent(zoomButton) ?? this.upgradeBtn?.addComponent(zoomButton);
         if (upgradeButton) {
             upgradeButton.onClick = this.clickUpgradeBtn.bind(this);
+        }
+        const useButton = this.useBtn?.getComponent(zoomButton) ?? this.useBtn?.addComponent(zoomButton);
+        if (useButton) {
+            useButton.onClick = this.clickUseBtn.bind(this);
         }
         this.tabList.forEach((tabNode, index) => {
             tabNode.on(Node.EventType.TOUCH_END, () => {
@@ -178,9 +187,25 @@ export class UIRoleStore extends UIBase {
             return;
         }
         this.selectedRole = selectedItem.roleData;
+        this.refreshUseButton();
         this.roleAvatarItems.forEach((item) => item.setSelected(item === selectedItem));
         this.clickPageTab(this.selectedPageIndex);
         this.refreshRoleSwitchButtons();
+    }
+
+    /**使用当前浏览的角色，下次出战时生效 */
+    private clickUseBtn() {
+        const roleId = this.selectedRole?.roleId;
+        if (roleId === undefined || roleId === pData.roleId) return;
+        pData.setRoleId(roleId);
+        this.refreshUseButton();
+    }
+
+    /**当前浏览角色已出战或尚未选中角色时，隐藏使用按钮 */
+    private refreshUseButton() {
+        if (this.useBtn) {
+            this.useBtn.active = !!this.selectedRole && this.selectedRole.roleId !== pData.roleId;
+        }
     }
 
     /**切换详情窗口页签：0 基础信息，1 皮肤 */

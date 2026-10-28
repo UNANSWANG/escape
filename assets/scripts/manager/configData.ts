@@ -199,6 +199,8 @@ export enum SaveKey {
     equipmentIds = "equipmentIds",
     /**角色等级，按角色 id 保存 */
     roleLevels = "roleLevels",
+    /**当前出战角色 id */
+    roleId = "roleId",
     /**引导 */
     guide = "guide",
     /**音效开关 */

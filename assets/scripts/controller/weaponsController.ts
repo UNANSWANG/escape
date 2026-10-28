@@ -193,7 +193,7 @@ export class weaponsController extends Component {
 
     /** 默认待机角度；子类可按各自武器类型覆盖。 */
     protected getDefaultAngle(): number {
-        return this.node.scale.x < 0 ? 10 : -10;
+        return 0;
     }
 
     stopResetRotationTween() {

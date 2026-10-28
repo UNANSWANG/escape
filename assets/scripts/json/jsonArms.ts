@@ -31,6 +31,8 @@ export interface JsonArmsData {
     weaponId: number;
     /**血量 */
     hp: number;
+    /**移动速度 */
+    speed: number;
     /**检测范围 */
     detectRange: number;
     /**追击时间 */

@@ -15,9 +15,8 @@ export class knifeController extends weaponsController {
     private isAttacking = false;
     private attackAnimationVersion = 0;
 
-    /** 刀待机时相对水平线的角度绝对值；左右朝向会自动取相反符号。 */
-    @property({ tooltip: '刀的默认角度（绝对值）' })
-    defaultAngle = 10;
+    /** 刀待机时相对水平线的角度。 */
+    defaultAngle = 0;
 
     /** 近战武器隐藏左手节点。 */
     protected onLoad(): void {
@@ -138,9 +137,8 @@ export class knifeController extends weaponsController {
         return true;
     }
 
-    /** 使用配置的刀默认角度，并随角色左右朝向镜像。 */
+    /** 使用配置的刀默认角度。 */
     protected getDefaultAngle(): number {
-        const angle = Math.abs(this.defaultAngle);
-        return this.node.scale.x < 0 ? angle : -angle;
+        return this.defaultAngle;
     }
 }

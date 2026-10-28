@@ -78,5 +78,7 @@ export interface JsonWeaponsData {
     bulletNum: number;
     /**蓄力时间（狙击枪） */
     chargeTime: number;
+    /**换弹时间 */
+    reloadTime: number;
 }
 

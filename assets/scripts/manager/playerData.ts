@@ -45,7 +45,7 @@ export class playerData {
     /**当前关卡所看广告数 */
     adNum = 0;
     /**角色id */
-    roleId = 2;
+    roleId = 0;
     /**角色等级，按角色 id 保存；未记录的角色默认为 1 级 */
     roleLevels: { [roleId: string]: number } = {};
     /**当前皮肤id */

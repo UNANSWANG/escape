@@ -27,6 +27,14 @@ export class roleShowController extends Component {
         gm.Event.on(GameEvent.refreshEquipmentDisplay, this.refreshEquipmentDisplay, this);
     }
 
+    /**每次显示角色时，角色和展示武器都默认循环播放待机动画。 */
+    protected onEnable(): void {
+        for (const name of ['roleAnim', 'weapon']) {
+            const skeleton = this.node.getChildByName(name)?.getComponent(sp.Skeleton);
+            if (skeleton?.skeletonData) skeleton.setAnimation(0, 'idle', true);
+        }
+    }
+
     protected onDestroy(): void {
         gm.Event.off(GameEvent.refreshEquipmentDisplay, this.refreshEquipmentDisplay, this);
     }
@@ -45,11 +53,11 @@ export class roleShowController extends Component {
         this.bindWeaponToRole();
     }
 
-    /** 将 weapon 节点绑定到角色 Spine 的 G 挂点；更换角色骨骼后需重新调用。 */
+    /** 将 weapon 节点绑定到角色 Spine 的 weapons 挂点；更换角色骨骼后需重新调用。 */
     bindWeaponToRole(roleAnim: sp.Skeleton = this.node.getChildByName('roleAnim')?.getComponent(sp.Skeleton)) {
         this.roleAnim = roleAnim;
         this.weaponNode = this.node.getChildByName('weapon');
-        this.weaponSocketBone = this.roleAnim?.findBone('G') ?? null;
+        this.weaponSocketBone = this.roleAnim?.findBone('weapons') ?? null;
         if (!this.weaponNode || !this.weaponSocketBone) return false;
         this.syncWeaponPosition();
         return true;

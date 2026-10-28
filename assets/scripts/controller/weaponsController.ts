@@ -83,10 +83,10 @@ export class weaponsController extends Component {
         if (Number.isFinite(stats.speed)) this.moveSpeedScale = Math.max(0, stats.speed / 100);
     }
 
-    /** 绑定到角色 Spine 的 G 挂点。 */
+    /** 绑定到角色 Spine 的 weapons 挂点。 */
     bindToRole(roleAnim: sp.Skeleton) {
         this.roleAnim = roleAnim;
-        this.weaponSocketBone = this.roleAnim?.findBone('G') ?? null;
+        this.weaponSocketBone = this.roleAnim?.findBone('weapons') ?? null;
         if (!this.weaponSocketBone) return false;
         this.syncToRoleSocket();
         return true;

@@ -162,6 +162,8 @@ export enum spinePath {
     dizziness = "spine/dizziness/vertigo",
     /**手指点击 */
     click = "spine/click/dianji",
+    /**宝石 */
+    gem = "spine/gem/gem",
 }
 
 /**动画路径 */

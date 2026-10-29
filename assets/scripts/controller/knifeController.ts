@@ -18,10 +18,10 @@ export class knifeController extends weaponsController {
     /** 刀待机时相对水平线的角度。 */
     defaultAngle = 0;
 
-    /** 近战武器隐藏左手节点。 */
+    /** 近战武器隐藏 right 节点，left 保持显示。 */
     protected onLoad(): void {
         super.onLoad();
-        if (this.leftHandNode) this.leftHandNode.active = false;
+        if (this.rightHandNode) this.rightHandNode.active = false;
         this.updateAttackInterval();
     }
 

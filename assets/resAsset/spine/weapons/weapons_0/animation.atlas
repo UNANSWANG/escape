@@ -1,13 +1,13 @@
 
 animation.png
-size: 512,512
+size: 1024,1024
 format: RGBA8888
 filter: Linear,Linear
 repeat: none
 weapons_0
   rotate: false
-  xy: 2, 369
-  size: 505, 138
-  orig: 505, 138
+  xy: 2, 414
+  size: 568, 156
+  orig: 568, 156
   offset: 0, 0
   index: -1

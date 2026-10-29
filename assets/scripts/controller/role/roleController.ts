@@ -1,4 +1,4 @@
-import { _decorator, Component, Label, Mat4, Node, sp, Sprite, tween, Tween, UITransform, Vec3 } from 'cc';
+import { _decorator, Component, instantiate, Label, Mat4, Node, sp, Sprite, tween, Tween, UITransform, Vec3 } from 'cc';
 import { enemyMgr } from '../../manager/enemyManager';
 import { UIGame, StaticCollisionShape } from '../../UIPage/UIGame';
 import { configData, GameEvent, playerCommonConfig, SaveKey } from '../../manager/configData';
@@ -16,6 +16,7 @@ import { weaponsConfig } from '../../json/jsonWeapons';
 import { equipmentConfig } from '../../json/jsonEquipment';
 import { pData } from '../../manager/playerData';
 import { ccTools } from '../../extention/generalTools';
+import { syringeController } from '../syringeController';
 import { imgPath } from '../../manager/pathConfig';
 import type { EnemyTarget } from '../../manager/enemyManager';
 const { ccclass } = _decorator;
@@ -104,6 +105,10 @@ export class roleController extends Component {
     private remainTimeLab: Label = null;
     /** 打药剩余时间环形进度。 */
     private remainCircle: Sprite = null;
+    /**角色身上的特效统一挂在此节点下。 */
+    effectNode: Node = null;
+    /**首次打药时创建，后续只重播和隐藏。 */
+    private syringeComp: syringeController = null;
     /** 枪节点上的枪械控制器。 */
     /** 武器根节点下的全部武器控制器：主武器、副武器、近战武器。 */
     private weaponComps: Array<weaponsController | null> = [];
@@ -182,6 +187,7 @@ export class roleController extends Component {
 
     /** 缓存角色自身与子节点组件。 */
     protected onLoad(): void {
+        this.effectNode = this.node.getChildByName('effectNode');
         this.moveCollider = this.node.getChildByName('colliderBox')?.getComponent(UITransform);
         if (!this.moveCollider) console.warn('角色预制体缺少 colliderBox 或 UITransform，无法进行移动碰撞检测');
         this.roleAnim = this.node.getChildByName('roleAnim')?.getComponent(sp.Skeleton);
@@ -585,7 +591,7 @@ export class roleController extends Component {
     /**组件停用时终止通用技能1，避免加速状态遗留到下次启用。 */
     protected onDisable(): void {
         this.finishCommonSkill1();
-        this.interruptDrugUse();
+        this.clearDrugUse();
     }
 
     /**开始使用药品；大小药品共用同一个状态，期间不能再次使用。 */
@@ -598,20 +604,33 @@ export class roleController extends Component {
         this.drugHealPercent = Math.max(0, healPercent);
         this.drugCompleteCallback = complete ?? null;
         this.refreshDrugRemainTime();
+        if (this.drugDuration > 0) this.playDrugEffect(this.drugDuration);
         if (this.drugRemainTime <= 0) this.finishDrugUse();
         return true;
     }
 
-    /**动作发生时中断打药；移动、切换武器及界面操作不调用此方法。 */
+    /**受到伤害或执行动作时中断打药，仅玩家显示中断提示。 */
     interruptDrugUse() {
         if (!this.isUsingDrug) return false;
         this.clearDrugUse();
+        if (this.isPlayer) uiMgr.showTips('治疗被打断');
         return true;
     }
 
     /**当前是否处于打药状态。 */
     get usingDrug() {
         return this.isUsingDrug;
+    }
+
+    /**注射器仅实例化一次，播放时传入本次完整打药时长。 */
+    private playDrugEffect(duration: number) {
+        if (!this.effectNode?.isValid || !uiMgr.syringePrefab) return;
+        if (!this.syringeComp?.isValid) {
+            const effect = instantiate(uiMgr.syringePrefab);
+            this.effectNode.addChild(effect);
+            this.syringeComp = effect.getComponent(syringeController) ?? effect.addComponent(syringeController);
+        }
+        this.syringeComp.play(duration);
     }
 
     /**更新打药倒计时；游戏暂停时冻结。 */
@@ -650,6 +669,7 @@ export class roleController extends Component {
 
     /**清理打药状态与头顶倒计时。 */
     private clearDrugUse() {
+        if (this.syringeComp?.isValid) this.syringeComp.hide();
         this.isUsingDrug = false;
         this.drugRemainTime = 0;
         this.drugDuration = 0;
@@ -941,6 +961,7 @@ export class roleController extends Component {
         if (defenseDamage > 0) this.refreshDefense();
         if (hpDamage > 0) this.refreshHp();
         const actualDamage = defenseDamage + hpDamage;
+        if (actualDamage > 0) this.interruptDrugUse();
         this.gameComp?.showDamageFloat(this.node, actualDamage);
         if (this.hp <= 0) {
             if (this.isPlayer && this.gameComp) this.gameComp.onPlayerDead();

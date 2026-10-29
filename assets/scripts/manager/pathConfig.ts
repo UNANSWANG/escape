@@ -94,6 +94,8 @@ export enum ItemPath {
     drone = "prefabs/game/drone",
     /**技能范围指示器 */
     skillRange = "prefabs/game/skillRange",
+    /**注射器 */
+    syringe = "prefabs/game/syringe",
 }
 
 /**音效路径 */

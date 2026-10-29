@@ -45,6 +45,8 @@ export class UIManager {
     dronePrefab: Prefab = null;
     /** Shared circular skill warning prefab. */
     skillRangePrefab: Prefab = null;
+    /**角色打药使用的注射器预制体。 */
+    syringePrefab: Prefab = null;
 
     /**游戏页面挂载节点 */
     private gamePage: Node = null;
@@ -147,6 +149,7 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, ItemPath.bossBox, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.drone, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.skillRange, false),
+            ccResTools.loadPrefab(this.resBundle, ItemPath.syringe, false),
         ]);
 
         if (prefabs.some((prefab) => !prefab)) {
@@ -167,6 +170,7 @@ export class UIManager {
         this.bossBoxPrefab = prefabs[11];
         this.dronePrefab = prefabs[12];
         this.skillRangePrefab = prefabs[13];
+        this.syringePrefab = prefabs[14];
     }
 
     /**加载游戏动画 */

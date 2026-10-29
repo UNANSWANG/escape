@@ -43,6 +43,8 @@ export class UIManager {
     bossBoxPrefab: Prefab = null;
     /**role1 主动技能使用的无人机预制体。 */
     dronePrefab: Prefab = null;
+    /** Shared circular skill warning prefab. */
+    skillRangePrefab: Prefab = null;
 
     /**游戏页面挂载节点 */
     private gamePage: Node = null;
@@ -144,6 +146,7 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, ItemPath.eliminationBox, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.bossBox, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.drone, false),
+            ccResTools.loadPrefab(this.resBundle, ItemPath.skillRange, false),
         ]);
 
         if (prefabs.some((prefab) => !prefab)) {
@@ -163,6 +166,7 @@ export class UIManager {
         this.eliminationBoxPrefab = prefabs[10];
         this.bossBoxPrefab = prefabs[11];
         this.dronePrefab = prefabs[12];
+        this.skillRangePrefab = prefabs[13];
     }
 
     /**加载游戏动画 */

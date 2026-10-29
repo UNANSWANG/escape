@@ -1,4 +1,6 @@
-import { _decorator, Vec3 } from 'cc';
+import { _decorator, instantiate, Node, Vec3 } from 'cc';
+import { uiMgr } from '../../manager/UIManager';
+import { skillRangeController } from '../indicator/skillRangeController';
 import { playerMgr } from '../../manager/playerManager';
 import { BossAnimName, bossBaseController } from './bossBaseController';
 const { ccclass } = _decorator;
@@ -27,6 +29,7 @@ export class bossController0 extends bossBaseController {
     private isInSkillRange = false;
     private skillStage = SkillStage.None;
     private skillVersion = 0;
+    private skillRangeNode: Node = null;
 
     get isUsingSkill(): boolean { return this.skillStage !== SkillStage.None; }
 
@@ -54,6 +57,7 @@ export class bossController0 extends bossBaseController {
     private playSkillWindup(name: BossAnimName, speed: number, version: number, complete: () => void) {
         const finish = () => {
             if (!this.isValid || this.hp <= 0 || this.skillVersion !== version || !this.isUsingSkill) return;
+            if (name === BossAnimName.skill1) this.clearSkillRange();
             complete();
         };
         const entry = this.playAnimation(name, false, true);
@@ -62,6 +66,10 @@ export class bossController0 extends bossBaseController {
             return;
         }
         entry.timeScale = speed;
+        if (name === BossAnimName.skill1) {
+            const duration = Math.max(0, entry.animationEnd - entry.animationStart);
+            this.showSkillRange(duration / Math.max(0.01, speed * this.roleAnim.timeScale));
+        }
         this.roleAnim.setTrackCompleteListener(entry, finish);
     }
 
@@ -79,6 +87,7 @@ export class bossController0 extends bossBaseController {
     }
 
     protected stopSkill(): void {
+        this.clearSkillRange();
         this.skillVersion++;
         this.skillStage = SkillStage.None;
         this.skillRemaining = 0;
@@ -86,7 +95,38 @@ export class bossController0 extends bossBaseController {
         this.isInSkillRange = false;
     }
 
-    /** 追到技能半径的 80%，避免停在伤害范围外。 */
+    /** Show the warning below the Boss while skill1 charges. */
+    private showSkillRange(duration: number): void {
+        this.clearSkillRange();
+        if (!uiMgr.skillRangePrefab) return;
+        this.skillRangeNode = instantiate(uiMgr.skillRangePrefab);
+        this.node.addChild(this.skillRangeNode);
+        this.skillRangeNode.setPosition(0, 0, 0);
+        this.skillRangeNode.setSiblingIndex(0);
+        const controller = this.skillRangeNode.getComponent(skillRangeController)
+            ?? this.skillRangeNode.addComponent(skillRangeController);
+        controller.init(this.skillRadius, duration);
+    }
+
+    private clearSkillRange(): void {
+        if (this.skillRangeNode?.isValid) {
+            this.skillRangeNode.active = false;
+            this.skillRangeNode.destroy();
+        }
+        this.skillRangeNode = null;
+    }
+
+    protected onDisable(): void {
+        this.stopSkill();
+        super.onDisable();
+    }
+
+    protected onDestroy(): void {
+        this.clearSkillRange();
+        super.onDestroy();
+    }
+
+    /** Chase to 80% of the skill radius. */
     protected chaseDuringSkill(target: Vec3, dt: number): void {
         // 前摇期间站定，不允许移动逻辑覆盖 skill1、skill2 动画。
         if (this.skillStage !== SkillStage.Active) return;

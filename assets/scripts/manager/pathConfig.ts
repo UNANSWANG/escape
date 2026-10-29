@@ -85,13 +85,15 @@ export enum ItemPath {
     /**角色显示预制体 */
     roleShow = "prefabs/common/roleShow",
     /**淘汰盒 */
-    eliminationBox = "prefabs/game/eliminationBox",
+    eliminationBox = "prefabs/game/box/eliminationBox",
     /**物资盒 */
-    supplyBox = "prefabs/game/supplyBox",
+    supplyBox = "prefabs/game/box/supplyBox",
     /**Boss盒 */
-    bossBox = "prefabs/game/bossBox",
+    bossBox = "prefabs/game/box/bossBox",
     /**角色1无人机 */
     drone = "prefabs/game/drone",
+    /**技能范围指示器 */
+    skillRange = "prefabs/game/skillRange",
 }
 
 /**音效路径 */

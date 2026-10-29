@@ -1,7 +1,11 @@
-import { _decorator } from 'cc';
+import { _decorator, instantiate, Node, sp, tween, Tween, Vec3 } from 'cc';
 import { roleAnimName, roleController, roleType } from './roleController';
 import { enemyMgr } from '../../manager/enemyManager';
 import { gm } from '../../manager/gm';
+import { uiMgr } from '../../manager/UIManager';
+import { ccTools } from '../../extention/generalTools';
+import { spinePath } from '../../manager/pathConfig';
+import { GameEvent } from '../../manager/configData';
 import type { EnemyTarget } from '../../manager/enemyManager';
 const { ccclass, property } = _decorator;
 
@@ -39,6 +43,22 @@ export class role0 extends roleController {
     private skill2KillExtendTime = 0;
     /**已记录死亡的敌人，避免同一敌人重复结算。 */
     private defeatedEnemies = new Set<EnemyTarget>();
+    /**主动技能前摇期间保留节点，防止重复释放和异步加载串入下一次技能。 */
+    private skill2EffectNode: Node = null;
+    private skill2EffectSpine: sp.Skeleton = null;
+    private skill2MoveTween: Tween<Node> = null;
+
+    protected onLoad(): void {
+        super.onLoad();
+        gm.Event.on(GameEvent.gamePause, this.pauseSkill2Animation, this);
+        gm.Event.on(GameEvent.gameResume, this.resumeSkill2Animation, this);
+    }
+
+    protected onDestroy(): void {
+        gm.Event.off(GameEvent.gamePause, this.pauseSkill2Animation, this);
+        gm.Event.off(GameEvent.gameResume, this.resumeSkill2Animation, this);
+        super.onDestroy();
+    }
 
     get isMoveDirectionLocked() { return this.isUsingSkill1; }
 
@@ -79,20 +99,90 @@ export class role0 extends roleController {
         this.skill2KillExtendTime = values[2] ?? 0;
     }
 
-    /**使用技能2：生效期间提高移速，击杀敌人回血并延长剩余时间。 */
+    /**释放时进入冷却，宝石动画结束后才开始技能效果及持续时间。 */
     useSkill2() {
-        if (this.isUsingSkill2 || this.isSkillCooling(2)) return false;
+        if (this.hp <= 0 || this.isUsingSkill2 || this.skill2EffectNode || this.isSkillCooling(2)
+            || !this.effectNode?.activeInHierarchy || !uiMgr.gameSpineItemPrefab) return false;
 
         this.skill2Duration = Math.max(0, this.roleLevelData?.initiativeTime ?? 0);
         if (this.skill2Duration <= 0) return false;
 
+        const effect = instantiate(uiMgr.gameSpineItemPrefab);
+        const skeleton = effect.getComponent(sp.Skeleton);
+        if (!skeleton) {
+            effect.destroy();
+            return false;
+        }
+        this.skill2EffectNode = effect;
+        this.skill2EffectSpine = skeleton;
+        this.effectNode.addChild(effect);
+        effect.setPosition(0, 140, 0);
+        this.startSkillCooldown(2);
+        void this.playSkill2Animation(effect, skeleton);
+        return true;
+    }
+
+    private async playSkill2Animation(effect: Node, skeleton: sp.Skeleton): Promise<void> {
+        try {
+            const loaded = await ccTools.loadSpine(skeleton, spinePath.gem);
+            if (this.skill2EffectNode !== effect || !effect.isValid) return;
+            if (!loaded || !skeleton.findAnimation('animation') || !skeleton.findAnimation('animation2')) {
+                this.clearSkill2Animation();
+                return;
+            }
+            skeleton.timeScale = gm.isGamePause ? 0 : 1;
+            skeleton.setAnimation(0, 'animation', false);
+            this.skill2MoveTween = tween(effect)
+                .to(0.2, { position: new Vec3(0, 65, 0) })
+                .call(() => {
+                    this.skill2MoveTween = null;
+                    const entry = skeleton.setAnimation(0, 'animation2', false);
+                    entry.timeScale = 1.5;
+                    skeleton.setTrackCompleteListener(entry, () => {
+                        if (this.skill2EffectNode !== effect) return;
+                        this.clearSkill2Animation();
+                        if (this.hp > 0 && this.node.activeInHierarchy) this.activateSkill2();
+                    });
+                })
+                .start();
+            if (gm.isGamePause) this.pauseSkill2Animation();
+        } catch (error) {
+            if (this.skill2EffectNode === effect) this.clearSkill2Animation();
+            console.warn('role0 主动技能宝石动画加载失败', error);
+        }
+    }
+
+    /**动画播放期间的击杀不计入技能效果。 */
+    private activateSkill2(): void {
         this.isUsingSkill2 = true;
         this.skill2RemainTime = this.skill2Duration;
         // 技能开始前已死亡的敌人不能触发本次技能效果。
         this.rememberDefeatedEnemies();
         this.emitSkill2Remain();
-        this.startSkillCooldown(2);
-        return true;
+    }
+
+    private pauseSkill2Animation(): void {
+        this.skill2MoveTween?.pause();
+        if (this.skill2EffectSpine?.isValid) this.skill2EffectSpine.timeScale = 0;
+    }
+
+    private resumeSkill2Animation(): void {
+        this.skill2MoveTween?.resume();
+        if (this.skill2EffectSpine?.isValid) this.skill2EffectSpine.timeScale = 1;
+    }
+
+    private clearSkill2Animation(): void {
+        this.skill2MoveTween?.stop();
+        this.skill2MoveTween = null;
+        const effect = this.skill2EffectNode;
+        const skeleton = this.skill2EffectSpine;
+        this.skill2EffectNode = null;
+        this.skill2EffectSpine = null;
+        if (skeleton?.isValid) {
+            ccTools.cancelAssetLoad(skeleton);
+            skeleton.setCompleteListener(null);
+        }
+        if (effect?.isValid) effect.destroy();
     }
 
     protected update(dt: number): void {
@@ -103,7 +193,14 @@ export class role0 extends roleController {
 
     protected onDisable(): void {
         super.onDisable();
+        this.clearSkill2Animation();
         this.finishSkill2();
+    }
+
+    playDeath(onComplete?: () => void) {
+        this.clearSkill2Animation();
+        this.finishSkill2();
+        super.playDeath(onComplete);
     }
 
     /**将角色等级表的主动数值兼容解析为数值数组。 */

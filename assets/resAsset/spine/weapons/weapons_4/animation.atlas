@@ -1,0 +1,20 @@
+
+animation.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+M4-1
+  rotate: false
+  xy: 124, 660
+  size: 792, 256
+  orig: 792, 256
+  offset: 0, 0
+  index: -1
+M4-2
+  rotate: false
+  xy: 2, 737
+  size: 120, 179
+  orig: 122, 181
+  offset: 1, 1
+  index: -1

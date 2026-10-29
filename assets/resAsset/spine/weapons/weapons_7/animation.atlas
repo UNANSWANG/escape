@@ -1,0 +1,20 @@
+
+animation.png
+size: 512,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+smzy1
+  rotate: false
+  xy: 99, 249
+  size: 372, 222
+  orig: 372, 222
+  offset: 0, 0
+  index: -1
+smzy2
+  rotate: false
+  xy: 2, 335
+  size: 95, 136
+  orig: 97, 136
+  offset: 1, 0
+  index: -1

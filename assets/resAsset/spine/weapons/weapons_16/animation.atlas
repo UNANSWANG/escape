@@ -1,0 +1,20 @@
+
+animation.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+cljj1
+  rotate: false
+  xy: 2, 691
+  size: 1003, 314
+  orig: 1003, 314
+  offset: 0, 0
+  index: -1
+cljj2
+  rotate: false
+  xy: 2, 481
+  size: 161, 208
+  orig: 162, 210
+  offset: 1, 1
+  index: -1

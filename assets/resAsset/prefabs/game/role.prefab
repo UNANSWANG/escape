@@ -1769,7 +1769,7 @@
         "__id__": 84
       }
     ],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 94
@@ -2321,7 +2321,7 @@
       "__expectedType__": "sp.SkeletonData"
     },
     "defaultSkin": "default",
-    "defaultAnimation": "idle",
+    "defaultAnimation": "",
     "_premultipliedAlpha": true,
     "_timeScale": 1,
     "_preCacheMode": 0,
@@ -2941,7 +2941,7 @@
       "__expectedType__": "sp.SkeletonData"
     },
     "defaultSkin": "default",
-    "defaultAnimation": "idle",
+    "defaultAnimation": "",
     "_premultipliedAlpha": true,
     "_timeScale": 1,
     "_preCacheMode": 0,
@@ -3006,7 +3006,7 @@
         "__id__": 130
       }
     ],
-    "_active": false,
+    "_active": true,
     "_components": [
       {
         "__id__": 140
@@ -3071,21 +3071,21 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 10.362534523010254,
-      "y": -2.5651707649230957,
+      "x": 10.367095947265625,
+      "y": -2.5689330101013184,
       "z": 0
     },
     "_lrot": {
       "__type__": "cc.Quat",
       "x": 0,
       "y": 0,
-      "z": 0.842969188800254,
-      "w": -0.5379618450535703
+      "z": 0.8435320468157802,
+      "w": -0.5370788452311048
     },
     "_lscale": {
       "__type__": "cc.Vec3",
-      "x": 0.09999998284231247,
-      "y": 0.10000000468375367,
+      "x": 0.09999998584657013,
+      "y": 0.10000000969776446,
       "z": 1
     },
     "_mobility": 0,
@@ -3094,7 +3094,7 @@
       "__type__": "cc.Vec3",
       "x": -180,
       "y": -180,
-      "z": -65.0900005979882
+      "z": -64.97000742526608
     },
     "_id": ""
   },
@@ -3330,7 +3330,7 @@
       "__expectedType__": "sp.SkeletonData"
     },
     "defaultSkin": "default",
-    "defaultAnimation": "attack",
+    "defaultAnimation": "",
     "_premultipliedAlpha": true,
     "_timeScale": 1,
     "_preCacheMode": 0,

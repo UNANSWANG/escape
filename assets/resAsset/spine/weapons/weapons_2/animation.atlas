@@ -1,0 +1,20 @@
+
+animation.png
+size: 512,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+UZI1
+  rotate: false
+  xy: 89, 227
+  size: 412, 274
+  orig: 412, 275
+  offset: 0, 1
+  index: -1
+UZI2
+  rotate: false
+  xy: 2, 336
+  size: 85, 165
+  orig: 86, 166
+  offset: 0, 1
+  index: -1

@@ -1,0 +1,13 @@
+
+animation.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+tangdao
+  rotate: false
+  xy: 2, 653
+  size: 800, 149
+  orig: 801, 149
+  offset: 1, 0
+  index: -1

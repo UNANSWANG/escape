@@ -1,0 +1,20 @@
+
+animation.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+jhfb1
+  rotate: false
+  xy: 2, 560
+  size: 880, 322
+  orig: 880, 322
+  offset: 0, 0
+  index: -1
+jhfb2
+  rotate: false
+  xy: 2, 340
+  size: 157, 218
+  orig: 159, 220
+  offset: 1, 1
+  index: -1

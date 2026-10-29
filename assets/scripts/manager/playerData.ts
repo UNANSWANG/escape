@@ -284,7 +284,7 @@ export class playerData {
             || this.isCollectionRewardClaimed(itemId)) {
             return false;
         }
-        const quality = itemConfig.getDataByItemId(itemId)?.quality;
+        const quality = itemConfig.getCollectionBookData().find((itemData) => itemData.itemId === itemId)?.quality;
         const gold = configData.collectionBookGold[quality];
         return Number.isInteger(quality) && Number.isFinite(gold) && gold > 0;
     }

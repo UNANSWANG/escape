@@ -140,8 +140,7 @@ export class UIHandBook extends UIBase {
         if (!content || !this.bookItemPrefab) {
             return;
         }
-        this.collectionItems = itemConfig.getAllData()
-            .filter((itemData) => Number.isFinite(itemData?.quality));
+        this.collectionItems = itemConfig.getCollectionBookData();
         this.collectionInitialized = true;
         ccTools.destroyAllChild(content);
         this.collectionItems.forEach((itemData) => {

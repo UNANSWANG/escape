@@ -47,6 +47,12 @@ export class jsonItem extends jsonBase {
         const rows = Array.isArray(this.data) ? this.data : Object.values(this.data);
         return rows as JsonItemData[];
     }
+
+    /**藏品图鉴排除表中前两条货币数据，再筛选有效品质。 */
+    getCollectionBookData(): JsonItemData[] {
+        return this.getAllData().slice(2)
+            .filter((itemData) => Number.isFinite(itemData?.quality));
+    }
 }
 export let itemConfig = new jsonItem();
 

@@ -133,7 +133,12 @@ export class UIMatch extends UIBase {
             return;
         }
         const roleNode = instantiate(uiMgr.roleShowPrefab);
-        roleNode.getComponent(roleShowController)?.setIsPlayerData(isPlayerData);
+        const roleShow = roleNode.getComponent(roleShowController);
+        roleShow?.setIsPlayerData(isPlayerData);
+        if (!isPlayerData) {
+            const aiIndex = this.matchItems.indexOf(item) - 1;
+            roleShow?.setWeaponId(playerMgr.matchedAIRoles[aiIndex]?.weaponId ?? -1);
+        }
         roleContent.addChild(roleNode);
     }
 

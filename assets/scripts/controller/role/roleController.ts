@@ -810,6 +810,7 @@ export class roleController extends Component {
             const weapon = this.assignWeaponController(node, weaponData.type);
             if (!weapon) return;
             weapon.applyStats(weaponData);
+            weapon.initWeaponSpine(weaponData.itemId);
             if (this.isAI) {
                 weapon.attack *= this.aiDamageRatio;
                 if (!(weapon instanceof knifeController)) weapon.attackInterval *= this.aiAttackIntervalRatio;
@@ -865,7 +866,7 @@ export class roleController extends Component {
 
     /**
      * 按 weapons 表的类型给武器节点挂载控制脚本：0 为刀、4 为霰弹枪、5 为狙击枪，其余为普通枪械。
-     * 武器外观沿用预制体绑定的 Spine 资源。
+     * 武器外观在应用配置时根据 itemId 加载 Spine 资源。
      * 切换装备数据时统一移除旧的武器基类组件，避免同一节点同时存在多个武器控制器。
      */
     private assignWeaponController(node: Node, weaponType: number) {

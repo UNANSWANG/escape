@@ -209,6 +209,7 @@ export class soldiersController extends Component {
         else this.weaponComp = this.weaponNode.addComponent(gunController);
 
         this.weaponComp.applyStats(weaponData);
+        this.weaponComp.initWeaponSpine(weaponData.itemId);
         this.weaponComp.attack *= soldierCommonConfig.npcAttackPercent;
         const attackRangePercent = Number.isFinite(soldierCommonConfig.npcAttackRangePercent)
             ? Math.max(0, soldierCommonConfig.npcAttackRangePercent) : 1;

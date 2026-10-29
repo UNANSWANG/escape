@@ -205,8 +205,9 @@ export class generalTools {
         return !!component && component.isValid && (component as any).__asyncAssetLoadVersion == version;
     }
 
-    /**获取spine加载路径，只有role和boss需要通过目录名拼资源名 */
+    /**获取 Spine 加载路径，为武器、角色和敌人目录补全实际资源名。 */
     private getSpineLoadPath(url: string) {
+        if (/^spine\/weapons\/weapons_[^/]+$/.test(url)) return `${url}/animation`;
         if (!url.startsWith("spine/role/") && !url.startsWith("spine/boss/")) {
             return url;
         }

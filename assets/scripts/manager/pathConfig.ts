@@ -158,6 +158,8 @@ export enum spinePath {
     role = "spine/role/role_",
     /**敌人spine（文件夹） */
     boss = "spine/boss/boss_",
+    /**武器 */
+    weapon = "spine/weapons/weapons_",
     /**眩晕 */
     dizziness = "spine/dizziness/vertigo",
     /**手指点击 */

@@ -1,4 +1,6 @@
 import { _decorator, Component, Mat4, Node, sp, Tween, tween, UITransform, Vec3 } from 'cc';
+import { ccTools } from '../extention/generalTools';
+import { spinePath } from '../manager/pathConfig';
 const { ccclass } = _decorator;
 
 /** 所有手持武器共用的动画名称。 */
@@ -6,6 +8,8 @@ export enum weaponsAnimName { idle = 'idle', attack = 'attack' }
 
 /** 从 weapons 表读取并应用到武器控制器的基础数值。 */
 export interface WeaponStats {
+    /** 武器类型，0 为近战武器。 */
+    type?: number;
     /** 两次攻击之间的基础间隔（秒）。 */
     attackInterval: number;
     /** 子弹的基础飞行速度（世界坐标单位/秒）；近战武器不使用。 */
@@ -79,6 +83,10 @@ export class weaponsController extends Component {
 
     /** 应用 weapons 表中的基础数值；非法值保留当前默认值。 */
     applyStats(stats: WeaponStats) {
+        if (Number.isFinite(stats.type)) {
+            const rightNode = this.node.getChildByName('right');
+            if (rightNode) rightNode.active = stats.type !== 0;
+        }
         if (Number.isFinite(stats.attackInterval)) this.attackInterval = Math.max(0, stats.attackInterval);
         if (Number.isFinite(stats.flightSpeed)) this.flightSpeed = Math.max(0, stats.flightSpeed);
         if (Number.isFinite(stats.attack)) this.attack = Math.max(0, stats.attack);
@@ -86,6 +94,25 @@ export class weaponsController extends Component {
         if (Number.isFinite(stats.attackRange)) this.attackRange = Math.max(0, stats.attackRange);
         if (Number.isFinite(stats.speed)) this.moveSpeedScale = Math.max(0, stats.speed / 100);
         this.reloadTime = Number.isFinite(stats.reloadTime) ? Math.max(0, stats.reloadTime) : 0;
+    }
+
+    /** 根据物品 id 初始化武器外观，加载完成后重新获取骨骼并播放待机。 */
+    async initWeaponSpine(itemId: number) {
+        this.weaponSkeleton = this.getComponent(sp.Skeleton);
+        if (!this.weaponSkeleton || !Number.isFinite(itemId)) return;
+        this.weaponSkeleton.skeletonData = null;
+        this.resetWeaponSpineBones();
+        const loaded = await ccTools.loadSpine(this.weaponSkeleton, spinePath.weapon + itemId);
+        if (!loaded || !this.isValid) return;
+        this.resetWeaponSpineBones();
+        this.playIdleAnim();
+    }
+
+    /** 更换骨骼数据后，旧骨骼对象不能继续用于挂点同步。 */
+    protected resetWeaponSpineBones() {
+        this.rightHandBone = null;
+        this.leftHandBone = null;
+        this.curWeaponAnimName = '';
     }
 
     /** 绑定到角色 Spine 的 weapons 挂点。 */

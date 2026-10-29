@@ -30,6 +30,11 @@ export class gunController extends weaponsController {
         this.currentAmmo = this.capacity;
     }
 
+    protected resetWeaponSpineBones() {
+        super.resetWeaponSpineBones();
+        this.shootBone = null;
+    }
+
     get ammo() { return this.currentAmmo; }
     get reloading() { return this.isReloading; }
 

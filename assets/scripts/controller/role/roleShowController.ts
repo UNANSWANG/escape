@@ -2,6 +2,10 @@ import { _decorator, Component, Node, sp, UITransform, Vec3 } from 'cc';
 import { ccStorageTools } from '../../extention/storageTools';
 import { GameEvent, SaveKey } from '../../manager/configData';
 import { gm } from '../../manager/gm';
+import { ccTools } from '../../extention/generalTools';
+import { weaponsConfig } from '../../json/jsonWeapons';
+import { pData } from '../../manager/playerData';
+import { spinePath } from '../../manager/pathConfig';
 const { ccclass } = _decorator;
 
 @ccclass('roleShowController')
@@ -13,6 +17,41 @@ export class roleShowController extends Component {
     setIsPlayerData(isPlayerData: boolean): void {
         this.isPlayerData = isPlayerData;
         this.refreshEquipmentDisplay();
+        this.refreshWeaponSpine();
+    }
+
+    /** AI 展示使用独立武器 id；玩家按主武器、副武器、近战的顺序展示。 */
+    private displayWeaponId = -1;
+    private loadedWeaponId: number = null;
+
+    setWeaponId(weaponId: number): void {
+        this.displayWeaponId = weaponId;
+        this.refreshWeaponSpine();
+    }
+
+    private get currentWeaponId(): number {
+        return this.isPlayerData ? (pData.equipmentIds.slice(0, 3).find(id => id >= 0) ?? -1) : this.displayWeaponId;
+    }
+
+    /** 按武器配置 id 查找 itemId；连续换装由 loadSpine 的请求版本保证顺序。 */
+    async refreshWeaponSpine(): Promise<void> {
+        const skeleton = this.node.getChildByName('weapon')?.getComponent(sp.Skeleton);
+        if (!skeleton) return;
+        const weaponId = this.currentWeaponId;
+        this.loadedWeaponId = weaponId;
+        ccTools.cancelAssetLoad(skeleton);
+        skeleton.skeletonData = null;
+        const weaponData = weaponsConfig.getDataById(weaponId);
+        skeleton.node.active = !!weaponData;
+        if (!weaponData) return;
+        const rightNode = skeleton.node.getChildByName('right');
+        if (rightNode) rightNode.active = weaponData.type !== 0;
+        const loaded = await ccTools.loadSpine(skeleton, spinePath.weapon + weaponData.itemId);
+        if (loaded) skeleton.setAnimation(0, 'idle', true);
+    }
+
+    private onTableLoad(tableName: string): void {
+        if (tableName === 'weapons') this.refreshWeaponSpine();
     }
 
     private roleAnim: sp.Skeleton = null;
@@ -25,10 +64,12 @@ export class roleShowController extends Component {
     protected onLoad(): void {
         this.refreshEquipmentDisplay();
         gm.Event.on(GameEvent.refreshEquipmentDisplay, this.refreshEquipmentDisplay, this);
+        gm.Event.on(GameEvent.loadTable, this.onTableLoad, this);
     }
 
     /**每次显示角色时，角色和展示武器都默认循环播放待机动画。 */
     protected onEnable(): void {
+        this.refreshWeaponSpine();
         for (const name of ['roleAnim', 'weapon']) {
             const skeleton = this.node.getChildByName(name)?.getComponent(sp.Skeleton);
             if (skeleton?.skeletonData) skeleton.setAnimation(0, 'idle', true);
@@ -37,6 +78,7 @@ export class roleShowController extends Component {
 
     protected onDestroy(): void {
         gm.Event.off(GameEvent.refreshEquipmentDisplay, this.refreshEquipmentDisplay, this);
+        gm.Event.off(GameEvent.loadTable, this.onTableLoad, this);
     }
 
     /** 玩家自身跟随仓库装备显示设置，AI 始终显示装备图片。 */
@@ -64,6 +106,7 @@ export class roleShowController extends Component {
     }
 
     protected lateUpdate(): void {
+        if (this.currentWeaponId !== this.loadedWeaponId) this.refreshWeaponSpine();
         // 骨骼数据尚未准备好时继续尝试绑定，兼容异步加载的展示角色。
         if (!this.weaponSocketBone) {
             this.bindWeaponToRole(this.roleAnim ?? undefined);

@@ -17,7 +17,6 @@ export class gunController extends weaponsController {
     private isReloading = false;
     /**武器 Spine 中用于确定枪口位置的开火骨骼。 */
     private shootBone: any = null;
-    private tempGunWorldPos = new Vec3();
     private tempShootRootWorldPos = new Vec3();
     private tempBulletSpawnWorldPos = new Vec3();
     private tempBulletWorldDirection = new Vec3();
@@ -54,7 +53,7 @@ export class gunController extends weaponsController {
         this.emitAmmoChange();
     }
 
-    /** 按枪口骨骼而非节点中心修正瞄准角度。 */
+    /**枪械默认沿本地 -X 方向开火，枪口挂点不参与方向角计算。 */
     protected updateAimRotation() {
         const parentTransform = this.node.parent?.getComponent(UITransform);
         if (!parentTransform || !this.weaponSkeleton) return;
@@ -65,10 +64,8 @@ export class gunController extends weaponsController {
         const targetOffsetX = this.tempTargetParentLocalPos.x - this.node.position.x;
         const targetOffsetY = this.tempTargetParentLocalPos.y - this.node.position.y;
         const targetAngle = Math.atan2(targetOffsetY, targetOffsetX) * 180 / Math.PI;
-        const scaledMuzzleX = this.shootBone.worldX * this.node.scale.x;
-        const scaledMuzzleY = this.shootBone.worldY * this.node.scale.y;
-        const muzzleAngle = Math.atan2(scaledMuzzleY, scaledMuzzleX) * 180 / Math.PI;
-        let localAngle = targetAngle - muzzleAngle;
+        const forwardAngle = this.node.scale.x < 0 ? 0 : 180;
+        let localAngle = targetAngle - forwardAngle;
         localAngle = (localAngle + 180) % 360;
         if (localAngle < 0) localAngle += 360;
         localAngle -= 180;
@@ -190,16 +187,10 @@ export class gunController extends weaponsController {
         this.node.updateWorldTransform();
         this.tempShootRootWorldPos.set(this.shootBone.worldX, this.shootBone.worldY, 0);
         Vec3.transformMat4(this.tempShootRootWorldPos, this.tempShootRootWorldPos, this.node.worldMatrix);
-        let directionX: number;
-        let directionY: number;
-        if (this.hasAimTarget) {
-            directionX = this.tempTargetWorldPos.x - this.tempShootRootWorldPos.x;
-            directionY = this.tempTargetWorldPos.y - this.tempShootRootWorldPos.y;
-        } else {
-            this.node.getWorldPosition(this.tempGunWorldPos);
-            directionX = this.tempShootRootWorldPos.x - this.tempGunWorldPos.x;
-            directionY = this.tempShootRootWorldPos.y - this.tempGunWorldPos.y;
-        }
+        // 挂点只决定出生位置；本地水平朝左的向量随武器旋转、缩放和翻转转换到世界空间。
+        const worldMatrix = this.node.worldMatrix;
+        const directionX = -worldMatrix.m00;
+        const directionY = -worldMatrix.m01;
         const directionLength = Math.sqrt(directionX * directionX + directionY * directionY);
         if (directionLength <= 0) return false;
         outPosition.set(this.tempShootRootWorldPos);

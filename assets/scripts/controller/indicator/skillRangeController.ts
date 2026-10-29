@@ -1,4 +1,4 @@
-import { _decorator, Component, tween, Tween, UITransform } from 'cc';
+import { _decorator, Color, Component, Graphics, tween, Tween, UITransform } from 'cc';
 const { ccclass } = _decorator;
 
 @ccclass('skillRangeController')
@@ -8,10 +8,21 @@ export class skillRangeController extends Component {
     /** Set the radius and the time in seconds for the background to fill the range. */
     init(radius: number, time: number): void {
         this.stopBgTween();
-        const line = this.node.getChildByName('line')?.getComponent(UITransform);
+        const lineNode = this.node.getChildByName('line');
+        const line = lineNode?.getComponent(UITransform);
+        const graphics = lineNode?.getComponent(Graphics);
         const bg = this.node.getChildByName('bg')?.getComponent(UITransform);
         const diameter = Number.isFinite(radius) ? Math.max(0, radius) * 2 : 0;
         line?.setContentSize(diameter, diameter);
+        if (graphics) {
+            graphics.clear();
+            graphics.strokeColor = Color.WHITE;
+            graphics.lineWidth = 8;
+            if (diameter > 2) {
+                graphics.circle(0, 0, diameter / 2 - graphics.lineWidth / 2);
+                graphics.stroke();
+            }
+        }
         if (!bg) return;
 
         bg.setContentSize(0, 0);

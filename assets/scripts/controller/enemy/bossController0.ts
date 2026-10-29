@@ -21,7 +21,7 @@ export class bossController0 extends bossBaseController {
     /** 技能伤害间隔（秒）。 */
     skillInterval = 0.5;
     /** 技能圆形伤害半径。 */
-    skillRadius = 300;
+    skillRadius = 200;
     /** 每次伤害的攻击力比例。 */
     skillDamageScale = 0.1;
     private skillRemaining = 0;
@@ -41,9 +41,17 @@ export class bossController0 extends bossBaseController {
         this.clearNavigationPath();
         this.skillStage = SkillStage.Skill1;
         const version = ++this.skillVersion;
-        this.playSkillWindup(BossAnimName.skill1, 1, version, () => {
+        const skill1Speed = 1;
+        const skill2Speed = 1.2;
+        const skill1Duration = this.roleAnim?.findAnimation(BossAnimName.skill1)?.duration ?? 0;
+        const skill2Duration = this.roleAnim?.findAnimation(BossAnimName.skill2)?.duration ?? 0;
+        const duration = (skill1Duration / skill1Speed + skill2Duration / skill2Speed)
+            / Math.max(0.01, this.roleAnim?.timeScale ?? 1);
+        this.showSkillRange(duration);
+        this.playSkillWindup(BossAnimName.skill1, skill1Speed, version, () => {
             this.skillStage = SkillStage.Skill2;
-            this.playSkillWindup(BossAnimName.skill2, 1.2, version, () => {
+            this.playSkillWindup(BossAnimName.skill2, skill2Speed, version, () => {
+                this.clearSkillRange();
                 this.skillStage = SkillStage.Active;
                 this.skillRemaining = this.skillDuration;
                 this.skillTickRemaining = this.skillInterval;
@@ -57,7 +65,6 @@ export class bossController0 extends bossBaseController {
     private playSkillWindup(name: BossAnimName, speed: number, version: number, complete: () => void) {
         const finish = () => {
             if (!this.isValid || this.hp <= 0 || this.skillVersion !== version || !this.isUsingSkill) return;
-            if (name === BossAnimName.skill1) this.clearSkillRange();
             complete();
         };
         const entry = this.playAnimation(name, false, true);
@@ -66,10 +73,6 @@ export class bossController0 extends bossBaseController {
             return;
         }
         entry.timeScale = speed;
-        if (name === BossAnimName.skill1) {
-            const duration = Math.max(0, entry.animationEnd - entry.animationStart);
-            this.showSkillRange(duration / Math.max(0.01, speed * this.roleAnim.timeScale));
-        }
         this.roleAnim.setTrackCompleteListener(entry, finish);
     }
 
@@ -95,7 +98,7 @@ export class bossController0 extends bossBaseController {
         this.isInSkillRange = false;
     }
 
-    /** Show the warning below the Boss while skill1 charges. */
+    /** Show the warning below the Boss throughout both windup animations. */
     private showSkillRange(duration: number): void {
         this.clearSkillRange();
         if (!uiMgr.skillRangePrefab) return;

@@ -102,7 +102,7 @@ export class bossBaseController extends Component {
 
     /** 怒气上限，从 boss 表的 rage 读取。 */
     maxRage = 100;
-    /** 当前怒气，满值后下一次普攻替换为技能。 */
+    /** Full rage casts a skill as soon as the normal attack animation is finished. */
     rage = 0;
 
     /** 当前游戏页。 */
@@ -256,7 +256,7 @@ export class bossBaseController extends Component {
     protected update(dt: number): void {
         if (EDITOR && !PREVIEW) return;
         if (gm.isGamePause || !this.initialized || this.hp <= 0) return;
-        if (this.bossState === BossState.Chase) {
+        if (this.bossState === BossState.Chase && !this.isUsingSkill) {
             this.recoveryElapsed = 0;
             this.rageRegenElapsed += Math.max(0, dt);
             const seconds = Math.floor(this.rageRegenElapsed + 1e-9);
@@ -306,6 +306,7 @@ export class bossBaseController extends Component {
             return;
         }
         const target = player.node.worldPosition;
+        this.tryStartRageSkill();
         if (this.isUsingSkill) {
             this.isInAttackRange = false;
             this.chaseDuringSkill(target, dt);
@@ -362,13 +363,31 @@ export class bossBaseController extends Component {
 
     /** 累计自然增长与受伤怒气，不超过上限。 */
     addRage(amount: number) {
-        if (this.hp <= 0 || !Number.isFinite(amount) || amount <= 0) return;
+        if (this.hp <= 0 || this.isUsingSkill || !Number.isFinite(amount) || amount <= 0) return;
         this.rage = Math.min(this.maxRage, this.rage + amount);
         this.refreshRage();
+        this.tryStartRageSkill();
     }
 
     /** 子类实现技能，返回是否成功释放。 */
     protected startSkill(): boolean { return false; }
+
+    /** Cast independently of attack cooldown, but never interrupt a normal attack. */
+    private tryStartRageSkill(): boolean {
+        if (gm.isGamePause || !this.initialized || this.hp <= 0
+            || this.isAttacking || this.isUsingSkill
+            || this.maxRage <= 0 || this.rage < this.maxRage) return false;
+        const player = playerMgr.playerComp;
+        if (this.bossState !== BossState.Chase || !player?.node?.isValid
+            || !player.node.activeInHierarchy || player.hp <= 0
+            || !this.isInsideOriginRange(player.node.worldPosition, this.validRange)) return false;
+        if (!this.startSkill()) return false;
+        this.rage = 0;
+        this.rageRegenElapsed = 0;
+        this.refreshRage();
+        return true;
+    }
+
     protected updateSkill(dt: number): void {}
     protected stopSkill(): void {}
     get isUsingSkill(): boolean { return false; }
@@ -382,12 +401,6 @@ export class bossBaseController extends Component {
     protected normalAttack() {
         if (gm.isGamePause) return;
         if (this.isAttacking || this.isUsingSkill || this.attackCooldown > 0 || this.hp <= 0) return;
-        if (this.maxRage > 0 && this.rage >= this.maxRage && this.startSkill()) {
-            this.rage = 0;
-            this.refreshRage();
-            this.attackCooldown = Math.max(0.01, this.attackInterval);
-            return;
-        }
         this.attackAnimationPlaying = true;
         this.playAttackAnimation();
         const player = playerMgr.playerComp;
@@ -416,6 +429,7 @@ export class bossBaseController extends Component {
         if (!this.attackAnimationPlaying) return;
         this.attackAnimationPlaying = false;
         this.attackCooldown = Math.max(0.01, this.attackInterval);
+        if (this.tryStartRageSkill()) return;
         this.playAnimation(BossAnimName.idle);
     }
 

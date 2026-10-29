@@ -163,7 +163,7 @@ export enum spinePath {
     /**手指点击 */
     click = "spine/click/dianji",
     /**宝石 */
-    gem = "spine/gem/gem",
+    gem = "spine/gem/roleSkill/gem",
 }
 
 /**动画路径 */

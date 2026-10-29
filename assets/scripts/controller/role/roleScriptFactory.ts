@@ -4,6 +4,7 @@ import { role1 } from './role1';
 import { role2 } from './role2';
 import { aiRole0 } from './aiRole0';
 import { aiRole1 } from './aiRole1';
+import { aiRole2 } from './aiRole2';
 import { roleController } from './roleController';
 
 /** 角色 id 与专属控制脚本的对应关系。新增角色时在此注册即可。 */
@@ -16,6 +17,7 @@ const roleScriptMap: Record<number, typeof roleController> = {
 const aiRoleScriptMap: Record<number, typeof roleController> = {
     0: aiRole0,
     1: aiRole1,
+    2: aiRole2,
 };
 
 export function addAIRoleScript(roleNode: Node, roleId: number): roleController {

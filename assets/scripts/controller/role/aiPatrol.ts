@@ -13,6 +13,8 @@ export class AIPatrol {
     private pathIndex = 0;
     private target = new Vec3();
     private actualMove = new Vec3();
+    /** Keep the last AI movement direction while sliding; use facing before the first move. */
+    private moveDirection = new Vec3();
     private retryRemaining = 0;
     private stayRemaining = 0;
     private isChasing = false;
@@ -23,6 +25,7 @@ export class AIPatrol {
     reset() {
         this.path.length = 0;
         this.pathIndex = 0;
+        this.moveDirection.set(0, 0, 0);
         this.retryRemaining = 0;
         this.stayRemaining = 0;
         this.isChasing = false;
@@ -35,6 +38,23 @@ export class AIPatrol {
         if (gm.isGamePause || role.hp <= 0 || !role.gameComp || !role.roleData || dt <= 0) return;
         const collider = role.node.getChildByName('colliderBox')?.getComponent(UITransform);
         if (!collider) return;
+
+        // The current three roles can cast their active skills without a target or HP condition.
+        if (role.useSkill2()) role.interruptDrugUse();
+        if (role.roleId === 0 && role.useSkill1()) {
+            role.interruptDrugUse();
+            this.stopAttack(role);
+            if (this.moveDirection.lengthSqr() === 0) {
+                this.moveDirection.set(role.roleAnim?.node.scale.x < 0 ? 1 : -1, 0, 0);
+            }
+        }
+        // Preserve the slide direction and animation until the skill completes.
+        if (role.isMoveDirectionLocked) {
+            this.mover.moveWorld(role.node, collider, role.gameComp,
+                this.moveDirection.x * role.moveSpeed * dt,
+                this.moveDirection.y * role.moveSpeed * dt, this.actualMove);
+            return;
+        }
         this.retryRemaining = Math.max(0, this.retryRemaining - dt);
         this.attackCooldown = Math.max(0, this.attackCooldown - dt);
         const player = playerMgr.playerComp;
@@ -123,6 +143,7 @@ export class AIPatrol {
         role.playRoleAnim(roleAnimName.move, true);
         const directionX = deltaX / distance;
         const directionY = deltaY / distance;
+        this.moveDirection.set(directionX, directionY, 0);
         this.mover.moveWorld(role.node, collider, role.gameComp,
             directionX * moveDistance, directionY * moveDistance, this.actualMove);
         const progress = this.actualMove.x * directionX + this.actualMove.y * directionY;

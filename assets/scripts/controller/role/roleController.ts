@@ -761,6 +761,9 @@ export class roleController extends Component {
         this.applyEquippedWeaponStats(true);
         this.refreshRoleSpine();
         this.initData();
+        // Read role-specific cooldowns first: players start ready, AI waits for a full cooldown.
+        this.skill1CooldownRemaining = this.isAI ? Math.max(0, this.skill1Cooldown) : 0;
+        this.skill2CooldownRemaining = this.isAI ? Math.max(0, this.skill2Cooldown) : 0;
         if (this.roleNameLab) this.roleNameLab.string = this.isPlayer ? '你' : (nickname || `人机${this.roleId}`);
     }
 

@@ -1,7 +1,7 @@
-import { _decorator, AnimationClip, AssetManager, Component, instantiate, Node, Prefab, Sprite, SpriteFrame, tween, UITransform, Vec3 } from 'cc';
+import { _decorator, AssetManager, Component, instantiate, Node, Prefab, Sprite, tween, UITransform, Vec3 } from 'cc';
 import { UIBase } from '../UIPage/UIBase';
 import { UIBackpack } from '../UIPage/UIBackpack';
-import { animPath, audioPath, gamePath, imgPath, ItemPath, UIPath } from './pathConfig';
+import { audioPath, gamePath, imgPath, ItemPath, UIPath } from './pathConfig';
 import { ccResTools } from '../extention/resTools';
 import { tipsNotice } from '../UIPage/tips/tipsNotice';
 import { pData } from './playerData';
@@ -31,9 +31,8 @@ export class UIManager {
     gameSpineItemPrefab: Prefab = null;
     /**游戏通用 Animation 动画节点预制体 */
     gameAnimItemPrefab: Prefab = null;
-    /**开火时使用的弹壳动画和图片，进入游戏前预加载。 */
-    bulletShellClip: AnimationClip = null;
-    bulletShellSpriteFrame: SpriteFrame = null;
+    /**弹壳专用预制体，包含图片和动画资源引用。 */
+    bulletShellPrefab: Prefab = null;
     /**通过 ItemPath.role 加载，供游戏界面创建玩家 */
     rolePrefab: Prefab = null;
     /**通过 ItemPath.soldier 加载，供游戏界面创建士兵 */
@@ -131,7 +130,6 @@ export class UIManager {
             this.preLoadPage(UIPath.UISuccess),
             this.preLoadPage(UIPath.UIFail),
             this.loadGamePrefab(),
-            this.loadGameAnim(),
         ]);
     }
 
@@ -153,6 +151,7 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, ItemPath.drone, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.skillRange, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.syringe, false),
+            ccResTools.loadPrefab(this.resBundle, ItemPath.bulletShell, false),
         ]);
 
         if (prefabs.some((prefab) => !prefab)) {
@@ -174,19 +173,7 @@ export class UIManager {
         this.dronePrefab = prefabs[12];
         this.skillRangePrefab = prefabs[13];
         this.syringePrefab = prefabs[14];
-    }
-
-    /**加载游戏动画 */
-    private async loadGameAnim() {
-        const [clip, spriteFrame] = await Promise.all([
-            ccResTools.loadAnimationClip(this.resBundle, animPath.bulletShell, false),
-            ccResTools.loadPic(this.resBundle, imgPath.bulletShell),
-        ]);
-        if (!clip || !spriteFrame) {
-            throw new Error("子弹壳动画或图片加载失败");
-        }
-        this.bulletShellClip = clip;
-        this.bulletShellSpriteFrame = spriteFrame;
+        this.bulletShellPrefab = prefabs[15];
     }
 
     /**显示提示 */

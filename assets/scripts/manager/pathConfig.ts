@@ -66,6 +66,8 @@ export enum ItemPath {
     gameSpineItem = "prefabs/Item/gameSpineItem",
     /**游戏animation物体 */
     gameAnimItem = "prefabs/Item/gameAnimItem",
+    /**弹壳特效 */
+    bulletShell = "prefabs/Item/bulletShell",
     /**特效物体 */
     effectItem = "prefabs/Item/effectItem",
     /**超武商城物品 */
@@ -156,8 +158,6 @@ export enum imgPath {
     hpBar = "texture/game/hpBar",
     /**盒子品质光 */
     boxLight = "texture/game/boxLight/light_",
-    /**子弹壳 */
-    bulletShell = "texture/common/bulletShell",
 }
 
 /**spine路径 */

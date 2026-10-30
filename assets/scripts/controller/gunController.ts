@@ -1,7 +1,6 @@
-import { _decorator, Node, Sprite, UIOpacity, UITransform, Vec3 } from 'cc';
+import { _decorator, Animation, Node, UITransform, Vec3 } from 'cc';
 import { uiMgr } from '../manager/UIManager';
 import { poolMgr } from '../manager/poolManager';
-import { gameAnimController } from './gameAnimController';
 import { bulletController } from './bulletController';
 import { weaponsAnimName, weaponsController, WeaponStats } from './weaponsController';
 const { ccclass } = _decorator;
@@ -230,8 +229,7 @@ export class gunController extends weaponsController {
 
     /** 在 danke 挂点创建独立弹壳，不受角色后续移动、转向或切枪影响。 */
     private playBulletShell(parent: Node) {
-        if (!parent?.isValid || !uiMgr.gameAnimItemPrefab || !uiMgr.bulletShellClip
-            || !uiMgr.bulletShellSpriteFrame) return;
+        if (!parent?.isValid || !uiMgr.bulletShellPrefab) return;
         if (!this.weaponSkeleton?.skeletonData) return;
         this.shellBone ??= this.weaponSkeleton.findBone('danke');
         if (!this.shellBone) return;
@@ -240,26 +238,19 @@ export class gunController extends weaponsController {
         Vec3.transformMat4(this.tempShellSpawnWorldPos, this.tempShellSpawnWorldPos, this.node.worldMatrix);
 
         // 外层保存出生位置和左右翻转，内层由 AnimationClip 控制相对位移与旋转。
-        const root = new Node('bulletShellRoot');
+        const root = poolMgr.getBulletShellNode(uiMgr.bulletShellPrefab);
         root.layer = parent.layer;
         parent.addChild(root);
         root.setWorldPosition(this.tempShellSpawnWorldPos);
         root.setScale(this.node.scale.x < 0 ? -1 : 1, 1, 1);
-        const shell = poolMgr.getGameAnimNode(uiMgr.gameAnimItemPrefab);
-        root.addChild(shell);
+        const shell = root.getChildByName('shell');
         shell.layer = parent.layer;
         shell.setPosition(0, 0, 0);
         shell.setScale(1, 1, 1);
         shell.angle = 0;
-        const sprite = shell.getComponent(Sprite);
-        sprite.spriteFrame = uiMgr.bulletShellSpriteFrame;
-        sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-        shell.getComponent(UITransform).setContentSize(7, 13);
-        (shell.getComponent(UIOpacity) || shell.addComponent(UIOpacity)).opacity = 255;
-        shell.getComponent(gameAnimController).startAnim(uiMgr.bulletShellClip, () => {
-            poolMgr.putGameAnimNode(shell);
-            root.destroy();
-        });
+        const animation = shell.getComponent(Animation);
+        animation.once(Animation.EventType.FINISHED, () => poolMgr.putBulletShellNode(root));
+        animation.play();
     }
 
     private playReloadAnim() {

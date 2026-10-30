@@ -1,4 +1,4 @@
-import { _decorator, Component, instantiate, Label, Node, NodePool, Prefab, sp, Sprite, Tween, UIOpacity, UITransform, Vec3 } from 'cc';
+import { _decorator, Animation, Component, instantiate, Label, Node, NodePool, Prefab, sp, Sprite, Tween, UIOpacity, UITransform, Vec3 } from 'cc';
 import { gameAnimController } from '../controller/gameAnimController';
 import { bulletController } from '../controller/bulletController';
 const { ccclass, property } = _decorator;
@@ -35,6 +35,7 @@ export class poolManager extends Component {
     /**按道具脚本类型拆分的节点对象池 */
     private propsNodePoolMap: Map<string, NodePool> = new Map();
     gameAnimNodePool: NodePool = new NodePool();
+    private bulletShellNodePool: NodePool = new NodePool();
 
     /**初始化点的对象池 */
     initPointNodePool() {
@@ -132,6 +133,21 @@ export class poolManager extends Component {
             skeleton.skeletonData = null;
         }
         this.putNodeWithLimit(this.gameSpineNodePool, node, GAME_SPINE_POOL_LIMIT);
+    }
+
+    getBulletShellNode(prefab: Prefab) {
+        return this.getNode(this.bulletShellNodePool, prefab);
+    }
+
+    putBulletShellNode(node: Node) {
+        const shell = node.getChildByName('shell');
+        const animation = shell?.getComponent(Animation);
+        animation?.off(Animation.EventType.FINISHED);
+        animation?.stop();
+        shell?.setPosition(Vec3.ZERO);
+        if (shell) shell.angle = 0;
+        this.resetNode(node);
+        this.putNodeWithLimit(this.bulletShellNodePool, node, GAME_ANIM_POOL_LIMIT);
     }
 
     getGameAnimNode(prefab: Prefab) {

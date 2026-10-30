@@ -1,6 +1,6 @@
 import { _decorator, Node, Prefab, instantiate, Label, Sprite, EventTouch, Layout, Color } from 'cc';
 import { UIBase } from './UIBase';
-import { ItemPath, UIPath } from '../manager/pathConfig';
+import { imgPath, ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
@@ -104,14 +104,13 @@ export class UIBackpack extends UIBase {
             const equipmentData = slotIndex < 3
                 ? weaponsConfig.getDataById(equipmentId)
                 : equipmentConfig.getDataById(equipmentId);
-            if (slotIndex < 2) {
-                const emptyWeaponNode = slotNode?.getChildByName("weaponNone");
-                if (emptyWeaponNode) {
-                    emptyWeaponNode.active = !equipmentData;
-                }
-                const weaponImageNode = slotNode?.getChildByName("img");
-                if (weaponImageNode) {
-                    weaponImageNode.active = !!equipmentData;
+            if (slotIndex < 3) {
+                const weaponImg = slotNode?.getChildByName("img")?.getComponent(Sprite);
+                if (weaponImg) {
+                    weaponImg.node.active = true;
+                    weaponImg.spriteFrame = null;
+                    const iconPath = equipmentData ? imgPath.weaponIcon + equipmentData.itemId : imgPath.weaponNone;
+                    ccTools.loadImg(weaponImg, iconPath);
                 }
             }
 

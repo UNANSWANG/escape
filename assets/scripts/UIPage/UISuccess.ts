@@ -10,6 +10,7 @@ import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
 import { ccResTools } from '../extention/resTools';
 import { showItemController } from '../controller/showItemController';
+import { RankScoreAnimation } from '../extention/rankScoreAnimation';
 import { itemConfig } from '../json/jsonItem';
 const { ccclass, property } = _decorator;
 
@@ -35,6 +36,7 @@ export class UISuccess extends UIBase {
 
     private showItemPrefab: Prefab = null;
     private itemListVersion = 0;
+    private rankScoreAnimation = new RankScoreAnimation();
 
     protected onLoad(): void {
         this.bindBtn();
@@ -45,8 +47,7 @@ export class UISuccess extends UIBase {
         anim.play();
         gm.gamePause();
         audioMgr.playEffect(audioPath.success);
-        const scoreChange = pData.fixRankScore(20);
-        if (this.curRankNumLab) this.curRankNumLab.string = String(pData.rankScore);
+        const scoreChange = this.rankScoreAnimation.play(this.curRankNumLab, 20);
         if (this.addRankNumLab) this.addRankNumLab.string = '+' + scoreChange;
         this.initData(data);
     }
@@ -93,6 +94,11 @@ export class UISuccess extends UIBase {
 
     onUI_Close() {
         ++this.itemListVersion;
+        this.rankScoreAnimation.finish();
+    }
+
+    protected onDisable(): void {
+        this.rankScoreAnimation.finish();
     }
 
     bindBtn() {

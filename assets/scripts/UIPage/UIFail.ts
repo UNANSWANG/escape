@@ -10,6 +10,7 @@ import { configData } from '../manager/configData';
 import { audioMgr } from '../manager/audioManager';
 import { ccResTools } from '../extention/resTools';
 import { showItemController } from '../controller/showItemController';
+import { RankScoreAnimation } from '../extention/rankScoreAnimation';
 import { videoMgr } from '../manager/videoManager';
 const { ccclass, property } = _decorator;
 
@@ -44,6 +45,7 @@ export class UIFail extends UIBase {
 
     private showItemPrefab: Prefab = null;
     private itemListVersion = 0;
+    private rankScoreAnimation = new RankScoreAnimation();
     private isRetrieving = false;
     private mainBtnDefaultX = 0;
 
@@ -57,8 +59,7 @@ export class UIFail extends UIBase {
         anim.play();
         gm.gamePause();
         audioMgr.playEffect(audioPath.fail);
-        const scoreChange = pData.fixRankScore(-10);
-        if (this.curRankNumLab) this.curRankNumLab.string = String(pData.rankScore);
+        const scoreChange = this.rankScoreAnimation.play(this.curRankNumLab, -10);
         if (this.addRankNumLab) this.addRankNumLab.string = String(scoreChange);
         this.initData(data);
     }
@@ -107,6 +108,11 @@ export class UIFail extends UIBase {
 
     onUI_Close() {
         ++this.itemListVersion;
+        this.rankScoreAnimation.finish();
+    }
+
+    protected onDisable(): void {
+        this.rankScoreAnimation.finish();
     }
 
     bindBtn() {

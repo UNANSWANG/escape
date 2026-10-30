@@ -34,7 +34,7 @@ export class itemController extends Component {
         if (this.itemImgSp) {
             this.itemImgSp.spriteFrame = null;
             //TODO 物品图片不齐，暂时先屏蔽
-            // ccTools.loadImg(this.itemImgSp, imgPath.item + itemId);
+            ccTools.loadImg(this.itemImgSp, imgPath.item + itemId);
         }
 
         if (!itemData) {

@@ -2,8 +2,8 @@ import { _decorator, AnimationClip, Camera, Canvas, Color, EventKeyboard, EventT
 import { uiMgr } from '../manager/UIManager';
 import { pData } from '../manager/playerData';
 import { UIBase } from './UIBase';
-import { UIPath } from '../manager/pathConfig';
-import { BossBookState, configData, floatColorArr, GameEvent } from '../manager/configData';
+import { imgPath, UIPath } from '../manager/pathConfig';
+import { BossBookState, configData, floatColorArr, GameEvent, QualityColorArr } from '../manager/configData';
 import { gm } from '../manager/gm';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
@@ -1492,22 +1492,24 @@ export class UIGame extends UIBase {
         this.refreshWeaponNums();
     }
 
-    /**按装备栏主、副武器 id 刷新两个武器框名称。 */
+    /**按装备栏主、副武器 id 刷新武器框名称和图标，空槽隐藏图片。 */
     refreshWeaponNames() {
         const weaponBoxes = [this.weaponBox_0, this.weaponBox_1];
         weaponBoxes.forEach((weaponBox, slotIndex) => {
             const weaponData = weaponsConfig.getDataById(pData.equipmentIds[slotIndex]);
-            const emptyWeaponNode = weaponBox?.getChildByName('weaponNone');
-            if (emptyWeaponNode) {
-                emptyWeaponNode.active = !weaponData;
-            }
-            const weaponImageNode = weaponBox?.getChildByName('img');
-            if (weaponImageNode) {
-                weaponImageNode.active = !!weaponData;
+            const weaponImg = weaponBox?.getChildByName('img')?.getComponent(Sprite);
+            if (weaponImg) {
+                weaponImg.node.active = !!weaponData;
+                ccTools.cancelAssetLoad(weaponImg);
+                weaponImg.spriteFrame = null;
+                if (weaponData) {
+                    ccTools.loadImg(weaponImg, imgPath.weaponIcon + weaponData.itemId);
+                }
             }
             const nameLab = weaponBox?.getChildByName('nameLab')?.getComponent(Label);
             if (!nameLab) return;
             nameLab.string = weaponData?.name ?? '';
+            nameLab.color = new Color(QualityColorArr[weaponData?.quality] ?? '#FFFFFF');
         });
     }
 

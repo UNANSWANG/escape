@@ -30,7 +30,7 @@ export class showItemController extends Component {
         }
         ccTools.loadImg(bgSp, imgPath.itemBg + itemData.quality);
         //TODO 物品图片不齐，暂时先屏蔽
-        // ccTools.loadImg(itemSp, imgPath.item + itemId);
+        ccTools.loadImg(itemSp, imgPath.item + itemId);
     }
 }
 

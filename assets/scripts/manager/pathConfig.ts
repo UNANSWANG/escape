@@ -156,6 +156,8 @@ export enum imgPath {
     hpBar = "texture/game/hpBar",
     /**盒子品质光 */
     boxLight = "texture/game/boxLight/light_",
+    /**子弹壳 */
+    bulletShell = "texture/common/bulletShell",
 }
 
 /**spine路径 */

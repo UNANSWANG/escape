@@ -42,7 +42,7 @@ export class shotgunController extends gunController {
         }
         if (!hasFired) return false;
 
-        this.finishFire();
+        this.finishFire(bulletParent);
         return true;
     }
 }

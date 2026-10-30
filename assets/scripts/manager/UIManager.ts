@@ -1,4 +1,4 @@
-import { _decorator, AnimationClip, AssetManager, Component, instantiate, Node, Prefab, Sprite, tween, UITransform, Vec3 } from 'cc';
+import { _decorator, AnimationClip, AssetManager, Component, instantiate, Node, Prefab, Sprite, SpriteFrame, tween, UITransform, Vec3 } from 'cc';
 import { UIBase } from '../UIPage/UIBase';
 import { UIBackpack } from '../UIPage/UIBackpack';
 import { animPath, audioPath, gamePath, imgPath, ItemPath, UIPath } from './pathConfig';
@@ -31,6 +31,9 @@ export class UIManager {
     gameSpineItemPrefab: Prefab = null;
     /**游戏通用 Animation 动画节点预制体 */
     gameAnimItemPrefab: Prefab = null;
+    /**开火时使用的弹壳动画和图片，进入游戏前预加载。 */
+    bulletShellClip: AnimationClip = null;
+    bulletShellSpriteFrame: SpriteFrame = null;
     /**通过 ItemPath.role 加载，供游戏界面创建玩家 */
     rolePrefab: Prefab = null;
     /**通过 ItemPath.soldier 加载，供游戏界面创建士兵 */
@@ -175,13 +178,15 @@ export class UIManager {
 
     /**加载游戏动画 */
     private async loadGameAnim() {
-        let clips = await Promise.all([
-            
+        const [clip, spriteFrame] = await Promise.all([
+            ccResTools.loadAnimationClip(this.resBundle, animPath.bulletShell, false),
+            ccResTools.loadPic(this.resBundle, imgPath.bulletShell),
         ]);
-
-        if (clips.some((clip) => !clip)) {
-            throw new Error("游戏动画加载失败");
+        if (!clip || !spriteFrame) {
+            throw new Error("子弹壳动画或图片加载失败");
         }
+        this.bulletShellClip = clip;
+        this.bulletShellSpriteFrame = spriteFrame;
     }
 
     /**显示提示 */

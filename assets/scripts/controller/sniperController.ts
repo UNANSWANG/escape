@@ -198,7 +198,7 @@ export class sniperController extends gunController {
             0,
         );
         if (!this.spawnBullet(bulletParent, this.tempMuzzleWorldPos, this.tempReleaseWorldDirection)) return false;
-        this.finishFire();
+        this.finishFire(bulletParent);
         return true;
     }
 

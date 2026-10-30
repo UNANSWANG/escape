@@ -178,5 +178,6 @@ export enum spinePath {
 
 /**动画路径 */
 export enum animPath {
-    
+    /**子弹壳弹出 */
+    bulletShell = "animation/game/bulletShell",
 }

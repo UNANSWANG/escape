@@ -1,6 +1,7 @@
-import { _decorator, Node, UITransform, Vec3 } from 'cc';
+import { _decorator, Node, Sprite, UIOpacity, UITransform, Vec3 } from 'cc';
 import { uiMgr } from '../manager/UIManager';
 import { poolMgr } from '../manager/poolManager';
+import { gameAnimController } from './gameAnimController';
 import { bulletController } from './bulletController';
 import { weaponsAnimName, weaponsController, WeaponStats } from './weaponsController';
 const { ccclass } = _decorator;
@@ -17,6 +18,9 @@ export class gunController extends weaponsController {
     private isReloading = false;
     /**武器 Spine 中用于确定枪口位置的开火骨骼。 */
     private shootBone: any = null;
+    /**武器 Spine 中用于弹出弹壳的 danke 骨骼。 */
+    private shellBone: any = null;
+    private tempShellSpawnWorldPos = new Vec3();
     private tempShootRootWorldPos = new Vec3();
     private tempBulletSpawnWorldPos = new Vec3();
     private tempBulletWorldDirection = new Vec3();
@@ -33,6 +37,7 @@ export class gunController extends weaponsController {
     protected resetWeaponSpineBones() {
         super.resetWeaponSpineBones();
         this.shootBone = null;
+        this.shellBone = null;
     }
 
     get ammo() { return this.currentAmmo; }
@@ -84,7 +89,7 @@ export class gunController extends weaponsController {
         if (!this.prepareFire()) return false;
         if (!this.getShootData(this.tempBulletSpawnWorldPos, this.tempBulletWorldDirection)) return false;
         if (!this.spawnBullet(bulletParent, this.tempBulletSpawnWorldPos, this.tempBulletWorldDirection)) return false;
-        this.finishFire();
+        this.finishFire(bulletParent);
         return true;
     }
 
@@ -135,18 +140,18 @@ export class gunController extends weaponsController {
     }
 
     /** 完成本次开火。无论本次生成几枚分裂子弹，均只在此扣除 1 发弹药。 */
-    protected finishFire() {
+    protected finishFire(bulletParent: Node) {
         if (this.hasInfiniteAmmo) {
-            this.playShootAnim();
+            this.playShootAnim(bulletParent);
             return;
         }
         this.currentAmmo--;
         this.emitAmmoChange();
         if (this.currentAmmo <= 0) {
-            this.playShootAnim(true);
+            this.playShootAnim(bulletParent, true);
             this.startReload(true);
         } else {
-            this.playShootAnim();
+            this.playShootAnim(bulletParent);
         }
     }
 
@@ -212,14 +217,49 @@ export class gunController extends weaponsController {
         return true;
     }
 
-    protected playShootAnim(reloadAfter = false) {
+    protected playShootAnim(bulletParent: Node, reloadAfter = false) {
         if (!this.weaponSkeleton?.skeletonData) return;
         this.curWeaponAnimName = weaponsAnimName.attack;
         this.weaponSkeleton.setAnimation(0, gunAnimName.attack, false);
+        this.playBulletShell(bulletParent);
         if (!reloadAfter) {
             this.weaponSkeleton.addAnimation(0, gunAnimName.idle, true, 0);
             this.curWeaponAnimName = weaponsAnimName.idle;
         }
+    }
+
+    /** 在 danke 挂点创建独立弹壳，不受角色后续移动、转向或切枪影响。 */
+    private playBulletShell(parent: Node) {
+        if (!parent?.isValid || !uiMgr.gameAnimItemPrefab || !uiMgr.bulletShellClip
+            || !uiMgr.bulletShellSpriteFrame) return;
+        if (!this.weaponSkeleton?.skeletonData) return;
+        this.shellBone ??= this.weaponSkeleton.findBone('danke');
+        if (!this.shellBone) return;
+        this.node.updateWorldTransform();
+        this.tempShellSpawnWorldPos.set(this.shellBone.worldX, this.shellBone.worldY, 0);
+        Vec3.transformMat4(this.tempShellSpawnWorldPos, this.tempShellSpawnWorldPos, this.node.worldMatrix);
+
+        // 外层保存出生位置和左右翻转，内层由 AnimationClip 控制相对位移与旋转。
+        const root = new Node('bulletShellRoot');
+        root.layer = parent.layer;
+        parent.addChild(root);
+        root.setWorldPosition(this.tempShellSpawnWorldPos);
+        root.setScale(this.node.scale.x < 0 ? -1 : 1, 1, 1);
+        const shell = poolMgr.getGameAnimNode(uiMgr.gameAnimItemPrefab);
+        root.addChild(shell);
+        shell.layer = parent.layer;
+        shell.setPosition(0, 0, 0);
+        shell.setScale(1, 1, 1);
+        shell.angle = 0;
+        const sprite = shell.getComponent(Sprite);
+        sprite.spriteFrame = uiMgr.bulletShellSpriteFrame;
+        sprite.sizeMode = Sprite.SizeMode.CUSTOM;
+        shell.getComponent(UITransform).setContentSize(7, 13);
+        (shell.getComponent(UIOpacity) || shell.addComponent(UIOpacity)).opacity = 255;
+        shell.getComponent(gameAnimController).startAnim(uiMgr.bulletShellClip, () => {
+            poolMgr.putGameAnimNode(shell);
+            root.destroy();
+        });
     }
 
     private playReloadAnim() {

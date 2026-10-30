@@ -1,6 +1,6 @@
-import { _decorator, Color, EventTouch, Label, Node, UITransform, Vec3, view } from 'cc';
+import { _decorator, Color, EventTouch, Label, Node, Sprite, UITransform, Vec3, view } from 'cc';
 import { UIBase } from './UIBase';
-import { UIPath } from '../manager/pathConfig';
+import { imgPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccStorageTools } from '../extention/storageTools';
@@ -111,20 +111,17 @@ export class UIStorehouse extends UIBase {
         this.refreshEquipmentNames();
     }
 
-    /**根据装备栏前三项刷新主武器、副武器和近战武器名称。 */
+    /**根据装备栏前三项刷新武器名称和图标，空槽显示 weaponNone。 */
     private refreshWeaponNames() {
         const weaponNodes = [this.weapons_0, this.weapons_1, this.knife];
         weaponNodes.forEach((weaponNode, slotIndex) => {
             const weaponData = weaponsConfig.getDataById(pData.equipmentIds[slotIndex]);
-            if (slotIndex < 2) {
-                const emptyWeaponNode = weaponNode?.getChildByName("weaponNone");
-                if (emptyWeaponNode) {
-                    emptyWeaponNode.active = !weaponData;
-                }
-                const weaponImageNode = weaponNode?.getChildByName("img");
-                if (weaponImageNode) {
-                    weaponImageNode.active = !!weaponData;
-                }
+            const weaponImg = weaponNode?.getChildByName("img")?.getComponent(Sprite);
+            if (weaponImg) {
+                weaponImg.node.active = true;
+                weaponImg.spriteFrame = null;
+                const iconPath = weaponData ? imgPath.weaponIcon + weaponData.itemId : imgPath.weaponNone;
+                ccTools.loadImg(weaponImg, iconPath);
             }
 
             const nameLab = weaponNode?.getChildByName("nameLab")?.getComponent(Label);

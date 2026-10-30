@@ -1523,7 +1523,9 @@ export class UIGame extends UIBase {
             }
             const weapon = playerMgr.playerComp?.getWeaponController(slotIndex);
             const gun = weapon?.node.getComponent(gunController);
-            numLab.string = `${gun?.ammo ?? 0}/∞`;
+            const weaponData = weaponsConfig.getDataById(pData.equipmentIds[slotIndex]);
+            const hasInfiniteAmmo = weaponData?.capacity === -1;
+            numLab.string = hasInfiniteAmmo ? '∞/∞' : `${gun?.ammo ?? 0}/∞`;
         });
     }
 

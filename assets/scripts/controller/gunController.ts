@@ -47,6 +47,7 @@ export class gunController extends weaponsController {
 
     /** 切入该枪后，空弹匣立即重新开始换弹。 */
     onWeaponEquipped() {
+        if (this.hasInfiniteAmmo) return;
         if (this.isReloading) return;
         if (this.currentAmmo <= 0) this.startReload(false);
     }
@@ -54,6 +55,7 @@ export class gunController extends weaponsController {
     /** 枪械在应用配置后，以新的弹匣容量重新装填。 */
     applyStats(stats: WeaponStats) {
         super.applyStats(stats);
+        this.isReloading = false;
         this.currentAmmo = this.capacity;
         this.emitAmmoChange();
     }
@@ -88,6 +90,7 @@ export class gunController extends weaponsController {
 
     /** 检查本次开火是否可执行；子类生成全部弹丸后调用 finishFire 统一扣除 1 发弹药。 */
     protected prepareFire() {
+        if (this.hasInfiniteAmmo) return true;
         if (this.isReloading) return false;
         if (this.currentAmmo <= 0) {
             this.reload();
@@ -133,6 +136,10 @@ export class gunController extends weaponsController {
 
     /** 完成本次开火。无论本次生成几枚分裂子弹，均只在此扣除 1 发弹药。 */
     protected finishFire() {
+        if (this.hasInfiniteAmmo) {
+            this.playShootAnim();
+            return;
+        }
         this.currentAmmo--;
         this.emitAmmoChange();
         if (this.currentAmmo <= 0) {
@@ -144,6 +151,7 @@ export class gunController extends weaponsController {
     }
 
     reload() {
+        if (this.hasInfiniteAmmo) return false;
         if (this.isReloading) {
             uiMgr.showTips('正在换弹中...');
             return false;
@@ -156,6 +164,7 @@ export class gunController extends weaponsController {
     }
 
     private startReload(afterCurrentAnimation: boolean) {
+        if (this.hasInfiniteAmmo) return false;
         if (this.isReloading || this.currentAmmo >= this.capacity) return false;
         this.isReloading = true;
         this.node.emit('reload-start', this.reloadTime);

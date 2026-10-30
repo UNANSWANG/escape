@@ -137,7 +137,7 @@ export enum imgPath {
     /**物品背景 */
     itemBg = "texture/common/itemBg_",
     /**物品 */
-    item = "texture/item/item_",
+    item = "texture/icon/item/item_",
     /**商店物品背景 */
     storeItemBg = "texture/store/storeItemBg_",
     /**图鉴藏品背景 */

@@ -16,7 +16,7 @@ export interface WeaponStats {
     flightSpeed: number;
     /** 单次命中的基础伤害。 */
     attack: number;
-    /** 弹匣容量；近战武器可配置为 1。 */
+    /** 弹匣容量；-1 表示无限弹药，近战武器可配置为 1。 */
     capacity: number;
     /** 攻击射程（世界坐标单位），同时用于自动索敌和限制攻击距离。 */
     attackRange: number;
@@ -45,8 +45,9 @@ export class weaponsController extends Component {
     flightSpeed = 2000;
     /** 攻击力。 */
     attack = 5;
-    /** 弹匣容量；近战武器可配置为 1。 */
+    /** 弹匣容量；-1 表示无限弹药，近战武器可配置为 1。 */
     capacity = 20;
+    get hasInfiniteAmmo(): boolean { return this.capacity === -1; }
     /** 换弹时间（秒），由 weapons 表 reloadTime 配置；未配置时为 0。 */
     reloadTime = 0;
     /** 攻击距离：用于自动索敌，并限制远程子弹的最大飞行距离。 */
@@ -90,7 +91,9 @@ export class weaponsController extends Component {
         if (Number.isFinite(stats.attackInterval)) this.attackInterval = Math.max(0, stats.attackInterval);
         if (Number.isFinite(stats.flightSpeed)) this.flightSpeed = Math.max(0, stats.flightSpeed);
         if (Number.isFinite(stats.attack)) this.attack = Math.max(0, stats.attack);
-        if (Number.isFinite(stats.capacity)) this.capacity = Math.max(0, Math.floor(stats.capacity));
+        if (Number.isFinite(stats.capacity)) {
+            this.capacity = stats.capacity === -1 ? -1 : Math.max(0, Math.floor(stats.capacity));
+        }
         if (Number.isFinite(stats.attackRange)) this.attackRange = Math.max(0, stats.attackRange);
         if (Number.isFinite(stats.speed)) this.moveSpeedScale = Math.max(0, stats.speed / 100);
         this.reloadTime = Number.isFinite(stats.reloadTime) ? Math.max(0, stats.reloadTime) : 0;

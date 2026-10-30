@@ -1005,10 +1005,10 @@ export class UIGame extends UIBase {
         }
 
         this.gameUINode.addChild(floatNode);
-        // 在人物中心横向 ±30 像素内生成；生成位置所在一侧决定后续斜飞方向。
+        // 在人物中心横向 ±30 像素内生成，飞行方向以竖直向上为 0°，随机偏转 ±45°。
         const spawnOffsetX = (Math.random() * 2 - 1) * 30;
-        const flyDirection = spawnOffsetX < 0 ? -1 : 1;
-        const flyOffsetX = flyDirection * (24 + Math.random() * 40);
+        const flyAngle = (Math.random() * 90 - 45) * Math.PI / 180;
+        const flyOffsetX = Math.tan(flyAngle) * 80;
         floatNode.setPosition(this.tempDamageFloatLocalPos.x + spawnOffsetX, this.tempDamageFloatLocalPos.y, 0);
         floatNode.setScale(0.8, 0.8, 1);
         label.string = isHeal ? `+${Math.ceil(damage)}` : `${Math.ceil(damage)}`;

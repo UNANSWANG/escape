@@ -42,6 +42,10 @@ export class weaponStorePage extends storePageBase {
             this.content.addChild(itemNode);
             itemNodes.push(itemNode);
 
+            const weaponImg = itemNode.getChildByName("img")?.getComponent(Sprite);
+            if (weaponImg) {
+                ccTools.loadImg(weaponImg, imgPath.weaponIcon + weapon.itemId);
+            }
             const nameLab = itemNode.getChildByName("nameLab")?.getComponent(Label);
             if (nameLab) {
                 nameLab.string = weapon.name ?? "";
@@ -78,6 +82,7 @@ export class weaponStorePage extends storePageBase {
             this.selectWeapon(weaponData[0], itemNodes, itemNodes[0]);
         } else {
             this.selectedWeapon = null;
+            this.refreshShowWeaponImage(null);
             if (this.showNameLab) {
                 this.showNameLab.string = "";
             }
@@ -110,6 +115,7 @@ export class weaponStorePage extends storePageBase {
 
     private selectWeapon(weapon: JsonWeaponsData, itemNodes: Node[], selectedNode: Node) {
         this.selectedWeapon = weapon;
+        this.refreshShowWeaponImage(weapon);
         this.refreshAttributes(weapon);
         if (this.showNameLab) {
             this.showNameLab.string = this.selectedWeapon.name ?? "";
@@ -121,6 +127,17 @@ export class weaponStorePage extends storePageBase {
                 selectNode.active = itemNode === selectedNode;
             }
         });
+    }
+
+    /** 默认选中和切换商品时同步刷新展示武器。 */
+    private refreshShowWeaponImage(weapon: JsonWeaponsData | null) {
+        const weaponImg = this.node.getChildByName("showNode")?.getChildByName("img")?.getComponent(Sprite);
+        if (!weaponImg) return;
+        ccTools.cancelAssetLoad(weaponImg);
+        weaponImg.spriteFrame = null;
+        if (weapon) {
+            ccTools.loadImg(weaponImg, imgPath.weaponIcon + weapon.itemId);
+        }
     }
 
     private refreshAttributes(weapon: JsonWeaponsData) {

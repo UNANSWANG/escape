@@ -181,7 +181,8 @@ export class loopAnimation extends Component {
             this.uiOpacity.opacity = 255;
         } else {
             this.node.scale = new Vec3(this.baseScale);
-            this.node.angle = 0;
+            // 浮动只改变位置，保留预制体设置的旋转角度。
+            if (this.animType != loop_anim.floating) this.node.angle = 0;
         }
     }
 

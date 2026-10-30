@@ -1,7 +1,7 @@
-import { _decorator, Node, Label, instantiate } from 'cc';
+import { _decorator, Node, Label, Sprite, instantiate } from 'cc';
 import { storePageBase } from './storePageBase';
 import { weaponsConfig, JsonWeaponsData } from '../../json/jsonWeapons';
-import { ItemPath, UIPath } from '../../manager/pathConfig';
+import { imgPath, ItemPath, UIPath } from '../../manager/pathConfig';
 import { uiMgr } from '../../manager/UIManager';
 import { ccResTools } from '../../extention/resTools';
 import { ccTools } from '../../extention/generalTools';
@@ -32,6 +32,10 @@ export class superWeaponStorePage extends storePageBase {
         for (const weapon of weaponData) {
             const itemNode = instantiate(itemPrefab);
             this.content.addChild(itemNode);
+            const weaponImg = itemNode.getChildByName("img")?.getComponent(Sprite);
+            if (weaponImg) {
+                ccTools.loadImg(weaponImg, imgPath.weaponIcon + weapon.itemId);
+            }
             const nameLab = itemNode.getChildByName("nameLab")?.getComponent(Label);
             if (nameLab) {
                 nameLab.string = weapon.name ?? "";

@@ -36,6 +36,12 @@ export class rewardItem extends Component {
         this.nameLab.string = itemData?.name ?? "";
         const quality = itemData?.quality ?? 4;
         ccTools.loadImg(this.bgSp, imgPath.itemBg + quality);
-        // ccTools.loadImg(this.imgSp, imgPath.props + itemId);
+        if (this.imgSp) {
+            const isWeapon = Number.isInteger(itemId) && itemId >= 0 && itemId <= 100000;
+            this.imgSp.node.angle = isWeapon ? -35 : 0;
+            ccTools.cancelAssetLoad(this.imgSp);
+            this.imgSp.spriteFrame = null;
+            ccTools.loadImg(this.imgSp, ccTools.getItemIconPath(itemId));
+        }
     }
 }

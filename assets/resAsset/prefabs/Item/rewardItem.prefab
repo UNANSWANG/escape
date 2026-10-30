@@ -172,10 +172,7 @@
       "b": 255,
       "a": 255
     },
-    "_spriteFrame": {
-      "__uuid__": "6b3be502-e942-44fb-8e9d-dad965264911@f9941",
-      "__expectedType__": "cc.SpriteFrame"
-    },
+    "_spriteFrame": null,
     "_type": 0,
     "_fillType": 0,
     "_sizeMode": 1,
@@ -244,8 +241,8 @@
     },
     "_lscale": {
       "__type__": "cc.Vec3",
-      "x": 1,
-      "y": 1,
+      "x": 0.7,
+      "y": 0.7,
       "z": 1
     },
     "_mobility": 0,

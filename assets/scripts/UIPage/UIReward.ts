@@ -1,4 +1,4 @@
-import { _decorator, Node, Animation, Prefab, instantiate, Layout } from 'cc';
+import { _decorator, Node, Animation, Prefab, instantiate, Layout, ScrollView } from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -82,6 +82,13 @@ export class UIReward extends UIBase {
                 }
                 layout.enabled = false;
             }
+        }
+
+        // 奖励列表布局完成后，停止上次滚动并立即回到顶部。
+        const scrollView = this.node.getComponentInChildren(ScrollView);
+        if (scrollView) {
+            scrollView.stopAutoScroll();
+            scrollView.scrollToTop(0);
         }
     }
 

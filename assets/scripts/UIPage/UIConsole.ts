@@ -120,7 +120,7 @@ export class UIConsole extends UIBase {
 
     /**点击增加物品 */
     clickAddItemBtn() {
-        const collectionItems = itemConfig.getAllData().filter((itemData) => Number.isFinite(itemData.quality));
+        const collectionItems = itemConfig.getCollectionBookData();
         this.openTableRewards(collectionItems);
     }
 

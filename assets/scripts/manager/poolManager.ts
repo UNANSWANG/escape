@@ -138,8 +138,8 @@ export class poolManager extends Component {
     }
 
     putBulletShellNode(node: Node) {
-        const shell = node.getChildByName('shell');
-        const animation = shell?.getComponent(Animation);
+        const animation = node.getComponentInChildren(Animation);
+        const shell = animation?.node;
         animation?.off(Animation.EventType.FINISHED);
         animation?.stop();
         shell?.setPosition(Vec3.ZERO);

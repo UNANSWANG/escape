@@ -239,16 +239,21 @@ export class gunController extends weaponsController {
 
         // 外层保存出生位置和左右翻转，内层由 AnimationClip 控制相对位移与旋转。
         const root = poolMgr.getBulletShellNode(uiMgr.bulletShellPrefab);
+        const animation = root.getComponentInChildren(Animation);
+        if (!animation?.defaultClip) {
+            poolMgr.putBulletShellNode(root);
+            console.warn('弹壳预制体缺少 Animation 组件或默认动画');
+            return;
+        }
         root.layer = parent.layer;
         parent.addChild(root);
         root.setWorldPosition(this.tempShellSpawnWorldPos);
         root.setScale(this.node.scale.x < 0 ? -1 : 1, 1, 1);
-        const shell = root.getChildByName('shell');
+        const shell = animation.node;
         shell.layer = parent.layer;
         shell.setPosition(0, 0, 0);
         shell.setScale(1, 1, 1);
         shell.angle = 0;
-        const animation = shell.getComponent(Animation);
         animation.once(Animation.EventType.FINISHED, () => poolMgr.putBulletShellNode(root));
         animation.play();
     }

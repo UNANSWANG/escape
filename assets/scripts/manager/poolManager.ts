@@ -1,5 +1,4 @@
 import { _decorator, Animation, Component, instantiate, Label, Node, NodePool, Prefab, sp, Sprite, Tween, UIOpacity, UITransform, Vec3 } from 'cc';
-import { gameAnimController } from '../controller/gameAnimController';
 import { bulletController } from '../controller/bulletController';
 const { ccclass, property } = _decorator;
 const PRODUCE_TIPS_POOL_LIMIT = 48;
@@ -11,7 +10,7 @@ const GAME_LABEL_POOL_LIMIT = 64;
 const GAME_SPINE_POOL_LIMIT = 32;
 const TILE_ITEM_POOL_LIMIT = 256;
 const PROPS_NODE_POOL_LIMIT = 32;
-const GAME_ANIM_POOL_LIMIT = 64;
+const BULLET_SHELL_POOL_LIMIT = 64;
 
 //对象池管理类
 @ccclass('poolManager')
@@ -34,7 +33,6 @@ export class poolManager extends Component {
     tileItemPool: NodePool = new NodePool();
     /**按道具脚本类型拆分的节点对象池 */
     private propsNodePoolMap: Map<string, NodePool> = new Map();
-    gameAnimNodePool: NodePool = new NodePool();
     private bulletShellNodePool: NodePool = new NodePool();
 
     /**初始化点的对象池 */
@@ -147,17 +145,7 @@ export class poolManager extends Component {
         shell?.setPosition(Vec3.ZERO);
         if (shell) shell.angle = 0;
         this.resetNode(node);
-        this.putNodeWithLimit(this.bulletShellNodePool, node, GAME_ANIM_POOL_LIMIT);
-    }
-
-    getGameAnimNode(prefab: Prefab) {
-        return this.getNode(this.gameAnimNodePool, prefab);
-    }
-
-    putGameAnimNode(node: Node) {
-        node.getComponent(gameAnimController)?.clearData();
-        this.resetNode(node);
-        this.putNodeWithLimit(this.gameAnimNodePool, node, GAME_ANIM_POOL_LIMIT);
+        this.putNodeWithLimit(this.bulletShellNodePool, node, BULLET_SHELL_POOL_LIMIT);
     }
 
     /**获取游戏图片节点Sprite组件 */

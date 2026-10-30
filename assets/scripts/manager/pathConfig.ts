@@ -64,8 +64,6 @@ export enum ItemPath {
     gameLabelItem = "prefabs/Item/gameLabelItem",
     /**游戏spine物体 */
     gameSpineItem = "prefabs/Item/gameSpineItem",
-    /**游戏animation物体 */
-    gameAnimItem = "prefabs/Item/gameAnimItem",
     /**弹壳特效 */
     bulletShell = "prefabs/Item/bulletShell",
     /**特效物体 */

@@ -29,8 +29,6 @@ export class UIManager {
     gameLabelItemPrefab: Prefab = null;
     /**游戏通用 Spine 动画节点预制体 */
     gameSpineItemPrefab: Prefab = null;
-    /**游戏通用 Animation 动画节点预制体 */
-    gameAnimItemPrefab: Prefab = null;
     /**弹壳专用预制体，包含图片和动画资源引用。 */
     bulletShellPrefab: Prefab = null;
     /**通过 ItemPath.role 加载，供游戏界面创建玩家 */
@@ -141,7 +139,6 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, ItemPath.gameSpriteItem, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.gameLabelItem, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.gameSpineItem, false),
-            ccResTools.loadPrefab(this.resBundle, ItemPath.gameAnimItem, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.role, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.soldier, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.roleShow, false),
@@ -163,17 +160,16 @@ export class UIManager {
         this.gameSpriteItemPrefab = prefabs[2];
         this.gameLabelItemPrefab = prefabs[3];
         this.gameSpineItemPrefab = prefabs[4];
-        this.gameAnimItemPrefab = prefabs[5];
-        this.rolePrefab = prefabs[6];
-        this.soldierPrefab = prefabs[7];
-        this.roleShowPrefab = prefabs[8];
-        this.supplyBoxPrefab = prefabs[9];
-        this.eliminationBoxPrefab = prefabs[10];
-        this.bossBoxPrefab = prefabs[11];
-        this.dronePrefab = prefabs[12];
-        this.skillRangePrefab = prefabs[13];
-        this.syringePrefab = prefabs[14];
-        this.bulletShellPrefab = prefabs[15];
+        this.rolePrefab = prefabs[5];
+        this.soldierPrefab = prefabs[6];
+        this.roleShowPrefab = prefabs[7];
+        this.supplyBoxPrefab = prefabs[8];
+        this.eliminationBoxPrefab = prefabs[9];
+        this.bossBoxPrefab = prefabs[10];
+        this.dronePrefab = prefabs[11];
+        this.skillRangePrefab = prefabs[12];
+        this.syringePrefab = prefabs[13];
+        this.bulletShellPrefab = prefabs[14];
     }
 
     /**显示提示 */

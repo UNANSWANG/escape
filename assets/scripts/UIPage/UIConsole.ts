@@ -128,7 +128,7 @@ export class UIConsole extends UIBase {
     private openTableRewards(tableData: Array<{ itemId: number }>) {
         const rewardData: number[][] = tableData
             .filter((itemData) => Number.isInteger(itemData?.itemId) && itemData.itemId >= 0)
-            .map((itemData) => [itemData.itemId, 1]);
+            .map((itemData) => [itemData.itemId, 99]);
         if (rewardData.length === 0) return;
         uiMgr.openPage(UIPath.UIReward, { rewardData });
     }

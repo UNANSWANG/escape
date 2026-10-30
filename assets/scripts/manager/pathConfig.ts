@@ -142,6 +142,8 @@ export enum imgPath {
     weaponIcon = "texture/icon/weapons/weapons_",
     /**武器空图标 */
     weaponNone = "texture/icon/weapons/weaponNone",
+    /**装备icon */
+    equipIcon = "texture/icon/equipment/equipment_",
     /**商店物品背景 */
     storeItemBg = "texture/store/storeItemBg_",
     /**图鉴藏品背景 */

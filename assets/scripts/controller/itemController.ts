@@ -32,9 +32,11 @@ export class itemController extends Component {
         const quality = itemData?.quality ?? 4;
         ccTools.loadImg(this.bgSp, imgPath.itemBg + quality);
         if (this.itemImgSp) {
+            const isWeapon = Number.isInteger(itemId) && itemId >= 0 && itemId <= 100000;
+            this.itemImgSp.node.angle = isWeapon ? -35 : 0;
+            ccTools.cancelAssetLoad(this.itemImgSp);
             this.itemImgSp.spriteFrame = null;
-            //TODO 物品图片不齐，暂时先屏蔽
-            ccTools.loadImg(this.itemImgSp, imgPath.item + itemId);
+            ccTools.loadImg(this.itemImgSp, ccTools.getItemIconPath(itemId));
         }
 
         if (!itemData) {

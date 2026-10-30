@@ -20,6 +20,8 @@ export class showItemController extends Component {
         const bgSp = this.node.getChildByName('bg')?.getComponent(Sprite);
         const itemSp = this.node.getChildByName('img')?.getComponent(Sprite);
         if (itemSp) {
+            const isWeapon = Number.isInteger(itemId) && itemId >= 0 && itemId <= 100000;
+            itemSp.node.angle = isWeapon ? -35 : 0;
             ccTools.cancelAssetLoad(itemSp);
             itemSp.spriteFrame = null;
             itemSp.node.active = true;
@@ -29,8 +31,7 @@ export class showItemController extends Component {
             return;
         }
         ccTools.loadImg(bgSp, imgPath.itemBg + itemData.quality);
-        //TODO 物品图片不齐，暂时先屏蔽
-        ccTools.loadImg(itemSp, imgPath.item + itemId);
+        ccTools.loadImg(itemSp, ccTools.getItemIconPath(itemId));
     }
 }
 

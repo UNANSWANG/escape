@@ -5,10 +5,20 @@ import { uiMgr } from '../manager/UIManager';
 import { ccResTools } from './resTools';
 import { configData } from '../manager/configData';
 import { pData } from '../manager/playerData';
+import { imgPath } from '../manager/pathConfig';
 const { ccclass, property } = _decorator;
 
 @ccclass('generalTools')
 export class generalTools {
+    /** 按跨表 itemId 区间返回图标路径，与 getItemDataByItemId 的分类规则一致。 */
+    getItemIconPath(itemId: number): string {
+        if (!Number.isInteger(itemId) || itemId < 0 || itemId > 400000) return '';
+        if (itemId <= 100000) return imgPath.weaponIcon + itemId;
+        if (itemId <= 200000) return imgPath.equipIcon + itemId;
+        // 道具和角色皮肤沿用通用物品图标目录。
+        return imgPath.item + itemId;
+    }
+
     /**显示指定子节点 */
     showChildByIdx(parent: Node, idx: number) {
         for (let i = 0; i < parent.children.length; i++) {

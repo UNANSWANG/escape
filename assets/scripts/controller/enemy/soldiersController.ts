@@ -560,19 +560,21 @@ export class soldiersController extends Component {
         this.roleAnim.setAnimation(0, animation, true);
     }
 
-    /**根据皮肤id刷新敌人spine */
+    /**初始化时随机加载一套士兵 Spine，动画 id 范围为 0 到数量减 1。 */
     private async refreshRoleSpine() {
-        // if (this.roleAnim) {
-        //     this.roleAnim.skeletonData = null;
-        // }
+        const animId = Math.floor(Math.random() * configData.soldierAnimCount);
+        const loaded = await ccTools.loadSpine(this.roleAnim, `${spinePath.soldier}${animId}/animation`);
+        if (!loaded || !this.isValid) return;
 
-        // let isLoaded = await ccTools.loadSpine(this.roleAnim, spinePath.boss + this.skinId);
-        // if (!isLoaded) {
-        //     return;
-        // }
-
+        // 更换骨骼数据后重新获取武器挂点，并恢复加载期间的当前动作。
+        this.weaponComp?.bindToRole(this.roleAnim);
+        if (this.hp <= 0) {
+            this.playDeath();
+            return;
+        }
+        const animation = this.currentAnim ?? enemyAnim.idle;
         this.currentAnim = null;
-        this.playPatrolAnimation(enemyAnim.idle);
+        this.playPatrolAnimation(animation);
     }
 
     /**生命值百分比 */

@@ -164,6 +164,8 @@ export enum spinePath {
     role = "spine/role/role_",
     /**敌人spine（文件夹） */
     boss = "spine/boss/boss_",
+    /**士兵spine（文件夹） */
+    soldier = "spine/soldier/soldier_",
     /**武器 */
     weapon = "spine/weapons/weapons_",
     /**眩晕 */
@@ -172,10 +174,4 @@ export enum spinePath {
     click = "spine/click/dianji",
     /**宝石 */
     gem = "spine/roleSkill/gem/gem",
-}
-
-/**动画路径 */
-export enum animPath {
-    /**子弹壳弹出 */
-    bulletShell = "animation/game/bulletShell",
 }

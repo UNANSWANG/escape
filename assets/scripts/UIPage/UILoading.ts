@@ -24,15 +24,6 @@ export class UILoading extends Component {
     @property(Label)
     percentLab: Label = null;
 
-    @property(Node)
-    zombie: Node = null;
-
-    /**城市背景向右移动速度（像素/秒） */
-    cityMoveSpeed = 200;
-
-    /**天空背景向右移动速度（像素/秒） */
-    skyMoveSpeed = 80;
-
     /**表格加载完成 */
     tableComplete = false;
     /**界面加载完成 */
@@ -54,7 +45,6 @@ export class UILoading extends Component {
     private isSceneLoading = false;
 
     start() {
-        this.zombie = this.zombie || this.node.getChildByName("zombie");
         this.refreshProgress();
         this.initData();
     }
@@ -157,11 +147,6 @@ export class UILoading extends Component {
         let progressPercent = Math.min(Math.max(this.currentProgressPercent, 0), 1);
         this.progress.fillRange = progressPercent;
         this.percentLab.string = `${(progressPercent * 100).toFixed(0)}%`;
-
-        if (this.zombie) {
-            let zombiePos = this.zombie.position;
-            this.zombie.setPosition(-466 + 932 * progressPercent, zombiePos.y, zombiePos.z);
-        }
     }
 
     /**加载表格 */

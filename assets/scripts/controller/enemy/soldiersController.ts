@@ -1,4 +1,4 @@
-import { _decorator, Color, Component, Label, Node, sp, Sprite, tween, Tween, UITransform, UIOpacity, Vec2, Vec3 } from 'cc';
+import { _decorator, Color, Component, Node, sp, Sprite, tween, Tween, UITransform, UIOpacity, Vec2, Vec3 } from 'cc';
 import { ccTools } from '../../extention/generalTools';
 import { UIGame } from '../../UIPage/UIGame';
 import { audioPath, spinePath, UIPath } from '../../manager/pathConfig';
@@ -69,8 +69,6 @@ export class soldiersController extends Component {
     roleAnim: sp.Skeleton = null;
     /**手持武器节点 */
     weaponNode: Node = null;
-    /**角色名称 */
-    roleNameLab: Label = null;
     /**血量节点 */
     hpNode: Node = null;
     /**血量图片 */
@@ -120,7 +118,6 @@ export class soldiersController extends Component {
         this.roleAnim = this.node.getChildByName("roleAnim").getComponent(sp.Skeleton);
         this.weaponNode = this.node.getChildByName("weapons");
         this.weaponDefaultX = this.weaponNode?.position.x ?? 0;
-        this.roleNameLab = this.node.getChildByName("roleNameLab").getComponent(Label);
         this.hpNode = this.node.getChildByName("hpNode");
         this.hpBar = this.hpNode.getChildByName("bar").getComponent(Sprite);
         this.baseHp = this.hpNode.getChildByName("base").getComponent(Sprite);
@@ -136,7 +133,7 @@ export class soldiersController extends Component {
     }
 
     /**初始化 */
-    init(comp: UIGame, id: number, armsId: number, data: soldiersData = null, nickname = "") {
+    init(comp: UIGame, id: number, armsId: number, data: soldiersData = null) {
         this.gameComp = comp;
         this.id = id;
         this.armsId = armsId;
@@ -145,7 +142,6 @@ export class soldiersController extends Component {
 
         this.refreshRoleSpine();
 
-        this.roleNameLab.string = nickname || `小兵${this.id + 1}`
         this.initPatrol(data);
     }
 
@@ -601,7 +597,6 @@ export class soldiersController extends Component {
     private playDeath() {
         if (this.weaponNode) this.weaponNode.active = false;
         if (this.hpNode) this.hpNode.active = false;
-        if (this.roleNameLab) this.roleNameLab.node.active = false;
         if (this.effectNode) this.effectNode.active = false;
         const finish = () => {
             if (this.isValid && this.hp <= 0) this.node.active = false;

@@ -160,6 +160,8 @@ export enum imgPath {
     soldierLeftHand = "texture/soldier/hand/left_",
     /**士兵右手 */
     soldierRightHand = "texture/soldier/hand/right_",
+    /**段位徽章 */
+    rankBadge = "texture/rank/badge/badge_",
 }
 
 /**spine路径 */

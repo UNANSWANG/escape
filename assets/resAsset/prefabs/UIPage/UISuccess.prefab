@@ -3579,6 +3579,9 @@
     "addRankNumLab": {
       "__id__": 71
     },
+    "rankBadge": {
+      "__id__": 59
+    },
     "itemContent": {
       "__id__": 129
     },

@@ -1,9 +1,9 @@
-import { _decorator, instantiate, Label, Layout, Node, Prefab, Animation } from 'cc';
+import { _decorator, instantiate, Label, Layout, Node, Prefab, Animation, Sprite } from 'cc';
 import { UIBase } from './UIBase';
-import { audioPath, ItemPath, UIPath } from '../manager/pathConfig';
+import { audioPath, imgPath, ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { pData } from '../manager/playerData';
-import { configData } from '../manager/configData';
+import { configData, GameEvent } from '../manager/configData';
 import { gm } from '../manager/gm';
 import { audioMgr } from '../manager/audioManager';
 import { zoomButton } from '../extention/zoomButton';
@@ -12,6 +12,7 @@ import { ccResTools } from '../extention/resTools';
 import { showItemController } from '../controller/showItemController';
 import { RankScoreAnimation } from '../extention/rankScoreAnimation';
 import { itemConfig } from '../json/jsonItem';
+import { rankConfig } from '../json/jsonRank';
 const { ccclass, property } = _decorator;
 
 @ccclass('UISuccess')
@@ -31,6 +32,9 @@ export class UISuccess extends UIBase {
     @property(Label)
     addRankNumLab: Label;
 
+    @property(Sprite)
+    rankBadge: Sprite;
+
     @property(Node)
     itemContent: Node;
 
@@ -47,8 +51,10 @@ export class UISuccess extends UIBase {
         anim.play();
         gm.gamePause();
         audioMgr.playEffect(audioPath.success);
+        gm.Event.on(GameEvent.refreshRank, this.refreshRankBadge, this);
         const scoreChange = this.rankScoreAnimation.play(this.curRankNumLab, 20);
         if (this.addRankNumLab) this.addRankNumLab.string = '+' + scoreChange;
+        this.refreshRankBadge();
         this.initData(data);
     }
 
@@ -92,7 +98,16 @@ export class UISuccess extends UIBase {
         this.itemContent.getComponent(Layout)?.updateLayout();
     }
 
+    /** 超出配置范围的段位沿用最后一枚徽章，晋升后同步刷新。 */
+    private refreshRankBadge() {
+        const rankData = rankConfig.getRankData(pData.rank);
+        if (this.rankBadge && rankData) {
+            ccTools.loadImg(this.rankBadge, imgPath.rankBadge + rankData.id);
+        }
+    }
+
     onUI_Close() {
+        gm.Event.off(GameEvent.refreshRank, this.refreshRankBadge, this);
         ++this.itemListVersion;
         this.rankScoreAnimation.finish();
     }

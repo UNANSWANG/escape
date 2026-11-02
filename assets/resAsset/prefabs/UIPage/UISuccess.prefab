@@ -1427,7 +1427,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "rank",
+    "_name": "badge",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -1448,7 +1448,7 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 33.5,
+      "x": 26.5,
       "y": 0,
       "z": 0
     },
@@ -1489,8 +1489,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 67,
-      "height": 55
+      "width": 53,
+      "height": 64
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -1526,7 +1526,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "31da375d-400b-4d0c-a2e3-a4eac8c07e2f@f9941",
+      "__uuid__": "034007ea-280c-46cb-9167-81e4bda428da@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
@@ -1584,7 +1584,7 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 121.14990234375,
+      "x": 107.14990234375,
       "y": 0,
       "z": 0
     },
@@ -1743,7 +1743,7 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 213.8115234375,
+      "x": 199.8115234375,
       "y": 0,
       "z": 0
     },
@@ -1902,7 +1902,7 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 290.8232421875,
+      "x": 276.8232421875,
       "y": 0,
       "z": 0
     },
@@ -2029,7 +2029,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 313.3232421875,
+      "width": 299.3232421875,
       "height": 100
     },
     "_anchorPoint": {

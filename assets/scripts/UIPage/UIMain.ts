@@ -67,13 +67,15 @@ export class UIMain extends UIBase {
     @property(Sprite)
     rankBar: Sprite = null;
 
-    @property({ tooltip: '主页角色向左移动的范围' })
+    @property(Sprite)
+    rankBadge: Sprite = null;
+
+    //人物动画配置
+    /**主页角色向左移动的范围 */
     roleMoveLeftRange = 250;
-
-    @property({ tooltip: '主页角色向右移动的范围' })
+    /**主页角色向右移动的范围 */
     roleMoveRightRange = 200;
-
-    @property({ tooltip: '主页角色移动速度（每秒本地坐标单位）' })
+    /**主页角色移动速度（每秒本地坐标单位） */
     roleMoveSpeed = 60;
 
     private roleOrigin = new Vec3();
@@ -208,7 +210,12 @@ export class UIMain extends UIBase {
 
     /**显示当前段位名称、段内积分及晋升进度。 */
     private refreshRank() {
-        const targetScore = rankConfig.getRankData(pData.rank)?.rankScore ?? 0;
+        const rankData = rankConfig.getRankData(pData.rank);
+        const targetScore = rankData?.rankScore ?? 0;
+        if (this.rankBadge && rankData) {
+            // 超出配置的段位沿用最后一个段位的配置 id，徽章也保持为最后一枚。
+            ccTools.loadImg(this.rankBadge, imgPath.rankBadge + rankData.id);
+        }
         if (this.rankNameLab) this.rankNameLab.string = rankConfig.getRankName(pData.rank);
         if (this.rankLab) this.rankLab.string = pData.rankScore + '/' + targetScore;
         if (this.rankBar) {

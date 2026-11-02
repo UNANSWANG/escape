@@ -11,7 +11,7 @@
     "6c48a": {
       "importer": "texture",
       "uuid": "f7a8dd45-bfbb-4e0a-8df1-8f0dc748a76e@6c48a",
-      "displayName": "btn_z_0009_tuceng_14",
+      "displayName": "startBtn",
       "id": "6c48a",
       "name": "texture",
       "userData": {
@@ -35,7 +35,7 @@
     "f9941": {
       "importer": "sprite-frame",
       "uuid": "f7a8dd45-bfbb-4e0a-8df1-8f0dc748a76e@f9941",
-      "displayName": "btn_z_0009_tuceng_14",
+      "displayName": "startBtn",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {

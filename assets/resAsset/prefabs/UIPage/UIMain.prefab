@@ -5195,7 +5195,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "rank",
+    "_name": "badge",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -5229,8 +5229,8 @@
     },
     "_lscale": {
       "__type__": "cc.Vec3",
-      "x": 0.5,
-      "y": 0.5,
+      "x": 1,
+      "y": 1,
       "z": 1
     },
     "_mobility": 0,
@@ -5257,8 +5257,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 134,
-      "height": 111
+      "width": 53,
+      "height": 64
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -5294,7 +5294,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "ed36fd1f-1b66-4334-801a-e521b0640c6b@f9941",
+      "__uuid__": "034007ea-280c-46cb-9167-81e4bda428da@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
@@ -14917,9 +14917,9 @@
     "rankBar": {
       "__id__": 228
     },
-    "roleMoveLeftRange": 250,
-    "roleMoveRightRange": 200,
-    "roleMoveSpeed": 60,
+    "rankBadge": {
+      "__id__": 215
+    },
     "_id": ""
   },
   {

@@ -5,8 +5,8 @@ const { ccclass, property } = _decorator;
 
 @ccclass('playerManager')
 export class playerManager {
-    /** 匹配时确定的本局 AI 配置，进入游戏时直接复用。 */
-    matchedAIRoles: JsonAgentRoleData[] = [];
+    /** 匹配时确定的本局 AI 配置和昵称，进入游戏时直接复用。 */
+    matchedAIRoles: (JsonAgentRoleData & { nickname: string })[] = [];
 
     /**玩家节点 */
     player: Node = null;

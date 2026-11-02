@@ -16,12 +16,13 @@ import { bossConfig } from '../json/jsonBoss';
 import { mapConfig } from '../json/jsonMap';
 import { rankConfig } from '../json/jsonRank';
 import { agentRoleConfig } from '../json/jsonAgentRole';
+import { nicknameConfig } from '../json/jsonNickname';
 const { ccclass, property } = _decorator;
 
 @ccclass('jsonManager')
 export class jsonManager  {
     /**表格数量 */
-    tableNum = 14;
+    tableNum = 15;
     /**已加载的表格数量 */
     tableLoadNum = 0;
 
@@ -46,6 +47,7 @@ export class jsonManager  {
         mapConfig.initTable();
         rankConfig.initTable();
         agentRoleConfig.initTable();
+        nicknameConfig.initTable();
     }
 
     loadCall(name: string){

@@ -73,7 +73,10 @@ export class UIMatch extends UIBase {
         } catch {
             console.warn('地图 agentList 配置格式错误', rawTypes);
         }
-        playerMgr.matchedAIRoles = agentRoleConfig.randomRoles(agentTypes, itemCount - 1);
+        playerMgr.matchedAIRoles = agentRoleConfig.randomRoles(agentTypes, itemCount - 1).map((data, index) => ({
+            ...data,
+            nickname: this.nicknamePool.pop() || `玩家${index + 1}`,
+        }));
         console.log('本局随机人机表 ID:', playerMgr.matchedAIRoles.map(data => data.id));
         if (playerMgr.matchedAIRoles.length !== itemCount - 1) {
             this.isMatching = false;
@@ -155,7 +158,7 @@ export class UIMatch extends UIBase {
         const min = Math.max(0, Number(configData.roleMatchTime[0]) || 0);
         const max = Math.max(min, Number(configData.roleMatchTime[1]) || min);
         this.scheduleOnce(() => {
-            const nickname = this.nicknamePool.pop() || `玩家${this.currentMatchIndex}`;
+            const nickname = playerMgr.matchedAIRoles[this.currentMatchIndex - 1].nickname;
             this.showMatchItem(this.matchItems[this.currentMatchIndex], nickname);
             this.currentMatchIndex++;
             this.scheduleNextMatch();

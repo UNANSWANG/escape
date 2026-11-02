@@ -851,7 +851,7 @@ export class UIGame extends UIBase {
             aiComp.aiDamageRatio = Number.isFinite(damageRatio) ? Math.max(0, damageRatio) : 1;
             const attackIntervalRatio = Number(agentData.attackIntervalRatio);
             aiComp.aiAttackIntervalRatio = Number.isFinite(attackIntervalRatio) ? Math.max(0, attackIntervalRatio) : 1;
-            aiComp.init(this, roleId, agentData.skinId, `人机${index + 1}`);
+            aiComp.init(this, roleId, agentData.skinId, agentData.nickname);
             this.aiRoles.push(aiComp);
             enemyMgr.aiRoles.push(aiComp);
         }

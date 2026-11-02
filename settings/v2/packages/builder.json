@@ -44,7 +44,7 @@
   "splash-setting": {
     "background": {
       "type": "custom",
-      "image": "project://settings/bg.jpg",
+      "image": "project://settings/BG.jpg",
       "color": {
         "x": 0.788235294117647,
         "y": 0.7764705882352941,

@@ -406,8 +406,7 @@ export class UIMain extends UIBase {
 
     /**点击图鉴 */
     clickHandbookBtn() {
-        uiMgr.openPage(UIPath.UIReward, { rewardData: [[200001, 10000]] });
-        // uiMgr.openPage(UIPath.UIHandBook);
+        uiMgr.openPage(UIPath.UIHandBook);
     }
 
     /**点击签到 */

@@ -1,7 +1,7 @@
 import { _decorator, Color, Component, Node, sp, Sprite, tween, Tween, UITransform, UIOpacity, Vec2, Vec3 } from 'cc';
 import { ccTools } from '../../extention/generalTools';
 import { UIGame } from '../../UIPage/UIGame';
-import { audioPath, spinePath, UIPath } from '../../manager/pathConfig';
+import { audioPath, imgPath, spinePath, UIPath } from '../../manager/pathConfig';
 import { ScoutType, soldiersData } from '../../data/soldiersData';
 import { configData, enemyCommonConfig, GameEvent, playerCommonConfig, soldierCommonConfig } from '../../manager/configData';
 import { armsConfig } from '../../json/jsonArms';
@@ -559,7 +559,13 @@ export class soldiersController extends Component {
     /**初始化时随机加载一套士兵 Spine，动画 id 范围为 0 到数量减 1。 */
     private async refreshRoleSpine() {
         const animId = Math.floor(Math.random() * configData.soldierAnimCount);
-        const loaded = await ccTools.loadSpine(this.roleAnim, `${spinePath.soldier}${animId}/animation`);
+        const leftHandImg = this.weaponNode?.getChildByName('left')?.getChildByName('img')?.getComponent(Sprite);
+        const rightHandImg = this.weaponNode?.getChildByName('right')?.getChildByName('img')?.getComponent(Sprite);
+        const [loaded] = await Promise.all([
+            ccTools.loadSpine(this.roleAnim, `${spinePath.soldier}${animId}/animation`),
+            ccTools.loadImg(leftHandImg, imgPath.soldierLeftHand + animId),
+            ccTools.loadImg(rightHandImg, imgPath.soldierRightHand + animId),
+        ]);
         if (!loaded || !this.isValid) return;
 
         // 更换骨骼数据后重新获取武器挂点，并恢复加载期间的当前动作。

@@ -12,13 +12,11 @@ export interface rewardItemData {
 @ccclass('rewardItem')
 export class rewardItem extends Component {
     numLab: Label = null;
-    nameLab: Label = null;
     imgSp: Sprite = null;
     bgSp: Sprite = null;
 
     protected onLoad(): void {
         this.numLab = this.node.getChildByName("numLab").getComponent(Label);
-        this.nameLab = this.node.getChildByName("nameLab").getComponent(Label);
         this.imgSp = this.node.getChildByName("img").getComponent(Sprite);
         this.bgSp = this.node.getChildByName("bg").getComponent(Sprite);
     }
@@ -33,7 +31,6 @@ export class rewardItem extends Component {
         let itemData = getItemDataByItemId(itemId);
 
         this.numLab.string = `x${num}`;
-        this.nameLab.string = itemData?.name ?? "";
         const quality = itemData?.quality ?? 4;
         ccTools.loadImg(this.bgSp, imgPath.itemBg + quality);
         if (this.imgSp) {

@@ -5,7 +5,6 @@ import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { gm, PlatType } from '../manager/gm';
 import { GameEvent, SaveKey } from '../manager/configData';
-import { pData } from '../manager/playerData';
 import { ccStorageTools } from '../extention/storageTools';
 import { TTManager } from '../sdk/plat/tt/TTManager';
 const { ccclass, property } = _decorator;
@@ -83,8 +82,8 @@ export class UIRevisit extends UIBase {
         let canGet = this.TTMgr.checkCanGetGift();
         if (canGet && !this.isGetted) {
             ccStorageTools.setLimitTimeData(SaveKey.isGetRevisit, 1);
-            uiMgr.showTips("获取代币+200");
-            pData.fixMoney(200);
+            this.isGetted = true;
+            uiMgr.openPage(UIPath.UIReward, { rewardData: [[200001, 10000]] });
             this.onClose();
         } else {
             if (this.isGetted) {

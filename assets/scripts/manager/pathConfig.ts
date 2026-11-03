@@ -98,6 +98,14 @@ export enum ItemPath {
     syringe = "prefabs/game/syringe",
 }
 
+/**animation动画预制体 */
+export enum animationItemPath {
+    /**弹壳特效 */
+    bulletShell = "prefabs/anim/bulletShell",
+    /**旋风动画 */
+    whirlwind = "prefabs/anim/whirlwind",
+}
+
 /**音效路径 */
 export enum audioPath {
     /**主页背景音乐 */

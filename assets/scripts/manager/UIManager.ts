@@ -1,7 +1,7 @@
 import { _decorator, AssetManager, Component, instantiate, Node, Prefab, Sprite, tween, UITransform, Vec3 } from 'cc';
 import { UIBase } from '../UIPage/UIBase';
 import { UIBackpack } from '../UIPage/UIBackpack';
-import { audioPath, gamePath, imgPath, ItemPath, UIPath } from './pathConfig';
+import { animationItemPath, audioPath, gamePath, imgPath, ItemPath, UIPath } from './pathConfig';
 import { ccResTools } from '../extention/resTools';
 import { tipsNotice } from '../UIPage/tips/tipsNotice';
 import { pData } from './playerData';
@@ -148,7 +148,7 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, ItemPath.drone, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.skillRange, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.syringe, false),
-            ccResTools.loadPrefab(this.resBundle, ItemPath.bulletShell, false),
+            ccResTools.loadPrefab(this.resBundle, animationItemPath.bulletShell, false),
         ]);
 
         if (prefabs.some((prefab) => !prefab)) {

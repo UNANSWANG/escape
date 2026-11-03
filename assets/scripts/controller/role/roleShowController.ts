@@ -1,11 +1,12 @@
-import { _decorator, Component, Node, sp, UITransform, Vec3 } from 'cc';
+import { _decorator, Component, Node, sp, Sprite, UITransform, Vec3 } from 'cc';
 import { ccStorageTools } from '../../extention/storageTools';
 import { GameEvent, SaveKey } from '../../manager/configData';
 import { gm } from '../../manager/gm';
 import { ccTools } from '../../extention/generalTools';
 import { weaponsConfig } from '../../json/jsonWeapons';
+import { equipmentConfig } from '../../json/jsonEquipment';
 import { pData } from '../../manager/playerData';
-import { spinePath } from '../../manager/pathConfig';
+import { imgPath, spinePath } from '../../manager/pathConfig';
 const { ccclass } = _decorator;
 
 @ccclass('roleShowController')
@@ -18,6 +19,15 @@ export class roleShowController extends Component {
         this.isPlayerData = isPlayerData;
         this.refreshEquipmentDisplay();
         this.refreshWeaponSpine();
+    }
+
+    /** AI 展示使用独立的头盔、护甲配置 id。 */
+    private displayEquipmentIds: number[] = [-1, -1, -1, -1, -1];
+
+    setEquipmentIds(helmetId: number, armorId: number): void {
+        this.displayEquipmentIds[3] = helmetId;
+        this.displayEquipmentIds[4] = armorId;
+        this.refreshEquipmentDisplay();
     }
 
     /** AI 展示使用独立武器 id；玩家按主武器、副武器、近战的顺序展示。 */
@@ -52,6 +62,7 @@ export class roleShowController extends Component {
 
     private onTableLoad(tableName: string): void {
         if (tableName === 'weapons') this.refreshWeaponSpine();
+        if (tableName === 'equipment') this.refreshEquipmentDisplay();
     }
 
     private roleAnim: sp.Skeleton = null;
@@ -69,6 +80,7 @@ export class roleShowController extends Component {
 
     /**每次显示角色时，角色和展示武器都默认循环播放待机动画。 */
     protected onEnable(): void {
+        this.refreshEquipmentDisplay();
         this.refreshWeaponSpine();
         for (const name of ['roleAnim', 'weapon']) {
             const skeleton = this.node.getChildByName(name)?.getComponent(sp.Skeleton);
@@ -83,12 +95,18 @@ export class roleShowController extends Component {
 
     /** 玩家自身跟随仓库装备显示设置，AI 始终显示装备图片。 */
     private refreshEquipmentDisplay(): void {
+        const equipmentIds = this.isPlayerData ? pData.equipmentIds : this.displayEquipmentIds;
         const isVisible = !this.isPlayerData || ccStorageTools.getNumberData(SaveKey.isShowEquipment) !== 1;
         const roleAnimNode = this.node.getChildByName('roleAnim');
-        for (const name of ['head', 'armor']) {
-            const imageNode = roleAnimNode?.getChildByName(name)?.getChildByName('img');
-            if (imageNode) imageNode.active = isVisible;
-        }
+        ['head', 'armor'].forEach((name, index) => {
+            const sprite = roleAnimNode?.getChildByName(name)?.getChildByName('img')?.getComponent(Sprite);
+            if (!sprite) return;
+            const equipmentData = equipmentConfig.getDataById(equipmentIds[index + 3]);
+            ccTools.cancelAssetLoad(sprite);
+            sprite.spriteFrame = null;
+            sprite.node.active = isVisible && !!equipmentData;
+            if (equipmentData) ccTools.loadImg(sprite, imgPath.equipment + equipmentData.itemId);
+        });
     }
 
     protected start(): void {

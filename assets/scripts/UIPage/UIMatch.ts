@@ -140,7 +140,9 @@ export class UIMatch extends UIBase {
         roleShow?.setIsPlayerData(isPlayerData);
         if (!isPlayerData) {
             const aiIndex = this.matchItems.indexOf(item) - 1;
-            roleShow?.setWeaponId(playerMgr.matchedAIRoles[aiIndex]?.weaponId ?? -1);
+            const agentData = playerMgr.matchedAIRoles[aiIndex];
+            roleShow?.setWeaponId(agentData?.weaponId ?? -1);
+            roleShow?.setEquipmentIds(agentData?.helmetId ?? -1, agentData?.armorId ?? -1);
         }
         roleContent.addChild(roleNode);
     }

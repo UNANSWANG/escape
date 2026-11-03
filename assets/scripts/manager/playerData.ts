@@ -535,6 +535,7 @@ export class playerData {
 
     private saveEquipmentIds() {
         ccStorageTools.setData(SaveKey.equipmentIds, this.equipmentIds.slice());
+        gm.Event.emit(GameEvent.refreshEquipmentDisplay);
     }
 
     private initStorehouseData(data: any) {

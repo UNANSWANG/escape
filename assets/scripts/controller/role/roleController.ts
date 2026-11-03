@@ -68,6 +68,7 @@ export class roleController extends Component {
     setAIEquipment(weaponId: number, helmetId?: number, armorId?: number) {
         const equippedId = (id: number) => Number.isInteger(id) && id >= 0 ? id : -1;
         this.aiEquipmentIds = [equippedId(weaponId), -1, -1, equippedId(helmetId), equippedId(armorId)];
+        this.refreshEquipmentDisplay();
     }
 
     private get equipmentIds(): number[] {
@@ -229,10 +230,15 @@ export class roleController extends Component {
     private refreshEquipmentDisplay(): void {
         const isVisible = this.isAI || ccStorageTools.getNumberData(SaveKey.isShowEquipment) !== 1;
         const roleAnimNode = this.node.getChildByName('roleAnim');
-        for (const name of ['head', 'armor']) {
-            const imageNode = roleAnimNode?.getChildByName(name)?.getChildByName('img');
-            if (imageNode) imageNode.active = isVisible;
-        }
+        ['head', 'armor'].forEach((name, index) => {
+            const sprite = roleAnimNode?.getChildByName(name)?.getChildByName('img')?.getComponent(Sprite);
+            if (!sprite) return;
+            const equipmentData = equipmentConfig.getDataById(this.equipmentIds[index + 3]);
+            ccTools.cancelAssetLoad(sprite);
+            sprite.spriteFrame = null;
+            sprite.node.active = isVisible && !!equipmentData;
+            if (equipmentData) ccTools.loadImg(sprite, imgPath.equipment + equipmentData.itemId);
+        });
     }
 
     /**当前装备的枪械组件 */
@@ -889,7 +895,10 @@ export class roleController extends Component {
     /** 装备相关表异步加载完成后，为已创建的角色补充装备数值。 */
     private onTableLoad(tableName: string) {
         if (tableName === 'weapons') this.applyEquippedWeaponStats();
-        if (tableName === 'equipment') this.applyEquippedDefenseStats();
+        if (tableName === 'equipment') {
+            this.applyEquippedDefenseStats();
+            this.refreshEquipmentDisplay();
+        }
         if (tableName === 'roleLevel' && this.roleData) {
             this.roleLevelData = roleLevelConfig.getRoleLevelData(this.roleId, pData.getRoleLevel(this.roleId));
             this.initData();

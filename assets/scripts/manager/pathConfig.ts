@@ -122,8 +122,8 @@ export enum imgPath {
     props = "texture/reward/props/props_",
     /**默认头像 */
     defAvatar = "texture/rank/moren",
-    /**子弹皮肤 */
-    bulletSkin = "texture/game/bullet/bullet_",
+    /**子弹 */
+    bullet = "texture/game/bullet/bullet_",
     /**角色全身 */
     roleBodyFull = "texture/role/all/all_",
     /**银币 */

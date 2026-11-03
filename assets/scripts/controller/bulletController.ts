@@ -1,8 +1,11 @@
-import { _decorator, Component, UITransform, Vec3 } from 'cc';
+import { _decorator, Component, Sprite, UITransform, Vec3 } from 'cc';
 import { enemyMgr } from '../manager/enemyManager';
 import { poolMgr } from '../manager/poolManager';
 import { playerMgr } from '../manager/playerManager';
 import { gm } from '../manager/gm';
+import { imgPath } from '../manager/pathConfig';
+import { uiMgr } from '../manager/UIManager';
+import { ccResTools } from '../extention/resTools';
 import type { StaticCollisionShape } from '../UIPage/UIGame';
 const { ccclass, property } = _decorator;
 
@@ -20,9 +23,12 @@ export class bulletController extends Component {
     private obstacleCandidates: StaticCollisionShape[] = [];
     private moveStartWorld = new Vec3();
     private moveEndWorld = new Vec3();
+    private bulletSprite: Sprite = null;
+    private spriteLoadVersion = 0;
 
     /**初始化为不锁定目标的直线飞行子弹 */
-    initStraight(direction: Vec3, damage: number, attackRange: number, flightSpeed: number, targetPlayer = false) {
+    initStraight(direction: Vec3, damage: number, attackRange: number, flightSpeed: number,
+        targetPlayer = false, bulletType = 0) {
         const directionLength = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
         if (directionLength <= 0) {
             this.recycle();
@@ -45,10 +51,25 @@ export class bulletController extends Component {
         }
         // 子弹图片默认朝上。
         this.node.angle = Math.atan2(this.moveDirection.y, this.moveDirection.x) * 180 / Math.PI - 90;
+        this.refreshBulletSprite(bulletType);
+    }
+
+    /** 图片共用资源缓存；版本号防止回池复用后被旧加载结果覆盖。 */
+    private refreshBulletSprite(bulletType: number) {
+        this.bulletSprite ??= this.getComponent(Sprite);
+        const sprite = this.bulletSprite;
+        if (!sprite) return;
+        const version = ++this.spriteLoadVersion;
+        sprite.spriteFrame = null;
+        ccResTools.loadPic(uiMgr.resBundle, imgPath.bullet + bulletType, (spriteFrame) => {
+            if (!this.isValid || !sprite.isValid || version !== this.spriteLoadVersion) return;
+            sprite.spriteFrame = spriteFrame;
+        });
     }
 
     /**放回对象池前清空本次射击状态 */
     onPoolPut() {
+        ++this.spriteLoadVersion;
         this.moveDirection.set(0, 0, 0);
         this.straightMoveRemainDistance = 0;
         this.damage = 0;

@@ -11,6 +11,8 @@ export enum gunAnimName { idle = 'idle', attack = 'attack', reload = 'reload' }
 /** 远程武器控制器：处理弹匣、换弹和子弹生成。 */
 @ccclass('gunController')
 export class gunController extends weaponsController {
+    /** 武器类型 1/5/6 使用 0，4 使用 1，2/3 使用 2。 */
+    private bulletType = 0;
     /**当前弹匣内的剩余子弹数量。 */
     private currentAmmo = 0;
     /**当前是否正在换弹。 */
@@ -59,6 +61,7 @@ export class gunController extends weaponsController {
     /** 枪械在应用配置后，以新的弹匣容量重新装填。 */
     applyStats(stats: WeaponStats) {
         super.applyStats(stats);
+        this.bulletType = stats.type === 4 ? 1 : (stats.type === 2 || stats.type === 3 ? 2 : 0);
         this.isReloading = false;
         this.currentAmmo = this.capacity;
         this.emitAmmoChange();
@@ -134,7 +137,8 @@ export class gunController extends weaponsController {
             poolMgr.putBulletNode(bulletNode);
             return false;
         }
-        bulletComp.initStraight(this.tempBulletLocalDirection, this.attack, this.attackRange, this.flightSpeed, this.targetPlayer);
+        bulletComp.initStraight(this.tempBulletLocalDirection, this.attack, this.attackRange,
+            this.flightSpeed, this.targetPlayer, this.bulletType);
         return true;
     }
 

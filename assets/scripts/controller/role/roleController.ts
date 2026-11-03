@@ -17,7 +17,7 @@ import { equipmentConfig } from '../../json/jsonEquipment';
 import { pData } from '../../manager/playerData';
 import { ccTools } from '../../extention/generalTools';
 import { syringeController } from '../syringeController';
-import { imgPath } from '../../manager/pathConfig';
+import { imgPath, spinePath } from '../../manager/pathConfig';
 import type { EnemyTarget } from '../../manager/enemyManager';
 const { ccclass } = _decorator;
 
@@ -100,6 +100,8 @@ export class roleController extends Component {
     roleType: roleType = roleType.advance;
     /** 角色本体 Spine。 */
     roleAnim: sp.Skeleton = null;
+    private loadedAppearanceRoleId: number = null;
+    private appearanceLoad: { roleId: number; promise: Promise<void> } = null;
     /** 角色头顶名称文本。 */
     roleNameLab: Label = null;
     /** 打药剩余时间文本。 */
@@ -785,6 +787,8 @@ export class roleController extends Component {
         this.applyEquippedDefenseStats();
         this.originalMoveSpeed = configData.moveSpeed;
         this.applyEquippedWeaponStats(true);
+        this.curRoleAnimName = '';
+        this.playRoleAnim(roleAnimName.idle, true);
         this.refreshRoleSpine();
         this.initData();
         // Read role-specific cooldowns first: players start ready, AI waits for a full cooldown.
@@ -905,12 +909,44 @@ export class roleController extends Component {
         }
     }
 
-    /** 刷新角色初始状态，同时通知枪械重新绑定角色挂点。 */
-    private async refreshRoleSpine() {
+    /** 同一角色复用外观和进行中的请求，只有角色改变或加载失败才重新加载。 */
+    refreshRoleSpine(): Promise<void> {
+        if (!this.roleAnim) return Promise.resolve();
+        const roleId = this.roleId;
+        if (this.appearanceLoad?.roleId === roleId) return this.appearanceLoad.promise;
+        if (!this.appearanceLoad && this.loadedAppearanceRoleId === roleId) return Promise.resolve();
+        this.loadedAppearanceRoleId = null;
+        const promise = this.loadRoleAppearance(roleId).then(() => {
+            if (this.appearanceLoad?.promise === promise) this.appearanceLoad = null;
+        }, (error) => {
+            if (this.appearanceLoad?.promise === promise) this.appearanceLoad = null;
+            throw error;
+        });
+        this.appearanceLoad = { roleId, promise };
+        return promise;
+    }
+
+    /** Spine 和各武器槽的左右手作为同一套角色外观刷新。 */
+    private async loadRoleAppearance(roleId: number): Promise<void> {
+        const [loaded] = await Promise.all([
+            ccTools.loadSpine(this.roleAnim, spinePath.role + roleId),
+            ...this.weaponNodes.map((node) => Promise.all([
+                ccTools.loadImg(node?.getChildByPath('left/img')?.getComponent(Sprite), imgPath.roleLeftHand + roleId),
+                ccTools.loadImg(node?.getChildByPath('right/img')?.getComponent(Sprite), imgPath.roleRightHand + roleId),
+            ])),
+        ]);
+        if (!loaded || !this.isValid || this.appearanceLoad?.roleId !== roleId) return;
+        this.loadedAppearanceRoleId = roleId;
+        this.weaponComps.forEach((weapon) => weapon?.bindToRole(this.roleAnim));
+        const animation = this.isPlayingDeath ? roleAnimName.die : (this.curRoleAnimName || roleAnimName.idle);
         this.curRoleAnimName = '';
         this.currentWeaponComp?.bindToRole(this.roleAnim);
         this.currentWeaponComp?.resetRotation(true);
-        this.playRoleAnim(roleAnimName.idle, true);
+        if (this.isPlayingDeath) {
+            this.roleAnim.setAnimation(0, roleAnimName.die, false);
+            return;
+        }
+        this.playRoleAnim(animation, true);
         this.currentWeaponComp?.playIdleAnim();
     }
 

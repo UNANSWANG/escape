@@ -215,17 +215,11 @@ export class generalTools {
         return !!component && component.isValid && (component as any).__asyncAssetLoadVersion == version;
     }
 
-    /**获取 Spine 加载路径，为武器、角色和敌人目录补全实际资源名。 */
+    /**角色、武器和 Boss 文件夹统一加载 animation；完整资源路径直接使用。 */
     private getSpineLoadPath(url: string) {
-        if (/^spine\/weapons\/weapons_[^/]+$/.test(url)) return `${url}/animation`;
-        if (!url.startsWith("spine/role/") && !url.startsWith("spine/boss/")) {
-            return url;
-        }
-
-        let pathArr = url.split("/");
-        let dirName = pathArr[pathArr.length - 1] || "";
-        let spineName = dirName.split("_")[0] || dirName;
-        return `${url}/${spineName}`;
+        return /^spine\/(role\/role_|weapons\/weapons_|boss\/boss_)[^/]+$/.test(url)
+            ? `${url}/animation`
+            : url;
     }
 
     /**打乱数组顺序 */

@@ -12,6 +12,7 @@ import { userMgr } from '../manager/userManager';
 import { WXManager } from '../sdk/plat/wx/WXManager';
 import { ccTools } from '../extention/generalTools';
 import { roleAnimName } from '../controller/role/roleController';
+import { roleShowController } from '../controller/role/roleShowController';
 import { mapConfig } from '../json/jsonMap';
 import { itemConfig } from '../json/jsonItem';
 import { rankConfig } from '../json/jsonRank';
@@ -225,7 +226,7 @@ export class UIMain extends UIBase {
     }
 
     /**从场景中的初始位置开始左右往返移动。 */
-    private refreshRoleAnim() {
+    private async refreshRoleAnim() {
         this.stopRoleWalking();
         if (!this.roleNode?.isValid) return;
         this.roleSkeleton = this.roleNode.getChildByName('roleAnim')?.getComponent(sp.Skeleton)
@@ -237,6 +238,12 @@ export class UIMain extends UIBase {
         this.isRoleWalking = true;
         this.updateRoleFacing();
         this.playRoleAnimation(roleAnimName.move);
+        const roleShow = this.roleNode.getComponent(roleShowController);
+        if (roleShow) await roleShow.refreshRoleSpine();
+        else if (this.roleSkeleton) await ccTools.loadSpine(this.roleSkeleton, spinePath.role + pData.roleId);
+        if (!this.isValid || !this.isRoleWalking || !this.roleNode?.activeInHierarchy) return;
+        this.currentRoleAnimation = '';
+        this.playRoleAnimation(this.isRoleResting ? roleAnimName.idle : roleAnimName.move);
     }
 
     protected update(dt: number): void {

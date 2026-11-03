@@ -13,10 +13,58 @@ const { ccclass } = _decorator;
 export class roleShowController extends Component {
     /** 当前展示的是否为玩家自身数据。 */
     private isPlayerData = true;
+    private displayRoleId = 0;
+    private loadedAppearanceRoleId: number = null;
+    private appearanceLoad: { roleId: number; promise: Promise<void> } = null;
+
+    /** 设置独立展示的角色，匹配 AI 时不读取玩家角色。 */
+    setRoleId(roleId: number): void {
+        this.displayRoleId = roleId;
+        this.refreshRoleSpine();
+    }
+
+    /** 同一角色复用外观和进行中的请求，重复显示不会重载 Spine 或左右手。 */
+    refreshRoleSpine(): Promise<void> {
+        const roleId = this.isPlayerData ? pData.roleId : this.displayRoleId;
+        if (this.appearanceLoad?.roleId === roleId) return this.appearanceLoad.promise;
+        if (!this.appearanceLoad && this.loadedAppearanceRoleId === roleId) return Promise.resolve();
+        this.loadedAppearanceRoleId = null;
+        const promise = this.loadRoleAppearance(roleId).then(() => {
+            if (this.appearanceLoad?.promise === promise) this.appearanceLoad = null;
+        }, (error) => {
+            if (this.appearanceLoad?.promise === promise) this.appearanceLoad = null;
+            throw error;
+        });
+        this.appearanceLoad = { roleId, promise };
+        return promise;
+    }
+
+    /** 初始化或更换角色时，一起加载 Spine 和左右手图片。 */
+    private async loadRoleAppearance(roleId: number): Promise<void> {
+        const skeleton = this.node.getChildByName('roleAnim')?.getComponent(sp.Skeleton);
+        if (!skeleton) return;
+        const animation = skeleton.getCurrent(0)?.animation?.name || 'idle';
+        this.weaponSocketBone = null;
+        const weaponNode = this.node.getChildByName('weapon');
+        const [loaded] = await Promise.all([
+            ccTools.loadSpine(skeleton, spinePath.role + roleId),
+            ccTools.loadImg(weaponNode?.getChildByPath('left/img')?.getComponent(Sprite), imgPath.roleLeftHand + roleId),
+            ccTools.loadImg(weaponNode?.getChildByPath('right/img')?.getComponent(Sprite), imgPath.roleRightHand + roleId),
+        ]);
+        if (!loaded || !this.isValid || this.appearanceLoad?.roleId !== roleId) return;
+        this.loadedAppearanceRoleId = roleId;
+        skeleton.setAnimation(0, skeleton.findAnimation(animation) ? animation : 'idle', true);
+        this.bindWeaponToRole(skeleton);
+    }
+
+    private onRoleChanged(): void {
+        if (this.isPlayerData) this.refreshRoleSpine();
+    }
 
     /** 切换展示数据来源时同步刷新装备显示。 */
     setIsPlayerData(isPlayerData: boolean): void {
         this.isPlayerData = isPlayerData;
+        this.refreshRoleSpine();
         this.refreshEquipmentDisplay();
         this.refreshWeaponSpine();
     }
@@ -76,10 +124,12 @@ export class roleShowController extends Component {
         this.refreshEquipmentDisplay();
         gm.Event.on(GameEvent.refreshEquipmentDisplay, this.refreshEquipmentDisplay, this);
         gm.Event.on(GameEvent.loadTable, this.onTableLoad, this);
+        gm.Event.on(GameEvent.refreshRoleSkin, this.onRoleChanged, this);
     }
 
     /**每次显示角色时，角色和展示武器都默认循环播放待机动画。 */
     protected onEnable(): void {
+        this.refreshRoleSpine();
         this.refreshEquipmentDisplay();
         this.refreshWeaponSpine();
         for (const name of ['roleAnim', 'weapon']) {
@@ -91,6 +141,7 @@ export class roleShowController extends Component {
     protected onDestroy(): void {
         gm.Event.off(GameEvent.refreshEquipmentDisplay, this.refreshEquipmentDisplay, this);
         gm.Event.off(GameEvent.loadTable, this.onTableLoad, this);
+        gm.Event.off(GameEvent.refreshRoleSkin, this.onRoleChanged, this);
     }
 
     /** 玩家自身跟随仓库装备显示设置，AI 始终显示装备图片。 */

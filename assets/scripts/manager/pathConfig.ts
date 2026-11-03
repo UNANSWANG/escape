@@ -168,6 +168,10 @@ export enum imgPath {
     soldierLeftHand = "texture/soldier/hand/left_",
     /**士兵右手 */
     soldierRightHand = "texture/soldier/hand/right_",
+    /**角色左手 */
+    roleLeftHand = "texture/role/hand/left_",
+    /**角色右手 */
+    roleRightHand = "texture/role/hand/right_",
     /**段位徽章 */
     rankBadge = "texture/rank/badge/badge_",
     /**装备 */
@@ -186,7 +190,7 @@ export enum spinePath {
     boss = "spine/boss/boss_",
     /**士兵spine（文件夹） */
     soldier = "spine/soldier/soldier_",
-    /**武器 */
+    /**武器spine（文件夹） */
     weapon = "spine/weapons/weapons_",
     /**眩晕 */
     dizziness = "spine/dizziness/vertigo",

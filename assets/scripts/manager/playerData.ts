@@ -661,8 +661,10 @@ export class playerData {
     /**设置当前出战角色并保存到本地 */
     setRoleId(roleId: number) {
         if (!Number.isInteger(roleId) || roleId < 0) return;
+        const isChanged = this.roleId !== roleId;
         this.roleId = roleId;
         ccStorageTools.setData(SaveKey.roleId, this.roleId);
+        if (isChanged) gm.Event.emit(GameEvent.refreshRoleSkin);
     }
 
     /**获取角色等级，未记录或无效时默认为 1 级 */

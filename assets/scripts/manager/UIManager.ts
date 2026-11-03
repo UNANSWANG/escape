@@ -31,6 +31,7 @@ export class UIManager {
     gameSpineItemPrefab: Prefab = null;
     /**弹壳专用预制体，包含图片和动画资源引用。 */
     bulletShellPrefab: Prefab = null;
+    whirlwindPrefab: Prefab = null;
     /**通过 ItemPath.role 加载，供游戏界面创建玩家 */
     rolePrefab: Prefab = null;
     /**通过 ItemPath.soldier 加载，供游戏界面创建士兵 */
@@ -149,6 +150,7 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, ItemPath.skillRange, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.syringe, false),
             ccResTools.loadPrefab(this.resBundle, animationItemPath.bulletShell, false),
+            ccResTools.loadPrefab(this.resBundle, animationItemPath.whirlwind, false),
         ]);
 
         if (prefabs.some((prefab) => !prefab)) {
@@ -170,6 +172,7 @@ export class UIManager {
         this.skillRangePrefab = prefabs[12];
         this.syringePrefab = prefabs[13];
         this.bulletShellPrefab = prefabs[14];
+        this.whirlwindPrefab = prefabs[15];
     }
 
     /**显示提示 */

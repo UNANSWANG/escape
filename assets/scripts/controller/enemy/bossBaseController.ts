@@ -109,6 +109,8 @@ export class bossBaseController extends Component {
     gameComp: UIGame = null;
     /** Boss 本体动画。 */
     roleAnim: sp.Skeleton = null;
+    /** 通用特效挂点，在加载时缓存，初始化时恢复显示。 */
+    effectNode: Node = null;
     /** 最大血量。 */
     maxHp = 0;
     /** 当前血量。 */
@@ -175,6 +177,12 @@ export class bossBaseController extends Component {
     protected onLoad(): void {
         if (EDITOR && !PREVIEW) return;
         this.roleAnim = (this.node.getChildByName('anim') ?? this.node.getChildByName('roleAnim'))?.getComponent(sp.Skeleton);
+        this.effectNode = this.node.getChildByName('effectNode');
+        if (!this.effectNode) {
+            this.effectNode = new Node('effectNode');
+            this.effectNode.layer = this.node.layer;
+            this.node.addChild(this.effectNode);
+        }
         this.roleNameLab = (this.node.getChildByName('nameLab') ?? this.node.getChildByName('roleNameLab'))?.getComponent(Label);
         this.hpNode = this.node.getChildByName('hpNode');
         this.hpBar = this.hpNode?.getChildByName('bar')?.getComponent(Sprite);
@@ -209,6 +217,9 @@ export class bossBaseController extends Component {
         this.rageRegenElapsed = 0;
         this.refreshRage();
         this.stopSkill();
+        this.effectNode?.children.forEach((child) => { child.active = false; });
+        if (this.effectNode) this.effectNode.active = true;
+        if (this.roleAnim) this.roleAnim.node.active = true;
         this.currentAnim = '';
         this.clearNavigationPath();
         this.bossState = BossState.Patrol;

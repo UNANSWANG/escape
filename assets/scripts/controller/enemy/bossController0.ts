@@ -1,4 +1,4 @@
-import { _decorator, instantiate, Node, Vec3 } from 'cc';
+import { _decorator, Animation, AnimationClip, instantiate, Node, Vec3 } from 'cc';
 import { uiMgr } from '../../manager/UIManager';
 import { skillRangeController } from '../indicator/skillRangeController';
 import { playerMgr } from '../../manager/playerManager';
@@ -30,6 +30,7 @@ export class bossController0 extends bossBaseController {
     private skillStage = SkillStage.None;
     private skillVersion = 0;
     private skillRangeNode: Node = null;
+    private whirlwindNode: Node = null;
 
     get isUsingSkill(): boolean { return this.skillStage !== SkillStage.None; }
 
@@ -56,6 +57,7 @@ export class bossController0 extends bossBaseController {
                 this.skillRemaining = this.skillDuration;
                 this.skillTickRemaining = this.skillInterval;
                 this.playAnimation(BossAnimName.idle, true, true);
+                this.showWhirlwind();
             });
         });
         return true;
@@ -91,11 +93,37 @@ export class bossController0 extends bossBaseController {
 
     protected stopSkill(): void {
         this.clearSkillRange();
+        if (this.whirlwindNode?.isValid) {
+            this.whirlwindNode.getComponent(Animation)?.stop();
+            this.whirlwindNode.active = false;
+        }
+        if (this.roleAnim?.isValid) this.roleAnim.node.active = true;
         this.skillVersion++;
         this.skillStage = SkillStage.None;
         this.skillRemaining = 0;
         this.skillTickRemaining = 0;
         this.isInSkillRange = false;
+    }
+
+    /** 首次创建后保留，后续技能只重播并切换显隐。 */
+    private showWhirlwind(): void {
+        if (!this.effectNode?.isValid || !uiMgr.whirlwindPrefab) return;
+        if (!this.whirlwindNode?.isValid) {
+            this.whirlwindNode = instantiate(uiMgr.whirlwindPrefab);
+            this.effectNode.addChild(this.whirlwindNode);
+            this.whirlwindNode.layer = this.effectNode.layer;
+        }
+        this.whirlwindNode.setPosition(0, 104, 0);
+        this.effectNode.active = true;
+        this.whirlwindNode.active = true;
+        const animation = this.whirlwindNode.getComponent(Animation);
+        const clip = animation?.defaultClip;
+        if (clip) {
+            const state = animation.getState(clip.name);
+            state.wrapMode = AnimationClip.WrapMode.Loop;
+            animation.play(clip.name);
+        }
+        if (this.roleAnim) this.roleAnim.node.active = false;
     }
 
     /** Show the warning below the Boss throughout both windup animations. */
@@ -143,8 +171,6 @@ export class bossController0 extends bossBaseController {
             this.faceTarget(target);
             this.playAnimation(BossAnimName.idle);
         }
-        // 技能生效期间暂时用循环 idle 替代专用持续动画。
-        this.playAnimation(BossAnimName.idle);
     }
 
     /** 技能范围随 Boss 移动，覆盖四周完整圆形。 */

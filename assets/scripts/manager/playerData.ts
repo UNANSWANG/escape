@@ -577,22 +577,51 @@ export class playerData {
     }
 
 
-    /**修改段位积分，达到目标后持续晋升；扣分最低为 0，不降段。 */
+    /**预览积分结算；最低段位不扣分，其余段位先保底到 0，0 分再次扣分才降段。 */
+    getRankScoreResult(score: number): { rank: number; rankScore: number; actualChange: number } {
+        let rank = this.rank;
+        let rankScore = this.rankScore;
+        if (!Number.isFinite(score)) return { rank, rankScore, actualChange: 0 };
+        const change = Math.trunc(score);
+        let actualChange = 0;
+        if (change < 0) {
+            if (rank > 0) {
+                if (rankScore > 0) {
+                    rankScore = Math.max(0, rankScore + change);
+                    actualChange = rankScore - this.rankScore;
+                } else {
+                    const lowerRankScore = rankConfig.getRankData(rank - 1)?.rankScore;
+                    if (Number.isFinite(lowerRankScore) && lowerRankScore > 0) {
+                        rank--;
+                        // 下一段位也有 0 分保护，一次结算最多下降一个段位。
+                        rankScore = Math.max(0, lowerRankScore + change);
+                        actualChange = rankScore - lowerRankScore;
+                    }
+                }
+            }
+        } else {
+            rankScore += change;
+            actualChange = change;
+            let targetScore = rankConfig.getRankData(rank)?.rankScore;
+            while (Number.isFinite(targetScore) && targetScore > 0 && rankScore >= targetScore) {
+                rankScore -= targetScore;
+                rank++;
+                targetScore = rankConfig.getRankData(rank)?.rankScore;
+            }
+        }
+        return { rank, rankScore, actualChange };
+    }
+
+    /**修改段位积分并保存，结算后同步刷新段位显示。 */
     fixRankScore(score: number): number {
         if (!Number.isFinite(score)) return 0;
-        const previousScore = this.rankScore;
-        this.rankScore = Math.max(0, this.rankScore + Math.trunc(score));
-        const actualChange = this.rankScore - previousScore;
-        let targetScore = rankConfig.getRankData(this.rank)?.rankScore;
-        while (Number.isFinite(targetScore) && targetScore > 0 && this.rankScore >= targetScore) {
-            this.rankScore -= targetScore;
-            this.rank++;
-            targetScore = rankConfig.getRankData(this.rank)?.rankScore;
-        }
+        const result = this.getRankScoreResult(score);
+        this.rank = result.rank;
+        this.rankScore = result.rankScore;
         ccStorageTools.setData(SaveKey.rank, this.rank);
         ccStorageTools.setData(SaveKey.rankScore, this.rankScore);
         gm.Event.emit(GameEvent.refreshRank);
-        return actualChange;
+        return result.actualChange;
     }
 
     /**修改银币*/

@@ -11,6 +11,7 @@ import { ccTools } from '../extention/generalTools';
 import { ccResTools } from '../extention/resTools';
 import { showItemController } from '../controller/showItemController';
 import { RankScoreAnimation } from '../extention/rankScoreAnimation';
+import { MonetaryValueAnimation } from '../extention/monetaryValueAnimation';
 import { itemConfig } from '../json/jsonItem';
 import { rankConfig } from '../json/jsonRank';
 const { ccclass, property } = _decorator;
@@ -41,6 +42,7 @@ export class UISuccess extends UIBase {
     private showItemPrefab: Prefab = null;
     private itemListVersion = 0;
     private rankScoreAnimation = new RankScoreAnimation();
+    private valueAnimation = new MonetaryValueAnimation();
 
     protected onLoad(): void {
         this.bindBtn();
@@ -69,7 +71,7 @@ export class UISuccess extends UIBase {
             const itemData = itemConfig.getDataByItemId(itemId);
             return total + Math.max(0, Number(itemData?.value) || 0) * Math.max(0, Math.floor(num));
         }, 0);
-        this.getNumLab.string = ccTools.formatMonetaryNum(collectionValue);
+        this.valueAnimation.play(this.getNumLab, collectionValue);
         this.refreshItems(items);
 
         pData.SDKReportLevelComplete();
@@ -110,10 +112,12 @@ export class UISuccess extends UIBase {
         gm.Event.off(GameEvent.refreshRank, this.refreshRankBadge, this);
         ++this.itemListVersion;
         this.rankScoreAnimation.finish();
+        this.valueAnimation.stop();
     }
 
     protected onDisable(): void {
         this.rankScoreAnimation.finish();
+        this.valueAnimation.stop();
     }
 
     bindBtn() {

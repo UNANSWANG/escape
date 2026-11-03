@@ -11,6 +11,7 @@ import { audioMgr } from '../manager/audioManager';
 import { ccResTools } from '../extention/resTools';
 import { showItemController } from '../controller/showItemController';
 import { RankScoreAnimation } from '../extention/rankScoreAnimation';
+import { MonetaryValueAnimation } from '../extention/monetaryValueAnimation';
 import { videoMgr } from '../manager/videoManager';
 import { rankConfig } from '../json/jsonRank';
 const { ccclass, property } = _decorator;
@@ -50,6 +51,7 @@ export class UIFail extends UIBase {
     private showItemPrefab: Prefab = null;
     private itemListVersion = 0;
     private rankScoreAnimation = new RankScoreAnimation();
+    private valueAnimation = new MonetaryValueAnimation();
     private isRetrieving = false;
     private mainBtnDefaultX = 0;
 
@@ -77,7 +79,7 @@ export class UIFail extends UIBase {
         const seconds = String(survivalTime % 60).padStart(2, '0');
         this.timeLab.string = `存活时间: ${minutes}:${seconds}`;
         const lostItemsValue = pData.getLostItemsValue();
-        this.dropNumLab.string = ccTools.formatMonetaryNum(lostItemsValue);
+        this.valueAnimation.play(this.dropNumLab, lostItemsValue);
         const canRetrieve = lostItemsValue > 0 && pData.lostItems.length > 0;
         this.retrieveBtn.active = canRetrieve;
         this.mainBtn.setPosition(canRetrieve ? this.mainBtnDefaultX : 0,
@@ -124,10 +126,12 @@ export class UIFail extends UIBase {
         gm.Event.off(GameEvent.refreshRank, this.refreshRankBadge, this);
         ++this.itemListVersion;
         this.rankScoreAnimation.finish();
+        this.valueAnimation.stop();
     }
 
     protected onDisable(): void {
         this.rankScoreAnimation.finish();
+        this.valueAnimation.stop();
     }
 
     bindBtn() {

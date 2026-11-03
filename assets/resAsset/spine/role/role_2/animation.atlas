@@ -1,0 +1,62 @@
+
+animation.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+L-leg
+  rotate: false
+  xy: 815, 485
+  size: 142, 194
+  orig: 142, 194
+  offset: 0, 0
+  index: -1
+R-leg
+  rotate: false
+  xy: 885, 811
+  size: 128, 202
+  orig: 131, 203
+  offset: 1, 0
+  index: -1
+biaoqing1
+  rotate: false
+  xy: 545, 732
+  size: 286, 165
+  orig: 291, 189
+  offset: 5, 24
+  index: -1
+body
+  rotate: false
+  xy: 545, 385
+  size: 248, 273
+  orig: 249, 284
+  offset: 1, 11
+  index: -1
+head
+  rotate: false
+  xy: 2, 438
+  size: 541, 575
+  orig: 543, 577
+  offset: 1, 1
+  index: -1
+head2
+  rotate: false
+  xy: 545, 660
+  size: 268, 70
+  orig: 269, 71
+  offset: 0, 0
+  index: -1
+tail
+  rotate: false
+  xy: 833, 681
+  size: 144, 128
+  orig: 146, 133
+  offset: 1, 0
+  index: -1
+yy
+  rotate: false
+  xy: 545, 899
+  size: 338, 114
+  orig: 338, 114
+  offset: 0, 0
+  index: -1

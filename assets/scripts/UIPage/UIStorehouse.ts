@@ -134,17 +134,23 @@ export class UIStorehouse extends UIBase {
         });
     }
 
-    /**根据装备栏后三项刷新头盔、护甲和背包名称。 */
+    /**根据装备栏后三项刷新头盔、护甲和背包名称及图标。 */
     private refreshEquipmentNames() {
         const equipmentNodes = [this.head, this.armor, this.backpack];
         equipmentNodes.forEach((equipmentNode, index) => {
-            const nameLab = equipmentNode?.getChildByName("nameLab")?.getComponent(Label);
-            if (!nameLab) {
-                return;
-            }
-
             const slotIndex = index + 3;
             const equipmentData = equipmentConfig.getDataByItemId(pData.equipmentIds[slotIndex]);
+            const equipmentImg = equipmentNode.getChildByName("img").getComponent(Sprite);
+            ccTools.cancelAssetLoad(equipmentImg);
+            equipmentImg.spriteFrame = null;
+            const iconPath = equipmentData
+                ? imgPath.equipIcon + equipmentData.itemId
+                : index === 0 ? imgPath.headNone : index === 1 ? imgPath.armorNone : "";
+            equipmentImg.node.active = !!iconPath;
+            if (iconPath) ccTools.loadImg(equipmentImg, iconPath);
+
+            const nameLab = equipmentNode?.getChildByName("nameLab")?.getComponent(Label);
+            if (!nameLab) return;
             nameLab.string = equipmentData?.name ?? "";
             nameLab.color = new Color(QualityColorArr[equipmentData?.quality] ?? "#FFFFFF");
         });

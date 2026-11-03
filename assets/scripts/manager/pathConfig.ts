@@ -165,9 +165,9 @@ export enum imgPath {
     /**装备 */
     equipment = "texture/role/equipment/equipment_",
     /**头盔空图标 */
-    headNone = "texture/role/equipment/headNone",
+    headNone = "texture/icon/equipment/headNone",
     /**护甲空图标 */
-    armorNone = "texture/role/equipment/armorNone",
+    armorNone = "texture/icon/equipment/armorNone",
 }
 
 /**spine路径 */

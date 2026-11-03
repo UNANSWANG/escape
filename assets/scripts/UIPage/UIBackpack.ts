@@ -113,15 +113,15 @@ export class UIBackpack extends UIBase {
             const equipmentData = slotIndex < 3
                 ? weaponsConfig.getDataByItemId(equipmentId)
                 : equipmentConfig.getDataByItemId(equipmentId);
-            if (slotIndex < 3) {
-                const weaponImg = slotNode?.getChildByName("img")?.getComponent(Sprite);
-                if (weaponImg) {
-                    weaponImg.node.active = true;
-                    weaponImg.spriteFrame = null;
-                    const iconPath = equipmentData ? imgPath.weaponIcon + equipmentData.itemId : imgPath.weaponNone;
-                    ccTools.loadImg(weaponImg, iconPath);
-                }
-            }
+            const equipmentImg = slotNode.getChildByName("img").getComponent(Sprite);
+            ccTools.cancelAssetLoad(equipmentImg);
+            equipmentImg.spriteFrame = null;
+            const iconPath = equipmentData
+                ? (slotIndex < 3 ? imgPath.weaponIcon : imgPath.equipIcon) + equipmentData.itemId
+                : slotIndex < 3 ? imgPath.weaponNone
+                    : slotIndex === 3 ? imgPath.headNone : slotIndex === 4 ? imgPath.armorNone : "";
+            equipmentImg.node.active = !!iconPath;
+            if (iconPath) ccTools.loadImg(equipmentImg, iconPath);
 
             const nameLab = slotNode?.getChildByName("nameLab")?.getComponent(Label);
             if (nameLab) {

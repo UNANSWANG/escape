@@ -1496,7 +1496,7 @@ export class UIGame extends UIBase {
     refreshWeaponNames() {
         const weaponBoxes = [this.weaponBox_0, this.weaponBox_1];
         weaponBoxes.forEach((weaponBox, slotIndex) => {
-            const weaponData = weaponsConfig.getDataById(pData.equipmentIds[slotIndex]);
+            const weaponData = weaponsConfig.getDataByItemId(pData.equipmentIds[slotIndex]);
             const weaponImg = weaponBox?.getChildByName('img')?.getComponent(Sprite);
             if (weaponImg) {
                 weaponImg.node.active = !!weaponData;
@@ -1525,7 +1525,7 @@ export class UIGame extends UIBase {
             }
             const weapon = playerMgr.playerComp?.getWeaponController(slotIndex);
             const gun = weapon?.node.getComponent(gunController);
-            const weaponData = weaponsConfig.getDataById(pData.equipmentIds[slotIndex]);
+            const weaponData = weaponsConfig.getDataByItemId(pData.equipmentIds[slotIndex]);
             const hasInfiniteAmmo = weaponData?.capacity === -1;
             numLab.string = hasInfiniteAmmo ? '∞/∞' : `${gun?.ammo ?? 0}/∞`;
         });

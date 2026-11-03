@@ -27,7 +27,7 @@ export interface JsonArmsData {
     id: number;
     /**名称 */
     name: string;
-    /**使用武器编号 */
+    /**使用武器 itemId */
     weaponId: number;
     /**血量 */
     hp: number;

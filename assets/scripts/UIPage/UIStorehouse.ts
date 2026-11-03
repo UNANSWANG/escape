@@ -115,7 +115,7 @@ export class UIStorehouse extends UIBase {
     private refreshWeaponNames() {
         const weaponNodes = [this.weapons_0, this.weapons_1, this.knife];
         weaponNodes.forEach((weaponNode, slotIndex) => {
-            const weaponData = weaponsConfig.getDataById(pData.equipmentIds[slotIndex]);
+            const weaponData = weaponsConfig.getDataByItemId(pData.equipmentIds[slotIndex]);
             const weaponImg = weaponNode?.getChildByName("img")?.getComponent(Sprite);
             if (weaponImg) {
                 weaponImg.node.active = true;
@@ -144,7 +144,7 @@ export class UIStorehouse extends UIBase {
             }
 
             const slotIndex = index + 3;
-            const equipmentData = equipmentConfig.getDataById(pData.equipmentIds[slotIndex]);
+            const equipmentData = equipmentConfig.getDataByItemId(pData.equipmentIds[slotIndex]);
             nameLab.string = equipmentData?.name ?? "";
             nameLab.color = new Color(QualityColorArr[equipmentData?.quality] ?? "#FFFFFF");
         });
@@ -548,15 +548,6 @@ export class UIStorehouse extends UIBase {
         return -1;
     }
 
-    /**根据物品配置取得写入 equipmentIds 的配置 id。 */
-    private getEquipmentConfigId(itemId: number): number {
-        const weaponData = weaponsConfig.getDataByItemId(itemId);
-        if (weaponData) {
-            return weaponData.id;
-        }
-        return equipmentConfig.getDataByItemId(itemId)?.id ?? -1;
-    }
-
     /**获取指定槽位当前装备对应的仓库物品 id。 */
     private getEquippedItemId(slotIndex: number): number {
         const equipmentId = pData.equipmentIds[slotIndex];
@@ -564,10 +555,7 @@ export class UIStorehouse extends UIBase {
             return -1;
         }
 
-        if (slotIndex <= 2) {
-            return weaponsConfig.getDataById(equipmentId)?.itemId ?? -1;
-        }
-        return equipmentConfig.getDataById(equipmentId)?.itemId ?? -1;
+        return equipmentId;
     }
 
     /**装备变化后刷新装备名称和当前仓库列表。 */
@@ -832,7 +820,7 @@ export class UIStorehouse extends UIBase {
         }
 
         const slotIndex = this.getEquipmentSlotIndex(selectedItem.itemId);
-        const equipmentId = this.getEquipmentConfigId(selectedItem.itemId);
+        const equipmentId = selectedItem.itemId;
         if (slotIndex < 0 || equipmentId < 0) {
             this.hideAllSelect();
             return;

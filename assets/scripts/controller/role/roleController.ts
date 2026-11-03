@@ -62,7 +62,7 @@ export class roleController extends Component {
     /**人机武器攻击间隔倍率，未配置时为 1。 */
     aiAttackIntervalRatio = 1;
 
-    /** AI 使用独立装备槽，不读取玩家装备；缺省槽位表示未装备。 */
+    /** AI 装备槽存储 itemId，不读取玩家装备；缺省槽位表示未装备。 */
     private aiEquipmentIds: number[] = [-1, -1, -1, -1, -1];
 
     setAIEquipment(weaponId: number, helmetId?: number, armorId?: number) {
@@ -233,7 +233,7 @@ export class roleController extends Component {
         ['head', 'armor'].forEach((name, index) => {
             const sprite = roleAnimNode?.getChildByName(name)?.getChildByName('img')?.getComponent(Sprite);
             if (!sprite) return;
-            const equipmentData = equipmentConfig.getDataById(this.equipmentIds[index + 3]);
+            const equipmentData = equipmentConfig.getDataByItemId(this.equipmentIds[index + 3]);
             ccTools.cancelAssetLoad(sprite);
             sprite.spriteFrame = null;
             sprite.node.active = isVisible && !!equipmentData;
@@ -807,7 +807,7 @@ export class roleController extends Component {
                 node.active = false;
                 return;
             }
-            const weaponData = weaponsConfig.getDataById(weaponId);
+            const weaponData = weaponsConfig.getDataByItemId(weaponId);
             if (!weaponData) {
                 console.warn(`未找到装备栏第 ${slotIndex + 1} 格的武器配置，id: ${weaponId}`);
                 return;
@@ -853,7 +853,7 @@ export class roleController extends Component {
         let totalDefenseValue = 0;
         let totalDamageImmunity = 0;
         for (const slotIndex of [3, 4]) {
-            const equipmentData = equipmentConfig.getDataById(this.equipmentIds[slotIndex]);
+            const equipmentData = equipmentConfig.getDataByItemId(this.equipmentIds[slotIndex]);
             const defenseValue = Number(equipmentData?.defenseValue);
             const damageImmunity = Number(equipmentData?.damageImmunity);
             if (Number.isFinite(defenseValue) && defenseValue > 0) {

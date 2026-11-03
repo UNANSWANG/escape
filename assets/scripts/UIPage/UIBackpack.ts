@@ -111,8 +111,8 @@ export class UIBackpack extends UIBase {
             const slotNode = equipmentNode?.getChildByName(slotName);
             const equipmentId = pData.equipmentIds[slotIndex];
             const equipmentData = slotIndex < 3
-                ? weaponsConfig.getDataById(equipmentId)
-                : equipmentConfig.getDataById(equipmentId);
+                ? weaponsConfig.getDataByItemId(equipmentId)
+                : equipmentConfig.getDataByItemId(equipmentId);
             if (slotIndex < 3) {
                 const weaponImg = slotNode?.getChildByName("img")?.getComponent(Sprite);
                 if (weaponImg) {

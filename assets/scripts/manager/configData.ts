@@ -197,8 +197,10 @@ export enum SaveKey {
     claimedCollectionRewards = "claimedCollectionRewards",
     /**Boss 图鉴状态，按 boss 配置的 id 保存 */
     bossBookStates = "bossBookStates",
-    /**当前装备数据 */
+    /**当前装备 itemId 数据 */
     equipmentIds = "equipmentIds",
+    /**装备存档已转换为 itemId */
+    equipmentItemIdVersion = "equipmentItemIdVersion",
     /**角色等级，按角色 id 保存 */
     roleLevels = "roleLevels",
     /**当前出战角色 id */

@@ -67,8 +67,8 @@ export class playerData {
     /**游戏开始的时间戳 */
     gameStartTime = 0;
     /**装备栏默认值；近战武器和背包不能留空。 */
-    private readonly defaultEquipmentIds: number[] = [-1, -1, 0, -1, -1, 0];
-    /**装备id数组[主武器（weapons），副武器（weapons），近战武器（weapons），头盔（equipment），护甲（equipment），背包（equipment）] */
+    private readonly defaultEquipmentIds: number[] = [-1, -1, 0, -1, -1, 100001];
+    /**装备 itemId 数组[主武器（weapons），副武器（weapons），近战武器（weapons），头盔（equipment），护甲（equipment），背包（equipment）] */
     equipmentIds: number[] = this.defaultEquipmentIds.slice();
     /**背包内价值 */
     backpackValue = 0;
@@ -93,7 +93,7 @@ export class playerData {
         this.gameStartTime = ccTimeTools.getTime();
 
         //初始化背包内最大容量
-        const backpackData = equipmentConfig.getDataById(this.equipmentIds[5]);
+        const backpackData = equipmentConfig.getDataByItemId(this.equipmentIds[5]);
         this.maxBackpackCapacity = Math.max(0, Number(backpackData?.capacity) || 0);
         //初始化背包内物品
         this.clearBackpack();
@@ -396,10 +396,10 @@ export class playerData {
             const equipmentId = this.equipmentIds[slotIndex];
             // 默认装备会在结算后保留，不计入丢失清单。
             if (equipmentId < 0 || equipmentId === this.getDefaultEquipmentId(slotIndex)) continue;
-            // 前三个槽位使用武器表 id，后三个槽位使用装备表 id。
+            // 前三个槽位从武器表查 itemId，后三个槽位从装备表查 itemId。
             const equipmentData = slotIndex < 3
-                ? weaponsConfig.getDataById(equipmentId)
-                : equipmentConfig.getDataById(equipmentId);
+                ? weaponsConfig.getDataByItemId(equipmentId)
+                : equipmentConfig.getDataByItemId(equipmentId);
             if (!equipmentData) {
                 console.warn(`未找到穿戴装备配置，slotIndex: ${slotIndex}, id: ${equipmentId}`);
                 continue;
@@ -465,7 +465,7 @@ export class playerData {
         ccStorageTools.setData(SaveKey.storehouse, this.storehouseData);
     }
 
-    /**修改单个装备槽并保存；近战武器和背包为空时自动恢复默认装备。 */
+    /**使用 itemId 修改单个装备槽并保存；近战武器和背包为空时自动恢复默认装备。 */
     setEquipmentId(slotIndex: number, equipmentId: number): boolean {
         if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= this.defaultEquipmentIds.length) {
             return false;
@@ -493,7 +493,7 @@ export class playerData {
         return this.setEquipmentId(slotIndex, this.defaultEquipmentIds[slotIndex]);
     }
 
-    /**获取指定装备槽位的默认装备 id。 */
+    /**获取指定装备槽位的默认装备 itemId。 */
     getDefaultEquipmentId(slotIndex: number): number {
         if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= this.defaultEquipmentIds.length) {
             return -1;
@@ -503,11 +503,29 @@ export class playerData {
 
     /**读取并兼容旧版装备存档。 */
     private initEquipmentIds(data: any) {
+        const isItemIdData = ccStorageTools.getNumberData(SaveKey.equipmentItemIdVersion) === 1;
+        if (!isItemIdData && Array.isArray(data)) {
+            // 存档初始化早于配置表加载，等待武器和装备表就绪后再迁移。
+            if (!weaponsConfig.getAllData().length || !equipmentConfig.getAllData().length) {
+                const migrate = () => {
+                    if (!weaponsConfig.getAllData().length || !equipmentConfig.getAllData().length) return;
+                    gm.Event.off(GameEvent.loadTable, migrate, this);
+                    this.initEquipmentIds(data);
+                };
+                gm.Event.on(GameEvent.loadTable, migrate, this);
+                return;
+            }
+            data = data.map((id, index) => {
+                if (!Number.isInteger(id) || id < 0) return id;
+                const config = index < 3 ? weaponsConfig : equipmentConfig;
+                return config.getDataById(id)?.itemId ?? config.getDataByItemId(id)?.itemId ?? -1;
+            });
+        }
         this.equipmentIds = this.normalizeEquipmentIds(data);
         const isNormalizedData = Array.isArray(data)
             && data.length === this.equipmentIds.length
             && data.every((equipmentId, index) => equipmentId === this.equipmentIds[index]);
-        if (!isNormalizedData) {
+        if (!isItemIdData || !isNormalizedData) {
             this.saveEquipmentIds();
         }
     }
@@ -535,6 +553,7 @@ export class playerData {
 
     private saveEquipmentIds() {
         ccStorageTools.setData(SaveKey.equipmentIds, this.equipmentIds.slice());
+        ccStorageTools.setData(SaveKey.equipmentItemIdVersion, 1);
         gm.Event.emit(GameEvent.refreshEquipmentDisplay);
     }
 

@@ -33,11 +33,11 @@ export interface JsonAgentRoleData {
     roleId: number;
     /**皮肤id */
     skinId: number;
-    /**武器id */
+    /**武器 itemId（对应 weapons 表的 itemId） */
     weaponId: number;
-    /**头盔id */
+    /**头盔 itemId（对应 equipment 表的 itemId） */
     helmetId: number;
-    /**护甲id */
+    /**护甲 itemId（对应 equipment 表的 itemId） */
     armorId: number;
     /**检测范围 */
     detectRange: number;

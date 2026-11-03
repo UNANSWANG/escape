@@ -195,7 +195,7 @@ export class soldiersController extends Component {
     private initWeapon() {
         const arms = armsConfig.getDataById(this.armsId);
         if (!arms) return;
-        const weaponData = weaponsConfig.getDataById(arms.weaponId);
+        const weaponData = weaponsConfig.getDataByItemId(arms.weaponId);
         if (!weaponData || !this.weaponNode) return;
         const oldWeapon = this.weaponNode.getComponent(weaponsController);
         if (oldWeapon) this.weaponNode.removeComponent(oldWeapon);

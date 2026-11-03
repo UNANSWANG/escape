@@ -21,7 +21,7 @@ export class roleShowController extends Component {
         this.refreshWeaponSpine();
     }
 
-    /** AI 展示使用独立的头盔、护甲配置 id。 */
+    /** AI 展示使用独立的头盔、护甲 itemId。 */
     private displayEquipmentIds: number[] = [-1, -1, -1, -1, -1];
 
     setEquipmentIds(helmetId: number, armorId: number): void {
@@ -30,7 +30,7 @@ export class roleShowController extends Component {
         this.refreshEquipmentDisplay();
     }
 
-    /** AI 展示使用独立武器 id；玩家按主武器、副武器、近战的顺序展示。 */
+    /** AI 展示使用独立武器 itemId；玩家按主武器、副武器、近战的顺序展示。 */
     private displayWeaponId = -1;
     private loadedWeaponId: number = null;
 
@@ -43,7 +43,7 @@ export class roleShowController extends Component {
         return this.isPlayerData ? (pData.equipmentIds.slice(0, 3).find(id => id >= 0) ?? -1) : this.displayWeaponId;
     }
 
-    /** 按武器配置 id 查找 itemId；连续换装由 loadSpine 的请求版本保证顺序。 */
+    /** 按武器 itemId 查找配置；连续换装由 loadSpine 的请求版本保证顺序。 */
     async refreshWeaponSpine(): Promise<void> {
         const skeleton = this.node.getChildByName('weapon')?.getComponent(sp.Skeleton);
         if (!skeleton) return;
@@ -51,7 +51,7 @@ export class roleShowController extends Component {
         this.loadedWeaponId = weaponId;
         ccTools.cancelAssetLoad(skeleton);
         skeleton.skeletonData = null;
-        const weaponData = weaponsConfig.getDataById(weaponId);
+        const weaponData = weaponsConfig.getDataByItemId(weaponId);
         skeleton.node.active = !!weaponData;
         if (!weaponData) return;
         const rightNode = skeleton.node.getChildByName('right');
@@ -101,7 +101,7 @@ export class roleShowController extends Component {
         ['head', 'armor'].forEach((name, index) => {
             const sprite = roleAnimNode?.getChildByName(name)?.getChildByName('img')?.getComponent(Sprite);
             if (!sprite) return;
-            const equipmentData = equipmentConfig.getDataById(equipmentIds[index + 3]);
+            const equipmentData = equipmentConfig.getDataByItemId(equipmentIds[index + 3]);
             ccTools.cancelAssetLoad(sprite);
             sprite.spriteFrame = null;
             sprite.node.active = isVisible && !!equipmentData;

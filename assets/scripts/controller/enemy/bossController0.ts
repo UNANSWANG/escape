@@ -2,6 +2,7 @@ import { _decorator, Animation, AnimationClip, instantiate, Node, Vec3 } from 'c
 import { uiMgr } from '../../manager/UIManager';
 import { skillRangeController } from '../indicator/skillRangeController';
 import { playerMgr } from '../../manager/playerManager';
+import { commonConfig } from '../../json/jsonCommon';
 import { BossAnimName, bossBaseController } from './bossBaseController';
 const { ccclass } = _decorator;
 
@@ -22,6 +23,8 @@ export class bossController0 extends bossBaseController {
     skillInterval = 0.5;
     /** 技能圆形伤害半径。 */
     skillRadius = 200;
+    /**技能持续期间移速加成 */
+    skillSpeed = 0.2;
     /** 每次伤害的攻击力比例。 */
     skillDamageScale = 0.1;
     private skillRemaining = 0;
@@ -33,6 +36,17 @@ export class bossController0 extends bossBaseController {
     private whirlwindNode: Node = null;
 
     get isUsingSkill(): boolean { return this.skillStage !== SkillStage.None; }
+
+    /** 从通用表初始化技能参数，移速加成按百分比转换。 */
+    protected initData(): void {
+        super.initData();
+        const duration = commonConfig.getValueNumber('boss0SkillDuration');
+        const radius = commonConfig.getValueNumber('boss0SkillRadius');
+        const speed = commonConfig.getValueNumber('boss0SkillMoveSpeed');
+        this.skillDuration = Number.isFinite(duration) ? Math.max(0, duration) : 3;
+        this.skillRadius = Number.isFinite(radius) ? Math.max(0, radius) : 200;
+        this.skillSpeed = Number.isFinite(speed) ? Math.max(0, speed) / 100 : 0.2;
+    }
 
     protected startSkill(): boolean {
         if (this.isUsingSkill || this.skillDuration <= 0 || this.skillInterval <= 0) return false;
@@ -165,7 +179,7 @@ export class bossController0 extends bossBaseController {
         const dy = target.y - this.node.worldPosition.y;
         const stopDistance = this.skillRadius * (this.isInSkillRange ? 1 : 0.8);
         this.isInSkillRange = dx * dx + dy * dy <= stopDistance * stopDistance;
-        if (!this.isInSkillRange) this.moveToward(target, dt, BossAnimName.idle);
+        if (!this.isInSkillRange) this.moveToward(target, dt, BossAnimName.idle, this.moveSpeed * (1 + this.skillSpeed));
         else {
             this.clearNavigationPath();
             this.faceTarget(target);

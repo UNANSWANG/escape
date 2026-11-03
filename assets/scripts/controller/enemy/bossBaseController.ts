@@ -208,6 +208,7 @@ export class bossBaseController extends Component {
     /** 设置出生位置后调用初始化。 */
     init(comp: UIGame) {
         this.gameComp = comp;
+        this.initData();
         this.patrolOrigin.set(this.node.worldPosition);
         this.attackCooldown = 0;
         this.attackAnimationPlaying = false;
@@ -229,6 +230,9 @@ export class bossBaseController extends Component {
         if (this.roleNameLab) this.roleNameLab.node.active = true;
         this.playAnimation(BossAnimName.idle);
     }
+
+    /** 初始化子类专属数据，由具体 Boss 重写。 */
+    protected initData(): void {}
 
     /** 读取配置，resetHp 决定是否回满血。 */
     private applyBossData(resetHp: boolean) {
@@ -257,6 +261,10 @@ export class bossBaseController extends Component {
 
     /** 刷新 Boss 配置和路线。 */
     private onTableLoad(tableName: string) {
+        if (tableName === 'common' && this.gameComp) {
+            this.initData();
+            return;
+        }
         if (tableName !== 'boss' || !this.gameComp) return;
         this.initialized = this.applyBossData(!this.initialized);
         this.isInAttackRange = false;
@@ -471,7 +479,7 @@ export class bossBaseController extends Component {
     }
 
     /** 沿路线移动并处理静态碰撞。 */
-    protected moveToward(target: Vec3, dt: number, animation = BossAnimName.move) {
+    protected moveToward(target: Vec3, dt: number, animation = BossAnimName.move, speed = this.moveSpeed) {
         if (this.isAttacking) return false;
         const current = this.node.worldPosition;
         if (Math.hypot(target.x - current.x, target.y - current.y) < 0.5) {
@@ -507,7 +515,7 @@ export class bossBaseController extends Component {
             waypoint = this.navigationPath[++this.navigationIndex];
             distance = Math.hypot(waypoint.x - current.x, waypoint.y - current.y);
         }
-        const step = Math.min(distance, this.moveSpeed * Math.max(0, dt));
+        const step = Math.min(distance, speed * Math.max(0, dt));
         if (distance < 0.001) {
             this.clearNavigationPath();
             return false;

@@ -40,6 +40,8 @@ export interface JsonContainerData {
     id: number;
     /**类型 */
     type: number;
+    /**奖励等级 */
+    rewardLevel: number;
     /**名字 */
     name: string;
     /**物品概率权重 */

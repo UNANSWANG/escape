@@ -13,6 +13,7 @@ import { ccResTools } from '../extention/resTools';
 import { weaponsConfig } from '../json/jsonWeapons';
 import { equipmentConfig } from '../json/jsonEquipment';
 import { containerController } from '../controller/containerController';
+import { containerConfig } from '../json/jsonContainer';
 const { ccclass, property } = _decorator;
 
 
@@ -29,6 +30,9 @@ export class UIBackpack extends UIBase {
 
     @property(Node)
     container: Node;
+
+    @property(Label)
+    containerTitleLab: Label;
 
     @property(Label)
     valueLab: Label;
@@ -75,6 +79,10 @@ export class UIBackpack extends UIBase {
         this.itemData = data?.itemData ?? [];
         this.revealedItemStates = data?.showSearchNode ? (data.revealedItemStates ?? []) : null;
         this.sourceContainer = data?.showSearchNode ? (data.sourceContainer ?? null) : null;
+        const containerData = this.sourceContainer
+            ? containerConfig.getDataByType(this.sourceContainer.containerType, pData.selectMapData[1])
+            : null;
+        this.containerTitleLab.string = containerData?.name ?? "";
         this.hideAllSelect();
         if (!this.itemPrefab) {
             this.itemPrefab = await ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.item);

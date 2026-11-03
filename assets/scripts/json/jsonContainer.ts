@@ -26,11 +26,11 @@ export class jsonContainer extends jsonBase {
         super.processTableData();
     }
 
-    /** 根据容器类型获取对应的容器配置 */
-    getDataByType(type: ContainerType): JsonContainerData | null {
+    /** 根据容器类型和奖励等级获取配置；奖励等级与进入地图的难度一致 */
+    getDataByType(type: ContainerType, rewardLevel: number): JsonContainerData | null {
         if (!this.data) return null;
         const rows = Array.isArray(this.data) ? this.data : Object.values(this.data);
-        return rows.find((row: JsonContainerData) => row?.type === type) ?? null;
+        return rows.find((row: JsonContainerData) => row?.type === type && row.rewardLevel === rewardLevel) ?? null;
     }
 }
 export let containerConfig = new jsonContainer();

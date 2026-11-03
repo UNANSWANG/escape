@@ -5,6 +5,7 @@ import { ccTools } from '../extention/generalTools';
 import { ccResTools } from '../extention/resTools';
 import { imgPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
+import { pData } from '../manager/playerData';
 const { ccclass, property } = _decorator;
 
 /** 由完成搜索的容器节点发送，每个容器只发送一次。 */
@@ -98,9 +99,10 @@ export class containerController extends Component {
 
     /** 按容器配置随机生成物品索引 */
     private initItemData() {
-        const containerData = containerConfig.getDataByType(this.containerType);
+        const rewardLevel = pData.selectMapData[1];
+        const containerData = containerConfig.getDataByType(this.containerType, rewardLevel);
         if (!containerData) {
-            console.warn(`Container config is unavailable for type: ${this.containerType}`);
+            console.warn(`Container config is unavailable for type: ${this.containerType}, rewardLevel: ${rewardLevel}`);
             return;
         }
 

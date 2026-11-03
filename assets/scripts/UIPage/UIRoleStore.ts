@@ -11,6 +11,7 @@ import { showItemController } from '../controller/showItemController';
 import { pData } from '../manager/playerData';
 import { roleLevelConfig, JsonRoleLevelData } from '../json/jsonRoleLevel';
 import { getItemDataByItemId } from '../json/jsonItemData';
+import { roleShowController } from '../controller/role/roleShowController';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIRoleStore')
@@ -59,8 +60,11 @@ export class UIRoleStore extends UIBase {
     private roleAvatarRefreshId = 0;
     private showItemPrefab: Prefab | null = null;
     private showItemPrefabLoad: Promise<Prefab> | null = null;
+    private roleShow: roleShowController = null;
 
     protected onLoad(): void {
+        this.roleShow = this.getComponentInChildren(roleShowController);
+        this.roleShow?.setShowEquipment(false);
         this.bindBtn();
     }
 
@@ -187,6 +191,7 @@ export class UIRoleStore extends UIBase {
             return;
         }
         this.selectedRole = selectedItem.roleData;
+        this.roleShow?.setPreviewRoleId(this.selectedRole.roleId);
         this.refreshUseButton();
         this.roleAvatarItems.forEach((item) => item.setSelected(item === selectedItem));
         this.clickPageTab(this.selectedPageIndex);

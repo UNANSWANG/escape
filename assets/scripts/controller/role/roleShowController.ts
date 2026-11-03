@@ -13,9 +13,31 @@ const { ccclass } = _decorator;
 export class roleShowController extends Component {
     /** 当前展示的是否为玩家自身数据。 */
     private isPlayerData = true;
+    /** 是否显示头盔和护甲，不影响武器。 */
+    private showEquipment = true;
     private displayRoleId = 0;
+    /** 商城预览角色独立指定，装备仍可沿用玩家数据。 */
+    private previewRoleId: number = null;
     private loadedAppearanceRoleId: number = null;
     private appearanceLoad: { roleId: number; promise: Promise<void> } = null;
+    /** AI 展示使用独立的头盔、护甲 itemId。 */
+    private displayEquipmentIds: number[] = [-1, -1, -1, -1, -1];
+    /** AI 展示使用独立武器 itemId；玩家按主武器、副武器、近战的顺序展示。 */
+    private displayWeaponId = -1;
+    private loadedWeaponId: number = null;
+    private roleAnim: sp.Skeleton = null;
+    private weaponNode: Node = null;
+    private weaponSocketBone: any = null;
+    private tempSocketLocalPos = new Vec3();
+    private tempSocketWorldPos = new Vec3();
+    private tempSocketParentLocalPos = new Vec3();
+
+    /** 控制头盔和护甲显示，武器保持正常显示。 */
+    setShowEquipment(visible: boolean): void {
+        if (this.showEquipment === visible) return;
+        this.showEquipment = visible;
+        this.refreshEquipmentDisplay();
+    }
 
     /** 设置独立展示的角色，匹配 AI 时不读取玩家角色。 */
     setRoleId(roleId: number): void {
@@ -23,9 +45,15 @@ export class roleShowController extends Component {
         this.refreshRoleSpine();
     }
 
+    /** 设置商城当前浏览的角色，不改变玩家出战角色和装备来源。 */
+    setPreviewRoleId(roleId: number): void {
+        this.previewRoleId = roleId;
+        this.refreshRoleSpine();
+    }
+
     /** 同一角色复用外观和进行中的请求，重复显示不会重载 Spine 或左右手。 */
     refreshRoleSpine(): Promise<void> {
-        const roleId = this.isPlayerData ? pData.roleId : this.displayRoleId;
+        const roleId = this.previewRoleId ?? (this.isPlayerData ? pData.roleId : this.displayRoleId);
         if (this.appearanceLoad?.roleId === roleId) return this.appearanceLoad.promise;
         if (!this.appearanceLoad && this.loadedAppearanceRoleId === roleId) return Promise.resolve();
         this.loadedAppearanceRoleId = null;
@@ -58,7 +86,7 @@ export class roleShowController extends Component {
     }
 
     private onRoleChanged(): void {
-        if (this.isPlayerData) this.refreshRoleSpine();
+        if (this.isPlayerData && this.previewRoleId === null) this.refreshRoleSpine();
     }
 
     /** 切换展示数据来源时同步刷新装备显示。 */
@@ -69,18 +97,11 @@ export class roleShowController extends Component {
         this.refreshWeaponSpine();
     }
 
-    /** AI 展示使用独立的头盔、护甲 itemId。 */
-    private displayEquipmentIds: number[] = [-1, -1, -1, -1, -1];
-
     setEquipmentIds(helmetId: number, armorId: number): void {
         this.displayEquipmentIds[3] = helmetId;
         this.displayEquipmentIds[4] = armorId;
         this.refreshEquipmentDisplay();
     }
-
-    /** AI 展示使用独立武器 itemId；玩家按主武器、副武器、近战的顺序展示。 */
-    private displayWeaponId = -1;
-    private loadedWeaponId: number = null;
 
     setWeaponId(weaponId: number): void {
         this.displayWeaponId = weaponId;
@@ -113,13 +134,6 @@ export class roleShowController extends Component {
         if (tableName === 'equipment') this.refreshEquipmentDisplay();
     }
 
-    private roleAnim: sp.Skeleton = null;
-    private weaponNode: Node = null;
-    private weaponSocketBone: any = null;
-    private tempSocketLocalPos = new Vec3();
-    private tempSocketWorldPos = new Vec3();
-    private tempSocketParentLocalPos = new Vec3();
-
     protected onLoad(): void {
         this.refreshEquipmentDisplay();
         gm.Event.on(GameEvent.refreshEquipmentDisplay, this.refreshEquipmentDisplay, this);
@@ -147,7 +161,7 @@ export class roleShowController extends Component {
     /** 玩家自身跟随仓库装备显示设置，AI 始终显示装备图片。 */
     private refreshEquipmentDisplay(): void {
         const equipmentIds = this.isPlayerData ? pData.equipmentIds : this.displayEquipmentIds;
-        const isVisible = !this.isPlayerData || ccStorageTools.getNumberData(SaveKey.isShowEquipment) !== 1;
+        const isVisible = this.showEquipment && (!this.isPlayerData || ccStorageTools.getNumberData(SaveKey.isShowEquipment) !== 1);
         const roleAnimNode = this.node.getChildByName('roleAnim');
         ['head', 'armor'].forEach((name, index) => {
             const sprite = roleAnimNode?.getChildByName(name)?.getChildByName('img')?.getComponent(Sprite);
@@ -156,7 +170,7 @@ export class roleShowController extends Component {
             ccTools.cancelAssetLoad(sprite);
             sprite.spriteFrame = null;
             sprite.node.active = isVisible && !!equipmentData;
-            if (equipmentData) ccTools.loadImg(sprite, imgPath.equipment + equipmentData.itemId);
+            if (isVisible && equipmentData) ccTools.loadImg(sprite, imgPath.equipment + equipmentData.itemId);
         });
     }
 

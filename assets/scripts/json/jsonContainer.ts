@@ -44,6 +44,8 @@ export interface JsonContainerData {
     rewardLevel: number;
     /**名字 */
     name: string;
+    /**字体颜色 */
+    fontColor: string;
     /**物品概率权重 */
     probabilityWeight: string;
     /**物品数量权重 */

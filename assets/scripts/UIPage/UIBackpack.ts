@@ -83,6 +83,7 @@ export class UIBackpack extends UIBase {
             ? containerConfig.getDataByType(this.sourceContainer.containerType, pData.selectMapData[1])
             : null;
         this.containerTitleLab.string = containerData?.name ?? "";
+        this.containerTitleLab.color = new Color(containerData?.fontColor || "#FFFFFF");
         this.hideAllSelect();
         if (!this.itemPrefab) {
             this.itemPrefab = await ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.item);

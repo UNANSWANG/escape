@@ -1,4 +1,4 @@
-import { _decorator, AnimationClip, Camera, Canvas, Color, EventKeyboard, EventTouch, Input, input, instantiate, KeyCode, Label, Layout, Node, UITransform, Vec2, Vec3, NodeEventType, director, TiledMap, TiledObjectGroup, Sprite, Tween, UIOpacity, tween, sp, view, Size, PolygonCollider2D } from 'cc';
+import { _decorator, AnimationClip, Camera, Canvas, Color, EventKeyboard, EventTouch, Input, input, instantiate, KeyCode, Label, Layout, Node, UITransform, Vec2, Vec3, NodeEventType, director, TiledMap, TiledObjectGroup, Sprite, Tween, UIOpacity, tween, sp, view, Size, PolygonCollider2D, Rect } from 'cc';
 import { uiMgr } from '../manager/UIManager';
 import { pData } from '../manager/playerData';
 import { UIBase } from './UIBase';
@@ -1195,7 +1195,12 @@ export class UIGame extends UIBase {
             for (const leaveNode of this.leaveList.children) {
                 if (!leaveNode.activeInHierarchy) continue;
                 const leaveTransform = leaveNode.getComponent(UITransform);
-                if (leaveTransform && playerBounds.intersects(leaveTransform.getBoundingBoxToWorld())) {
+                if (!leaveTransform) continue;
+                // 仅使用撤离点自身尺寸，子节点的图片、文字和特效不参与区域判断。
+                const leaveBounds = new Rect(-leaveTransform.anchorX * leaveTransform.width,
+                    -leaveTransform.anchorY * leaveTransform.height, leaveTransform.width, leaveTransform.height);
+                leaveBounds.transformMat4(leaveNode.worldMatrix);
+                if (playerBounds.intersects(leaveBounds)) {
                     isInside = true;
                     break;
                 }

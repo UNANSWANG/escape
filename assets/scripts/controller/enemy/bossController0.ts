@@ -20,13 +20,11 @@ export class bossController0 extends bossBaseController {
     /** 技能持续时间（秒）。 */
     skillDuration = 3;
     /** 技能伤害间隔（秒）。 */
-    skillInterval = 0.5;
+    skillInterval = 0.2;
     /** 技能圆形伤害半径。 */
     skillRadius = 200;
     /**技能持续期间移速加成 */
     skillSpeed = 0.2;
-    /** 每次伤害的攻击力比例。 */
-    skillDamageScale = 0.1;
     private skillRemaining = 0;
     private skillTickRemaining = 0;
     private isInSkillRange = false;
@@ -194,7 +192,7 @@ export class bossController0 extends bossBaseController {
         const dx = player.node.worldPosition.x - this.node.worldPosition.x;
         const dy = player.node.worldPosition.y - this.node.worldPosition.y;
         if (dx * dx + dy * dy <= this.skillRadius ** 2) {
-            player.takeDamage(this.attackDamage * this.skillDamageScale);
+            player.takeDamage(1 + 0.1 * this.attackDamage);
         }
     }
 }

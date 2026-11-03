@@ -1,4 +1,4 @@
-import { _decorator, Component, instantiate, Label, Mat4, Node, sp, Sprite, tween, Tween, UITransform, Vec3 } from 'cc';
+import { _decorator, Component, instantiate, Label, Mat4, Node, sp, Sprite, tween, Tween, UIOpacity, UITransform, Vec3 } from 'cc';
 import { enemyMgr } from '../../manager/enemyManager';
 import { UIGame, StaticCollisionShape } from '../../UIPage/UIGame';
 import { configData, GameEvent, playerCommonConfig, SaveKey } from '../../manager/configData';
@@ -102,6 +102,8 @@ export class roleController extends Component {
     roleAnim: sp.Skeleton = null;
     private loadedAppearanceRoleId: number = null;
     private appearanceLoad: { roleId: number; promise: Promise<void> } = null;
+    private appearanceOpacity: UIOpacity = null;
+    private visibleAppearanceOpacity = 255;
     /** 角色头顶名称文本。 */
     roleNameLab: Label = null;
     /** 打药剩余时间文本。 */
@@ -190,6 +192,7 @@ export class roleController extends Component {
 
     /** 缓存角色自身与子节点组件。 */
     protected onLoad(): void {
+        this.setAppearanceVisible(false);
         this.effectNode = this.node.getChildByName('effectNode');
         this.moveCollider = this.node.getChildByName('colliderBox')?.getComponent(UITransform);
         if (!this.moveCollider) console.warn('角色预制体缺少 colliderBox 或 UITransform，无法进行移动碰撞检测');
@@ -916,6 +919,7 @@ export class roleController extends Component {
         if (this.appearanceLoad?.roleId === roleId) return this.appearanceLoad.promise;
         if (!this.appearanceLoad && this.loadedAppearanceRoleId === roleId) return Promise.resolve();
         this.loadedAppearanceRoleId = null;
+        this.setAppearanceVisible(false);
         const promise = this.loadRoleAppearance(roleId).then(() => {
             if (this.appearanceLoad?.promise === promise) this.appearanceLoad = null;
         }, (error) => {
@@ -942,12 +946,22 @@ export class roleController extends Component {
         this.curRoleAnimName = '';
         this.currentWeaponComp?.bindToRole(this.roleAnim);
         this.currentWeaponComp?.resetRotation(true);
+        this.setAppearanceVisible(true);
         if (this.isPlayingDeath) {
             this.roleAnim.setAnimation(0, roleAnimName.die, false);
             return;
         }
         this.playRoleAnim(animation, true);
         this.currentWeaponComp?.playIdleAnim();
+    }
+
+    /** 加载期间隐藏整个角色显示，避免默认骨骼和手部图片提前出现。 */
+    private setAppearanceVisible(visible: boolean): void {
+        if (!this.appearanceOpacity) {
+            this.appearanceOpacity = this.getComponent(UIOpacity) ?? this.addComponent(UIOpacity);
+            this.visibleAppearanceOpacity = this.appearanceOpacity.opacity;
+        }
+        this.appearanceOpacity.opacity = visible ? this.visibleAppearanceOpacity : 0;
     }
 
     /**角色朝向仍从角色控制器入口调用，具体人物与枪械翻转由枪械控制器处理。 */

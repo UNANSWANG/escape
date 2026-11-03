@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, sp, Sprite, UITransform, Vec3 } from 'cc';
+import { _decorator, Component, Node, sp, Sprite, UIOpacity, UITransform, Vec3 } from 'cc';
 import { ccStorageTools } from '../../extention/storageTools';
 import { GameEvent, SaveKey } from '../../manager/configData';
 import { gm } from '../../manager/gm';
@@ -20,6 +20,8 @@ export class roleShowController extends Component {
     private previewRoleId: number = null;
     private loadedAppearanceRoleId: number = null;
     private appearanceLoad: { roleId: number; promise: Promise<void> } = null;
+    private appearanceOpacity: UIOpacity = null;
+    private visibleAppearanceOpacity = 255;
     /** AI 展示使用独立的头盔、护甲 itemId。 */
     private displayEquipmentIds: number[] = [-1, -1, -1, -1, -1];
     /** AI 展示使用独立武器 itemId；玩家按主武器、副武器、近战的顺序展示。 */
@@ -57,6 +59,7 @@ export class roleShowController extends Component {
         if (this.appearanceLoad?.roleId === roleId) return this.appearanceLoad.promise;
         if (!this.appearanceLoad && this.loadedAppearanceRoleId === roleId) return Promise.resolve();
         this.loadedAppearanceRoleId = null;
+        this.setAppearanceVisible(false);
         const promise = this.loadRoleAppearance(roleId).then(() => {
             if (this.appearanceLoad?.promise === promise) this.appearanceLoad = null;
         }, (error) => {
@@ -83,6 +86,16 @@ export class roleShowController extends Component {
         this.loadedAppearanceRoleId = roleId;
         skeleton.setAnimation(0, skeleton.findAnimation(animation) ? animation : 'idle', true);
         this.bindWeaponToRole(skeleton);
+        this.setAppearanceVisible(true);
+    }
+
+    /** 加载期间保持节点运行，仅隐藏显示，准备好外观后恢复。 */
+    private setAppearanceVisible(visible: boolean): void {
+        if (!this.appearanceOpacity) {
+            this.appearanceOpacity = this.getComponent(UIOpacity) ?? this.addComponent(UIOpacity);
+            this.visibleAppearanceOpacity = this.appearanceOpacity.opacity;
+        }
+        this.appearanceOpacity.opacity = visible ? this.visibleAppearanceOpacity : 0;
     }
 
     private onRoleChanged(): void {
@@ -135,6 +148,7 @@ export class roleShowController extends Component {
     }
 
     protected onLoad(): void {
+        if (this.loadedAppearanceRoleId === null) this.setAppearanceVisible(false);
         this.refreshEquipmentDisplay();
         gm.Event.on(GameEvent.refreshEquipmentDisplay, this.refreshEquipmentDisplay, this);
         gm.Event.on(GameEvent.loadTable, this.onTableLoad, this);

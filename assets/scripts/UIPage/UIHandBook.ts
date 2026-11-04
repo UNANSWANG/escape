@@ -7,7 +7,6 @@ import { ccTools } from '../extention/generalTools';
 import { ccResTools } from '../extention/resTools';
 import { itemConfig, JsonItemData } from '../json/jsonItem';
 import { bossConfig } from '../json/jsonBoss';
-import { weaponsConfig } from '../json/jsonWeapons';
 import { BossBookState, configData, GameEvent, QualityColorArr } from '../manager/configData';
 import { pData } from '../manager/playerData';
 import { gm } from '../manager/gm';
@@ -124,10 +123,10 @@ export class UIHandBook extends UIBase {
             if (descLab) {
                 descLab.string = bossData.desc;
             }
-            const itemNameLab = itemNode.getChildByName("itemNameLab")?.getComponent(Label);
-            if (itemNameLab) {
-                itemNameLab.string = weaponsConfig.getDataByItemId(bossData.dropItemId)?.name
-                    ?? itemConfig.getDataByItemId(bossData.dropItemId)?.name ?? "";
+            const itemImg = itemNode.getChildByName("itemImg")?.getComponent(Sprite);
+            if (itemImg) {
+                itemImg.spriteFrame = null;
+                ccTools.loadImg(itemImg, ccTools.getItemIconPath(bossData.dropItemId));
             }
         });
     }

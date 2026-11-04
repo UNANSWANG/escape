@@ -639,9 +639,9 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 247,
-      "g": 191,
-      "b": 191,
+      "r": 255,
+      "g": 255,
+      "b": 255,
       "a": 255
     },
     "_skeletonData": {

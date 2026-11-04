@@ -1,4 +1,4 @@
-import { _decorator, instantiate, Node, sp, tween, Tween, Vec3 } from 'cc';
+import { _decorator, Color, instantiate, Node, sp, tween, Tween, Vec3 } from 'cc';
 import { roleAnimName, roleController, roleType } from './roleController';
 import { enemyMgr } from '../../manager/enemyManager';
 import { gm } from '../../manager/gm';
@@ -47,6 +47,8 @@ export class role0 extends roleController {
     private skill2EffectNode: Node = null;
     private skill2EffectSpine: sp.Skeleton = null;
     private skill2MoveTween: Tween<Node> = null;
+    /**角色颜色 */
+    private roleColor: string = "#F7BFBF";
 
     protected onLoad(): void {
         super.onLoad();
@@ -155,6 +157,7 @@ export class role0 extends roleController {
     /**动画播放期间的击杀不计入技能效果。 */
     private activateSkill2(): void {
         this.isUsingSkill2 = true;
+        this.refreshSkillColor();
         this.skill2RemainTime = this.skill2Duration;
         // 技能开始前已死亡的敌人不能触发本次技能效果。
         this.rememberDefeatedEnemies();
@@ -194,11 +197,13 @@ export class role0 extends roleController {
     protected onDisable(): void {
         super.onDisable();
         this.clearSkill2Animation();
+        this.finishSkill1();
         this.finishSkill2();
     }
 
     playDeath(onComplete?: () => void) {
         this.clearSkill2Animation();
+        this.finishSkill1();
         this.finishSkill2();
         super.playDeath(onComplete);
     }
@@ -265,6 +270,7 @@ export class role0 extends roleController {
     private finishSkill2() {
         const wasUsingSkill2 = this.isUsingSkill2 || this.skill2RemainTime > 0;
         this.isUsingSkill2 = false;
+        this.refreshSkillColor();
         this.skill2RemainTime = 0;
         this.defeatedEnemies.clear();
         if (wasUsingSkill2) this.emitSkill2Remain();
@@ -280,5 +286,11 @@ export class role0 extends roleController {
         if (!this.isUsingSkill1) return;
         this.isUsingSkill1 = false;
         this.curRoleAnimName = '';
+    }
+
+    /** 仅技能2生效期间使用技能色，结束后恢复白色。 */
+    private refreshSkillColor(): void {
+        if (!this.roleAnim?.isValid) return;
+        this.roleAnim.color = new Color(this.isUsingSkill2 ? this.roleColor : '#FFFFFF');
     }
 }

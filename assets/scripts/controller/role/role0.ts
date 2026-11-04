@@ -233,6 +233,7 @@ export class role0 extends roleController {
 
     /** 在移动完成后采样位置；残影与角色分离，使用游戏时间计时。 */
     protected lateUpdate(dt: number): void {
+        super.lateUpdate(dt);
         if (gm.isGamePause || dt <= 0) return;
         for (let index = this.ghosts.length - 1; index >= 0; index--) {
             const ghost = this.ghosts[index];

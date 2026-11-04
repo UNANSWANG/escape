@@ -56,6 +56,7 @@ export class role1 extends roleController {
 
     /**在人物移动后更新无人机，坐标和效果范围统一使用 gameUINode 的本地坐标。 */
     protected lateUpdate(dt: number): void {
+        super.lateUpdate(dt);
         if (!this.droneNode) return;
         const uiNode = this.gameComp?.gameUINode;
         if (this.hp <= 0 || !this.droneNode.isValid || !uiNode?.activeInHierarchy) {

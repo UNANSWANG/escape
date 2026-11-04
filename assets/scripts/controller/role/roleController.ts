@@ -1,4 +1,4 @@
-import { _decorator, Component, instantiate, Label, Mat4, Node, sp, Sprite, tween, Tween, UIOpacity, UITransform, Vec3 } from 'cc';
+import { _decorator, Animation, Component, instantiate, Label, Mat4, Node, sp, Sprite, tween, Tween, UIOpacity, UITransform, Vec3 } from 'cc';
 import { enemyMgr } from '../../manager/enemyManager';
 import { UIGame, StaticCollisionShape } from '../../UIPage/UIGame';
 import { configData, GameEvent, playerCommonConfig, SaveKey } from '../../manager/configData';
@@ -95,6 +95,10 @@ export class roleController extends Component {
     /**角色当前播放的动画名 */
     protected curRoleAnimName = '';
     private isPlayingDeath = false;
+    /** 根据当前移动动画切换烟雾，持续播放时不重复启动。 */
+    private moveSmokeNode: Node = null;
+    private moveSmokeAnim: Animation = null;
+    private isMoveSmokePlaying = false;
 
     /**角色类型 */
     roleType: roleType = roleType.advance;
@@ -197,6 +201,9 @@ export class roleController extends Component {
         this.moveCollider = this.node.getChildByName('colliderBox')?.getComponent(UITransform);
         if (!this.moveCollider) console.warn('角色预制体缺少 colliderBox 或 UITransform，无法进行移动碰撞检测');
         this.roleAnim = this.node.getChildByName('roleAnim')?.getComponent(sp.Skeleton);
+        this.moveSmokeNode = this.node.getChildByPath('roleAnim/moveSmoke');
+        this.moveSmokeAnim = this.moveSmokeNode?.getComponent(Animation);
+        this.setMoveSmokeVisible(false);
         this.roleNameLab = this.node.getChildByName('roleNameLab')?.getComponent(Label);
         this.remainTimeLab = this.node.getChildByName('remainTimeLab')?.getComponent(Label);
         if (this.remainTimeLab) this.remainTimeLab.node.active = false;
@@ -599,8 +606,29 @@ export class roleController extends Component {
         this.updateDrugUse(dt);
     }
 
+    /** 以人物实际播放的移动动画为准。 */
+    protected lateUpdate(dt: number): void {
+        const animation = this.roleAnim?.skeletonData ? this.roleAnim.getCurrent(0)?.animation?.name : '';
+        const isMoveAnimation = animation === roleAnimName.move || animation === roleAnimName.run;
+        this.setMoveSmokeVisible(isMoveAnimation && !gm.isGamePause && this.hp > 0 && !this.isPlayingDeath);
+    }
+
+    private setMoveSmokeVisible(visible: boolean): void {
+        if (!this.moveSmokeNode?.isValid) return;
+        if (this.isMoveSmokePlaying === visible && this.moveSmokeNode.active === visible) return;
+        this.isMoveSmokePlaying = visible;
+        if (visible) {
+            this.moveSmokeNode.active = true;
+            this.moveSmokeAnim?.play();
+        } else {
+            this.moveSmokeAnim?.stop();
+            this.moveSmokeNode.active = false;
+        }
+    }
+
     /**组件停用时终止通用技能1，避免加速状态遗留到下次启用。 */
     protected onDisable(): void {
+        this.setMoveSmokeVisible(false);
         this.finishCommonSkill1();
         this.clearDrugUse();
     }
@@ -1098,6 +1126,7 @@ export class roleController extends Component {
     playDeath(onComplete?: () => void) {
         if (this.isPlayingDeath) return;
         this.isPlayingDeath = true;
+        this.setMoveSmokeVisible(false);
         if (this.isAI) this.gameComp?.spawnDeathBox('ai', this.node.worldPosition);
         this.finishCommonSkill1();
         this.interruptDrugUse();

@@ -1,4 +1,4 @@
-import { _decorator, Color, Component, Node, sp, Sprite, tween, Tween, UITransform, UIOpacity, Vec2, Vec3 } from 'cc';
+import { _decorator, Animation, Color, Component, Node, sp, Sprite, tween, Tween, UITransform, UIOpacity, Vec2, Vec3 } from 'cc';
 import { ccTools } from '../../extention/generalTools';
 import { UIGame } from '../../UIPage/UIGame';
 import { audioPath, imgPath, spinePath, UIPath } from '../../manager/pathConfig';
@@ -107,6 +107,10 @@ export class soldiersController extends Component {
     private moveCollider: UITransform = null;
     private collisionMover = new StaticCollisionMover();
     private actualMove = new Vec3();
+    /** 根据当前移动动画切换烟雾，持续播放时不重复启动。 */
+    private moveSmokeNode: Node = null;
+    private moveSmokeAnim: Animation = null;
+    private isMoveSmokePlaying = false;
     /** A* 计算得到的世界坐标路线。玩家移动时会定期重新规划。 */
     private navigationPath: Vec3[] = [];
     private navigationIndex = 0;
@@ -116,6 +120,9 @@ export class soldiersController extends Component {
 
     protected onLoad(): void {
         this.roleAnim = this.node.getChildByName("roleAnim").getComponent(sp.Skeleton);
+        this.moveSmokeNode = this.node.getChildByPath('roleAnim/moveSmoke');
+        this.moveSmokeAnim = this.moveSmokeNode?.getComponent(Animation);
+        this.setMoveSmokeVisible(false);
         this.weaponNode = this.node.getChildByName("weapons");
         this.weaponDefaultX = this.weaponNode?.position.x ?? 0;
         this.hpNode = this.node.getChildByName("hpNode");
@@ -130,6 +137,29 @@ export class soldiersController extends Component {
     protected onDestroy(): void {
         Tween.stopAllByTarget(this.baseHp);
         gm.Event.off(GameEvent.loadTable, this.onTableLoad, this);
+    }
+
+    /** 以士兵实际播放的移动动画为准。 */
+    protected lateUpdate(dt: number): void {
+        const animation = this.roleAnim?.skeletonData ? this.roleAnim.getCurrent(0)?.animation?.name : '';
+        this.setMoveSmokeVisible(animation === enemyAnim.move && !gm.isGamePause && this.hp > 0);
+    }
+
+    protected onDisable(): void {
+        this.setMoveSmokeVisible(false);
+    }
+
+    private setMoveSmokeVisible(visible: boolean): void {
+        if (!this.moveSmokeNode?.isValid) return;
+        if (this.isMoveSmokePlaying === visible && this.moveSmokeNode.active === visible) return;
+        this.isMoveSmokePlaying = visible;
+        if (visible) {
+            this.moveSmokeNode.active = true;
+            this.moveSmokeAnim?.play();
+        } else {
+            this.moveSmokeAnim?.stop();
+            this.moveSmokeNode.active = false;
+        }
     }
 
     /**初始化 */
@@ -601,6 +631,7 @@ export class soldiersController extends Component {
     }
 
     private playDeath() {
+        this.setMoveSmokeVisible(false);
         if (this.weaponNode) this.weaponNode.active = false;
         if (this.hpNode) this.hpNode.active = false;
         if (this.effectNode) this.effectNode.active = false;

@@ -1,4 +1,4 @@
-import { _decorator, Color, instantiate, Node, sp, Sprite, SpriteFrame, tween, Tween, UIOpacity, UITransform, Vec3 } from 'cc';
+import { _decorator, Animation, Color, instantiate, Node, sp, Sprite, SpriteFrame, tween, Tween, UIOpacity, UITransform, Vec3 } from 'cc';
 import { roleAnimName, roleController, roleType } from './roleController';
 import { enemyMgr } from '../../manager/enemyManager';
 import { gm } from '../../manager/gm';
@@ -25,6 +25,8 @@ export class role0 extends roleController {
 
     /**技能1进行中，期间保持释放时的移动方向。 */
     private isUsingSkill1 = false;
+    private shovelSmokeNode: Node = null;
+    private shovelSmokeAnim: Animation = null;
     /**技能1冷却时间 */
     skill1Cooldown = 15;
     /**技能2冷却时间 */
@@ -69,6 +71,7 @@ export class role0 extends roleController {
     }
 
     protected onDestroy(): void {
+        this.clearShovelSmoke();
         this.clearGhosts();
         gm.Event.off(GameEvent.gamePause, this.pauseSkill2Animation, this);
         gm.Event.off(GameEvent.gameResume, this.resumeSkill2Animation, this);
@@ -98,11 +101,35 @@ export class role0 extends roleController {
         if (!entry) return false;
 
         this.isUsingSkill1 = true;
+        this.playShovelSmoke();
         entry.timeScale = Math.max(0.01, this.skill1TimeScale);
         this.curRoleAnimName = roleAnimName.useSkill1;
         this.roleAnim.setTrackCompleteListener(entry, () => this.finishSkill1());
         this.startSkillCooldown(1);
         return true;
+    }
+
+    /** 滑铲烟雾使用 effectNode 的本地坐标。 */
+    private playShovelSmoke(): void {
+        this.clearShovelSmoke();
+        if (!this.effectNode?.activeInHierarchy || !uiMgr.shovelSmokePrefab) return;
+        const smoke = instantiate(uiMgr.shovelSmokePrefab);
+        this.shovelSmokeNode = smoke;
+        this.effectNode.addChild(smoke);
+        // 默认朝左；朝右滑铲时，烟雾方向和水平偏移一起镜像。
+        const directionScale = this.roleAnim.node.scale.x < 0 ? -1 : 1;
+        smoke.setPosition(40 * directionScale, 4, 0);
+        smoke.setScale(smoke.scale.x * directionScale, smoke.scale.y, smoke.scale.z);
+        this.shovelSmokeAnim = smoke.getComponent(Animation);
+        this.shovelSmokeAnim?.play();
+        if (gm.isGamePause) this.shovelSmokeAnim?.pause();
+    }
+
+    private clearShovelSmoke(): void {
+        if (this.shovelSmokeAnim?.isValid) this.shovelSmokeAnim.stop();
+        if (this.shovelSmokeNode?.isValid) this.shovelSmokeNode.destroy();
+        this.shovelSmokeAnim = null;
+        this.shovelSmokeNode = null;
     }
 
     initData(): void {
@@ -186,11 +213,13 @@ export class role0 extends roleController {
     }
 
     private pauseSkill2Animation(): void {
+        if (this.shovelSmokeAnim?.isValid) this.shovelSmokeAnim.pause();
         this.skill2MoveTween?.pause();
         if (this.skill2EffectSpine?.isValid) this.skill2EffectSpine.timeScale = 0;
     }
 
     private resumeSkill2Animation(): void {
+        if (this.shovelSmokeAnim?.isValid) this.shovelSmokeAnim.resume();
         this.skill2MoveTween?.resume();
         if (this.skill2EffectSpine?.isValid) this.skill2EffectSpine.timeScale = 1;
     }
@@ -397,6 +426,7 @@ export class role0 extends roleController {
 
     /**技能1动画结束，恢复普通动画控制权。 */
     private finishSkill1() {
+        this.clearShovelSmoke();
         if (!this.isUsingSkill1) return;
         this.isUsingSkill1 = false;
         this.curRoleAnimName = '';

@@ -32,6 +32,8 @@ export class UIManager {
     /**弹壳专用预制体，包含图片和动画资源引用。 */
     bulletShellPrefab: Prefab = null;
     whirlwindPrefab: Prefab = null;
+    /**role0 滑铲期间播放的烟雾预制体。 */
+    shovelSmokePrefab: Prefab = null;
     /**通过 ItemPath.role 加载，供游戏界面创建玩家 */
     rolePrefab: Prefab = null;
     /**通过 ItemPath.soldier 加载，供游戏界面创建士兵 */
@@ -171,6 +173,7 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, ItemPath.syringe, false),
             ccResTools.loadPrefab(this.resBundle, animationItemPath.bulletShell, false),
             ccResTools.loadPrefab(this.resBundle, animationItemPath.whirlwind, false),
+            ccResTools.loadPrefab(this.resBundle, animationItemPath.shovelSmoke, false),
         ]);
 
         if (prefabs.some((prefab) => !prefab)) {
@@ -193,6 +196,7 @@ export class UIManager {
         this.syringePrefab = prefabs[13];
         this.bulletShellPrefab = prefabs[14];
         this.whirlwindPrefab = prefabs[15];
+        this.shovelSmokePrefab = prefabs[16];
     }
 
     /**显示提示 */

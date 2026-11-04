@@ -1,4 +1,4 @@
-import { _decorator, Node, UITransform, Vec3 } from 'cc';
+import { _decorator, Animation, Node, UITransform, Vec3 } from 'cc';
 import { enemyMgr } from '../manager/enemyManager';
 import { playerMgr } from '../manager/playerManager';
 import { WeaponStats, weaponsAnimName, weaponsController } from './weaponsController';
@@ -22,13 +22,23 @@ export class knifeController extends weaponsController {
     protected onLoad(): void {
         super.onLoad();
         if (this.rightHandNode) this.rightHandNode.active = false;
+        this.hideGunFire();
         this.updateAttackInterval();
     }
 
     /** 近战攻击间隔由动画决定，不使用表中的攻击间隔。 */
     applyStats(stats: WeaponStats) {
         super.applyStats(stats);
+        this.hideGunFire();
         this.updateAttackInterval();
+    }
+
+    /** 近战武器复用带枪口火焰的节点时，停止并隐藏已有特效。 */
+    private hideGunFire() {
+        const gunFire = this.node.getChildByName('gunFire');
+        if (!gunFire) return;
+        gunFire.getComponent(Animation)?.stop();
+        gunFire.active = false;
     }
 
     private updateAttackInterval() {

@@ -104,6 +104,8 @@ export enum animationItemPath {
     bulletShell = "prefabs/anim/bulletShell",
     /**旋风动画 */
     whirlwind = "prefabs/anim/whirlwind",
+    /**枪口火焰动画 */
+    gunFire = "prefabs/anim/gunFire",
 }
 
 /**音效路径 */

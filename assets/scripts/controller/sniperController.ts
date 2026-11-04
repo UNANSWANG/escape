@@ -111,6 +111,7 @@ export class sniperController extends gunController {
     }
 
     protected onDisable(): void {
+        super.onDisable();
         this.cancelCharge();
     }
 

@@ -21,6 +21,9 @@ export class gunController extends weaponsController {
     private shootBone: any = null;
     /**武器 Spine 中用于弹出弹壳的 danke 骨骼。 */
     private shellBone: any = null;
+    /** 武器下预先放置的枪口火焰，不动态创建。 */
+    private gunFireNode: Node = null;
+    private gunFireAnimation: Animation = null;
     private tempShellSpawnWorldPos = new Vec3();
     private tempShootRootWorldPos = new Vec3();
     private tempBulletSpawnWorldPos = new Vec3();
@@ -33,6 +36,18 @@ export class gunController extends weaponsController {
     protected onLoad(): void {
         super.onLoad();
         this.currentAmmo = this.capacity;
+        this.gunFireNode = this.node.getChildByName('gunFire');
+        this.gunFireAnimation = this.gunFireNode?.getComponent(Animation) ?? null;
+        this.hideGunFire();
+    }
+
+    protected onDisable(): void {
+        this.hideGunFire();
+    }
+
+    protected lateUpdate(): void {
+        super.lateUpdate();
+        if (this.gunFireNode?.active) this.syncGunFirePosition();
     }
 
     protected resetWeaponSpineBones() {
@@ -46,6 +61,7 @@ export class gunController extends weaponsController {
 
     /** 切走该枪时中断当前换弹，避免隐藏节点的动画回调使换弹状态遗留。 */
     onWeaponUnequipped() {
+        this.hideGunFire();
         if (!this.isReloading) return;
         this.isReloading = false;
         this.playIdleAnim();
@@ -144,6 +160,7 @@ export class gunController extends weaponsController {
 
     /** 完成本次开火。无论本次生成几枚分裂子弹，均只在此扣除 1 发弹药。 */
     protected finishFire(bulletParent: Node) {
+        this.playGunFire();
         if (this.hasInfiniteAmmo) {
             this.playShootAnim(bulletParent);
             return;
@@ -229,6 +246,34 @@ export class gunController extends weaponsController {
             this.weaponSkeleton.addAnimation(0, gunAnimName.idle, true, 0);
             this.curWeaponAnimName = weaponsAnimName.idle;
         }
+    }
+
+    /** 只播放武器下已有的 gunFire；缺少节点、动画或枪口挂点时跳过。 */
+    private playGunFire() {
+        if (!this.gunFireNode?.isValid || !this.gunFireAnimation?.defaultClip) return;
+        if (!this.syncGunFirePosition()) return;
+        this.gunFireAnimation.off(Animation.EventType.FINISHED, this.hideGunFire, this);
+        this.gunFireAnimation.stop();
+        this.gunFireNode.active = true;
+        this.gunFireAnimation.once(Animation.EventType.FINISHED, this.hideGunFire, this);
+        this.gunFireAnimation.play();
+    }
+
+    /** kaihuo 的骨骼坐标位于武器本地空间，火焰随武器一起旋转、翻转。 */
+    private syncGunFirePosition(): boolean {
+        if (!this.weaponSkeleton?.skeletonData || !this.gunFireNode?.isValid) return false;
+        this.shootBone ??= this.weaponSkeleton.findBone('kaihuo');
+        if (!this.shootBone) return false;
+        this.gunFireNode.setPosition(this.shootBone.worldX + 8, this.shootBone.worldY, 0);
+        return true;
+    }
+
+    private hideGunFire() {
+        if (this.gunFireAnimation?.isValid) {
+            this.gunFireAnimation.off(Animation.EventType.FINISHED, this.hideGunFire, this);
+            this.gunFireAnimation.stop();
+        }
+        if (this.gunFireNode?.isValid) this.gunFireNode.active = false;
     }
 
     /** 在 danke 挂点创建独立弹壳，不受角色后续移动、转向或切枪影响。 */

@@ -128,14 +128,10 @@ export enum audioPath {
 
 /**图片路径 */
 export enum imgPath {
-    /**道具图片 */
-    props = "texture/reward/props/props_",
     /**默认头像 */
     defAvatar = "texture/rank/moren",
     /**子弹 */
     bullet = "texture/game/bullet/bullet_",
-    /**角色全身 */
-    roleBodyFull = "texture/role/all/all_",
     /**银币 */
     money = "texture/common/money",
     /**金币 */
@@ -182,6 +178,8 @@ export enum imgPath {
     headNone = "texture/icon/equipment/headNone",
     /**护甲空图标 */
     armorNone = "texture/icon/equipment/armorNone",
+    /**残影 */
+    ghost = "texture/role/skill/ghost",
 }
 
 /**spine路径 */

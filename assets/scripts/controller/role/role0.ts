@@ -1,10 +1,11 @@
-import { _decorator, Color, instantiate, Node, sp, tween, Tween, Vec3 } from 'cc';
+import { _decorator, Color, instantiate, Node, sp, Sprite, SpriteFrame, tween, Tween, UIOpacity, UITransform, Vec3 } from 'cc';
 import { roleAnimName, roleController, roleType } from './roleController';
 import { enemyMgr } from '../../manager/enemyManager';
 import { gm } from '../../manager/gm';
 import { uiMgr } from '../../manager/UIManager';
 import { ccTools } from '../../extention/generalTools';
-import { spinePath } from '../../manager/pathConfig';
+import { imgPath, spinePath } from '../../manager/pathConfig';
+import { ccResTools } from '../../extention/resTools';
 import { GameEvent } from '../../manager/configData';
 import type { EnemyTarget } from '../../manager/enemyManager';
 const { ccclass, property } = _decorator;
@@ -49,6 +50,17 @@ export class role0 extends roleController {
     private skill2MoveTween: Tween<Node> = null;
     /**角色颜色 */
     private roleColor: string = "#F7BFBF";
+    private ghostSpriteFrame: SpriteFrame = null;
+    private ghostElapsed = 0;
+    private ghostLastWorldPos = new Vec3();
+    /** 根据位置历史插值得到 0.02 秒前的位置。 */
+    private ghostPreviousSpawnWorldPos = new Vec3();
+    private ghostHistoryTime = 0;
+    private ghostPositionHistory: { time: number; position: Vec3 }[] = [];
+    private ghostWorldPos = new Vec3();
+    private ghostWorldScale = new Vec3();
+    private ghostParentWorldScale = new Vec3();
+    private ghosts: { node: Node; opacity: UIOpacity; remain: number }[] = [];
 
     protected onLoad(): void {
         super.onLoad();
@@ -57,6 +69,7 @@ export class role0 extends roleController {
     }
 
     protected onDestroy(): void {
+        this.clearGhosts();
         gm.Event.off(GameEvent.gamePause, this.pauseSkill2Animation, this);
         gm.Event.off(GameEvent.gameResume, this.resumeSkill2Animation, this);
         super.onDestroy();
@@ -158,6 +171,14 @@ export class role0 extends roleController {
     private activateSkill2(): void {
         this.isUsingSkill2 = true;
         this.refreshSkillColor();
+        this.ghostElapsed = 0;
+        this.node.getWorldPosition(this.ghostLastWorldPos);
+        this.roleAnim.node.getWorldPosition(this.ghostPreviousSpawnWorldPos);
+        this.ghostHistoryTime = 0;
+        this.ghostPositionHistory = [{ time: 0, position: this.ghostPreviousSpawnWorldPos.clone() }];
+        void ccResTools.loadPic(uiMgr.resBundle, imgPath.ghost).then((frame) => {
+            if (this.isValid) this.ghostSpriteFrame = frame;
+        });
         this.skill2RemainTime = this.skill2Duration;
         // 技能开始前已死亡的敌人不能触发本次技能效果。
         this.rememberDefeatedEnemies();
@@ -196,16 +217,108 @@ export class role0 extends roleController {
 
     protected onDisable(): void {
         super.onDisable();
+        this.clearGhosts();
         this.clearSkill2Animation();
         this.finishSkill1();
         this.finishSkill2();
     }
 
     playDeath(onComplete?: () => void) {
+        this.clearGhosts();
         this.clearSkill2Animation();
         this.finishSkill1();
         this.finishSkill2();
         super.playDeath(onComplete);
+    }
+
+    /** 在移动完成后采样位置；残影与角色分离，使用游戏时间计时。 */
+    protected lateUpdate(dt: number): void {
+        if (gm.isGamePause || dt <= 0) return;
+        for (let index = this.ghosts.length - 1; index >= 0; index--) {
+            const ghost = this.ghosts[index];
+            ghost.remain -= dt;
+            // 0.08 秒渐显到 200，保持 0.3 秒，再用 0.6 秒淡出。
+            if (ghost.opacity.isValid) {
+                const elapsed = 0.98 - ghost.remain;
+                const opacityRatio = elapsed < 0.08
+                    ? elapsed / 0.08
+                    : (elapsed < 0.38 ? 1 : ghost.remain / 0.6);
+                ghost.opacity.opacity = 200 * Math.max(0, Math.min(1, opacityRatio));
+            }
+            if (ghost.remain <= 1e-6 || !ghost.node.isValid) {
+                if (ghost.node.isValid) ghost.node.destroy();
+                this.ghosts.splice(index, 1);
+            }
+        }
+        if (!this.isUsingSkill2) return;
+        this.ghostHistoryTime += dt;
+        this.ghostPositionHistory.push({
+            time: this.ghostHistoryTime,
+            position: this.roleAnim.node.worldPosition.clone(),
+        });
+        const sampleTime = this.ghostHistoryTime - 0.02;
+        // 保留目标时刻前后各一个采样点，兼容不同帧率。
+        while (this.ghostPositionHistory.length > 2 && this.ghostPositionHistory[1].time <= sampleTime) {
+            this.ghostPositionHistory.shift();
+        }
+        const first = this.ghostPositionHistory[0];
+        const second = this.ghostPositionHistory[1];
+        const ratio = second && second.time > first.time
+            ? Math.max(0, Math.min(1, (sampleTime - first.time) / (second.time - first.time))) : 0;
+        Vec3.lerp(this.ghostPreviousSpawnWorldPos, first.position, second?.position ?? first.position, ratio);
+        this.node.getWorldPosition(this.ghostWorldPos);
+        const moved = Vec3.squaredDistance(this.ghostWorldPos, this.ghostLastWorldPos) > 1e-6;
+        this.ghostLastWorldPos.set(this.ghostWorldPos);
+        if (!moved) {
+            this.ghostElapsed = 0;
+            return;
+        }
+        this.ghostElapsed += dt;
+        if (this.ghostElapsed >= 0.12 - 1e-6) {
+            this.ghostElapsed = Math.max(0, this.ghostElapsed - 0.12) % 0.12;
+            this.spawnGhost(this.ghostPreviousSpawnWorldPos);
+        }
+    }
+
+    private spawnGhost(worldPosition: Vec3): void {
+        const parent = this.gameComp?.gameUINode;
+        if (!parent?.activeInHierarchy || !this.ghostSpriteFrame || !this.roleAnim?.isValid
+            || !uiMgr.gameSpriteItemPrefab) return;
+        const ghost = instantiate(uiMgr.gameSpriteItemPrefab);
+        const transform = ghost.getComponent(UITransform);
+        const sprite = ghost.getComponent(Sprite);
+        if (!transform || !sprite) {
+            ghost.destroy();
+            return;
+        }
+        ghost.layer = parent.layer;
+        transform.setAnchorPoint(0.5, 0);
+        sprite.spriteFrame = this.ghostSpriteFrame;
+        parent.addChild(ghost);
+        ghost.setWorldPosition(worldPosition);
+        ghost.setPosition(ghost.position.x, ghost.position.y - 5, ghost.position.z);
+        ghost.setWorldRotation(this.roleAnim.node.worldRotation);
+        // 残影图片使用人物根节点的缩放，避免叠加 roleAnim 的 0.65 美术缩放。
+        this.node.getWorldScale(this.ghostWorldScale);
+        parent.getWorldScale(this.ghostParentWorldScale);
+        ghost.setScale(
+            this.ghostWorldScale.x * (this.roleAnim.node.scale.x < 0 ? -1 : 1) / (this.ghostParentWorldScale.x || 1),
+            this.ghostWorldScale.y / (this.ghostParentWorldScale.y || 1),
+            1,
+        );
+        const opacity = ghost.getComponent(UIOpacity) ?? ghost.addComponent(UIOpacity);
+        opacity.opacity = 0;
+        this.ghosts.push({ node: ghost, opacity, remain: 0.98 });
+    }
+
+    private clearGhosts(): void {
+        for (const ghost of this.ghosts) {
+            if (ghost.node.isValid) ghost.node.destroy();
+        }
+        this.ghosts.length = 0;
+        this.ghostElapsed = 0;
+        this.ghostPositionHistory.length = 0;
+        this.ghostHistoryTime = 0;
     }
 
     /**将角色等级表的主动数值兼容解析为数值数组。 */

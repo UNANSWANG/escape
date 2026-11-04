@@ -2,7 +2,7 @@ import { _decorator, AnimationClip, Camera, Canvas, Color, EventKeyboard, EventT
 import { uiMgr } from '../manager/UIManager';
 import { pData } from '../manager/playerData';
 import { UIBase } from './UIBase';
-import { imgPath, UIPath } from '../manager/pathConfig';
+import { imgPath, ItemPath, UIPath } from '../manager/pathConfig';
 import { BossBookState, configData, floatColorArr, GameEvent, QualityColorArr } from '../manager/configData';
 import { gm } from '../manager/gm';
 import { zoomButton } from '../extention/zoomButton';
@@ -107,7 +107,7 @@ export class UIGame extends UIBase {
     drugBtn_1: Node;
 
     @property(Node)
-    mapNode: Node;
+    mapContainer: Node;
 
     @property(Label)
     skill2RemainLab: Label;
@@ -191,6 +191,8 @@ export class UIGame extends UIBase {
     private isLeaveSuccessTriggered = false;
     /**防止死亡后重复结算。 */
     private isFailTriggered = false;
+    /**地图节点，用于存储地图层容器节点 */
+    mapNode: Node;
 
     ///
     ///临时变量，不参与重新开始游戏数据恢复
@@ -258,6 +260,7 @@ export class UIGame extends UIBase {
         this.openVersion++;
         this.removeListener();
         this.clearData();
+        this.clearMap();
     }
 
     /**重新开始单局 */
@@ -265,11 +268,14 @@ export class UIGame extends UIBase {
         // 每次重开都先作废上一局的异步任务并立即清场，不能等新地图加载完成后再清理
         let version = ++this.openVersion;
         this.clearData();
+        this.clearMap();
         pData.levelInit();
         this.isGamePause = true;
 
         try {
             await uiMgr.preLoadGame();
+            if (version != this.openVersion || !this.node.activeInHierarchy) return;
+            if (!await this.initMap(version)) return;
         } catch (error) {
             if (version == this.openVersion && this.node.activeInHierarchy) {
                 console.error('加载游戏资源失败', error);
@@ -282,6 +288,44 @@ export class UIGame extends UIBase {
         }
 
         this.initData();
+    }
+
+    /** 根据所选地图索引加载地图，完成后再初始化本局角色和地图数据。 */
+    private async initMap(version: number): Promise<boolean> {
+        const mapIndex = pData.selectMapData[0];
+        if (!this.mapContainer?.isValid || !Number.isInteger(mapIndex) || mapIndex < 0) {
+            console.error('初始化地图失败：地图容器或所选地图索引无效', mapIndex);
+            return false;
+        }
+        const path = ItemPath.map + mapIndex;
+        const prefab = await uiMgr.preLoadMap(mapIndex);
+        if (version != this.openVersion || !this.node.activeInHierarchy || !this.mapContainer?.isValid) return false;
+        if (!prefab) {
+            console.error('加载地图预制体失败', path);
+            return false;
+        }
+        const map = instantiate(prefab);
+        const bg = map.getChildByName('bg')?.getComponent(UITransform);
+        if (!bg || bg.width <= 0 || bg.height <= 0) {
+            map.destroy();
+            console.error('地图 bg 缺少有效的 UITransform 宽高', path);
+            return false;
+        }
+        this.mapContainer.addChild(map);
+        map.setPosition(0, 0, 0);
+        this.mapNode = map;
+        pData.mapHalfSize = new Vec2(bg.width / 2, bg.height / 2);
+        return true;
+    }
+
+    private clearMap(): void {
+        if (this.mapContainer?.isValid) ccTools.destroyAllChild(this.mapContainer);
+        this.mapNode = null;
+        this.containerList = null;
+        this.colliderList = null;
+        this.perspectiveList = null;
+        this.shelterList = null;
+        this.leaveList = null;
     }
 
     /**添加监听 */

@@ -33,7 +33,7 @@ export class playerData {
     /**Boss 图鉴状态；未记录的 Boss 默认未解锁 */
     private bossBookStates: { [bossId: string]: BossBookState } = {};
     /**地图半宽高 */
-    mapHalfSize: Vec2 = Vec2.ZERO;
+    mapHalfSize: Vec2 = new Vec2();
     /**确认后的地图选择，格式为 [地图索引, 难度类型]；默认 [-1, -1]，点击确定时更新并保存到本地 */
     selectMapData: [number, number] = [-1, -1];
     /**本次运行是否确认过地图选择；仅存内存，重启后为 false，恢复存档不会将其设为 true */
@@ -87,8 +87,6 @@ export class playerData {
 
     levelInit() {
         pData.adNum = 0;
-        //TODO 临时写地图半宽高，后续根据配置加载
-        pData.mapHalfSize = new Vec2(3500 / 2, 3500 / 2);
         this.isGuide = ccStorageTools.getNumberData(SaveKey.guide) != 1 || gmConfig.forceGuide;
         this.gameStartTime = ccTimeTools.getTime();
 

@@ -47,7 +47,7 @@ export class UIMatch extends UIBase {
     initData(count: number) {
         this.unscheduleAllCallbacks();
         this.clearItems();
-        uiMgr.preLoadGame().catch((error) => {
+        Promise.all([uiMgr.preLoadGame(), uiMgr.preLoadMap()]).catch((error) => {
             console.error('匹配界面预加载游戏资源失败', error);
         });
         this.matchTime = 0;
@@ -152,9 +152,19 @@ export class UIMatch extends UIBase {
         if (this.currentMatchIndex >= this.matchItems.length) {
             this.isMatching = false;
             this.titleLab.string = '匹配成功';
-            this.scheduleOnce(() => {
-                uiMgr.startGame();
-                this.onClose();
+            const matchItems = this.matchItems;
+            this.scheduleOnce(async () => {
+                try {
+                    await Promise.all([uiMgr.preLoadGame(), uiMgr.preLoadMap()]);
+                    if (!this.node.activeInHierarchy || this.matchItems !== matchItems) return;
+                    uiMgr.startGame();
+                    this.onClose();
+                } catch (error) {
+                    if (this.node.activeInHierarchy && this.matchItems === matchItems) {
+                        this.titleLab.string = '地图加载失败，请重新匹配';
+                        console.error('开始游戏前预加载失败', error);
+                    }
+                }
             }, 1);
             return;
         }

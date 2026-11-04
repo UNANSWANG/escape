@@ -68,6 +68,26 @@ export class UIManager {
     private gamePreloadPromise: Promise<void> = null;
     /**游戏资源是否已全部预加载 */
     private gamePreloadComplete = false;
+    /** 按地图索引缓存加载任务，匹配期间提前加载地图及其依赖。 */
+    private mapPreloadTasks = new Map<number, Promise<Prefab>>();
+
+    preLoadMap(mapIndex = pData.selectMapData[0]): Promise<Prefab> {
+        if (!this.resBundle || !Number.isInteger(mapIndex) || mapIndex < 0) {
+            return Promise.reject(new Error(`无法预加载地图，索引无效或资源包未加载: ${mapIndex}`));
+        }
+        const cached = this.mapPreloadTasks.get(mapIndex);
+        if (cached) return cached;
+        const path = ItemPath.map + mapIndex;
+        const task = ccResTools.loadPrefab(this.resBundle, path, false).then((prefab) => {
+            if (!prefab) throw new Error(`加载地图预制体失败: ${path}`);
+            return prefab;
+        }).catch((error) => {
+            this.mapPreloadTasks.delete(mapIndex);
+            throw error;
+        });
+        this.mapPreloadTasks.set(mapIndex, task);
+        return task;
+    }
 
     /**从场景容器中初始化各类页面和特效的挂载节点 */
     initData(node) {

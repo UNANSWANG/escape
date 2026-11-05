@@ -166,7 +166,7 @@ export class role0 extends roleController {
 
     private async playSkill2Animation(effect: Node, skeleton: sp.Skeleton): Promise<void> {
         try {
-            const loaded = await ccTools.loadSpine(skeleton, spinePath.gem);
+            const loaded = await ccTools.loadSpine(skeleton, spinePath.gem, false);
             if (this.skill2EffectNode !== effect || !effect.isValid) return;
             if (!loaded || !skeleton.findAnimation('animation') || !skeleton.findAnimation('animation2')) {
                 this.clearSkill2Animation();

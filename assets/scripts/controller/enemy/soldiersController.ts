@@ -592,7 +592,7 @@ export class soldiersController extends Component {
         const leftHandImg = this.weaponNode?.getChildByName('left')?.getChildByName('img')?.getComponent(Sprite);
         const rightHandImg = this.weaponNode?.getChildByName('right')?.getChildByName('img')?.getComponent(Sprite);
         const [loaded] = await Promise.all([
-            ccTools.loadSpine(this.roleAnim, `${spinePath.soldier}${animId}/animation`),
+            ccTools.loadSpine(this.roleAnim, `${spinePath.soldier}${animId}`),
             ccTools.loadImg(leftHandImg, imgPath.soldierLeftHand + animId),
             ccTools.loadImg(rightHandImg, imgPath.soldierRightHand + animId),
         ]);

@@ -172,15 +172,18 @@ export class generalTools {
         return true;
     }
 
-    /**异步加载spine进Skeleton */
-    async loadSpine(skeleton: sp.Skeleton, url: string) {
+    /**
+     * 异步加载 Spine 到 Skeleton，默认在文件夹路径后拼接 /animation。
+     * @param appendAnimation 为 false 时直接使用传入的完整资源路径。
+     */
+    async loadSpine(skeleton: sp.Skeleton, url: string, appendAnimation = true) {
         if (!skeleton || !skeleton.isValid || !url) {
             return false;
         }
 
         // 记录本次请求版本，防止异步完成时Skeleton已被回池或改作他用
         let loadVersion = this.beginAssetLoad(skeleton);
-        let spinePath = this.getSpineLoadPath(url);
+        let spinePath = appendAnimation ? `${url}/animation` : url;
         let spineData = await ccResTools.loadSpine(uiMgr.resBundle, spinePath);
         if (!spineData) {
             console.log("加载spine失败", url);
@@ -213,13 +216,6 @@ export class generalTools {
     /**确认组件仍有效且本次请求仍是最后一次请求 */
     private isAssetLoadCurrent(component: Component, version: number) {
         return !!component && component.isValid && (component as any).__asyncAssetLoadVersion == version;
-    }
-
-    /**角色、武器和 Boss 文件夹统一加载 animation；完整资源路径直接使用。 */
-    private getSpineLoadPath(url: string) {
-        return /^spine\/(role\/role_|weapons\/weapons_|boss\/boss_)[^/]+$/.test(url)
-            ? `${url}/animation`
-            : url;
     }
 
     /**打乱数组顺序 */

@@ -196,8 +196,6 @@ export enum spinePath {
     soldier = "spine/soldier/soldier_",
     /**武器spine（文件夹） */
     weapon = "spine/weapons/weapons_",
-    /**近战特效spine（文件夹） */
-    slashing = "spine/weaponsEffect/slashing_",
     /**眩晕 */
     dizziness = "spine/dizziness/vertigo",
     /**手指点击 */

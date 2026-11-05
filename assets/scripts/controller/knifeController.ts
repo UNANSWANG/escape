@@ -91,7 +91,14 @@ export class knifeController extends weaponsController {
      */
     attackInFacingDirection() {
         const originNode = this.roleAnim?.node ?? this.node.parent;
-        if (!originNode || this.isAttacking || !this.playAttackAnim()) return false;
+        if (!originNode || this.isAttacking) return false;
+        return this.playAttackAnim();
+    }
+
+    /** 仅在攻击动画的 damage 事件帧，按当前坐标和朝向结算伤害。 */
+    private applyAttackDamage(): void {
+        const originNode = this.roleAnim?.node ?? this.node.parent;
+        if (!originNode) return;
         originNode.updateWorldTransform();
         originNode.getWorldPosition(this.tempRoleWorldPos);
         // 以角色本体的当前朝向作为扇形正前方，而非武器节点自身的缩放状态。
@@ -103,14 +110,14 @@ export class knifeController extends weaponsController {
                     player.takeDamage(this.attack);
                 }
             }
-            return true;
+            return;
         }
         for (const enemy of enemyMgr.allEnemies) {
             if (!enemy?.node?.isValid || !enemy.node.activeInHierarchy || enemy.hp <= 0) continue;
             if (!this.intersectsAttackArea(enemy.roleAnim?.node || enemy.node, facingX)) continue;
             enemy.takeDamage(this.attack);
         }
-        return true;
+        return;
     }
 
     private intersectsAttackArea(targetNode: Node, facingX: number) {
@@ -139,6 +146,14 @@ export class knifeController extends weaponsController {
         this.isAttacking = true;
         this.curWeaponAnimName = weaponsAnimName.attack;
         const version = ++this.attackAnimationVersion;
+        let damageApplied = false;
+        this.weaponSkeleton.setTrackEventListener(entry, (_entry, event) => {
+            if (typeof event === 'number') return;
+            if (event.data.name !== 'damage' || damageApplied || !this.isValid
+                || !this.enabledInHierarchy || !this.isAttacking || version !== this.attackAnimationVersion) return;
+            damageApplied = true;
+            this.applyAttackDamage();
+        });
         this.weaponSkeleton.setTrackCompleteListener(entry, () => {
             if (version !== this.attackAnimationVersion) return;
             this.isAttacking = false;

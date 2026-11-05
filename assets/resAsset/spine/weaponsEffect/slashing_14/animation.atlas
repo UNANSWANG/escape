@@ -1,0 +1,13 @@
+
+animation.png
+size: 128,128
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+cw
+  rotate: false
+  xy: 2, 2
+  size: 114, 121
+  orig: 127, 125
+  offset: 5, 2
+  index: -1

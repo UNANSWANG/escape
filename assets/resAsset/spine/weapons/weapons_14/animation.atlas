@@ -6,8 +6,8 @@ filter: Linear,Linear
 repeat: none
 ftyz
   rotate: false
-  xy: 2, 635
-  size: 993, 360
-  orig: 994, 361
-  offset: 1, 1
+  xy: 2, 424
+  size: 662, 240
+  orig: 662, 241
+  offset: 0, 1
   index: -1

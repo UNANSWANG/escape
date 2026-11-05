@@ -6,8 +6,8 @@ filter: Linear,Linear
 repeat: none
 tangdao
   rotate: false
-  xy: 2, 653
-  size: 800, 149
-  orig: 801, 149
-  offset: 1, 0
+  xy: 2, 436
+  size: 534, 100
+  orig: 534, 100
+  offset: 0, 0
   index: -1

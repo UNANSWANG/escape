@@ -223,6 +223,8 @@ export class UIGame extends UIBase {
     private isGamePause = false;
     /**落地前屏蔽游戏操作，离场时允许战斗。 */
     private isOpening = false;
+    /**撤离演出在战斗暂停期间继续播放。 */
+    private isEvacuating = false;
     private openingHelicopter: Node = null;
     private openingSkeleton: sp.Skeleton = null;
     private openingTweens: Tween<any>[] = [];
@@ -868,7 +870,7 @@ export class UIGame extends UIBase {
     private startOpeningTween(action: Tween<any>) {
         this.openingTweens.push(action);
         action.start();
-        if (gm.isGamePause) action.pause();
+        if (gm.isGamePause && !this.isEvacuating) action.pause();
     }
 
     private clearOpening() {
@@ -878,6 +880,7 @@ export class UIGame extends UIBase {
         if (this.openingHelicopter?.isValid) this.openingHelicopter.destroy();
         this.openingHelicopter = null;
         this.isOpening = false;
+        this.isEvacuating = false;
     }
 
     /**按相机边界计算离屏位置，额外留出整个机身和旋翼的宽度。 */
@@ -965,6 +968,86 @@ export class UIGame extends UIBase {
                 playerMgr.cameraFollow = true;
                 drop();
             }));
+        }));
+    }
+
+    /**撤离计时结束后暂停战斗，飞机登机演出结束才结算。 */
+    private playEvacuation() {
+        // 也取消仍未离场的开场飞机，避免两架飞机及旧回调重叠。
+        this.clearOpening();
+        gm.gamePause();
+        this.isGamePause = true;
+        this.isOpening = true;
+        this.isEvacuating = true;
+        this.setGameControlsVisible(false);
+        this.leaveRemainLab.node.active = false;
+        uiMgr.closePage(UIPath.UIBackpack);
+        playerMgr.cameraFollow = false;
+        this.gameCameraComp?.lockCameraPos(this.gameCamera.node.position.clone());
+        playerMgr.playerComp?.interruptDrugUse();
+        playerMgr.playerComp?.playRoleAnim(roleAnimName.idle, true);
+
+        const player = playerMgr.player;
+        const helicopter = instantiate(uiMgr.helicopterPrefab);
+        this.openingHelicopter = helicopter;
+        this.roleNode.addChild(helicopter);
+        helicopter.setSiblingIndex(player.getSiblingIndex());
+        const skeleton = helicopter.getComponentInChildren(sp.Skeleton);
+        const showPos = helicopter.getChildByName('showPos');
+        const endPos = helicopter.getChildByName('endPos');
+        const version = this.openVersion;
+        const isCurrent = () => version === this.openVersion && this.openingHelicopter === helicopter && helicopter.isValid;
+        const complete = () => {
+            if (!isCurrent()) return;
+            this.clearOpening();
+            // 成功页出现前持续屏蔽输入，直到关闭本局。
+            this.isOpening = true;
+            const backpackItems = pData.backpackItems.map(([itemId, num]) => [itemId, num]);
+            pData.moveBackpackItemsToStorehouse();
+            uiMgr.openPage(UIPath.UISuccess, {
+                survivalTime: this.survivalTime,
+                skinId: pData.skinId,
+                backpackItems,
+            });
+        };
+        if (!skeleton || !showPos || !endPos
+            || ['idle', 'open', 'idle2', 'close'].some(name => !skeleton.findAnimation(name))) {
+            console.error('撤离直升机缺少动画或 showPos/endPos 挂点');
+            complete();
+            return;
+        }
+        this.openingSkeleton = skeleton;
+        // 用梯子底部对齐人物当前位置，人物无需先走到屏幕中心。
+        const targetPos = helicopter.worldPosition.clone().add(player.worldPosition).subtract(endPos.worldPosition);
+        helicopter.setWorldPosition(new Vec3(this.getHelicopterOffscreenX(1), targetPos.y, targetPos.z));
+        skeleton.setAnimation(0, 'idle', true);
+        this.startOpeningTween(tween(helicopter).to(this.helicopterFlyTime, { worldPosition: targetPos }, { easing: 'sineOut' }).call(() => {
+            if (!isCurrent()) return;
+            const openEntry = skeleton.setAnimation(0, 'open', false);
+            skeleton.setTrackCompleteListener(openEntry, () => {
+                if (!isCurrent()) return;
+                skeleton.setAnimation(0, 'idle2', true);
+                const opacity = player.getComponent(UIOpacity) ?? player.addComponent(UIOpacity);
+                this.startOpeningTween(tween(player)
+                    .to(this.openingDropTime, { worldPosition: showPos.worldPosition.clone() }, { easing: 'quadOut' })
+                    .call(() => {
+                        if (!isCurrent()) return;
+                        const hiddenPos = showPos.worldPosition.clone();
+                        hiddenPos.x += 20 * Math.abs(helicopter.worldScale.x);
+                        this.startOpeningTween(tween(player).to(0.2, { worldPosition: hiddenPos }));
+                        this.startOpeningTween(tween(opacity).to(0.2, { opacity: 0 }).call(() => {
+                            if (!isCurrent()) return;
+                            const closeEntry = skeleton.setAnimation(0, 'close', false);
+                            skeleton.setTrackCompleteListener(closeEntry, () => {
+                                if (!isCurrent()) return;
+                                skeleton.setAnimation(0, 'idle', true);
+                                const exitPos = helicopter.worldPosition.clone();
+                                exitPos.x = this.getHelicopterOffscreenX(-1);
+                                this.startOpeningTween(tween(helicopter).to(this.helicopterFlyTime, { worldPosition: exitPos }, { easing: 'sineIn' }).call(complete));
+                            });
+                        }));
+                    }));
+            });
         }));
     }
 
@@ -1267,7 +1350,8 @@ export class UIGame extends UIBase {
     private onGameResume() {
         for (const action of this.openingTweens) action.resume();
         if (this.openingSkeleton?.isValid) this.openingSkeleton.timeScale = 1;
-        this.isGamePause = false;
+        if (this.isEvacuating) gm.isGamePause = true;
+        this.isGamePause = this.isEvacuating;
     }
 
     /**摇杆归位 */
@@ -1431,13 +1515,7 @@ export class UIGame extends UIBase {
         if (this.leaveRemaining > 0) return;
 
         this.isLeaveSuccessTriggered = true;
-        const backpackItems = pData.backpackItems.map(([itemId, num]) => [itemId, num]);
-        pData.moveBackpackItemsToStorehouse();
-        uiMgr.openPage(UIPath.UISuccess, {
-            survivalTime: this.survivalTime,
-            skinId: pData.skinId,
-            backpackItems,
-        });
+        this.playEvacuation();
     }
 
     /**隐藏撤离文本，并让下一次进入撤离点时从完整时间重新开始。 */

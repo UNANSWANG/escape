@@ -36,6 +36,10 @@ export interface JsonBossData {
     name: string;
     /**掉落物品id */
     dropItemId: number;
+    /**掉落物品概率 */
+    dropItemProb: number;
+    /**每日掉落金币上限 */
+    dropGoldLimit: number;
     /**描述 */
     desc: string;
     /**血量 */

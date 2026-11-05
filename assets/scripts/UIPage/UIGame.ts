@@ -118,6 +118,15 @@ export class UIGame extends UIBase {
     @property(Label)
     gameTimeLab: Label;
 
+    @property(Node)
+    leftUINode: Node;
+
+    @property(Node)
+    rightUINode: Node;
+
+    @property(Node)
+    centerUINode: Node;
+
     ///
     ///需要获取的节点
     ///
@@ -212,6 +221,13 @@ export class UIGame extends UIBase {
     private manualAimDirection: Vec3 = new Vec3();
     /**游戏是否暂停 */
     private isGamePause = false;
+    /**落地前屏蔽游戏操作，离场时允许战斗。 */
+    private isOpening = false;
+    private openingHelicopter: Node = null;
+    private openingSkeleton: sp.Skeleton = null;
+    private openingTweens: Tween<any>[] = [];
+    private readonly helicopterFlyTime = 1.2;
+    private readonly openingDropTime = 0.6;
     /**当前游戏局序号，用于避免异步加载回写旧局 */
     private openVersion = 0;
     /**当前播放中的伤害飘字节点。 */
@@ -271,6 +287,8 @@ export class UIGame extends UIBase {
         this.clearMap();
         pData.levelInit();
         this.isGamePause = true;
+        this.isOpening = true;
+        this.setGameControlsVisible(false);
 
         try {
             await uiMgr.preLoadGame();
@@ -315,10 +333,12 @@ export class UIGame extends UIBase {
         map.setPosition(0, 0, 0);
         this.mapNode = map;
         pData.mapHalfSize = new Vec2(bg.width / 2, bg.height / 2);
+        this.gameCameraComp?.setMapBounds(bg.getBoundingBoxToWorld());
         return true;
     }
 
     private clearMap(): void {
+        this.gameCameraComp?.setMapBounds(null);
         if (this.mapContainer?.isValid) ccTools.destroyAllChild(this.mapContainer);
         this.mapNode = null;
         this.containerList = null;
@@ -417,14 +437,15 @@ export class UIGame extends UIBase {
         this.rebuildPerspectiveAreas();
         this.rebuildShelterAreas();
 
+        this.isOpening = true;
+        this.setGameControlsVisible(false);
         this.initRockerArea();
         this.initPlayer();
-        this.initAI();
-        this.initSoldier();
-        this.initBoss();
         this.initGameCountdown();
         this.refreshDrugButtons();
         this.updateContainerOpenButton();
+
+        this.playOpening();
 
         const [mapIdx, difficultyType] = pData.selectMapData;
         const bossId = mapConfig.getMapData(mapIdx, difficultyType)?.bossId;
@@ -441,6 +462,8 @@ export class UIGame extends UIBase {
         this.perspectiveList = this.mapNode?.getChildByName('perspectiveList') ?? null;
         this.shelterList = this.mapNode?.getChildByName('shelterList') ?? null;
         this.leaveList = this.mapNode?.getChildByName('leaveList') ?? null;
+        const bossList = this.mapNode?.getChildByName('bossList');
+        if (bossList) bossList.active = false;
     }
 
     /** 在死亡位置生成对应盒子，统一归入地图容器列表。 */
@@ -457,6 +480,8 @@ export class UIGame extends UIBase {
 
     clearData() {
         this.unscheduleAllCallbacks();
+        this.clearOpening();
+        playerMgr.cameraFollow = false;
         this.gameCameraComp?.unlockCameraPos();
         this.setGameViewScale(1);
         this.isGamePause = false;
@@ -632,6 +657,8 @@ export class UIGame extends UIBase {
     /**角色进入任意透视区域时半透明，离开所有区域后恢复不透明。 */
     private updateRolePerspective(roleNode: Node, isHidden = false) {
         if (!roleNode?.isValid) return;
+        // 下机期间透明度由开场补间管理，避免透视逻辑提前显示人物。
+        if (this.isOpening && roleNode === playerMgr.player) return;
         const opacity = roleNode.getComponent(UIOpacity);
         if (!opacity) return;
         if (isHidden) {
@@ -837,11 +864,139 @@ export class UIGame extends UIBase {
         return alongAB >= 0 && alongAB <= 1 && alongCD >= 0 && alongCD <= 1;
     }
 
+    /**记录开场补间，统一处理暂停和清理。 */
+    private startOpeningTween(action: Tween<any>) {
+        this.openingTweens.push(action);
+        action.start();
+        if (gm.isGamePause) action.pause();
+    }
+
+    private clearOpening() {
+        for (const action of this.openingTweens) action.stop();
+        this.openingTweens.length = 0;
+        this.openingSkeleton = null;
+        if (this.openingHelicopter?.isValid) this.openingHelicopter.destroy();
+        this.openingHelicopter = null;
+        this.isOpening = false;
+    }
+
+    /**按相机边界计算离屏位置，额外留出整个机身和旋翼的宽度。 */
+    private getHelicopterOffscreenX(side: -1 | 1) {
+        const size = view.getVisibleSize();
+        const halfWidth = (this.gameCamera?.orthoHeight ?? size.height / 2) * size.width / Math.max(1, size.height);
+        const centerX = this.gameCamera?.node.worldPosition.x ?? playerMgr.player.worldPosition.x;
+        const scale = this.openingHelicopter?.worldScale.x ?? 1;
+        return centerX + side * (halfWidth + 800 * Math.abs(scale));
+    }
+
+    /**用 endPos 对齐出生点，开场看向 showPos，人物显示后跟随下落。 */
+    private playOpening() {
+        const player = playerMgr.player;
+        const landingPos = player.worldPosition.clone();
+        playerMgr.cameraFollow = false;
+        const helicopter = instantiate(uiMgr.helicopterPrefab);
+        this.openingHelicopter = helicopter;
+        this.roleNode.addChild(helicopter);
+        // 同一角色层中，人物排在直升机之后渲染，避免下机时被机身遮住。
+        helicopter.setSiblingIndex(player.getSiblingIndex());
+        const skeleton = helicopter.getComponentInChildren(sp.Skeleton);
+        const showPos = helicopter.getChildByName('showPos');
+        const endPos = helicopter.getChildByName('endPos');
+        if (!skeleton || !showPos || !endPos
+            || ['idle', 'open', 'idle2', 'close'].some(name => !skeleton.findAnimation(name))) {
+            console.error('直升机开场缺少动画或 showPos/endPos 挂点');
+            this.clearOpening();
+            this.finishOpening();
+            return;
+        }
+        this.openingSkeleton = skeleton;
+        const targetPos = helicopter.worldPosition.clone().add(landingPos).subtract(endPos.worldPosition);
+        // 先放到到达位置再获取挂点世界坐标，避免使用预制体的初始位置。
+        helicopter.setWorldPosition(targetPos);
+        const cameraPos = landingPos.clone();
+        cameraPos.y = showPos.worldPosition.y;
+        if (this.gameCamera?.node.parent) this.gameCamera.node.parent.inverseTransformPoint(cameraPos, cameraPos);
+        this.gameCameraComp?.lockCameraPos(cameraPos);
+        helicopter.setWorldPosition(new Vec3(Math.max(this.getHelicopterOffscreenX(1), targetPos.x + 800), targetPos.y, targetPos.z));
+        skeleton.setAnimation(0, 'idle', true);
+        if (gm.isGamePause) skeleton.timeScale = 0;
+        const version = this.openVersion;
+        const isCurrent = () => version === this.openVersion && this.openingHelicopter === helicopter && helicopter.isValid;
+        this.startOpeningTween(tween(helicopter).to(this.helicopterFlyTime, { worldPosition: targetPos }, { easing: 'sineOut' }).call(() => {
+            if (!isCurrent()) return;
+            const showWorld = showPos.worldPosition.clone();
+            const opacity = player.getComponent(UIOpacity);
+            const showStart = showWorld.clone();
+            showStart.x += 20 * Math.abs(helicopter.worldScale.x);
+            player.setWorldPosition(showStart);
+            const openEntry = skeleton.setAnimation(0, 'open', false);
+            let opened = false;
+            let shown = false;
+            const drop = () => {
+                if (!isCurrent() || !opened || !shown) return;
+                this.startOpeningTween(tween(player).to(this.openingDropTime, { worldPosition: endPos.worldPosition.clone() }, { easing: 'quadIn' }).call(() => {
+                    if (!isCurrent()) return;
+                    this.finishOpening();
+                    const closeEntry = skeleton.setAnimation(0, 'close', false);
+                    skeleton.setTrackCompleteListener(closeEntry, () => {
+                        if (!isCurrent()) return;
+                        skeleton.setAnimation(0, 'idle', true);
+                        const exitPos = helicopter.worldPosition.clone();
+                        exitPos.x = Math.min(this.getHelicopterOffscreenX(-1), exitPos.x - 800);
+                        this.startOpeningTween(tween(helicopter).to(this.helicopterFlyTime, { worldPosition: exitPos }, { easing: 'sineIn' }).call(() => {
+                            if (isCurrent()) this.clearOpening();
+                        }));
+                    });
+                }));
+            };
+            skeleton.setTrackCompleteListener(openEntry, () => {
+                if (!isCurrent()) return;
+                skeleton.setAnimation(0, 'idle2', true);
+                opened = true;
+                drop();
+            });
+            this.startOpeningTween(tween(player).delay(0.1).call(() => {
+                if (!isCurrent()) return;
+                this.startOpeningTween(tween(opacity).to(0.2, { opacity: 255 }));
+            }).to(0.2, { worldPosition: showWorld }).call(() => {
+                if (!isCurrent()) return;
+                shown = true;
+                this.gameCameraComp?.unlockCameraPos();
+                playerMgr.cameraFollow = true;
+                drop();
+            }));
+        }));
+    }
+
+    /**开场隐藏操作界面，落地恢复控制时统一显示。 */
+    private setGameControlsVisible(visible: boolean) {
+        for (const node of [this.leftUINode, this.rightUINode, this.centerUINode, this.rockerTouchNode]) {
+            if (node?.isValid) node.active = visible;
+        }
+    }
+
+    /**落地后再创建敌人，开场期间既不显示也不运行 AI。 */
+    private finishOpening() {
+        this.isOpening = false;
+        this.setGameControlsVisible(true);
+        playerMgr.player.getComponent(UIOpacity).opacity = 255;
+        this.rockerReset(true);
+        this.gameCameraComp?.unlockCameraPos();
+        playerMgr.cameraFollow = true;
+        this.initAI();
+        this.initSoldier();
+        this.initBoss();
+        this.updateRolePerspectives();
+        this.updateShelterVisibility();
+    }
+
     /**初始化玩家 */
     initPlayer() {
         playerMgr.player = instantiate(uiMgr.rolePrefab);
+        const opacity = playerMgr.player.getComponent(UIOpacity) ?? playerMgr.player.addComponent(UIOpacity);
+        opacity.opacity = 0;
         this.roleNode.addChild(playerMgr.player);
-        playerMgr.cameraFollow = true;
+        playerMgr.cameraFollow = false;
         this.initRolePos(playerMgr.player);
         this.keepNodeInsideMap(playerMgr.player);
         const roleComp = addRoleScript(playerMgr.player, pData.roleId);
@@ -1095,6 +1250,8 @@ export class UIGame extends UIBase {
 
     /**响应全局游戏暂停 */
     private onGamePause() {
+        for (const action of this.openingTweens) action.pause();
+        if (this.openingSkeleton?.isValid) this.openingSkeleton.timeScale = 0;
         this.isGamePause = true;
         this.isKeyboardAttackPressed = false;
         this.isShootButtonPressed = false;
@@ -1108,6 +1265,8 @@ export class UIGame extends UIBase {
 
     /**响应全局游戏继续 */
     private onGameResume() {
+        for (const action of this.openingTweens) action.resume();
+        if (this.openingSkeleton?.isValid) this.openingSkeleton.timeScale = 1;
         this.isGamePause = false;
     }
 
@@ -1133,7 +1292,7 @@ export class UIGame extends UIBase {
     }
 
     protected update(dt: number): void {
-        if (this.isGamePause) {
+        if (this.isGamePause || this.isOpening) {
             return;
         }
 
@@ -1195,10 +1354,15 @@ export class UIGame extends UIBase {
         this.refreshGameTimeLab();
     }
 
+    /**上次显示的倒计时秒数，避免每帧格式化相同文本。 */
+    private displayedGameTimeSeconds = -1;
+
     /**剩余秒数向上取整，显示为“撤离倒计时：分:秒”。 */
     private refreshGameTimeLab(): void {
         if (!this.gameTimeLab) return;
         const totalSeconds = Math.ceil(this.gameTimeRemaining);
+        if (totalSeconds === this.displayedGameTimeSeconds) return;
+        this.displayedGameTimeSeconds = totalSeconds;
         const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
         const seconds = String(totalSeconds % 60).padStart(2, '0');
         const text = `撤离倒计时：${minutes}:${seconds}`;
@@ -1286,6 +1450,7 @@ export class UIGame extends UIBase {
 
     /**摇杆区域点击开始 */
     onTouchRockerStart(event: EventTouch) {
+        if (this.isOpening) return;
         let rockerNode = this.rockerTouchNode.getChildByName("rockerNode");
         let rockerPoint = rockerNode.getChildByName("rockerPoint");
 
@@ -1303,6 +1468,7 @@ export class UIGame extends UIBase {
 
     /**摇杆区域移动 */
     onTouchRockerMove(event: EventTouch) {
+        if (this.isOpening) return;
         const maxDistance = 34;
         const moveMultiplier = 4; // 移动倍数，可以根据需要调整
         let rockerNode = this.rockerTouchNode.getChildByName("rockerNode");
@@ -1333,6 +1499,7 @@ export class UIGame extends UIBase {
 
     /**摇杆区域点击结束 */
     onTouchRockerEnd(event: any) {
+        if (this.isOpening) return;
         this.rockerReset();
     }
 
@@ -1412,6 +1579,7 @@ export class UIGame extends UIBase {
 
     /**射击敌人  */
     shootEnemy(deltaTime = 0) {
+        if (this.isOpening) return;
         if (this.shootCooldownRemaining > 0) {
             return;
         }
@@ -1582,6 +1750,7 @@ export class UIGame extends UIBase {
 
     /**射击按钮按下：立即尝试射击，按住期间由 update 持续射击 */
     private onShootButtonStart() {
+        if (this.isOpening) return;
         // 攻击输入按下即视为动作开始；狙击枪进入瞄准/蓄力时也应立即打断打药。
         playerMgr.playerComp?.interruptDrugUse();
         const wasAttacking = this.isAttacking();
@@ -1595,6 +1764,7 @@ export class UIGame extends UIBase {
 
     /**射击按钮松开或取消：停止持续射击 */
     private onShootButtonEnd() {
+        if (this.isOpening) return;
         this.isShootButtonPressed = false;
         this.syncPlayerAttackHeldState();
         if (!this.isAttacking()) {
@@ -1604,6 +1774,7 @@ export class UIGame extends UIBase {
 
     /**手动瞄准摇杆按下：确定方向后开始持续攻击。 */
     private onManualAimRockerStart(event: EventTouch) {
+        if (this.isOpening) return;
         if (pData.isAutoAiming) return;
         this.isManualAimControlling = true;
         this.updateManualAimDirection(event);
@@ -1612,12 +1783,14 @@ export class UIGame extends UIBase {
 
     /**手动瞄准摇杆移动：更新摇杆点和枪口方向。 */
     private onManualAimRockerMove(event: EventTouch) {
+        if (this.isOpening) return;
         if (!this.isManualAimControlling || pData.isAutoAiming) return;
         this.updateManualAimDirection(event);
     }
 
     /**手动瞄准摇杆松开：归位并停止攻击。 */
     private onManualAimRockerEnd() {
+        if (this.isOpening) return;
         if (!this.isManualAimControlling) return;
         this.isManualAimControlling = false;
         this.manualAimDirection.set(0, 0, 0);
@@ -1657,6 +1830,7 @@ export class UIGame extends UIBase {
 
     /** 切换角色武器，并清除旧武器的瞄准和冷却状态。 */
     private switchWeapon(slotIndex: number) {
+        if (this.isOpening) return;
         const roleComp = playerMgr.playerComp;
         if (!roleComp?.equipWeapon(slotIndex)) return;
         this.shootCooldownRemaining = 0;
@@ -1725,6 +1899,7 @@ export class UIGame extends UIBase {
 
     /**监听按钮点击事件 */
     onKeyDown(event: EventKeyboard) {
+        if (this.isOpening) return;
         if (this.isBackpackOpen()) {
             if (event.keyCode === KeyCode.KEY_B) this.clickBagBtn();
             return;
@@ -1783,6 +1958,7 @@ export class UIGame extends UIBase {
 
     /**监听键盘松开，恢复剩余按键的方向或停止移动 */
     onKeyUp(event: EventKeyboard) {
+        if (this.isOpening) return;
         if (this.isBackpackOpen()) return;
 
         switch (event.keyCode) {
@@ -1807,24 +1983,28 @@ export class UIGame extends UIBase {
 
     /**点击换弹按钮 */
     clickReloadBtn() {
+        if (this.isOpening) return;
         // 主动换弹；枪械组件会自行拦截满弹或换弹中的重复请求。
         playerMgr.playerComp?.gunController?.reload();
     }
 
     /**点击技能按钮1 */
     clickSkillBtn1() {
+        if (this.isOpening) return;
         const roleComp = playerMgr.playerComp;
         if (roleComp?.useSkill1()) roleComp.interruptDrugUse();
     }
 
     /**点击技能按钮2 */
     clickSkillBtn2() {
+        if (this.isOpening) return;
         const roleComp = playerMgr.playerComp;
         if (roleComp?.useSkill2()) roleComp.interruptDrugUse();
     }
 
     /**点击小/大药品；库存为空时观看广告，成功后补充数量并自动使用一次。 */
     private clickDrugBtn(isBig: boolean) {
+        if (this.isOpening) return;
         const roleComp = playerMgr.playerComp;
         if (!roleComp || roleComp.usingDrug) return;
 
@@ -1895,6 +2075,7 @@ export class UIGame extends UIBase {
 
     /**点击背包按钮 */
     clickBagBtn() {
+        if (this.isOpening) return;
         if (uiMgr.isPageOpen(UIPath.UIBackpack)) {
             uiMgr.closePage(UIPath.UIBackpack);
             return;
@@ -1905,6 +2086,7 @@ export class UIGame extends UIBase {
 
     /**点击打开容器按钮 */
     clickOpenContainerBtn() {
+        if (this.isOpening) return;
         if (!this.currentContainer) return;
         this.clearKeyboardGameInput();
         this.currentContainer.open();
@@ -1930,6 +2112,7 @@ export class UIGame extends UIBase {
 
     /**点击自动瞄准按钮 */
     clickAimingBtn() {
+        if (this.isOpening) return;
         pData.setAutoAiming(!pData.isAutoAiming);
         this.isManualAimControlling = false;
         this.manualAimDirection.set(0, 0, 0);
@@ -1940,6 +2123,7 @@ export class UIGame extends UIBase {
 
     /**点击设置按钮 */
     clickSetBtn() {
+        if (this.isOpening) return;
         uiMgr.openPage(UIPath.UISetting, { mode: 1 });
         gm.gamePause();
     }

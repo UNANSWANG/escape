@@ -1,4 +1,4 @@
-import { _decorator, Camera, Component, Vec2, v3, Vec3, view } from 'cc';
+import { _decorator, Camera, Component, Rect, Vec2, Vec3, view } from 'cc';
 import { pData } from '../manager/playerData';
 import { playerMgr } from '../manager/playerManager';
 import { GameEvent } from '../manager/configData';
@@ -18,13 +18,25 @@ export class CameraController extends Component {
 
     private camera: Camera = null;
     // private shelter: Node = null;
-    private playerPos: Vec3 = null;
+    private playerPos = new Vec3();
     private cameraPos: Vec3 = null;
-    private move: Vec3 = null;
+    private lastFollowPos = new Vec3(NaN, NaN, NaN);
+    private halfViewWidth = 0;
+    private halfViewHeight = 0;
     private cameraWorldPos: Vec3 = new Vec3();
     private isPositionLocked: boolean = false;
     /** 当前视野倍率。数值越大，可见的地图范围越大。 */
     private viewScale = 1;
+    /**地图背景在世界坐标中的实际边界。 */
+    private mapBounds: Rect = null;
+
+    setMapBounds(bounds: Rect | null) {
+        if (this.mapBounds === bounds || (this.mapBounds && bounds
+            && this.mapBounds.x === bounds.x && this.mapBounds.y === bounds.y
+            && this.mapBounds.width === bounds.width && this.mapBounds.height === bounds.height)) return;
+        this.mapBounds = bounds;
+        this.updateOrthoHeight();
+    }
     onLoad() {
         this.camera = this.node.getComponent(Camera);
     }
@@ -38,7 +50,8 @@ export class CameraController extends Component {
     }
 
     start() {
-        this.cameraPos = v3(0, 0, 0);
+        // 开场可能已在 start 前定位并锁定相机，保留出生点坐标。
+        this.cameraPos = this.node.position.clone();
         this.updateOrthoHeight();
     }
 
@@ -54,8 +67,22 @@ export class CameraController extends Component {
 
         const designAspect = this.DesignWidth / this.DesignHeight;
         const currentAspect = visibleSize.width / visibleSize.height;
-        this.camera.orthoHeight = this.OrthoHeight * this.viewScale * designAspect / currentAspect;
-        gm.Event.emit(GameEvent.refreshGameCamera);
+        let orthoHeight = this.OrthoHeight * this.viewScale * designAspect / currentAspect;
+        if (this.mapBounds) {
+            // 地图小于当前视野时缩小视野，保证画面四边仍在地图内。
+            orthoHeight = Math.min(orthoHeight,
+                this.mapBounds.height / 2, this.mapBounds.width / (2 * currentAspect));
+        }
+        const projectionChanged = this.camera.orthoHeight !== orthoHeight
+            || this.halfViewWidth !== orthoHeight * currentAspect || this.halfViewHeight !== orthoHeight;
+        if (this.camera.orthoHeight !== orthoHeight) this.camera.orthoHeight = orthoHeight;
+        this.halfViewHeight = orthoHeight;
+        this.halfViewWidth = orthoHeight * currentAspect;
+        // 分辨率或缩放变化后，即使开场锁定了位置也必须重新校正边界。
+        this.cameraPos = this.limitCameraPos(this.node.position);
+        if (!this.node.position.equals(this.cameraPos)) this.node.setPosition(this.cameraPos);
+        this.lastFollowPos.set(NaN, NaN, NaN);
+        if (projectionChanged) gm.Event.emit(GameEvent.refreshGameCamera);
     }
 
     /** 设置相机可视范围倍率，并立即重新计算相机边界与 UI 坐标换算比例。 */
@@ -64,7 +91,6 @@ export class CameraController extends Component {
         if (this.viewScale === validScale) return;
         this.viewScale = validScale;
         this.updateOrthoHeight();
-        if (!this.isPositionLocked) this.setCameraPos(this.node.position);
     }
 
     private limitCameraPos(cameraPos: Vec3): Vec3 {
@@ -72,50 +98,47 @@ export class CameraController extends Component {
             return cameraPos;
         }
 
-        const visibleSize = view.getVisibleSize();
-        if (visibleSize.width <= 0 || visibleSize.height <= 0) {
-            return cameraPos;
-        }
-
-        const halfViewHeight = this.camera.orthoHeight;
-        const halfViewWidth = halfViewHeight * visibleSize.width / visibleSize.height;
-        const minX = -pData.mapHalfSize.x + halfViewWidth;
-        const maxX = pData.mapHalfSize.x - halfViewWidth;
-        const minY = -pData.mapHalfSize.y + halfViewHeight;
-        const maxY = pData.mapHalfSize.y - halfViewHeight;
+        const halfViewHeight = this.halfViewHeight;
+        const halfViewWidth = this.halfViewWidth;
+        const bounds = this.mapBounds;
+        const centerX = bounds ? bounds.x + bounds.width / 2 : 0;
+        const centerY = bounds ? bounds.y + bounds.height / 2 : 0;
+        const minX = (bounds ? bounds.x : -pData.mapHalfSize.x) + halfViewWidth;
+        const maxX = (bounds ? bounds.x + bounds.width : pData.mapHalfSize.x) - halfViewWidth;
+        const minY = (bounds ? bounds.y : -pData.mapHalfSize.y) + halfViewHeight;
+        const maxY = (bounds ? bounds.y + bounds.height : pData.mapHalfSize.y) - halfViewHeight;
         const limitPos = cameraPos.clone();
+        if (this.node.parent) Vec3.transformMat4(limitPos, limitPos, this.node.parent.worldMatrix);
 
-        limitPos.x = minX <= maxX ? Math.min(Math.max(limitPos.x, minX), maxX) : 0;
-        limitPos.y = minY <= maxY ? Math.min(Math.max(limitPos.y, minY), maxY) : 0;
+        limitPos.x = minX <= maxX ? Math.min(Math.max(limitPos.x, minX), maxX) : centerX;
+        limitPos.y = minY <= maxY ? Math.min(Math.max(limitPos.y, minY), maxY) : centerY;
+        if (this.node.parent) this.node.parent.inverseTransformPoint(limitPos, limitPos);
 
         return limitPos;
     }
 
     /**直接设置相机的坐标 */
-    setCameraPos(pos: Vec3, isRefresh: boolean = false) {
+    setCameraPos(pos: Vec3) {
         if (this.isPositionLocked) {
             return;
         }
 
         this.cameraPos = this.limitCameraPos(pos);
-        this.node.setPosition(this.cameraPos);
-        if (isRefresh) {
-            this.scheduleOnce(() => {
-                this.node.setPosition(this.cameraPos);
-            }, 0);
-        }
+        if (!this.node.position.equals(this.cameraPos)) this.node.setPosition(this.cameraPos);
+        this.lastFollowPos.set(NaN, NaN, NaN);
     }
 
     /**锁定相机坐标，解锁前忽略其他位置控制 */
     lockCameraPos(pos: Vec3) {
         this.isPositionLocked = false;
-        this.setCameraPos(pos, true);
+        this.setCameraPos(pos);
         this.isPositionLocked = true;
     }
 
     /**解除相机坐标锁定 */
     unlockCameraPos() {
         this.isPositionLocked = false;
+        this.lastFollowPos.set(NaN, NaN, NaN);
     }
 
     /**根据屏幕滑动距离移动相机，表现为拖动画面 */
@@ -142,14 +165,9 @@ export class CameraController extends Component {
             return false;
         }
 
-        const visibleSize = view.getVisibleSize();
-        if (visibleSize.width <= 0 || visibleSize.height <= 0) {
-            return false;
-        }
-
         this.node.getWorldPosition(this.cameraWorldPos);
-        const halfViewHeight = this.camera.orthoHeight;
-        const halfViewWidth = halfViewHeight * visibleSize.width / visibleSize.height;
+        const halfViewHeight = this.halfViewHeight;
+        const halfViewWidth = this.halfViewWidth;
         return worldPos.x >= this.cameraWorldPos.x - halfViewWidth
             && worldPos.x <= this.cameraWorldPos.x + halfViewWidth
             && worldPos.y >= this.cameraWorldPos.y - halfViewHeight
@@ -157,10 +175,12 @@ export class CameraController extends Component {
     }
 
     lateUpdate(deltaTime: number) {
-        if (playerMgr.cameraFollow && playerMgr.player) {
-            this.playerPos = playerMgr.player.getPosition();
-
+        if (!this.isPositionLocked && playerMgr.cameraFollow && playerMgr.player) {
+            playerMgr.player.getWorldPosition(this.playerPos);
+            if (this.node.parent) this.node.parent.inverseTransformPoint(this.playerPos, this.playerPos);
+            if (this.playerPos.equals(this.lastFollowPos)) return;
             this.setCameraPos(this.playerPos);
+            this.lastFollowPos.set(this.playerPos);
         }
 
     }

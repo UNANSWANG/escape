@@ -50,6 +50,8 @@ export class UIManager {
     skillRangePrefab: Prefab = null;
     /**角色打药使用的注射器预制体。 */
     syringePrefab: Prefab = null;
+    /**开场直升机预制体。 */
+    helicopterPrefab: Prefab = null;
 
     /**游戏页面挂载节点 */
     private gamePage: Node = null;
@@ -174,6 +176,7 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, animationItemPath.bulletShell, false),
             ccResTools.loadPrefab(this.resBundle, animationItemPath.whirlwind, false),
             ccResTools.loadPrefab(this.resBundle, animationItemPath.shovelSmoke, false),
+            ccResTools.loadPrefab(this.resBundle, ItemPath.helicopter, false),
         ]);
 
         if (prefabs.some((prefab) => !prefab)) {
@@ -197,6 +200,7 @@ export class UIManager {
         this.bulletShellPrefab = prefabs[14];
         this.whirlwindPrefab = prefabs[15];
         this.shovelSmokePrefab = prefabs[16];
+        this.helicopterPrefab = prefabs[17];
     }
 
     /**显示提示 */

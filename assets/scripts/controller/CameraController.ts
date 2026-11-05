@@ -27,6 +27,12 @@ export class CameraController extends Component {
     private isPositionLocked: boolean = false;
     /** 当前视野倍率。数值越大，可见的地图范围越大。 */
     private viewScale = 1;
+    /**技能视野独立于武器视野，按游戏时间平滑过渡。 */
+    private skillViewScale = 1;
+    private skillViewStartScale = 1;
+    private skillViewTargetScale = 1;
+    private skillViewElapsed = 0;
+    private skillViewDuration = 0;
     /**地图背景在世界坐标中的实际边界。 */
     private mapBounds: Rect = null;
 
@@ -47,6 +53,7 @@ export class CameraController extends Component {
 
     onDisable() {
         view.off('canvas-resize', this.updateOrthoHeight, this);
+        this.setSkillViewScale(1, 0);
     }
 
     start() {
@@ -67,7 +74,7 @@ export class CameraController extends Component {
 
         const designAspect = this.DesignWidth / this.DesignHeight;
         const currentAspect = visibleSize.width / visibleSize.height;
-        let orthoHeight = this.OrthoHeight * this.viewScale * designAspect / currentAspect;
+        let orthoHeight = this.OrthoHeight * this.viewScale * this.skillViewScale * designAspect / currentAspect;
         if (this.mapBounds) {
             // 地图小于当前视野时缩小视野，保证画面四边仍在地图内。
             orthoHeight = Math.min(orthoHeight,
@@ -90,6 +97,29 @@ export class CameraController extends Component {
         const validScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
         if (this.viewScale === validScale) return;
         this.viewScale = validScale;
+        this.updateOrthoHeight();
+    }
+
+    /**设置技能视野倍率；从当前倍率开始过渡，结束后传入 1 恢复。 */
+    setSkillViewScale(scale = 1, duration = 0.2) {
+        this.skillViewStartScale = this.skillViewScale;
+        this.skillViewTargetScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
+        this.skillViewElapsed = 0;
+        this.skillViewDuration = Number.isFinite(duration) ? Math.max(0, duration) : 0;
+        if (this.skillViewDuration === 0) {
+            this.skillViewScale = this.skillViewTargetScale;
+            this.updateOrthoHeight();
+        }
+    }
+
+    private updateSkillViewScale(dt: number) {
+        if (gm.isGamePause || dt <= 0 || this.skillViewScale === this.skillViewTargetScale) return;
+        this.skillViewElapsed = Math.min(this.skillViewDuration, this.skillViewElapsed + dt);
+        const progress = this.skillViewDuration > 0 ? this.skillViewElapsed / this.skillViewDuration : 1;
+        // 平滑起止速度，避免视野变化开始和结束时突兀。
+        const ratio = progress * progress * (3 - 2 * progress);
+        this.skillViewScale = progress >= 1 ? this.skillViewTargetScale
+            : this.skillViewStartScale + (this.skillViewTargetScale - this.skillViewStartScale) * ratio;
         this.updateOrthoHeight();
     }
 
@@ -175,6 +205,7 @@ export class CameraController extends Component {
     }
 
     lateUpdate(deltaTime: number) {
+        this.updateSkillViewScale(deltaTime);
         if (!this.isPositionLocked && playerMgr.cameraFollow && playerMgr.player) {
             playerMgr.player.getWorldPosition(this.playerPos);
             if (this.node.parent) this.node.parent.inverseTransformPoint(this.playerPos, this.playerPos);

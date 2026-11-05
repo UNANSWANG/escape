@@ -1655,6 +1655,11 @@ export class UIGame extends UIBase {
         this.gameCameraComp?.setViewScale(scale);
     }
 
+    /**技能视野与武器视野叠加，默认在 0.2 秒内平滑切换。 */
+    setSkillViewScale(scale: number, duration = 0.2) {
+        this.gameCameraComp?.setSkillViewScale(scale, duration);
+    }
+
     /**射击敌人  */
     shootEnemy(deltaTime = 0) {
         if (this.isOpening) return;

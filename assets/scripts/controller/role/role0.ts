@@ -44,6 +44,8 @@ export class role0 extends roleController {
     private skill2KillHealPercent = 0;
     /**技能2期间每次击杀延长的时间（秒）。 */
     private skill2KillExtendTime = 0;
+    /**技能2提供的视野加成百分比（initiativeValue 第四项）。 */
+    private skill2ViewPercent = 0;
     /**已记录死亡的敌人，避免同一敌人重复结算。 */
     private defeatedEnemies = new Set<EnemyTarget>();
     /**主动技能前摇期间保留节点，防止重复释放和异步加载串入下一次技能。 */
@@ -139,6 +141,7 @@ export class role0 extends roleController {
         this.skill2MoveSpeedPercent = values[0] ?? 0;
         this.skill2KillHealPercent = (values[1] ?? 0) / 100;
         this.skill2KillExtendTime = values[2] ?? 0;
+        this.skill2ViewPercent = Math.max(0, values[3] ?? 0);
     }
 
     /**释放时进入冷却，宝石动画结束后才开始技能效果及持续时间。 */
@@ -197,6 +200,7 @@ export class role0 extends roleController {
     /**动画播放期间的击杀不计入技能效果。 */
     private activateSkill2(): void {
         this.isUsingSkill2 = true;
+        if (this.isPlayer) this.gameComp?.setSkillViewScale(1 + this.skill2ViewPercent / 100);
         this.refreshSkillColor();
         this.ghostElapsed = 0;
         this.node.getWorldPosition(this.ghostLastWorldPos);
@@ -416,7 +420,10 @@ export class role0 extends roleController {
         this.refreshSkillColor();
         this.skill2RemainTime = 0;
         this.defeatedEnemies.clear();
-        if (wasUsingSkill2) this.emitSkill2Remain();
+        if (wasUsingSkill2) {
+            if (this.isPlayer) this.gameComp?.setSkillViewScale(1);
+            this.emitSkill2Remain();
+        }
     }
 
     /**派发技能2的实时剩余时间，由游戏界面负责显示或隐藏倒计时。 */

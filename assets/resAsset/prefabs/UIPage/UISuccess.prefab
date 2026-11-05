@@ -706,7 +706,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "撤离失败",
+    "_string": "撤离成功",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 42,

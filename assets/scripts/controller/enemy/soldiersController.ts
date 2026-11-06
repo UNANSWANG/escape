@@ -67,6 +67,8 @@ export class soldiersController extends Component {
     ///
     /**角色spine节点 */
     roleAnim: sp.Skeleton = null;
+    /** Dedicated damage bounds, cached from hitArea. */
+    hitArea: UITransform = null;
     /**手持武器节点 */
     weaponNode: Node = null;
     /**血量节点 */
@@ -120,6 +122,7 @@ export class soldiersController extends Component {
 
     protected onLoad(): void {
         this.roleAnim = this.node.getChildByName("roleAnim").getComponent(sp.Skeleton);
+        this.hitArea = this.node.getChildByName('hitArea')?.getComponent(UITransform);
         this.moveSmokeNode = this.node.getChildByPath('roleAnim/moveSmoke');
         this.moveSmokeAnim = this.moveSmokeNode?.getComponent(Animation);
         this.setMoveSmokeVisible(false);

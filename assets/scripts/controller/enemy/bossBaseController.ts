@@ -112,6 +112,8 @@ export class bossBaseController extends Component {
     gameComp: UIGame = null;
     /** Boss 本体动画。 */
     roleAnim: sp.Skeleton = null;
+    /** Dedicated damage bounds, cached from hitArea. */
+    hitArea: UITransform = null;
     /** 通用特效挂点，在加载时缓存，初始化时恢复显示。 */
     effectNode: Node = null;
     /** 最大血量。 */
@@ -180,6 +182,7 @@ export class bossBaseController extends Component {
     protected onLoad(): void {
         if (EDITOR && !PREVIEW) return;
         this.roleAnim = (this.node.getChildByName('anim') ?? this.node.getChildByName('roleAnim'))?.getComponent(sp.Skeleton);
+        this.hitArea = this.node.getChildByName('hitArea')?.getComponent(UITransform);
         this.effectNode = this.node.getChildByName('effectNode');
         if (!this.effectNode) {
             this.effectNode = new Node('effectNode');
@@ -419,6 +422,20 @@ export class bossBaseController extends Component {
         this.moveToward(target, dt);
     }
 
+    /** Circle/semicircle damage intersects the player's dedicated hitArea. */
+    protected intersectsPlayerHitArea(radius: number, facingX = 0): boolean {
+        const hitArea = playerMgr.playerComp?.hitArea;
+        if (!hitArea) return false;
+        const bounds = hitArea.getBoundingBoxToWorld();
+        const origin = this.node.worldPosition;
+        const minX = facingX > 0 ? Math.max(bounds.xMin, origin.x) : bounds.xMin;
+        const maxX = facingX < 0 ? Math.min(bounds.xMax, origin.x) : bounds.xMax;
+        if (minX > maxX) return false;
+        const dx = Math.max(minX, Math.min(origin.x, maxX)) - origin.x;
+        const dy = Math.max(bounds.yMin, Math.min(origin.y, bounds.yMax)) - origin.y;
+        return dx * dx + dy * dy <= radius * radius;
+    }
+
     /** 攻击前方半圆，开始时结算伤害。 */
     protected normalAttack() {
         if (gm.isGamePause) return;
@@ -427,10 +444,7 @@ export class bossBaseController extends Component {
         this.playAttackAnimation();
         const player = playerMgr.playerComp;
         if (!player?.node?.isValid || !player.node.activeInHierarchy || player.hp <= 0) return;
-        const dx = player.node.worldPosition.x - this.node.worldPosition.x;
-        const dy = player.node.worldPosition.y - this.node.worldPosition.y;
-        // 按距离和朝向筛选前方半圆。
-        if (dx * dx + dy * dy <= this.attackDistance * this.attackDistance && dx * this.facingX >= 0) {
+        if (this.intersectsPlayerHitArea(this.attackDistance, this.facingX)) {
             player.takeDamage(this.attackDamage);
         }
     }

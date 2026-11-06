@@ -106,7 +106,7 @@ export class knifeController extends weaponsController {
         if (this.targetPlayer) {
             const player = playerMgr.playerComp;
             if (player?.node?.isValid && player.node.activeInHierarchy && player.hp > 0) {
-                if (this.intersectsAttackArea(player.roleAnim?.node || player.node, facingX)) {
+                if (this.intersectsAttackArea(player.hitArea, facingX)) {
                     player.takeDamage(this.attack);
                 }
             }
@@ -114,14 +114,13 @@ export class knifeController extends weaponsController {
         }
         for (const enemy of enemyMgr.allEnemies) {
             if (!enemy?.node?.isValid || !enemy.node.activeInHierarchy || enemy.hp <= 0) continue;
-            if (!this.intersectsAttackArea(enemy.roleAnim?.node || enemy.node, facingX)) continue;
+            if (!this.intersectsAttackArea(enemy.hitArea, facingX)) continue;
             enemy.takeDamage(this.attack);
         }
         return;
     }
 
-    private intersectsAttackArea(targetNode: Node, facingX: number) {
-        const targetTransform = targetNode.getComponent(UITransform);
+    private intersectsAttackArea(targetTransform: UITransform, facingX: number) {
         if (!targetTransform) return false;
         const bounds = targetTransform.getBoundingBoxToWorld();
         const originX = this.tempRoleWorldPos.x;

@@ -189,9 +189,7 @@ export class bossController0 extends bossBaseController {
     private damageAround(): void {
         const player = playerMgr.playerComp;
         if (!player?.node?.isValid || !player.node.activeInHierarchy || player.hp <= 0) return;
-        const dx = player.node.worldPosition.x - this.node.worldPosition.x;
-        const dy = player.node.worldPosition.y - this.node.worldPosition.y;
-        if (dx * dx + dy * dy <= this.skillRadius ** 2) {
+        if (this.intersectsPlayerHitArea(this.skillRadius)) {
             player.takeDamage(1 + 0.1 * this.attackDamage);
         }
     }

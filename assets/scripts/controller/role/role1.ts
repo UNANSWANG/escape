@@ -101,23 +101,15 @@ export class role1 extends roleController {
         this.droneTargetPos.z = 0;
     }
 
-    /**以人物本体包围盒与无人机效果区域相交判定，避免只检测脚下原点而漏伤。 */
-    private isInDroneRange(target: Node, uiTransform: UITransform) {
+    /** Use hitArea bounds for the drone effect area. */
+    private isInDroneRange(hitTransform: UITransform, uiTransform: UITransform) {
+        if (!hitTransform) return false;
         const dronePos = this.droneNode.position;
-        const hitNode = target.getChildByName('roleAnim') || target;
-        const hitTransform = hitNode.getComponent(UITransform);
-        if (!hitTransform) {
-            uiTransform.convertToNodeSpaceAR(target.worldPosition, this.droneCheckPos);
-            return Math.abs(this.droneCheckPos.x - dronePos.x) <= 50
-                && this.droneCheckPos.y <= dronePos.y && this.droneCheckPos.y >= dronePos.y - 140;
-        }
-
-        // 与子弹使用相同的人物本体受击包围盒，不包含血条和名字。
         const bounds = hitTransform.getBoundingBoxToWorld();
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         for (let i = 0; i < 4; i++) {
             this.droneBoundsWorldPos.set(i % 2 === 0 ? bounds.xMin : bounds.xMax,
-                i < 2 ? bounds.yMin : bounds.yMax, hitNode.worldPosition.z);
+                i < 2 ? bounds.yMin : bounds.yMax, hitTransform.node.worldPosition.z);
             uiTransform.convertToNodeSpaceAR(this.droneBoundsWorldPos, this.droneCheckPos);
             minX = Math.min(minX, this.droneCheckPos.x);
             maxX = Math.max(maxX, this.droneCheckPos.x);
@@ -129,13 +121,13 @@ export class role1 extends roleController {
     }
 
     private applyDroneEffect(uiTransform: UITransform) {
-        if (this.droneHealPercent > 0 && this.isInDroneRange(this.node, uiTransform)) {
+        if (this.droneHealPercent > 0 && this.isInDroneRange(this.hitArea, uiTransform)) {
             this.heal(this.maxHp * this.droneHealPercent);
         }
         if (this.droneDamagePercent <= 0) return;
         for (const enemy of enemyMgr.allEnemies) {
             if (enemy === this || !enemy?.node?.isValid || !enemy.node.activeInHierarchy || enemy.hp <= 0) continue;
-            if (this.isInDroneRange(enemy.node, uiTransform)) {
+            if (this.isInDroneRange(enemy.hitArea, uiTransform)) {
                 enemy.takeDamage(enemy.maxHp * this.droneDamagePercent);
             }
         }

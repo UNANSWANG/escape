@@ -223,9 +223,8 @@ export class bulletController extends Component {
 
         for (const enemy of enemyMgr.allEnemies) {
             if (!enemy?.node?.isValid || !enemy.node.activeInHierarchy || enemy.hp <= 0) continue;
-            // 只用角色本体作为受击范围，避免血条和名字也触发命中。
-            const hitNode = enemy.roleAnim?.node || enemy.node;
-            const enemyTransform = hitNode.getComponent(UITransform);
+            // Use the dedicated hitArea instead of animation bounds.
+            const enemyTransform = enemy.hitArea;
             if (!enemyTransform || !bulletBounds.intersects(enemyTransform.getBoundingBoxToWorld())) continue;
 
             enemy.takeDamage(this.damage);
@@ -239,8 +238,7 @@ export class bulletController extends Component {
         const player = playerMgr.playerComp;
         if (!player?.node?.isValid || !player.node.activeInHierarchy || player.hp <= 0) return false;
         const bulletTransform = this.getComponent(UITransform);
-        const hitNode = player.roleAnim?.node || player.node;
-        const playerTransform = hitNode.getComponent(UITransform);
+        const playerTransform = player.hitArea;
         if (!bulletTransform || !playerTransform
             || !bulletTransform.getBoundingBoxToWorld().intersects(playerTransform.getBoundingBoxToWorld())) return false;
         player.takeDamage(this.damage);

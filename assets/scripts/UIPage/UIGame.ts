@@ -485,7 +485,7 @@ export class UIGame extends UIBase {
         this.clearOpening();
         playerMgr.cameraFollow = false;
         this.gameCameraComp?.unlockCameraPos();
-        this.setGameViewScale(1);
+        this.setGameViewScale(1, 0);
         this.isGamePause = false;
         this.isKeyboardAttackPressed = false;
         this.isShootButtonPressed = false;
@@ -1650,12 +1650,12 @@ export class UIGame extends UIBase {
         this.updateGameToUICameraScale();
     }
 
-    /** 设置游戏地图的可视范围倍率；狙击枪装备时传入 1.2。 */
-    setGameViewScale(scale: number) {
-        this.gameCameraComp?.setViewScale(scale);
+    /**设置武器视野倍率，默认在 0.2 秒内平滑切换；清理时传入 0 立即恢复。 */
+    setGameViewScale(scale: number, duration = 0.2) {
+        this.gameCameraComp?.setViewScale(scale, duration);
     }
 
-    /**技能视野与武器视野叠加，默认在 0.2 秒内平滑切换。 */
+    /**技能视野与武器视野的增幅按加法叠加，默认在 0.2 秒内平滑切换。 */
     setSkillViewScale(scale: number, duration = 0.2) {
         this.gameCameraComp?.setSkillViewScale(scale, duration);
     }

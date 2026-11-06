@@ -25,8 +25,12 @@ export class CameraController extends Component {
     private halfViewHeight = 0;
     private cameraWorldPos: Vec3 = new Vec3();
     private isPositionLocked: boolean = false;
-    /** 当前视野倍率。数值越大，可见的地图范围越大。 */
+    /**武器视野独立过渡，与技能视野的增幅按加法叠加。 */
     private viewScale = 1;
+    private viewStartScale = 1;
+    private viewTargetScale = 1;
+    private viewElapsed = 0;
+    private viewDuration = 0;
     /**技能视野独立于武器视野，按游戏时间平滑过渡。 */
     private skillViewScale = 1;
     private skillViewStartScale = 1;
@@ -53,6 +57,7 @@ export class CameraController extends Component {
 
     onDisable() {
         view.off('canvas-resize', this.updateOrthoHeight, this);
+        this.setViewScale(1, 0);
         this.setSkillViewScale(1, 0);
     }
 
@@ -74,7 +79,7 @@ export class CameraController extends Component {
 
         const designAspect = this.DesignWidth / this.DesignHeight;
         const currentAspect = visibleSize.width / visibleSize.height;
-        let orthoHeight = this.OrthoHeight * this.viewScale * this.skillViewScale * designAspect / currentAspect;
+        let orthoHeight = this.OrthoHeight * (1 + (this.viewScale - 1) + (this.skillViewScale - 1)) * designAspect / currentAspect;
         if (this.mapBounds) {
             // 地图小于当前视野时缩小视野，保证画面四边仍在地图内。
             orthoHeight = Math.min(orthoHeight,
@@ -92,12 +97,20 @@ export class CameraController extends Component {
         if (projectionChanged) gm.Event.emit(GameEvent.refreshGameCamera);
     }
 
-    /** 设置相机可视范围倍率，并立即重新计算相机边界与 UI 坐标换算比例。 */
-    setViewScale(scale = 1) {
+    /**设置武器视野倍率；与技能一样默认在 0.2 秒内平滑过渡。 */
+    setViewScale(scale = 1, duration = 0.2) {
         const validScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
-        if (this.viewScale === validScale) return;
-        this.viewScale = validScale;
-        this.updateOrthoHeight();
+        const validDuration = Number.isFinite(duration) ? Math.max(0, duration) : 0;
+        // 重复同步同一武器时保留正在进行的过渡；duration 为 0 时立即应用。
+        if (this.viewTargetScale === validScale && validDuration > 0) return;
+        this.viewStartScale = this.viewScale;
+        this.viewTargetScale = validScale;
+        this.viewElapsed = 0;
+        this.viewDuration = validDuration;
+        if (this.viewDuration === 0) {
+            this.viewScale = this.viewTargetScale;
+            this.updateOrthoHeight();
+        }
     }
 
     /**设置技能视野倍率；从当前倍率开始过渡，结束后传入 1 恢复。 */
@@ -112,15 +125,32 @@ export class CameraController extends Component {
         }
     }
 
+    private updateViewScales(dt: number) {
+        if (gm.isGamePause || dt <= 0) return;
+        let changed = false;
+        if (this.viewScale !== this.viewTargetScale) {
+            this.viewElapsed = Math.min(this.viewDuration, this.viewElapsed + dt);
+            const progress = this.viewDuration > 0 ? this.viewElapsed / this.viewDuration : 1;
+            const ratio = progress * progress * (3 - 2 * progress);
+            this.viewScale = progress >= 1 ? this.viewTargetScale
+                : this.viewStartScale + (this.viewTargetScale - this.viewStartScale) * ratio;
+            changed = true;
+        }
+        if (this.skillViewScale !== this.skillViewTargetScale) {
+            this.updateSkillViewScale(dt);
+            changed = true;
+        }
+        // 同帧的武器与技能过渡合并刷新，保持相机边界和 UI 换算同步。
+        if (changed) this.updateOrthoHeight();
+    }
+
     private updateSkillViewScale(dt: number) {
-        if (gm.isGamePause || dt <= 0 || this.skillViewScale === this.skillViewTargetScale) return;
         this.skillViewElapsed = Math.min(this.skillViewDuration, this.skillViewElapsed + dt);
         const progress = this.skillViewDuration > 0 ? this.skillViewElapsed / this.skillViewDuration : 1;
         // 平滑起止速度，避免视野变化开始和结束时突兀。
         const ratio = progress * progress * (3 - 2 * progress);
         this.skillViewScale = progress >= 1 ? this.skillViewTargetScale
             : this.skillViewStartScale + (this.skillViewTargetScale - this.skillViewStartScale) * ratio;
-        this.updateOrthoHeight();
     }
 
     private limitCameraPos(cameraPos: Vec3): Vec3 {
@@ -205,7 +235,7 @@ export class CameraController extends Component {
     }
 
     lateUpdate(deltaTime: number) {
-        this.updateSkillViewScale(deltaTime);
+        this.updateViewScales(deltaTime);
         if (!this.isPositionLocked && playerMgr.cameraFollow && playerMgr.player) {
             playerMgr.player.getWorldPosition(this.playerPos);
             if (this.node.parent) this.node.parent.inverseTransformPoint(this.playerPos, this.playerPos);

@@ -111,13 +111,13 @@ export class role0 extends roleController {
         return true;
     }
 
-    /** 滑铲烟雾使用 effectNode 的本地坐标。 */
+    /** 滑铲烟雾使用 bottomEffectNode 的本地坐标，显示在武器层下方。 */
     private playShovelSmoke(): void {
         this.clearShovelSmoke();
-        if (!this.effectNode?.activeInHierarchy || !uiMgr.shovelSmokePrefab) return;
+        if (!this.bottomEffectNode?.activeInHierarchy || !uiMgr.shovelSmokePrefab) return;
         const smoke = instantiate(uiMgr.shovelSmokePrefab);
         this.shovelSmokeNode = smoke;
-        this.effectNode.addChild(smoke);
+        this.bottomEffectNode.addChild(smoke);
         // 默认朝左；朝右滑铲时，烟雾方向和水平偏移一起镜像。
         const directionScale = this.roleAnim.node.scale.x < 0 ? -1 : 1;
         smoke.setPosition(40 * directionScale, 4, 0);

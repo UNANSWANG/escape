@@ -114,7 +114,9 @@ export class roleController extends Component {
     private remainTimeLab: Label = null;
     /** 打药剩余时间环形进度。 */
     private remainCircle: Sprite = null;
-    /**角色身上的特效统一挂在此节点下。 */
+    /**武器层下方的特效挂点。 */
+    bottomEffectNode: Node = null;
+    /**角色身上的上层特效挂点。 */
     effectNode: Node = null;
     /**首次打药时创建，后续只重播和隐藏。 */
     private syringeComp: syringeController = null;
@@ -197,6 +199,7 @@ export class roleController extends Component {
     /** 缓存角色自身与子节点组件。 */
     protected onLoad(): void {
         this.setAppearanceVisible(false);
+        this.bottomEffectNode = this.node.getChildByName('bottomEffectNode');
         this.effectNode = this.node.getChildByName('effectNode');
         this.moveCollider = this.node.getChildByName('colliderBox')?.getComponent(UITransform);
         if (!this.moveCollider) console.warn('角色预制体缺少 colliderBox 或 UITransform，无法进行移动碰撞检测');

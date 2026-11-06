@@ -632,6 +632,20 @@ export class playerData {
         gm.Event.emit(GameEvent.refreshPlayerMonetary);
     }
 
+    /**按 Boss 编号累计每日金币掉落，默认每次 5 枚；返回实际获得数量。 */
+    grantBossDropGold(bossId: number, dailyLimit: number): number {
+        if (!Number.isInteger(bossId) || bossId < 0 || !Number.isFinite(dailyLimit)) return 0;
+        const limit = Math.max(0, Math.floor(dailyLimit));
+        const key = 'bossDropGold_' + bossId;
+        const saved = Number(ccStorageTools.getLimitTimeData(key));
+        const dropped = Number.isFinite(saved) ? Math.max(0, Math.floor(saved)) : 0;
+        const gold = Math.min(5, Math.max(0, limit - dropped));
+        if (gold <= 0) return 0;
+        ccStorageTools.setLimitTimeData(key, dropped + gold);
+        this.fixGold(gold);
+        return gold;
+    }
+
     /**修改金币*/
     fixGold(gold: number) {
         this.gold += gold;

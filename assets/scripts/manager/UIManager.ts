@@ -203,6 +203,26 @@ export class UIManager {
         this.helicopterPrefab = prefabs[17];
     }
 
+    /**等待按顺序播放的奖励提示。 */
+    private rewardTipsQueue: string[] = [];
+    private isShowingRewardTips = false;
+
+    /**将一组奖励提示加入队列，每隔 1 秒显示下一条。 */
+    showRewardTips(messages: string[]) {
+        this.rewardTipsQueue.push(...messages);
+        this.showNextRewardTip();
+    }
+
+    private showNextRewardTip() {
+        if (this.isShowingRewardTips || this.rewardTipsQueue.length === 0) return;
+        this.isShowingRewardTips = true;
+        this.showTips(this.rewardTipsQueue.shift());
+        setTimeout(() => {
+            this.isShowingRewardTips = false;
+            this.showNextRewardTip();
+        }, 1000);
+    }
+
     /**显示提示 */
     showTips(str?) {
         let noticeItem = instantiate(this.tipsPrefab);

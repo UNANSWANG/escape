@@ -1,6 +1,9 @@
 import { _decorator, CCFloat, CCInteger, Color, Component, Graphics, Label, Node, sp, Sprite, Tween, tween, UITransform, Vec3 } from 'cc';
 import { EDITOR, PREVIEW } from 'cc/env';
 import { bossConfig } from '../../json/jsonBoss';
+import { getItemDataByItemId } from '../../json/jsonItemData';
+import { uiMgr } from '../../manager/UIManager';
+import { userMgr } from '../../manager/userManager';
 import { BossBookState, enemyCommonConfig, GameEvent, gmConfig } from '../../manager/configData';
 import { gm } from '../../manager/gm';
 import { playerMgr } from '../../manager/playerManager';
@@ -553,9 +556,31 @@ export class bossBaseController extends Component {
         this.gameComp?.showDamageFloat(this.node, actualDamage);
         if (this.hp <= 0) {
             this.gameComp?.spawnDeathBox('boss', this.node.worldPosition);
+            this.grantDefeatRewards();
             this.playDeath();
         }
         return true;
+    }
+
+    /**击败后立即结算奖励，提示按击败、金币、道具的顺序播放。 */
+    private grantDefeatRewards() {
+        const data = bossConfig.getDataById(this.id);
+        if (!data) return;
+        const playerName = playerMgr.playerComp?.roleNameLab?.string || userMgr.nickName || '玩家';
+        const messages = [playerName + '击败' + data.name];
+        const gold = pData.grantBossDropGold(this.id, Number(data.dropGoldLimit));
+        if (gold > 0) messages.push('获得金币*' + gold);
+
+        const probability = Math.max(0, Math.min(100, Number(data.dropItemProb) || 0));
+        if (probability > 0 && Math.random() * 100 < probability) {
+            const itemId = Number(data.dropItemId);
+            const itemData = getItemDataByItemId(itemId);
+            if (itemData) {
+                pData.fixStorehouseData(itemId, 1);
+                messages.push('掉落' + itemData.name + '*1');
+            }
+        }
+        uiMgr.showRewardTips(messages);
     }
 
     /** 播放死亡动画后隐藏。 */

@@ -436,12 +436,18 @@ export class bossBaseController extends Component {
         return dx * dx + dy * dy <= radius * radius;
     }
 
-    /** 攻击前方半圆，开始时结算伤害。 */
+    /** 开始播放普通攻击，伤害由 damage 事件帧结算。 */
     protected normalAttack() {
         if (gm.isGamePause) return;
         if (this.isAttacking || this.isUsingSkill || this.attackCooldown > 0 || this.hp <= 0) return;
         this.attackAnimationPlaying = true;
         this.playAttackAnimation();
+    }
+
+    /** 每个 damage 事件按触发时的位置和朝向，独立结算一次伤害。 */
+    private applyAttackDamage(): void {
+        if (gm.isGamePause || !this.isValid || !this.enabledInHierarchy
+            || !this.attackAnimationPlaying || this.hp <= 0) return;
         const player = playerMgr.playerComp;
         if (!player?.node?.isValid || !player.node.activeInHierarchy || player.hp <= 0) return;
         if (this.intersectsPlayerHitArea(this.attackDistance, this.facingX)) {
@@ -457,8 +463,16 @@ export class bossBaseController extends Component {
         }
         this.currentAnim = BossAnimName.attack;
         const entry = this.roleAnim.setAnimation(0, BossAnimName.attack, false);
-        if (entry) this.roleAnim.setTrackCompleteListener(entry, () => this.finishAttackAnimation());
-        else this.finishAttackAnimation();
+        if (!entry) {
+            this.finishAttackAnimation();
+            return;
+        }
+        this.roleAnim.setTrackEventListener(entry, (_entry, event) => {
+            if (typeof event === 'number' || event.data.name !== 'damage') return;
+            if (this.roleAnim.getCurrent(0) !== entry) return;
+            this.applyAttackDamage();
+        });
+        this.roleAnim.setTrackCompleteListener(entry, () => this.finishAttackAnimation());
     }
 
     private finishAttackAnimation() {

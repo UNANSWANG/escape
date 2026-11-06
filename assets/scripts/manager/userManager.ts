@@ -6,12 +6,12 @@ export class userManager {
     /**微信插屏广告id */
     Ad_interstitialAd_wx: string = "";
     /**微信激励视频广告id */
-    Ad_video_wx: string = "adunit-cf38c23824867e27";
+    Ad_video_wx: string = "";
 
     /**抖音插屏广告id */
     Ad_interstitialAd_tt: string = "";
     /**抖音激励视频广告id */
-    Ad_video_tt: string = "35fpg95go4oppq4q8q";
+    Ad_video_tt: string = "";
 
     /**用户昵称 */
     nickName: string = "";

@@ -1650,9 +1650,9 @@ export class UIGame extends UIBase {
         this.updateGameToUICameraScale();
     }
 
-    /**设置武器视野倍率，默认在 0.2 秒内平滑切换；清理时传入 0 立即恢复。 */
+    /**设置武器视野倍率；开场直接应用，局内默认在 0.2 秒内平滑切换。 */
     setGameViewScale(scale: number, duration = 0.2) {
-        this.gameCameraComp?.setViewScale(scale, duration);
+        this.gameCameraComp?.setViewScale(scale, this.isOpening ? 0 : duration);
     }
 
     /**技能视野与武器视野的增幅按加法叠加，默认在 0.2 秒内平滑切换。 */

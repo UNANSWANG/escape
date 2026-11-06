@@ -357,13 +357,12 @@ export class roleController extends Component {
         const reach = Math.hypot(worldDeltaX, worldDeltaY) + 1;
         this.gameComp.queryStaticColliders(bounds.x - reach, bounds.y - reach,
             bounds.x + bounds.width + reach, bounds.y + bounds.height + reach, this.moveCollisionCandidates);
-        if (!this.moveCollisionCandidates.length) {
-            this.node.setPosition(start.x + deltaX, start.y + deltaY, start.z);
-            this.gameComp.keepNodeInsideMap(this.node);
+        // 已经陷入障碍物时先脱困，避免起点重叠导致移动距离始终为零。
+        if (this.isPlayer && this.intersectsStaticShape(bounds.x, bounds.y, bounds.width, bounds.height)
+            && this.recoverFromStaticCollision(bounds.x, bounds.y, bounds.width, bounds.height)) {
             out.set(this.node.position.x - startX, this.node.position.y - startY, 0);
             return out;
         }
-
         let x = bounds.x, y = bounds.y;
         let remainingX = worldDeltaX, remainingY = worldDeltaY;
         // 一次接触可沿边滑动；最多再处理两个相邻边或墙角。
@@ -392,8 +391,115 @@ export class roleController extends Component {
         }
         this.node.setPosition(this.moveLocalPoint.x, this.moveLocalPoint.y, start.z);
         this.gameComp.keepNodeInsideMap(this.node);
+        // 坐标转换和地图边界校正后的真实落点也必须可走，避免误差将贴边位置推入墙内。
+        const finalBounds = this.moveCollider.getBoundingBoxToWorld();
+        this.gameComp.queryStaticColliders(finalBounds.x, finalBounds.y,
+            finalBounds.x + finalBounds.width, finalBounds.y + finalBounds.height, this.moveCollisionCandidates);
+        if (this.intersectsStaticShape(finalBounds.x, finalBounds.y, finalBounds.width, finalBounds.height)) {
+            this.node.setPosition(startX, startY, start.z);
+        }
         out.set(this.node.position.x - startX, this.node.position.y - startY, 0);
         return out;
+    }
+
+    /** 搜索碰撞盒可放置区域的边界，选择距离当前位置最近且位于地图内的空位。 */
+    private recoverFromStaticCollision(x: number, y: number, width: number, height: number) {
+        const origin = this.node.worldPosition.clone();
+        const mapMin = new Vec3(-Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER, origin.z);
+        const mapMax = new Vec3(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER, origin.z);
+        this.gameComp.clampWorldPointToMap(this.node, mapMin, mapMin);
+        this.gameComp.clampWorldPointToMap(this.node, mapMax, mapMax);
+        // 使用碰撞盒左下角坐标搜索，保留碰撞盒相对角色根节点的偏移。
+        const minX = mapMin.x + x - origin.x, minY = mapMin.y + y - origin.y;
+        const maxX = mapMax.x + x - origin.x, maxY = mapMax.y + y - origin.y;
+        const maxRadius = Math.max(Math.hypot(minX - x, minY - y), Math.hypot(maxX - x, minY - y),
+            Math.hypot(minX - x, maxY - y), Math.hypot(maxX - x, maxY - y));
+        const candidates: StaticCollisionShape[] = [];
+        const padding = 0.01;
+        let radius = Math.min(Math.max(width, height, 16), maxRadius);
+        while (true) {
+            this.gameComp.queryStaticColliders(x - radius - padding, y - radius - padding,
+                x + width + radius + padding, y + height + radius + padding, candidates);
+            const segments: Array<{ ax: number; ay: number; bx: number; by: number }> = [];
+            const addSegment = (ax: number, ay: number, bx: number, by: number) => {
+                if (Math.max(ax, bx) < x - radius || Math.min(ax, bx) > x + radius
+                    || Math.max(ay, by) < y - radius || Math.min(ay, by) > y + radius) return;
+                segments.push({ ax, ay, bx, by });
+            };
+            const addRect = (left: number, bottom: number, right: number, top: number) => {
+                addSegment(left, bottom, right, bottom);
+                addSegment(right, bottom, right, top);
+                addSegment(right, top, left, top);
+                addSegment(left, top, left, bottom);
+            };
+            addRect(minX, minY, maxX, maxY);
+            for (const shape of candidates) {
+                if (!shape.points) {
+                    addRect(shape.minX - width - padding, shape.minY - height - padding,
+                        shape.maxX + padding, shape.maxY + padding);
+                    continue;
+                }
+                // 障碍物与角色矩形的 Minkowski 和：平移各条边，补上顶点处的矩形边。
+                // 内部边段由精确相交检测剔除，因此也支持凹多边形和重叠障碍物。
+                const offsets = [
+                    { x: -width - padding, y: -height - padding },
+                    { x: padding, y: -height - padding },
+                    { x: padding, y: padding },
+                    { x: -width - padding, y: padding },
+                ];
+                for (let i = 0; i < shape.points.length; i++) {
+                    const a = shape.points[i], b = shape.points[(i + 1) % shape.points.length];
+                    for (const offset of offsets) {
+                        addSegment(a.x + offset.x, a.y + offset.y, b.x + offset.x, b.y + offset.y);
+                    }
+                    addRect(a.x - width - padding, a.y - height - padding, a.x + padding, a.y + padding);
+                }
+            }
+            let bestDistance = Infinity, bestX = x, bestY = y;
+            const consider = (px: number, py: number) => {
+                if (px < minX || px > maxX || py < minY || py > maxY) return;
+                const distance = (px - x) ** 2 + (py - y) ** 2;
+                if (distance > radius * radius || distance >= bestDistance
+                    || this.intersectsStaticShape(px, py, width, height, candidates)) return;
+                bestDistance = distance;
+                bestX = px;
+                bestY = py;
+            };
+            for (let i = 0; i < segments.length; i++) {
+                const a = segments[i];
+                const dx = a.bx - a.ax, dy = a.by - a.ay;
+                const lengthSquared = dx * dx + dy * dy;
+                const t = lengthSquared > 0
+                    ? Math.max(0, Math.min(1, ((x - a.ax) * dx + (y - a.ay) * dy) / lengthSquared)) : 0;
+                consider(a.ax + dx * t, a.ay + dy * t);
+                consider(a.ax, a.ay);
+                consider(a.bx, a.by);
+                // 最近的有效边界可能是障碍物之间、或障碍物与地图边缘的交点。
+                for (let j = 0; j < i; j++) {
+                    const b = segments[j];
+                    if (Math.max(a.ax, a.bx) < Math.min(b.ax, b.bx)
+                        || Math.min(a.ax, a.bx) > Math.max(b.ax, b.bx)
+                        || Math.max(a.ay, a.by) < Math.min(b.ay, b.by)
+                        || Math.min(a.ay, a.by) > Math.max(b.ay, b.by)) continue;
+                    const ex = b.bx - b.ax, ey = b.by - b.ay;
+                    const cross = dx * ey - dy * ex;
+                    if (Math.abs(cross) < 0.0000001) continue;
+                    const ax = b.ax - a.ax, ay = b.ay - a.ay;
+                    const ta = (ax * ey - ay * ex) / cross;
+                    const tb = (ax * dy - ay * dx) / cross;
+                    if (ta >= 0 && ta <= 1 && tb >= 0 && tb <= 1) {
+                        consider(a.ax + dx * ta, a.ay + dy * ta);
+                    }
+                }
+            }
+            if (bestDistance < Infinity) {
+                this.node.setWorldPosition(origin.x + bestX - x, origin.y + bestY - y, origin.z);
+                return true;
+            }
+            // 整张地图没有可容纳角色的位置时保持原位，避免无限搜索或传送出地图。
+            if (radius >= maxRadius) return false;
+            radius = Math.min(radius * 2, maxRadius);
+        }
     }
 
     private allowedMoveFraction(x: number, y: number, width: number, height: number, dx: number, dy: number) {
@@ -446,40 +552,42 @@ export class roleController extends Component {
         return enter + 0.000000001 < exit;
     }
 
-    /** 凹多边形也可用：矩形角点轨迹与多边形边相交，或多边形顶点进入矩形扫过的区域。 */
+    /** 检测多边形边是否进入矩形扫过区域的内部，包含边界对齐和穿过顶点的情况。 */
     private sweptRectIntersectsPolygon(x: number, y: number, width: number, height: number,
         dx: number, dy: number, points: ReadonlyArray<{ x: number; y: number }>) {
         if (this.rectIntersectsPolygon(x, y, x + width, y + height, points)
             || this.rectIntersectsPolygon(x + dx, y + dy, x + width + dx, y + height + dy, points)) return true;
-        for (const point of points) {
-            if (this.pointInsideSweptRect(point.x, point.y, x, y, width, height, dx, dy)) return true;
-        }
         for (let i = 0; i < points.length; i++) {
             const a = points[i], b = points[(i + 1) % points.length];
-            if (this.segmentsCross(x, y, x + dx, y + dy, a.x, a.y, b.x, b.y)
-                || this.segmentsCross(x + width, y, x + width + dx, y + dy, a.x, a.y, b.x, b.y)
-                || this.segmentsCross(x + width, y + height, x + width + dx, y + height + dy, a.x, a.y, b.x, b.y)
-                || this.segmentsCross(x, y + height, x + dx, y + height + dy, a.x, a.y, b.x, b.y)) return true;
+            if (this.segmentIntersectsSweptRect(a.x, a.y, b.x, b.y, x, y, width, height, dx, dy)) return true;
         }
         return false;
     }
 
-    private pointInsideSweptRect(px: number, py: number, x: number, y: number,
-        width: number, height: number, dx: number, dy: number) {
+    /** 扫过区域为凸多边形，沿 X、Y、移动法线三个方向裁剪线段；仅贴边不算碰撞。 */
+    private segmentIntersectsSweptRect(ax: number, ay: number, bx: number, by: number,
+        x: number, y: number, width: number, height: number, dx: number, dy: number) {
         let enter = 0, exit = 1;
-        if (!dx) {
-            if (px <= x || px >= x + width) return false;
-        } else {
-            enter = Math.max(enter, Math.min((px - x - width) / dx, (px - x) / dx));
-            exit = Math.min(exit, Math.max((px - x - width) / dx, (px - x) / dx));
+        for (let axis = 0; axis < 3; axis++) {
+            const nx = axis === 0 ? 1 : axis === 1 ? 0 : -dy;
+            const ny = axis === 0 ? 0 : axis === 1 ? 1 : dx;
+            if (!nx && !ny) continue;
+            const base = nx * x + ny * y;
+            const travel = nx * dx + ny * dy;
+            const min = base + Math.min(0, nx * width) + Math.min(0, ny * height) + Math.min(0, travel);
+            const max = base + Math.max(0, nx * width) + Math.max(0, ny * height) + Math.max(0, travel);
+            const start = nx * ax + ny * ay;
+            const delta = nx * (bx - ax) + ny * (by - ay);
+            if (Math.abs(delta) < 0.000000000001) {
+                if (start <= min || start >= max) return false;
+            } else {
+                const t1 = (min - start) / delta, t2 = (max - start) / delta;
+                enter = Math.max(enter, Math.min(t1, t2));
+                exit = Math.min(exit, Math.max(t1, t2));
+            }
+            if (enter >= exit) return false;
         }
-        if (!dy) {
-            if (py <= y || py >= y + height) return false;
-        } else {
-            enter = Math.max(enter, Math.min((py - y - height) / dy, (py - y) / dy));
-            exit = Math.min(exit, Math.max((py - y - height) / dy, (py - y) / dy));
-        }
-        return enter + 0.000000001 < exit;
+        return enter < exit;
     }
 
     /** 在接触位置找朝向角色的障碍物边法线，随后将剩余位移投影到边的切线。 */
@@ -510,29 +618,24 @@ export class roleController extends Component {
         return bestProgress > 0;
     }
 
-    private intersectsStaticShape(x: number, y: number, width: number, height: number) {
+    private intersectsStaticShape(x: number, y: number, width: number, height: number,
+        candidates: ReadonlyArray<StaticCollisionShape> = this.moveCollisionCandidates) {
         const right = x + width, top = y + height;
-        for (const shape of this.moveCollisionCandidates) {
+        for (const shape of candidates) {
             if (right <= shape.minX || x >= shape.maxX || top <= shape.minY || y >= shape.maxY) continue;
             if (!shape.points || this.rectIntersectsPolygon(x, y, right, top, shape.points)) return true;
         }
         return false;
     }
 
-    /** 支持凹多边形：顶点包含检测加线段相交检测。 */
+    /** 多边形边进入矩形内部，或矩形被多边形包含时即为重叠；支持凹多边形。 */
     private rectIntersectsPolygon(left: number, bottom: number, right: number, top: number,
         points: ReadonlyArray<{ x: number; y: number }>) {
-        for (const point of points) {
-            if (point.x > left && point.x < right && point.y > bottom && point.y < top) return true;
-        }
-        if (this.pointInPolygon(left, bottom, points) || this.pointInPolygon(right, bottom, points)
-            || this.pointInPolygon(right, top, points) || this.pointInPolygon(left, top, points)) return true;
+        if (this.pointInPolygon((left + right) * 0.5, (bottom + top) * 0.5, points)) return true;
         for (let i = 0; i < points.length; i++) {
             const a = points[i], b = points[(i + 1) % points.length];
-            if (this.segmentsCross(a.x, a.y, b.x, b.y, left, bottom, right, bottom)
-                || this.segmentsCross(a.x, a.y, b.x, b.y, right, bottom, right, top)
-                || this.segmentsCross(a.x, a.y, b.x, b.y, right, top, left, top)
-                || this.segmentsCross(a.x, a.y, b.x, b.y, left, top, left, bottom)) return true;
+            if (this.segmentIntersectsSweptRect(a.x, a.y, b.x, b.y,
+                left, bottom, right - left, top - bottom, 0, 0)) return true;
         }
         return false;
     }
@@ -549,17 +652,6 @@ export class roleController extends Component {
             if ((a.y > y) !== (b.y > y) && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) inside = !inside;
         }
         return inside;
-    }
-
-    private segmentsCross(ax: number, ay: number, bx: number, by: number,
-        cx: number, cy: number, dx: number, dy: number) {
-        const abC = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
-        const abD = (bx - ax) * (dy - ay) - (by - ay) * (dx - ax);
-        const cdA = (dx - cx) * (ay - cy) - (dy - cy) * (ax - cx);
-        const cdB = (dx - cx) * (by - cy) - (dy - cy) * (bx - cx);
-        const epsilon = 0.0000001;
-        return ((abC > epsilon && abD < -epsilon) || (abC < -epsilon && abD > epsilon))
-            && ((cdA > epsilon && cdB < -epsilon) || (cdA < -epsilon && cdB > epsilon));
     }
 
     /**当前是否处于战斗状态。 */

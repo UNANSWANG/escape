@@ -251,15 +251,6 @@ export class StaticCollisionMover {
         const reach = Math.hypot(deltaX, deltaY) + 1;
         game.queryStaticColliders(bounds.x - reach, bounds.y - reach,
             bounds.x + bounds.width + reach, bounds.y + bounds.height + reach, this.candidates);
-        if (!this.candidates.length) {
-            this.destination.set(this.origin.x + deltaX, this.origin.y + deltaY, this.origin.z);
-            node.setWorldPosition(this.destination);
-            game.keepNodeInsideMap(node);
-            node.getWorldPosition(this.destination);
-            out.set(this.destination.x - this.origin.x, this.destination.y - this.origin.y, 0);
-            return out;
-        }
-
         let x = bounds.x;
         let y = bounds.y;
         let remainingX = deltaX;
@@ -284,6 +275,13 @@ export class StaticCollisionMover {
         this.destination.set(this.origin.x + x - bounds.x, this.origin.y + y - bounds.y, this.origin.z);
         node.setWorldPosition(this.destination);
         game.keepNodeInsideMap(node);
+        // 地图边界校正和坐标精度可能改变落点，按实际碰撞盒复核后再提交移动。
+        const finalBounds = collider.getBoundingBoxToWorld();
+        game.queryStaticColliders(finalBounds.x, finalBounds.y,
+            finalBounds.x + finalBounds.width, finalBounds.y + finalBounds.height, this.candidates);
+        if (this.intersectsStaticShape(finalBounds.x, finalBounds.y, finalBounds.width, finalBounds.height)) {
+            node.setWorldPosition(this.origin);
+        }
         node.getWorldPosition(this.destination);
         out.set(this.destination.x - this.origin.x, this.destination.y - this.origin.y, 0);
         return out;
@@ -344,37 +342,37 @@ export class StaticCollisionMover {
         dx: number, dy: number, points: ReadonlyArray<{ x: number; y: number }>) {
         if (this.rectIntersectsPolygon(x, y, x + width, y + height, points)
             || this.rectIntersectsPolygon(x + dx, y + dy, x + width + dx, y + height + dy, points)) return true;
-        for (const point of points) {
-            if (this.pointInsideSweptRect(point.x, point.y, x, y, width, height, dx, dy)) return true;
-        }
         for (let i = 0; i < points.length; i++) {
-            const a = points[i];
-            const b = points[(i + 1) % points.length];
-            if (this.segmentsCross(x, y, x + dx, y + dy, a.x, a.y, b.x, b.y)
-                || this.segmentsCross(x + width, y, x + width + dx, y + dy, a.x, a.y, b.x, b.y)
-                || this.segmentsCross(x + width, y + height, x + width + dx, y + height + dy, a.x, a.y, b.x, b.y)
-                || this.segmentsCross(x, y + height, x + dx, y + height + dy, a.x, a.y, b.x, b.y)) return true;
+            const a = points[i], b = points[(i + 1) % points.length];
+            if (this.segmentIntersectsSweptRect(a.x, a.y, b.x, b.y, x, y, width, height, dx, dy)) return true;
         }
         return false;
     }
 
-    private pointInsideSweptRect(px: number, py: number, x: number, y: number,
-        width: number, height: number, dx: number, dy: number) {
-        let enter = 0;
-        let exit = 1;
-        if (!dx) {
-            if (px <= x || px >= x + width) return false;
-        } else {
-            enter = Math.max(enter, Math.min((px - x - width) / dx, (px - x) / dx));
-            exit = Math.min(exit, Math.max((px - x - width) / dx, (px - x) / dx));
+    /** 沿 X、Y、移动法线裁剪线段，检测其是否进入矩形扫过区域内部，避免边界重合漏检。 */
+    private segmentIntersectsSweptRect(ax: number, ay: number, bx: number, by: number,
+        x: number, y: number, width: number, height: number, dx: number, dy: number) {
+        let enter = 0, exit = 1;
+        for (let axis = 0; axis < 3; axis++) {
+            const nx = axis === 0 ? 1 : axis === 1 ? 0 : -dy;
+            const ny = axis === 0 ? 0 : axis === 1 ? 1 : dx;
+            if (!nx && !ny) continue;
+            const base = nx * x + ny * y;
+            const travel = nx * dx + ny * dy;
+            const min = base + Math.min(0, nx * width) + Math.min(0, ny * height) + Math.min(0, travel);
+            const max = base + Math.max(0, nx * width) + Math.max(0, ny * height) + Math.max(0, travel);
+            const start = nx * ax + ny * ay;
+            const delta = nx * (bx - ax) + ny * (by - ay);
+            if (Math.abs(delta) < 0.000000000001) {
+                if (start <= min || start >= max) return false;
+            } else {
+                const t1 = (min - start) / delta, t2 = (max - start) / delta;
+                enter = Math.max(enter, Math.min(t1, t2));
+                exit = Math.min(exit, Math.max(t1, t2));
+            }
+            if (enter >= exit) return false;
         }
-        if (!dy) {
-            if (py <= y || py >= y + height) return false;
-        } else {
-            enter = Math.max(enter, Math.min((py - y - height) / dy, (py - y) / dy));
-            exit = Math.min(exit, Math.max((py - y - height) / dy, (py - y) / dy));
-        }
-        return enter + 0.000000001 < exit;
+        return enter < exit;
     }
 
     private findSlideNormal(x: number, y: number, width: number, height: number,
@@ -418,18 +416,11 @@ export class StaticCollisionMover {
 
     private rectIntersectsPolygon(left: number, bottom: number, right: number, top: number,
         points: ReadonlyArray<{ x: number; y: number }>) {
-        for (const point of points) {
-            if (point.x > left && point.x < right && point.y > bottom && point.y < top) return true;
-        }
-        if (this.pointInPolygon(left, bottom, points) || this.pointInPolygon(right, bottom, points)
-            || this.pointInPolygon(right, top, points) || this.pointInPolygon(left, top, points)) return true;
+        if (this.pointInPolygon((left + right) * 0.5, (bottom + top) * 0.5, points)) return true;
         for (let i = 0; i < points.length; i++) {
-            const a = points[i];
-            const b = points[(i + 1) % points.length];
-            if (this.segmentsCross(a.x, a.y, b.x, b.y, left, bottom, right, bottom)
-                || this.segmentsCross(a.x, a.y, b.x, b.y, right, bottom, right, top)
-                || this.segmentsCross(a.x, a.y, b.x, b.y, right, top, left, top)
-                || this.segmentsCross(a.x, a.y, b.x, b.y, left, top, left, bottom)) return true;
+            const a = points[i], b = points[(i + 1) % points.length];
+            if (this.segmentIntersectsSweptRect(a.x, a.y, b.x, b.y,
+                left, bottom, right - left, top - bottom, 0, 0)) return true;
         }
         return false;
     }
@@ -447,16 +438,5 @@ export class StaticCollisionMover {
                 && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) inside = !inside;
         }
         return inside;
-    }
-
-    private segmentsCross(ax: number, ay: number, bx: number, by: number,
-        cx: number, cy: number, dx: number, dy: number) {
-        const abC = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
-        const abD = (bx - ax) * (dy - ay) - (by - ay) * (dx - ax);
-        const cdA = (dx - cx) * (ay - cy) - (dy - cy) * (ax - cx);
-        const cdB = (dx - cx) * (by - cy) - (dy - cy) * (bx - cx);
-        const epsilon = 0.0000001;
-        return ((abC > epsilon && abD < -epsilon) || (abC < -epsilon && abD > epsilon))
-            && ((cdA > epsilon && cdB < -epsilon) || (cdA < -epsilon && cdB > epsilon));
     }
 }

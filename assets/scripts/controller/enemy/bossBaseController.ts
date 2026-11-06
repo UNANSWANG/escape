@@ -469,7 +469,6 @@ export class bossBaseController extends Component {
         }
         this.roleAnim.setTrackEventListener(entry, (_entry, event) => {
             if (typeof event === 'number' || event.data.name !== 'damage') return;
-            if (this.roleAnim.getCurrent(0) !== entry) return;
             this.applyAttackDamage();
         });
         this.roleAnim.setTrackCompleteListener(entry, () => this.finishAttackAnimation());

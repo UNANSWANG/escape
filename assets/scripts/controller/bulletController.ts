@@ -51,6 +51,8 @@ export class bulletController extends Component {
         }
         // 子弹图片默认朝上。
         this.node.angle = Math.atan2(this.moveDirection.y, this.moveDirection.x) * 180 / Math.PI - 90;
+        // 出生点只补检一次，避免枪口与目标重叠时首帧移出受击范围。
+        if (this.targetPlayer ? this.checkHitPlayer() : this.checkHitEnemy()) return;
         this.refreshBulletSprite(bulletType);
     }
 

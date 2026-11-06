@@ -1,4 +1,5 @@
 import { _decorator, Component, Sprite, UITransform, Vec3 } from 'cc';
+import { bulletExplosionController } from './bulletExplosionController';
 import { enemyMgr } from '../manager/enemyManager';
 import { poolMgr } from '../manager/poolManager';
 import { playerMgr } from '../manager/playerManager';
@@ -99,7 +100,7 @@ export class bulletController extends Component {
         this.straightMoveRemainDistance -= moveDistance;
         this.node.getWorldPosition(this.moveEndWorld);
         if (this.checkHitObstacle()) {
-            this.recycle();
+            this.recycle(true);
             return;
         }
         if (this.targetPlayer ? this.checkHitPlayer() : this.checkHitEnemy()) {
@@ -228,7 +229,7 @@ export class bulletController extends Component {
             if (!enemyTransform || !bulletBounds.intersects(enemyTransform.getBoundingBoxToWorld())) continue;
 
             enemy.takeDamage(this.damage);
-            this.recycle();
+            this.recycle(true);
             return true;
         }
         return false;
@@ -243,12 +244,19 @@ export class bulletController extends Component {
         if (!bulletTransform || !playerTransform
             || !bulletTransform.getBoundingBoxToWorld().intersects(playerTransform.getBoundingBoxToWorld())) return false;
         player.takeDamage(this.damage);
-        this.recycle();
+        this.recycle(true);
         return true;
     }
 
     /**回收子弹 */
-    private recycle() {
+    private recycle(showExplosion = false) {
+        const parent = this.node.parent;
+        if (showExplosion && parent?.isValid && uiMgr.bulletExplosionPrefab) {
+            const effect = poolMgr.getBulletExplosionNode(uiMgr.bulletExplosionPrefab);
+            parent.addChild(effect);
+            effect.setWorldPosition(this.node.worldPosition);
+            effect.getComponent(bulletExplosionController).play();
+        }
         poolMgr.putBulletNode(this.node);
     }
 }

@@ -34,6 +34,8 @@ export class UIManager {
     whirlwindPrefab: Prefab = null;
     /**role0 滑铲期间播放的烟雾预制体。 */
     shovelSmokePrefab: Prefab = null;
+    /** Bullet impact animation prefab. */
+    bulletExplosionPrefab: Prefab = null;
     /**通过 ItemPath.role 加载，供游戏界面创建玩家 */
     rolePrefab: Prefab = null;
     /**通过 ItemPath.soldier 加载，供游戏界面创建士兵 */
@@ -177,6 +179,7 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, animationItemPath.whirlwind, false),
             ccResTools.loadPrefab(this.resBundle, animationItemPath.shovelSmoke, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.helicopter, false),
+            ccResTools.loadPrefab(this.resBundle, animationItemPath.bomb, false),
         ]);
 
         if (prefabs.some((prefab) => !prefab)) {
@@ -201,6 +204,7 @@ export class UIManager {
         this.whirlwindPrefab = prefabs[15];
         this.shovelSmokePrefab = prefabs[16];
         this.helicopterPrefab = prefabs[17];
+        this.bulletExplosionPrefab = prefabs[18];
     }
 
     /**等待按顺序播放的奖励提示。 */

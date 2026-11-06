@@ -11,6 +11,7 @@ const GAME_SPINE_POOL_LIMIT = 32;
 const TILE_ITEM_POOL_LIMIT = 256;
 const PROPS_NODE_POOL_LIMIT = 32;
 const BULLET_SHELL_POOL_LIMIT = 64;
+const BULLET_EXPLOSION_POOL_LIMIT = 64;
 
 //对象池管理类
 @ccclass('poolManager')
@@ -34,6 +35,7 @@ export class poolManager extends Component {
     /**按道具脚本类型拆分的节点对象池 */
     private propsNodePoolMap: Map<string, NodePool> = new Map();
     private bulletShellNodePool: NodePool = new NodePool();
+    private bulletExplosionNodePool: NodePool = new NodePool();
 
     /**初始化点的对象池 */
     initPointNodePool() {
@@ -131,6 +133,15 @@ export class poolManager extends Component {
             skeleton.skeletonData = null;
         }
         this.putNodeWithLimit(this.gameSpineNodePool, node, GAME_SPINE_POOL_LIMIT);
+    }
+
+    getBulletExplosionNode(prefab: Prefab) {
+        return this.getNode(this.bulletExplosionNodePool, prefab);
+    }
+
+    putBulletExplosionNode(node: Node) {
+        this.resetNode(node);
+        this.putNodeWithLimit(this.bulletExplosionNodePool, node, BULLET_EXPLOSION_POOL_LIMIT);
     }
 
     getBulletShellNode(prefab: Prefab) {

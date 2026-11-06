@@ -1,0 +1,146 @@
+
+animation.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+1
+  rotate: false
+  xy: 847, 454
+  size: 137, 278
+  orig: 137, 278
+  offset: 0, 0
+  index: -1
+10
+  rotate: false
+  xy: 173, 615
+  size: 256, 393
+  orig: 256, 393
+  offset: 0, 0
+  index: -1
+11
+  rotate: false
+  xy: 431, 736
+  size: 140, 272
+  orig: 140, 272
+  offset: 0, 0
+  index: -1
+12
+  rotate: false
+  xy: 752, 604
+  size: 93, 172
+  orig: 93, 172
+  offset: 0, 0
+  index: -1
+13
+  rotate: false
+  xy: 386, 364
+  size: 293, 249
+  orig: 299, 250
+  offset: 6, 1
+  index: -1
+14
+  rotate: false
+  xy: 857, 239
+  size: 113, 213
+  orig: 115, 214
+  offset: 1, 1
+  index: -1
+15
+  rotate: false
+  xy: 530, 644
+  size: 75, 88
+  orig: 75, 88
+  offset: 0, 0
+  index: -1
+16
+  rotate: false
+  xy: 2, 38
+  size: 169, 970
+  orig: 170, 971
+  offset: 1, 1
+  index: -1
+17
+  rotate: false
+  xy: 431, 639
+  size: 97, 93
+  orig: 97, 93
+  offset: 0, 0
+  index: -1
+18
+  rotate: false
+  xy: 607, 650
+  size: 143, 126
+  orig: 143, 126
+  offset: 0, 0
+  index: -1
+19
+  rotate: false
+  xy: 607, 778
+  size: 184, 230
+  orig: 184, 230
+  offset: 0, 0
+  index: -1
+2
+  rotate: false
+  xy: 642, 61
+  size: 213, 301
+  orig: 213, 302
+  offset: 0, 1
+  index: -1
+20
+  rotate: false
+  xy: 857, 62
+  size: 85, 175
+  orig: 87, 176
+  offset: 1, 1
+  index: -1
+3
+  rotate: false
+  xy: 2, 2
+  size: 78, 34
+  orig: 78, 34
+  offset: 0, 0
+  index: -1
+4
+  rotate: false
+  xy: 681, 427
+  size: 163, 175
+  orig: 164, 176
+  offset: 0, 0
+  index: -1
+5
+  rotate: false
+  xy: 490, 10
+  size: 131, 182
+  orig: 131, 182
+  offset: 0, 0
+  index: -1
+6
+  rotate: false
+  xy: 173, 16
+  size: 315, 171
+  orig: 315, 171
+  offset: 0, 0
+  index: -1
+7
+  rotate: false
+  xy: 173, 189
+  size: 211, 424
+  orig: 211, 424
+  offset: 0, 0
+  index: -1
+8
+  rotate: false
+  xy: 857, 734
+  size: 149, 274
+  orig: 150, 275
+  offset: 1, 1
+  index: -1
+9
+  rotate: false
+  xy: 386, 194
+  size: 254, 168
+  orig: 254, 170
+  offset: 0, 1
+  index: -1

@@ -22,7 +22,7 @@
           },
           "miniGame": {
             "fallbackOptions": {
-              "isRemote": false,
+              "isRemote": true,
               "compressionType": "merge_dep"
             },
             "configMode": "overwrite",
@@ -34,6 +34,9 @@
               "bytedance-mini-game": {
                 "isRemote": false,
                 "compressionType": "subpackage"
+              },
+              "alipay-mini-game": {
+                "isRemote": false
               }
             }
           }

@@ -42,6 +42,11 @@ export class equipStorePage extends storePageBase {
             this.content.addChild(itemNode);
             itemNodes.push(itemNode);
 
+            const equipmentImg = itemNode.getChildByName("img")?.getComponent(Sprite);
+            if (equipmentImg) {
+                equipmentImg.node.angle = 0;
+                ccTools.loadImg(equipmentImg, imgPath.equipIcon + equipment.itemId);
+            }
             const firePowerLayout = itemNode.getChildByName("firepowerLayout");
             if (firePowerLayout) {
                 firePowerLayout.active = false;
@@ -73,6 +78,7 @@ export class equipStorePage extends storePageBase {
             this.selectEquipment(equipmentData[0], itemNodes, itemNodes[0]);
         } else {
             this.selectedEquipment = null;
+            this.refreshShowEquipmentImage(null);
             this.refreshAttribute(null);
             if (this.showNameLab) {
                 this.showNameLab.string = "";
@@ -105,6 +111,7 @@ export class equipStorePage extends storePageBase {
 
     private selectEquipment(equipment: JsonEquipmentData, itemNodes: Node[], selectedNode: Node) {
         this.selectedEquipment = equipment;
+        this.refreshShowEquipmentImage(equipment);
         this.refreshAttribute(equipment);
         if (this.showNameLab) {
             this.showNameLab.string = this.selectedEquipment.name ?? "";
@@ -116,6 +123,17 @@ export class equipStorePage extends storePageBase {
                 selectNode.active = itemNode === selectedNode;
             }
         });
+    }
+
+    /** 默认选中和切换商品时同步刷新展示装备。 */
+    private refreshShowEquipmentImage(equipment: JsonEquipmentData | null) {
+        const equipmentImg = this.node.getChildByName("showNode")?.getChildByName("img")?.getComponent(Sprite);
+        if (!equipmentImg) return;
+        ccTools.cancelAssetLoad(equipmentImg);
+        equipmentImg.spriteFrame = null;
+        if (equipment) {
+            ccTools.loadImg(equipmentImg, imgPath.equipIcon + equipment.itemId);
+        }
     }
 
     private refreshAttribute(equipment: JsonEquipmentData | null) {

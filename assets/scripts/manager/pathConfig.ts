@@ -110,6 +110,8 @@ export enum animationItemPath {
     whirlwind = "prefabs/anim/whirlwind",
     /**滑铲烟雾动画 */
     shovelSmoke = "prefabs/anim/shovelSmoke",
+    /**子弹爆炸动画 */
+    bomb = "prefabs/anim/bomb",
 }
 
 /**音效路径 */

@@ -1440,6 +1440,10 @@ export class UIGame extends UIBase {
 
     /**上次显示的倒计时秒数，避免每帧格式化相同文本。 */
     private displayedGameTimeSeconds = -1;
+    /**倒计时常规颜色。 */
+    private readonly gameTimeNormalColor = new Color('#9CFE41');
+    /**倒计时最后60秒的颜色。 */
+    private readonly gameTimeLastMinuteColor = new Color('#FE6941');
 
     /**剩余秒数向上取整，显示为“撤离倒计时：分:秒”。 */
     private refreshGameTimeLab(): void {
@@ -1447,6 +1451,10 @@ export class UIGame extends UIBase {
         const totalSeconds = Math.ceil(this.gameTimeRemaining);
         if (totalSeconds === this.displayedGameTimeSeconds) return;
         this.displayedGameTimeSeconds = totalSeconds;
+        const targetColor = totalSeconds <= 60 ? this.gameTimeLastMinuteColor : this.gameTimeNormalColor;
+        if (!this.gameTimeLab.color.equals(targetColor)) {
+            this.gameTimeLab.color = targetColor;
+        }
         const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
         const seconds = String(totalSeconds % 60).padStart(2, '0');
         const text = `${minutes}:${seconds}`;

@@ -46,6 +46,8 @@ export enum UIPath {
     UIGift = "prefabs/UIPage/UIGift",
     /**显示物品页面 */
     UIShowItem = "prefabs/UIPage/UIShowItem",
+    /**添加金币页面 */
+    UIMoneyAdd = "prefabs/UIPage/UIMoneyAdd",
 }
 
 /**物品路径 */

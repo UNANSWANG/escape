@@ -264,10 +264,10 @@ export class role0 extends roleController {
         super.playDeath(onComplete);
     }
 
-    /** 在移动完成后采样位置；残影与角色分离，使用游戏时间计时。 */
+    /** 在移动完成后采样位置；已有残影的淡出和回收不受游戏暂停影响。 */
     protected lateUpdate(dt: number): void {
         super.lateUpdate(dt);
-        if (gm.isGamePause || dt <= 0) return;
+        if (dt <= 0) return;
         for (let index = this.ghosts.length - 1; index >= 0; index--) {
             const ghost = this.ghosts[index];
             ghost.remain -= dt;
@@ -284,7 +284,7 @@ export class role0 extends roleController {
                 this.ghosts.splice(index, 1);
             }
         }
-        if (!this.isUsingSkill2) return;
+        if (gm.isGamePause || !this.isUsingSkill2) return;
         this.ghostHistoryTime += dt;
         this.ghostPositionHistory.push({
             time: this.ghostHistoryTime,

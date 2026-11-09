@@ -127,6 +127,9 @@ export class UIGame extends UIBase {
     @property(Node)
     centerUINode: Node;
 
+    @property(Node)
+    timeShowLab: Node;
+
     ///
     ///需要获取的节点
     ///
@@ -228,6 +231,8 @@ export class UIGame extends UIBase {
     private openingHelicopter: Node = null;
     private openingSkeleton: sp.Skeleton = null;
     private openingTweens: Tween<any>[] = [];
+    /**倒计时从屏幕中央移入常驻位置的补间。 */
+    private timeShowTween: Tween<Node> = null;
     private readonly helicopterFlyTime = 1.2;
     private readonly openingDropTime = 0.6;
     /**当前游戏局序号，用于避免异步加载回写旧局 */
@@ -483,6 +488,7 @@ export class UIGame extends UIBase {
     clearData() {
         this.unscheduleAllCallbacks();
         this.clearOpening();
+        this.clearTimeShowAnimation();
         playerMgr.cameraFollow = false;
         this.gameCameraComp?.unlockCameraPos();
         this.setGameViewScale(1, 0);
@@ -1058,10 +1064,56 @@ export class UIGame extends UIBase {
         }
     }
 
+    /**UI显示后，先在中央展示倒计时，再移入常驻位置。 */
+    private playTimeShowAnimation(): void {
+        this.clearTimeShowAnimation();
+        if (!this.timeShowLab?.isValid || !this.gameTimeLab?.isValid || !this.timeShowLab.parent) return;
+
+        this.timeShowLab.setPosition(0, 140, 0);
+        this.timeShowLab.setScale(1, 1, 1);
+        this.timeShowLab.active = true;
+        this.refreshTimeShowLab();
+        this.gameTimeLab.node.active = false;
+
+        // 目标节点可能在其他父节点下，先转换到展示节点的父节点坐标系。
+        const targetPosition = new Vec3();
+        this.timeShowLab.parent.inverseTransformPoint(targetPosition, this.gameTimeLab.node.worldPosition);
+        this.timeShowTween = tween(this.timeShowLab)
+            .delay(1.2)
+            .to(0.3, { position: targetPosition, scale: new Vec3(0.5, 0.5, 1) })
+            .call(() => {
+                this.timeShowTween = null;
+                this.timeShowLab.active = false;
+                this.gameTimeLab.node.active = true;
+            });
+        this.timeShowTween.start();
+        if (gm.isGamePause) this.timeShowTween.pause();
+    }
+
+    /**重开或关闭游戏页时，停止动画并恢复节点显示状态。 */
+    private clearTimeShowAnimation(): void {
+        this.timeShowTween?.stop();
+        this.timeShowTween = null;
+        if (this.timeShowLab?.isValid) this.timeShowLab.active = false;
+        if (this.gameTimeLab?.isValid) this.gameTimeLab.node.active = true;
+    }
+
+    /**展示期间同步倒计时文字与颜色。 */
+    private refreshTimeShowLab(): void {
+        if (!this.timeShowLab?.active) return;
+        const label = this.timeShowLab.getComponent(Label);
+        if (!label) return;
+        label.string = `撤离倒计时:${this.gameTimeLab.string}`;
+        if (!label.color.equals(this.gameTimeLab.color)) {
+            label.color = this.gameTimeLab.color;
+        }
+    }
+
     /**落地后再创建敌人，开场期间既不显示也不运行 AI。 */
     private finishOpening() {
         this.isOpening = false;
         this.setGameControlsVisible(true);
+        this.playTimeShowAnimation();
         playerMgr.player.getComponent(UIOpacity).opacity = 255;
         this.rockerReset(true);
         this.gameCameraComp?.unlockCameraPos();
@@ -1333,6 +1385,7 @@ export class UIGame extends UIBase {
 
     /**响应全局游戏暂停 */
     private onGamePause() {
+        this.timeShowTween?.pause();
         for (const action of this.openingTweens) action.pause();
         if (this.openingSkeleton?.isValid) this.openingSkeleton.timeScale = 0;
         this.isGamePause = true;
@@ -1348,6 +1401,7 @@ export class UIGame extends UIBase {
 
     /**响应全局游戏继续 */
     private onGameResume() {
+        this.timeShowTween?.resume();
         for (const action of this.openingTweens) action.resume();
         if (this.openingSkeleton?.isValid) this.openingSkeleton.timeScale = 1;
         if (this.isEvacuating) gm.isGamePause = true;
@@ -1459,6 +1513,7 @@ export class UIGame extends UIBase {
         const seconds = String(totalSeconds % 60).padStart(2, '0');
         const text = `${minutes}:${seconds}`;
         if (this.gameTimeLab.string !== text) this.gameTimeLab.string = text;
+        this.refreshTimeShowLab();
     }
 
     /**玩家死亡时进入本局失败结算。 */

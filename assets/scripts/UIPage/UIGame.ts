@@ -2086,6 +2086,12 @@ export class UIGame extends UIBase {
             case KeyCode.DIGIT_3:
                 this.switchWeapon(2);
                 break;
+            case KeyCode.DIGIT_4:
+                this.clickDrugBtn(false);
+                break;
+            case KeyCode.DIGIT_5:
+                this.clickDrugBtn(true);
+                break;
             case KeyCode.SPACE:
                 this.clickSkillBtn1();
                 break;

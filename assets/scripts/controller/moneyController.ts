@@ -4,7 +4,7 @@ import { gm } from '../manager/gm';
 import { GameEvent, MonetaryType } from '../manager/configData';
 import { uiMgr } from '../manager/UIManager';
 import { ccTools } from '../extention/generalTools';
-import { imgPath } from '../manager/pathConfig';
+import { imgPath, UIPath } from '../manager/pathConfig';
 const { ccclass, property } = _decorator;
 
 @ccclass('moneyController')
@@ -29,6 +29,7 @@ export class moneyController extends Component {
     }
 
     protected onEnable(): void {
+        this.node.on(Node.EventType.TOUCH_END, this.clickMoney, this);
         gm.Event.on(GameEvent.refreshPlayerMonetary, this.refreshMoney, this);
         //延后一帧等待widget刷新后再刷坐标
         this.scheduleOnce(() => {
@@ -37,7 +38,13 @@ export class moneyController extends Component {
     }
 
     protected onDisable(): void {
+        this.node.off(Node.EventType.TOUCH_END, this.clickMoney, this);
         gm.Event.off(GameEvent.refreshPlayerMonetary, this.refreshMoney, this);
+    }
+
+    /**点击货币区域，打开货币补充界面 */
+    private clickMoney() {
+        uiMgr.openPage(UIPath.UIMoneyAdd);
     }
 
     /**刷新当前货币动画的目标世界坐标 */

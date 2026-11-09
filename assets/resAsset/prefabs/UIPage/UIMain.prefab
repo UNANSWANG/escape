@@ -5098,7 +5098,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 198,
+      "width": 94.04296875,
       "height": 56.4
     },
     "_anchorPoint": {
@@ -5134,7 +5134,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "玩家昵称名字啊啊",
+    "_string": "游客123",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
     "_actualFontSize": 24,
@@ -6264,7 +6264,7 @@
     },
     "_type": 0,
     "_fillType": 0,
-    "_sizeMode": 1,
+    "_sizeMode": 0,
     "_fillCenter": {
       "__type__": "cc.Vec2",
       "x": 0,

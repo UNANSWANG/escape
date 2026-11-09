@@ -1,6 +1,6 @@
-import { _decorator, Node, Animation, Label } from 'cc';
+import { _decorator, Node, Animation, Label, Sprite } from 'cc';
 import { UIBase } from './UIBase';
-import { UIPath } from '../manager/pathConfig';
+import { imgPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
@@ -8,6 +8,7 @@ import { ccStorageTools } from '../extention/storageTools';
 import { SaveKey } from '../manager/configData';
 import { JsonSignData, signConfig } from '../json/jsonSign';
 import { getItemDataByItemId } from '../json/jsonItemData';
+import { videoMgr } from '../manager/videoManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('UISign')
@@ -34,6 +35,8 @@ export class UISign extends UIBase {
     private isGetToday = false;
     /**当前可领取或今日已领取的奖励下标 */
     private currentDayIndex = 0;
+    /**是否正在观看签到奖励广告 */
+    private isWatchingAd = false;
 
     protected onLoad(): void {
         this.bindBtn();
@@ -77,6 +80,7 @@ export class UISign extends UIBase {
             const reward = this.currentWeekRewards[index];
             const dayLab = itemNode.getChildByName("dayLab")?.getComponent(Label);
             const desLab = itemNode.getChildByName("desLab")?.getComponent(Label);
+            const img = itemNode.getChildByName("img")?.getComponent(Sprite);
             const mask = itemNode.getChildByName("mask");
             const select = itemNode.getChildByName("select");
 
@@ -85,10 +89,23 @@ export class UISign extends UIBase {
             }
 
             const rewardData = this.parseReward(reward);
-            if (desLab && rewardData) {
+            if (img) {
+                ccTools.cancelAssetLoad(img);
+                img.spriteFrame = null;
+            }
+            if (rewardData) {
                 const [itemId, num] = rewardData;
-                const itemName = getItemDataByItemId(itemId)?.name || `${itemId}`;
-                desLab.string = `${itemName}x${num}`;
+                if (desLab) {
+                    const itemName = getItemDataByItemId(itemId)?.name || `${itemId}`;
+                    desLab.string = `${itemName}x${num}`;
+                }
+                if (img) {
+                    const isWeapon = Number.isInteger(itemId) && itemId >= 0 && itemId <= 100000;
+                    img.node.angle = isWeapon ? -35 : 0;
+                    const iconPath = itemId === 200001 ? imgPath.money
+                        : itemId === 200002 ? imgPath.gold : ccTools.getItemIconPath(itemId);
+                    ccTools.loadImg(img, iconPath);
+                }
             }
 
             const isReceived = this.isGetToday
@@ -130,8 +147,16 @@ export class UISign extends UIBase {
     ///
     ///点击事件
     ///
-    /**点击获取 */
+    /**点击普通领取 */
     clickGetBtn() {
+        if (this.isWatchingAd) {
+            return;
+        }
+        this.receiveReward(1);
+    }
+
+    /**领取签到奖励，倍率仅影响数量，签到天数只增加一天 */
+    private receiveReward(multiplier: number) {
         if (this.isGetToday) {
             return;
         }
@@ -141,17 +166,30 @@ export class UISign extends UIBase {
             return;
         }
 
+        this.isGetToday = true;
         ccStorageTools.setData(SaveKey.signDays, this.signDays + 1);
         ccStorageTools.setLimitTimeData(SaveKey.isGetSign, 1);
         this.getBtn.active = false;
         this.adBtn.active = false;
         this.onClose();
-        uiMgr.openPage(UIPath.UIReward, { rewardData: [rewardData] });
+        const [itemId, num] = rewardData;
+        uiMgr.openPage(UIPath.UIReward, { rewardData: [[itemId, num * multiplier]] });
     }
 
-    /**点击广告 */
+    /**广告播放完成后领取三倍奖励 */
     clickAdBtn() {
-        console.log("点击广告");
+        if (this.isGetToday || this.isWatchingAd
+            || !this.parseReward(this.currentWeekRewards[this.currentDayIndex])) {
+            return;
+        }
+
+        this.isWatchingAd = true;
+        videoMgr.watchVideo(68, () => {
+            this.isWatchingAd = false;
+            this.receiveReward(3);
+        }, () => {
+            this.isWatchingAd = false;
+        });
     }
 
     /**点击关闭 */

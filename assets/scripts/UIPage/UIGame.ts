@@ -163,7 +163,7 @@ export class UIGame extends UIBase {
     /**技能2按钮遮罩。 */
     private skill2Mask: Sprite = null;
     /**摇杆初始位置 */
-    private rockerInitPos: Vec3 = new Vec3(200, -56, 0);
+    private rockerInitPos: Vec3 = new Vec3(270, -15, 0);
     /**当前是否正在攻击瞄准 */
     private isAttackAiming = false;
     /**本轮持续攻击锁定的目标；离开检测范围后仍保留至松开攻击键 */
@@ -1449,7 +1449,7 @@ export class UIGame extends UIBase {
         this.displayedGameTimeSeconds = totalSeconds;
         const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
         const seconds = String(totalSeconds % 60).padStart(2, '0');
-        const text = `撤离倒计时：${minutes}:${seconds}`;
+        const text = `${minutes}:${seconds}`;
         if (this.gameTimeLab.string !== text) this.gameTimeLab.string = text;
     }
 
@@ -1645,7 +1645,6 @@ export class UIGame extends UIBase {
         }
     }
 
-    /**刷新游戏摄像机视角 */
     refreshGameCamera() {
         this.updateGameToUICameraScale();
     }

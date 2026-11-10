@@ -219,6 +219,10 @@ export enum SaveKey {
     vibrat = "vibrat",
     /**今日是否领取过侧边栏奖励 */
     isGetRevisit = "isGetRevisit",
+    /**今日是否已分享领取银币补充奖励 */
+    moneyAddShare = "moneyAddShare",
+    /**今日是否已分享领取金币补充奖励 */
+    moneyAddShare2 = "moneyAddShare2",
     /**用户头像 */
     avatarUrl = "avatarUrl",
     /**敌人是否只攻击自身（gm配置） */

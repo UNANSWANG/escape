@@ -388,7 +388,7 @@ export class UIManager {
     goldTargetPos: Vec3 = new Vec3();
 
     /**播放货币动画
-     * @param rootNode 货币动画初始节点
+     * @param rootNode 仅提供货币动画起始世界坐标，不参与尺寸计算
      * @param num 货币数量
      * @param moneyType 货币类型，默认银币
      * @param call 动画完成回调
@@ -426,7 +426,7 @@ export class UIManager {
             this.effectNode.addChild(effectItem);
 
             effectItem.setPosition(startCenter);
-            effectItem.setScale(2, 2, 1);
+            effectItem.setScale(1, 1, 1);
 
             let sprite = effectItem.getComponent(Sprite);
             if (sprite) {
@@ -447,7 +447,7 @@ export class UIManager {
             }
 
             moneyTween
-                .to(0.5, { position: targetPos, scale: new Vec3(1, 1, 1) }, { easing: 'quadIn' })
+                .to(0.5, { position: targetPos }, { easing: 'quadIn' })
                 .call(() => {
                     effectItem.destroy();
                     completedCount++;
@@ -540,7 +540,7 @@ export class UIManager {
             }
 
             rewardTween
-                .to(0.5, { position: targetPos, scale: new Vec3(0.8, 0.8, 1) }, { easing: 'quadIn' })
+                .to(0.5, { position: targetPos }, { easing: 'quadIn' })
                 .call(() => {
                     effectItem.destroy();
                     completedCount++;

@@ -1121,6 +1121,8 @@ export class UIGame extends UIBase {
         this.initAI();
         this.initSoldier();
         this.initBoss();
+        // 敌人创建完成后，将玩家放到父节点的最后一层。
+        playerMgr.player.setSiblingIndex(this.roleNode.children.length - 1);
         this.updateRolePerspectives();
         this.updateShelterVisibility();
     }

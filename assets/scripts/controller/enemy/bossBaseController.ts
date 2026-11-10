@@ -116,6 +116,8 @@ export class bossBaseController extends Component {
     hitArea: UITransform = null;
     /** 通用特效挂点，在加载时缓存，初始化时恢复显示。 */
     effectNode: Node = null;
+    /** Boss 底部特效节点。 */
+    bottomEffect: Node = null;
     /** 最大血量。 */
     maxHp = 0;
     /** 当前血量。 */
@@ -184,6 +186,7 @@ export class bossBaseController extends Component {
         this.roleAnim = (this.node.getChildByName('anim') ?? this.node.getChildByName('roleAnim'))?.getComponent(sp.Skeleton);
         this.hitArea = this.node.getChildByName('hitArea')?.getComponent(UITransform);
         this.effectNode = this.node.getChildByName('effectNode');
+        this.bottomEffect = this.node.getChildByName('bottomEffect');
         if (!this.effectNode) {
             this.effectNode = new Node('effectNode');
             this.effectNode.layer = this.node.layer;

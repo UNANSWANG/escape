@@ -10,6 +10,12 @@ export class UIMoneyAdd extends UIBase {
     @property(Node)
     closeBtn: Node;
 
+    @property(Node)
+    getBtn_0: Node;
+
+    @property(Node)
+    getBtn_1: Node;
+
     protected onLoad(): void {
         this.bindBtn();
     }

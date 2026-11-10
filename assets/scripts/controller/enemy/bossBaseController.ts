@@ -14,10 +14,6 @@ const { ccclass, executeInEditMode, property } = _decorator;
 
 /** Boss 通用动画名称。 */
 export enum BossAnimName {
-    /** 技能第一段前摇。 */
-    skill1 = 'skill1',
-    /** 技能第二段前摇。 */
-    skill2 = 'skill2',
     /** 待机。 */
     idle = 'idle',
     /** 移动。 */
@@ -170,7 +166,7 @@ export class bossBaseController extends Component {
     private attackAnimationPlaying = false;
     private isInAttackRange = false;
     /** 当前动画名称。 */
-    private currentAnim: BossAnimName | '' = '';
+    private currentAnim: string = '';
     /** 水平朝向：1 向右，-1 向左。 */
     private facingX = -1;
     /** 是否初始化成功。 */
@@ -496,7 +492,7 @@ export class bossBaseController extends Component {
     }
 
     /** 播放动画，force 表示强制重播。 */
-    protected playAnimation(name: BossAnimName, loop = true, force = false) {
+    protected playAnimation(name: string, loop = true, force = false) {
         if (!this.roleAnim?.skeletonData || !this.roleAnim.findAnimation(name)) return;
         if (!force && this.currentAnim === name) return;
         this.currentAnim = name;

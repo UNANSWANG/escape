@@ -66,8 +66,6 @@ export enum ItemPath {
     gameLabelItem = "prefabs/Item/gameLabelItem",
     /**游戏spine物体 */
     gameSpineItem = "prefabs/Item/gameSpineItem",
-    /**弹壳特效 */
-    bulletShell = "prefabs/Item/bulletShell",
     /**特效物体 */
     effectItem = "prefabs/Item/effectItem",
     /**超武商城物品 */
@@ -196,8 +194,6 @@ export enum imgPath {
 export enum spinePath {
     /**角色spine（文件夹） */
     role = "spine/role/role_",
-    /**敌人spine（文件夹） */
-    boss = "spine/boss/boss_",
     /**士兵spine（文件夹） */
     soldier = "spine/soldier/soldier_",
     /**武器spine（文件夹） */
@@ -208,4 +204,6 @@ export enum spinePath {
     click = "spine/click/dianji",
     /**宝石 */
     gem = "spine/roleSkill/gem/gem",
+    /**剑雨spine（文件夹） */
+    swordRain = "spine/bossSkill/swordRain",
 }

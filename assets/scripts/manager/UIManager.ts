@@ -50,6 +50,8 @@ export class UIManager {
     dronePrefab: Prefab = null;
     /** 圆形技能范围指示器预制体。 */
     skillRangeCirclePrefab: Prefab = null;
+    /**矩形技能范围指示器预制体 */
+    skillRangeRectPrefab: Prefab = null;
     /**角色打药使用的注射器预制体。 */
     syringePrefab: Prefab = null;
     /**开场直升机预制体。 */
@@ -180,6 +182,7 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, animationItemPath.shovelSmoke, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.helicopter, false),
             ccResTools.loadPrefab(this.resBundle, animationItemPath.bomb, false),
+            ccResTools.loadPrefab(this.resBundle, ItemPath.skillRangeRect, false),
         ]);
 
         if (prefabs.some((prefab) => !prefab)) {
@@ -205,6 +208,7 @@ export class UIManager {
         this.shovelSmokePrefab = prefabs[16];
         this.helicopterPrefab = prefabs[17];
         this.bulletExplosionPrefab = prefabs[18];
+        this.skillRangeRectPrefab = prefabs[19];
     }
 
     /**等待按顺序播放的奖励提示。 */

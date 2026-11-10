@@ -1664,7 +1664,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "f7IebxtMhDZLMgFMGBNtqb"
+    "fileId": "771Im4+e5K9pI0ohIVJmUM"
   },
   {
     "__type__": "cc.Sprite",
@@ -1703,13 +1703,13 @@
     "_fillStart": 0,
     "_fillRange": 0,
     "_isTrimmedMode": true,
-    "_useGrayscale": true,
+    "_useGrayscale": false,
     "_atlas": null,
     "_id": ""
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "5asydXdDtBPIQ4qtK9u43U"
+    "fileId": "4bv1CG2XVBxqFm36upwXXJ"
   },
   {
     "__type__": "cc.PrefabInfo",
@@ -1719,7 +1719,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "cbmrUnW4JI/rgpLBnJ6n0B",
+    "fileId": "ecyt49Zi9OuboMHujr5VIm",
     "instance": null,
     "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
@@ -1800,7 +1800,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "443WFbkTFNH75jUanZzIQO"
+    "fileId": "03PdDg3ONIA7yKgtq04Mxt"
   },
   {
     "__type__": "cc.Sprite",
@@ -1845,7 +1845,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "6dMaxw9K5M06VPVIdc0/iz"
+    "fileId": "15Tk0NSM1NKIFwPHo3phGs"
   },
   {
     "__type__": "cc.PrefabInfo",
@@ -1855,7 +1855,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "ccLTHzAMlOQ61pY+j4j2jr",
+    "fileId": "a8M7qwNoBLF6tm3skE2z+v",
     "instance": null,
     "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
@@ -1884,7 +1884,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": 2,
+      "y": -84,
       "z": 0
     },
     "_lrot": {
@@ -1936,7 +1936,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "9dxbv4gbpGxr3GbjKuwX2r"
+    "fileId": "59+vtvArlCgLrKCtn0Hq8n"
   },
   {
     "__type__": "cc.Label",
@@ -1955,12 +1955,12 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 137,
-      "g": 137,
-      "b": 137,
+      "r": 248,
+      "g": 237,
+      "b": 219,
       "a": 255
     },
-    "_string": "敬请期待",
+    "_string": "军事基地",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 35,
@@ -2004,7 +2004,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "cbyyXb+ZBGzohe7COmeOAI"
+    "fileId": "40NB1q9lpMTrL/JAVyjYP7"
   },
   {
     "__type__": "cc.PrefabInfo",
@@ -2014,7 +2014,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "99cyxl1+pCl4BpQDC1tV2e",
+    "fileId": "0bZhOPLKNG5rAAm75xlDL3",
     "instance": null,
     "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
@@ -2028,7 +2028,7 @@
       "__id__": 60
     },
     "_children": [],
-    "_active": false,
+    "_active": true,
     "_components": [
       {
         "__id__": 80
@@ -2095,7 +2095,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "a7NuajJipGyaJx+5g7rvOm"
+    "fileId": "cbLgLGk0hEP70Ujj3yZ3Kc"
   },
   {
     "__type__": "cc.Sprite",
@@ -2140,7 +2140,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "9aKq3TFW5MqaXp0DIHU6Al"
+    "fileId": "6cW6uzFV9Gp7ylQvQPQQPF"
   },
   {
     "__type__": "cc.PrefabInfo",
@@ -2150,7 +2150,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "7cXn5DY6RHZIDmXvNP0qFx",
+    "fileId": "598+pGbTRMqoYuOiswf0py",
     "instance": null,
     "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
@@ -2181,7 +2181,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "72D+odakFFIaBTOJts9KZy"
+    "fileId": "19MzN1v8pO86rY5/BlzYRx"
   },
   {
     "__type__": "cc.PrefabInfo",
@@ -2191,7 +2191,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "45VNLG8bVOcob03Soro6+Z",
+    "fileId": "54wnhgv/VODKVlYyQfW4MF",
     "instance": null,
     "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
@@ -3923,7 +3923,7 @@
     },
     "_type": 0,
     "_fillType": 0,
-    "_sizeMode": 1,
+    "_sizeMode": 0,
     "_fillCenter": {
       "__type__": "cc.Vec2",
       "x": 0,
@@ -7430,7 +7430,7 @@
     },
     "_type": 0,
     "_fillType": 0,
-    "_sizeMode": 1,
+    "_sizeMode": 0,
     "_fillCenter": {
       "__type__": "cc.Vec2",
       "x": 0,

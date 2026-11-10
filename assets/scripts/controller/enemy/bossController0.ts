@@ -6,6 +6,14 @@ import { commonConfig } from '../../json/jsonCommon';
 import { BossAnimName, bossBaseController } from './bossBaseController';
 const { ccclass } = _decorator;
 
+/** 本 Boss 专属技能动画。 */
+enum Boss0SkillAnimName {
+    /** 旋风技能第一段前摇：原地播放一次，期间显示圆形范围预警。 */
+    skill1 = 'skill1',
+    /** 旋风技能第二段前摇：原地播放一次，结束后进入旋风持续伤害阶段。 */
+    skill2 = 'skill2',
+}
+
 enum SkillStage {
     None,
     Skill1,
@@ -56,14 +64,14 @@ export class bossController0 extends bossBaseController {
         const version = ++this.skillVersion;
         const skill1Speed = 1;
         const skill2Speed = 1.2;
-        const skill1Duration = this.roleAnim?.findAnimation(BossAnimName.skill1)?.duration ?? 0;
-        const skill2Duration = this.roleAnim?.findAnimation(BossAnimName.skill2)?.duration ?? 0;
+        const skill1Duration = this.roleAnim?.findAnimation(Boss0SkillAnimName.skill1)?.duration ?? 0;
+        const skill2Duration = this.roleAnim?.findAnimation(Boss0SkillAnimName.skill2)?.duration ?? 0;
         const duration = (skill1Duration / skill1Speed + skill2Duration / skill2Speed)
             / Math.max(0.01, this.roleAnim?.timeScale ?? 1);
         this.showSkillRange(duration);
-        this.playSkillWindup(BossAnimName.skill1, skill1Speed, version, () => {
+        this.playSkillWindup(Boss0SkillAnimName.skill1, skill1Speed, version, () => {
             this.skillStage = SkillStage.Skill2;
-            this.playSkillWindup(BossAnimName.skill2, skill2Speed, version, () => {
+            this.playSkillWindup(Boss0SkillAnimName.skill2, skill2Speed, version, () => {
                 this.clearSkillRange();
                 this.skillStage = SkillStage.Active;
                 this.skillRemaining = this.skillDuration;
@@ -76,7 +84,7 @@ export class bossController0 extends bossBaseController {
     }
 
     /** 前摇使用动画完成回调，倍率只作用于当前动画轨道。 */
-    private playSkillWindup(name: BossAnimName, speed: number, version: number, complete: () => void) {
+    private playSkillWindup(name: Boss0SkillAnimName, speed: number, version: number, complete: () => void) {
         const finish = () => {
             if (!this.isValid || this.hp <= 0 || this.skillVersion !== version || !this.isUsingSkill) return;
             complete();

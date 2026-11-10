@@ -190,6 +190,10 @@ export enum imgPath {
     ghost = "texture/role/skill/ghost",
     /**boss头像 */
     bossAvatar = "texture/boss/avatar/avatar_",
+    /**主动图标 */
+    activeIcon = "texture/roleStore/skillIcon/active_",
+    /**被动图标 */
+    passiveIcon = "texture/roleStore/skillIcon/passive_",
 }
 
 /**spine路径 */

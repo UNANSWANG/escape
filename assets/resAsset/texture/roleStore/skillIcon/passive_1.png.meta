@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "21019d03-7edd-4edb-9be8-70106443efe8",
+  "uuid": "07881c21-dc15-498b-90f5-a8ea565a8772",
   "files": [
     ".json",
     ".png"
@@ -10,14 +10,14 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "21019d03-7edd-4edb-9be8-70106443efe8@6c48a",
-      "displayName": "BOSS血条",
+      "uuid": "07881c21-dc15-498b-90f5-a8ea565a8772@6c48a",
+      "displayName": "passive_1",
       "id": "6c48a",
       "name": "texture",
       "userData": {
         "wrapModeS": "clamp-to-edge",
         "wrapModeT": "clamp-to-edge",
-        "imageUuidOrDatabaseUri": "21019d03-7edd-4edb-9be8-70106443efe8",
+        "imageUuidOrDatabaseUri": "07881c21-dc15-498b-90f5-a8ea565a8772",
         "isUuid": true,
         "visible": false,
         "minfilter": "linear",
@@ -34,8 +34,8 @@
     },
     "f9941": {
       "importer": "sprite-frame",
-      "uuid": "21019d03-7edd-4edb-9be8-70106443efe8@f9941",
-      "displayName": "BOSS血条",
+      "uuid": "07881c21-dc15-498b-90f5-a8ea565a8772@f9941",
+      "displayName": "passive_1",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {
@@ -45,10 +45,10 @@
         "offsetY": 0,
         "trimX": 0,
         "trimY": 0,
-        "width": 1334,
-        "height": 750,
-        "rawWidth": 1334,
-        "rawHeight": 750,
+        "width": 56,
+        "height": 60,
+        "rawWidth": 56,
+        "rawHeight": 60,
         "borderTop": 0,
         "borderBottom": 0,
         "borderLeft": 0,
@@ -60,17 +60,17 @@
         "meshType": 0,
         "vertices": {
           "rawPosition": [
-            -667,
-            -375,
+            -28,
+            -30,
             0,
-            667,
-            -375,
+            28,
+            -30,
             0,
-            -667,
-            375,
+            -28,
+            30,
             0,
-            667,
-            375,
+            28,
+            30,
             0
           ],
           "indexes": [
@@ -83,12 +83,12 @@
           ],
           "uv": [
             0,
-            750,
-            1334,
-            750,
+            60,
+            56,
+            60,
             0,
             0,
-            1334,
+            56,
             0
           ],
           "nuv": [
@@ -102,18 +102,18 @@
             1
           ],
           "minPos": [
-            -667,
-            -375,
+            -28,
+            -30,
             0
           ],
           "maxPos": [
-            667,
-            375,
+            28,
+            30,
             0
           ]
         },
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "21019d03-7edd-4edb-9be8-70106443efe8@6c48a",
+        "imageUuidOrDatabaseUri": "07881c21-dc15-498b-90f5-a8ea565a8772@6c48a",
         "atlasUuid": "",
         "trimType": "auto"
       },
@@ -128,7 +128,7 @@
   "userData": {
     "type": "sprite-frame",
     "fixAlphaTransparencyArtifacts": false,
-    "hasAlpha": false,
-    "redirect": "21019d03-7edd-4edb-9be8-70106443efe8@6c48a"
+    "hasAlpha": true,
+    "redirect": "07881c21-dc15-498b-90f5-a8ea565a8772@6c48a"
   }
 }

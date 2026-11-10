@@ -1,7 +1,7 @@
 [
   {
     "__type__": "cc.Prefab",
-    "_name": "skillRange2",
+    "_name": "skillRangeRect",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_native": "",
@@ -13,7 +13,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "skillRange2",
+    "_name": "skillRangeRect",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": null,
@@ -368,7 +368,7 @@
     "fileId": "b98arAX7pCl65z2wQs4AHZ"
   },
   {
-    "__type__": "47a6fNUE7JML62buSy0ort3",
+    "__type__": "f84cb/YW45LKIc2mqkXpamA",
     "_name": "",
     "_objFlags": 0,
     "__editorExtras__": {},

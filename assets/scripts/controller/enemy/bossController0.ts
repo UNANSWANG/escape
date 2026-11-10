@@ -1,6 +1,6 @@
 import { _decorator, Animation, AnimationClip, instantiate, Node, Vec3 } from 'cc';
 import { uiMgr } from '../../manager/UIManager';
-import { skillRangeController } from '../indicator/skillRangeController';
+import { skillRangeCircleController } from '../indicator/skillRangeCircleController';
 import { playerMgr } from '../../manager/playerManager';
 import { commonConfig } from '../../json/jsonCommon';
 import { BossAnimName, bossBaseController } from './bossBaseController';
@@ -141,13 +141,13 @@ export class bossController0 extends bossBaseController {
     /** Show the warning below the Boss throughout both windup animations. */
     private showSkillRange(duration: number): void {
         this.clearSkillRange();
-        if (!uiMgr.skillRangePrefab) return;
-        this.skillRangeNode = instantiate(uiMgr.skillRangePrefab);
+        if (!uiMgr.skillRangeCirclePrefab) return;
+        this.skillRangeNode = instantiate(uiMgr.skillRangeCirclePrefab);
         this.node.addChild(this.skillRangeNode);
         this.skillRangeNode.setPosition(0, 0, 0);
         this.skillRangeNode.setSiblingIndex(0);
-        const controller = this.skillRangeNode.getComponent(skillRangeController)
-            ?? this.skillRangeNode.addComponent(skillRangeController);
+        const controller = this.skillRangeNode.getComponent(skillRangeCircleController)
+            ?? this.skillRangeNode.addComponent(skillRangeCircleController);
         controller.init(this.skillRadius, duration);
     }
 

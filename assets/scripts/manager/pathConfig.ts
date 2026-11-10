@@ -94,8 +94,10 @@ export enum ItemPath {
     bossBox = "prefabs/game/box/bossBox",
     /**角色1无人机 */
     drone = "prefabs/game/drone",
-    /**技能范围指示器 */
-    skillRange = "prefabs/game/skillRange",
+    /**圆形技能范围指示器 */
+    skillRangeCircle = "prefabs/game/skillRangeCircle",
+    /**矩形技能范围指示器 */
+    skillRangeRect = "prefabs/game/skillRangeRect",
     /**注射器 */
     syringe = "prefabs/game/syringe",
     /**直升机 */

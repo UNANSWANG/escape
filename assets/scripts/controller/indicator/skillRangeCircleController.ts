@@ -1,11 +1,11 @@
 import { _decorator, Color, Component, Graphics, tween, Tween, UITransform } from 'cc';
 const { ccclass } = _decorator;
 
-@ccclass('skillRangeController')
-export class skillRangeController extends Component {
+@ccclass('skillRangeCircleController')
+export class skillRangeCircleController extends Component {
     private bgTween: Tween<UITransform> = null;
 
-    /** Set the radius and the time in seconds for the background to fill the range. */
+    /** 初始化圆形范围：半径和背景填满所需时间（秒）。 */
     init(radius: number, time: number): void {
         this.stopBgTween();
         const lineNode = this.node.getChildByName('line');

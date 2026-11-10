@@ -68,6 +68,7 @@ export class bossBaseController extends Component {
     protected onDisable() {
         this.isFocusedInEditor = false;
         this.hideRangePreview();
+        if (!EDITOR || PREVIEW) gm.Event?.emit(GameEvent.bossChaseChanged, this, false);
     }
 
     private refreshRangePreview() {
@@ -129,7 +130,13 @@ export class bossBaseController extends Component {
     /** 追击有效半径，以出生点为圆心。 */
     validRange = 0;
     /** 当前行为状态。 */
-    protected bossState = BossState.Patrol;
+    private _bossState = BossState.Patrol;
+    protected get bossState() { return this._bossState; }
+    protected set bossState(state: BossState) {
+        if (this._bossState === state) return;
+        this._bossState = state;
+        gm.Event?.emit(GameEvent.bossChaseChanged, this, state === BossState.Chase);
+    }
     /** 固定出生点（世界坐标）。 */
     protected readonly patrolOrigin = new Vec3();
     /** 名称标签。 */
@@ -205,6 +212,7 @@ export class bossBaseController extends Component {
     protected onDestroy(): void {
         this.hideRangePreview();
         if (EDITOR && !PREVIEW) return;
+        gm.Event?.emit(GameEvent.bossChaseChanged, this, false);
         gm.Event.off(GameEvent.loadTable, this.onTableLoad, this);
         if (this.baseHp) Tween.stopAllByTarget(this.baseHp);
         if (this.angerBase) Tween.stopAllByTarget(this.angerBase);
@@ -611,6 +619,7 @@ export class bossBaseController extends Component {
 
     /** 播放死亡动画后隐藏。 */
     protected playDeath() {
+        this.bossState = BossState.Patrol;
         if (pData.getBossBookState(this.id) !== BossBookState.Defeated) {
             pData.setBossBookState(this.id, BossBookState.Defeated);
         }
@@ -645,12 +654,13 @@ export class bossBaseController extends Component {
 
     /** 刷新血条，immediate 表示立即同步虚影。 */
     refreshHp(immediate = false) {
+        gm.Event?.emit(GameEvent.bossHpChanged, this, immediate);
         const percent = Math.max(0, Math.min(1, this.hpPercent));
         const reduced = this.hpBar && percent < this.hpBar.fillRange;
         if (this.hpBar) this.hpBar.fillRange = percent;
         if (!this.baseHp) return;
         Tween.stopAllByTarget(this.baseHp);
         if (immediate || !reduced) this.baseHp.fillRange = percent;
-        else tween(this.baseHp).to(0.3, { fillRange: percent }, { easing: 'linear' }).start();
+        else tween(this.baseHp).to(0.2, { fillRange: percent }, { easing: 'linear' }).start();
     }
 }

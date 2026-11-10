@@ -26,6 +26,7 @@ import type { EnemyTarget } from '../manager/enemyManager';
 import { soldiersData } from '../data/soldiersData';
 import { commonConfig } from '../json/jsonCommon';
 import { mapConfig } from '../json/jsonMap';
+import { bossConfig } from '../json/jsonBoss';
 const { ccclass, property } = _decorator;
 
 /** 静态障碍物的世界坐标数据。points 为 null 时直接使用矩形包围盒。 */
@@ -263,8 +264,20 @@ export class UIGame extends UIBase {
     private tempPerspectiveWorldPos = new Vec3();
     /**地图遮挡物及其检测区域缓存。 */
     private shelterAreas: ShelterArea[] = [];
+    /** 正在追击的 Boss；多个 Boss 同时追击时显示最后进入追击的一个。 */
+    private chasingBosses: Set<bossBaseController> = new Set();
+    private currentHpBoss: bossBaseController = null;
+    private bossNameLab: Label = null;
+    private bossAvatarImg: Sprite = null;
+    private bossBar: Sprite = null;
+    private bossBarBase: Sprite = null;
 
     protected onLoad(): void {
+        this.bossNameLab = this.bossHpBar?.getChildByName('nameLab')?.getComponent(Label);
+        this.bossAvatarImg = this.bossHpBar?.getChildByName('avatarImg')?.getComponent(Sprite);
+        this.bossBar = this.bossHpBar?.getChildByName('bossBar')?.getComponent(Sprite);
+        this.bossBarBase = this.bossHpBar?.getChildByName('bossBarBase')?.getComponent(Sprite);
+        this.clearBossHpBar();
         this.bindBtn();
         this.initButtonMasks();
         this.updateSkill2RemainLab(0, false);
@@ -360,6 +373,8 @@ export class UIGame extends UIBase {
 
     /**添加监听 */
     addListener() {
+        gm.Event.on(GameEvent.bossChaseChanged, this.onBossChaseChanged, this);
+        gm.Event.on(GameEvent.bossHpChanged, this.onBossHpChanged, this);
         gm.Event.on(GameEvent.refreshGameLevel, this.restartGame, this);
         gm.Event.on(GameEvent.refreshGameCamera, this.refreshGameCamera, this);
         gm.Event.on(GameEvent.gamePause, this.onGamePause, this);
@@ -376,6 +391,8 @@ export class UIGame extends UIBase {
 
     /**删除监听 */
     removeListener() {
+        gm.Event.off(GameEvent.bossChaseChanged, this.onBossChaseChanged, this);
+        gm.Event.off(GameEvent.bossHpChanged, this.onBossHpChanged, this);
         gm.Event.off(GameEvent.refreshGameLevel, this.restartGame, this);
         gm.Event.off(GameEvent.refreshGameCamera, this.refreshGameCamera, this);
         gm.Event.off(GameEvent.gamePause, this.onGamePause, this);
@@ -388,6 +405,51 @@ export class UIGame extends UIBase {
         this.rockerTouchNode.off(NodeEventType.TOUCH_MOVE, this.onTouchRockerMove, this);
         this.rockerTouchNode.off(NodeEventType.TOUCH_END, this.onTouchRockerEnd, this);
         this.rockerTouchNode.off(NodeEventType.TOUCH_CANCEL, this.onTouchRockerEnd, this);
+    }
+
+    /** 追击开始时切换资料，脱战时回退到仍在追击的 Boss。 */
+    private onBossChaseChanged(boss: bossBaseController, isChasing: boolean) {
+        if (boss.gameComp !== this) return;
+        if (isChasing && boss.hp > 0 && boss.node.activeInHierarchy) {
+            this.chasingBosses.delete(boss);
+            this.chasingBosses.add(boss);
+        } else {
+            this.chasingBosses.delete(boss);
+        }
+        const candidates = Array.from(this.chasingBosses).filter(candidate =>
+            candidate.isValid && candidate.node.activeInHierarchy && candidate.hp > 0);
+        const next = candidates[candidates.length - 1] ?? null;
+        if (next === this.currentHpBoss) return;
+        this.currentHpBoss = next;
+        if (this.bossHpBar) this.bossHpBar.active = !!next;
+        if (this.bossBarBase) Tween.stopAllByTarget(this.bossBarBase);
+        if (this.bossAvatarImg) {
+            ccTools.cancelAssetLoad(this.bossAvatarImg);
+            this.bossAvatarImg.spriteFrame = null;
+        }
+        if (!next) return;
+        if (this.bossNameLab) this.bossNameLab.string = bossConfig.getDataById(next.id)?.name ?? '';
+        if (this.bossAvatarImg) void ccTools.loadImg(this.bossAvatarImg, imgPath.bossAvatar + next.id);
+        this.onBossHpChanged(next, true);
+    }
+
+    /** 实际血条立即更新，扣血虚影以 0.2 秒补间追赶。 */
+    private onBossHpChanged(boss: bossBaseController, immediate = false) {
+        if (boss !== this.currentHpBoss || !this.bossBar || !this.bossBarBase) return;
+        const percent = boss.maxHp > 0 ? Math.max(0, Math.min(1, boss.hp / boss.maxHp)) : 0;
+        const reduced = percent < this.bossBar.fillRange;
+        this.bossBar.fillRange = percent;
+        Tween.stopAllByTarget(this.bossBarBase);
+        if (immediate || !reduced) this.bossBarBase.fillRange = percent;
+        else tween(this.bossBarBase).to(0.2, { fillRange: percent }, { easing: 'linear' }).start();
+    }
+
+    private clearBossHpBar() {
+        this.chasingBosses.clear();
+        this.currentHpBoss = null;
+        if (this.bossHpBar) this.bossHpBar.active = false;
+        if (this.bossBarBase) Tween.stopAllByTarget(this.bossBarBase);
+        if (this.bossAvatarImg) ccTools.cancelAssetLoad(this.bossAvatarImg);
     }
 
     bindBtn() {
@@ -489,6 +551,7 @@ export class UIGame extends UIBase {
     }
 
     clearData() {
+        this.clearBossHpBar();
         this.unscheduleAllCallbacks();
         this.clearOpening();
         this.clearTimeShowAnimation();

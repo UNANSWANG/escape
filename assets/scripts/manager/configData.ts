@@ -96,6 +96,10 @@ export const gmConfig = {
 
 /**游戏事件 */
 export enum GameEvent {
+    /** Boss 追击状态变化，参数为 Boss 实例和是否追击。 */
+    bossChaseChanged = "bossChaseChanged",
+    /** Boss 血量变化，参数为 Boss 实例和是否立即同步虚影。 */
+    bossHpChanged = "bossHpChanged",
     /**游戏暂停 */
     gamePause = "gamePause",
     /**游戏继续 */

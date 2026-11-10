@@ -188,6 +188,8 @@ export enum imgPath {
     armorNone = "texture/icon/equipment/armorNone",
     /**残影 */
     ghost = "texture/role/skill/ghost",
+    /**boss头像 */
+    bossAvatar = "texture/boss/avatar/avatar_",
 }
 
 /**spine路径 */

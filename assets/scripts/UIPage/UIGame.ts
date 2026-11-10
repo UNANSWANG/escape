@@ -130,6 +130,9 @@ export class UIGame extends UIBase {
     @property(Node)
     timeShowLab: Node;
 
+    @property(Node)
+    bossHpBar: Node;
+
     ///
     ///需要获取的节点
     ///

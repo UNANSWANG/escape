@@ -119,7 +119,7 @@ export class UILoading extends Component {
             resolve();
         });
     }
-    loadItems = [UIPath.UIMain, UIPath.UISetting, UIPath.UIMatch, UIPath.UIRank, gamePath.UIGame];
+    loadItems = [UIPath.UIMain, UIPath.UISetting, UIPath.UIMatch, gamePath.UIGame];
 
     /**预加载界面 */
     async preLoadPage() {

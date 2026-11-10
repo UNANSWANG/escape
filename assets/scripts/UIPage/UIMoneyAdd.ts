@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Animation} from 'cc';
+import { _decorator, Component, Node, Animation, Label} from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -15,6 +15,12 @@ export class UIMoneyAdd extends UIBase {
 
     @property(Node)
     getBtn_1: Node;
+
+    @property(Label)
+    addNumLab: Label;
+
+    @property(Label)
+    addNumLab2: Label;
 
     protected onLoad(): void {
         this.bindBtn();

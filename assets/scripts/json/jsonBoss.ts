@@ -58,6 +58,10 @@ export interface JsonBossData {
     validRange: number;
     /**怒气上限 */
     rage: number;
+    /**蓄力时间 */
+    chargeTime: number;
+    /**持续时间 */
+    duration: number;
 }
 
 

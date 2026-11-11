@@ -1,6 +1,7 @@
 import { _decorator, instantiate, Node, sp, Tween, UITransform, Vec3 } from 'cc';
 import { BossAnimName, bossBaseController } from './bossBaseController';
 import { commonConfig } from '../../json/jsonCommon';
+import { bossConfig } from '../../json/jsonBoss';
 import { ccTools } from '../../extention/generalTools';
 import { GameEvent } from '../../manager/configData';
 import { gm } from '../../manager/gm';
@@ -14,11 +15,11 @@ const { ccclass } = _decorator;
 enum Boss1SkillAnimName {
     /** 技能起手：原地播放一次，完成后进入蓄力并显示范围。 */
     skill1 = 'skill1',
-    /** 蓄力：原地循环播放，范围预警在 boss1SkillPrepare 秒内填满。 */
+    /** 蓄力：原地循环播放，范围预警在 Boss 表 chargeTime 秒内填满。 */
     skill2 = 'skill2',
     /** 释放前动作：范围预警完成后播放一次，完成后开始剑雨。 */
     skill3 = 'skill3',
-    /** 释放剑雨：原地循环 boss1SkillDuration 秒，期间造成范围伤害并获得减伤。 */
+    /** 释放剑雨：原地循环 Boss 表 duration 秒，期间造成范围伤害并获得减伤。 */
     skill4 = 'skill4',
     /** 技能收招：原地播放一次，完成后恢复追击、普攻和怒气积攒。 */
     skill5 = 'skill5',
@@ -54,8 +55,9 @@ export class bossController1 extends bossBaseController {
 
     protected initData(): void {
         super.initData();
-        const prepare = commonConfig.getValueNumber('boss1SkillPrepare');
-        const duration = commonConfig.getValueNumber('boss1SkillDuration');
+        const data = bossConfig.getDataById(this.id);
+        const prepare = data?.chargeTime;
+        const duration = data?.duration;
         const reduce = commonConfig.getValueNumber('boss1SkillReduce');
         this.skillPrepare = Number.isFinite(prepare) ? Math.max(0, prepare) : 0;
         this.skillDuration = Number.isFinite(duration) ? Math.max(0, duration) : 0;

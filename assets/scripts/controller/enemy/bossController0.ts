@@ -3,6 +3,7 @@ import { uiMgr } from '../../manager/UIManager';
 import { skillRangeCircleController } from '../indicator/skillRangeCircleController';
 import { playerMgr } from '../../manager/playerManager';
 import { commonConfig } from '../../json/jsonCommon';
+import { bossConfig } from '../../json/jsonBoss';
 import { BossAnimName, bossBaseController } from './bossBaseController';
 const { ccclass } = _decorator;
 
@@ -43,14 +44,12 @@ export class bossController0 extends bossBaseController {
 
     get isUsingSkill(): boolean { return this.skillStage !== SkillStage.None; }
 
-    /** 从通用表初始化技能参数，移速加成按百分比转换。 */
+    /** 从 Boss 表读取持续时间，通用表的移速加成按百分比转换。 */
     protected initData(): void {
         super.initData();
-        const duration = commonConfig.getValueNumber('boss0SkillDuration');
-        const radius = commonConfig.getValueNumber('boss0SkillRadius');
+        const duration = bossConfig.getDataById(this.id)?.duration;
         const speed = commonConfig.getValueNumber('boss0SkillMoveSpeed');
         this.skillDuration = Number.isFinite(duration) ? Math.max(0, duration) : 3;
-        this.skillRadius = Number.isFinite(radius) ? Math.max(0, radius) : 200;
         this.skillSpeed = Number.isFinite(speed) ? Math.max(0, speed) / 100 : 0.2;
     }
 

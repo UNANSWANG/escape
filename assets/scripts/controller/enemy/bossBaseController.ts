@@ -278,6 +278,7 @@ export class bossBaseController extends Component {
             return;
         }
         if (tableName !== 'boss' || !this.gameComp) return;
+        this.initData();
         this.initialized = this.applyBossData(!this.initialized);
         this.isInAttackRange = false;
         this.clearNavigationPath();

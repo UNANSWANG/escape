@@ -272,7 +272,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 451.728515625,
+      "width": 0,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -299,14 +299,14 @@
       "__id__": 12
     },
     "_lineHeight": 40,
-    "_string": "<color=#FFFFFF>成功击杀<color=#00D6FF>凌天战甲</color>，获得<color=#FFEB00>金币*100</color></color>",
+    "_string": "",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_fontSize": 30,
     "_fontColor": {
       "__type__": "cc.Color",
-      "r": 0,
-      "g": 214,
+      "r": 255,
+      "g": 255,
       "b": 255,
       "a": 255
     },
@@ -333,6 +333,8 @@
       "__id__": 0
     },
     "fileId": "7bn8eVXQ5LOLDeon2CEHw9",
+    "instance": null,
+    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {

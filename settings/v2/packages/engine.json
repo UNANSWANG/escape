@@ -36,7 +36,7 @@
             "_value": false
           },
           "rich-text": {
-            "_value": false
+            "_value": true
           },
           "mask": {
             "_value": true
@@ -143,7 +143,7 @@
             "_value": false
           },
           "tiled-map": {
-            "_value": true
+            "_value": false
           },
           "vendor-google": {
             "_value": false
@@ -207,8 +207,8 @@
           "particle-2d",
           "physics-2d-builtin",
           "profiler",
+          "rich-text",
           "spine-3.8",
-          "tiled-map",
           "tween",
           "ui"
         ],

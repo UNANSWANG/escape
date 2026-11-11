@@ -3,7 +3,6 @@ import { EDITOR, PREVIEW } from 'cc/env';
 import { bossConfig } from '../../json/jsonBoss';
 import { getItemDataByItemId } from '../../json/jsonItemData';
 import { uiMgr } from '../../manager/UIManager';
-import { userMgr } from '../../manager/userManager';
 import { BossBookState, enemyCommonConfig, GameEvent, gmConfig } from '../../manager/configData';
 import { gm } from '../../manager/gm';
 import { playerMgr } from '../../manager/playerManager';
@@ -596,14 +595,12 @@ export class bossBaseController extends Component {
         return true;
     }
 
-    /**击败后立即结算奖励，提示按击败、金币、道具的顺序播放。 */
+    /**击败后立即结算奖励，先显示击杀与金币提示，再显示可能获得的武器。 */
     private grantDefeatRewards() {
         const data = bossConfig.getDataById(this.id);
         if (!data) return;
-        const playerName = playerMgr.playerComp?.roleNameLab?.string || userMgr.nickName || '玩家';
-        const messages = [playerName + '击败' + data.name];
         const gold = pData.grantBossDropGold(this.id, Number(data.dropGoldLimit));
-        if (gold > 0) messages.push('获得金币*' + gold);
+        const messages = [`<color=#FFFFFF>成功击杀<color=#00D6FF>${data.name}</color>，获得<color=#FFEB00>金币*${gold}</color></color>`];
 
         const probability = Math.max(0, Math.min(100, Number(data.dropItemProb) || 0));
         if (probability > 0 && Math.random() * 100 < probability) {
@@ -611,7 +608,7 @@ export class bossBaseController extends Component {
             const itemData = getItemDataByItemId(itemId);
             if (itemData) {
                 pData.fixStorehouseData(itemId, 1);
-                messages.push('掉落' + itemData.name + '*1');
+                messages.push(`获得<color=#FFEB00>${itemData.name}</color>`);
             }
         }
         uiMgr.showRewardTips2(messages);

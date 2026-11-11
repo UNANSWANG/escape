@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Animation, Label } from 'cc';
+import { _decorator, Component, Node, Animation, Label, RichText } from 'cc';
 const { ccclass, property } = _decorator;
 
 @ccclass('tipsNotice')
@@ -14,6 +14,8 @@ export class tipsNotice extends Component {
     }
 
     initData(str){
-        this.node.getChildByName('lab').getComponent(Label).string = str;
+        const textNode = this.node.getChildByName('lab');
+        const text = textNode.getComponent(RichText) || textNode.getComponent(Label);
+        text.string = str;
     }
 }

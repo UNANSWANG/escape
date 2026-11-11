@@ -54,6 +54,8 @@ export enum UIPath {
 export enum ItemPath {
     /**提示 */
     tips = "prefabs/notice/tips",
+    /**提示2 */
+    tips2 = "prefabs/notice/tips2",
     /**子弹 */
     bullet = "prefabs/Item/bullet",
     /**游戏内连线 */

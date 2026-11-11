@@ -1,0 +1,13 @@
+
+animation.png
+size: 256,256
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+weapons_20
+  rotate: false
+  xy: 2, 88
+  size: 137, 51
+  orig: 137, 51
+  offset: 0, 0
+  index: -1

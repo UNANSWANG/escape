@@ -17,6 +17,8 @@ export class UIManager {
     resBundle: AssetManager.Bundle = null;
     /**通用文字提示预制体 */
     tipsPrefab: Prefab = null;
+    /**提示2预制体，用于 Boss 击败和奖励提示 */
+    tips2Prefab: Prefab = null;
     /**游戏子弹预制体 */
     bulletPrefab: Prefab = null;
     /**游戏连线预制体 */
@@ -112,7 +114,7 @@ export class UIManager {
 
     /**加载启动后各页面都可能使用的预制体 */
     async preLoadCommonPrefab() {
-        if (this.tipsPrefab) {
+        if (this.tipsPrefab && this.tips2Prefab && this.effectItemPrefab) {
             return;
         }
         if (!this.resBundle) {
@@ -122,6 +124,10 @@ export class UIManager {
         this.tipsPrefab = await ccResTools.loadPrefab(this.resBundle, ItemPath.tips, false);
         if (!this.tipsPrefab) {
             throw new Error(`加载预制体失败: ${ItemPath.tips}`);
+        }
+        this.tips2Prefab = await ccResTools.loadPrefab(this.resBundle, ItemPath.tips2, false);
+        if (!this.tips2Prefab) {
+            throw new Error(`加载预制体失败: ${ItemPath.tips2}`);
         }
         this.effectItemPrefab = await ccResTools.loadPrefab(this.resBundle, ItemPath.effectItem, false);
     }
@@ -212,19 +218,30 @@ export class UIManager {
     }
 
     /**等待按顺序播放的奖励提示。 */
-    private rewardTipsQueue: string[] = [];
+    private rewardTipsQueue: { message: string, useTips2: boolean }[] = [];
     private isShowingRewardTips = false;
 
     /**将一组奖励提示加入队列，每隔 1 秒显示下一条。 */
     showRewardTips(messages: string[]) {
-        this.rewardTipsQueue.push(...messages);
+        this.enqueueRewardTips(messages, false);
+    }
+
+    /**将一组奖励提示加入队列，并使用提示2预制体。 */
+    showRewardTips2(messages: string[]) {
+        this.enqueueRewardTips(messages, true);
+    }
+
+    private enqueueRewardTips(messages: string[], useTips2: boolean) {
+        this.rewardTipsQueue.push(...messages.map(message => ({ message, useTips2 })));
         this.showNextRewardTip();
     }
 
     private showNextRewardTip() {
         if (this.isShowingRewardTips || this.rewardTipsQueue.length === 0) return;
         this.isShowingRewardTips = true;
-        this.showTips(this.rewardTipsQueue.shift());
+        const rewardTip = this.rewardTipsQueue.shift();
+        if (rewardTip.useTips2) this.showTips2(rewardTip.message);
+        else this.showTips(rewardTip.message);
         setTimeout(() => {
             this.isShowingRewardTips = false;
             this.showNextRewardTip();
@@ -234,6 +251,15 @@ export class UIManager {
     /**显示提示 */
     showTips(str?) {
         let noticeItem = instantiate(this.tipsPrefab);
+        this.noticePage.addChild(noticeItem);
+
+        let notice = noticeItem.getComponent(tipsNotice);
+        notice.initData(str);
+    }
+
+    /**显示提示2，文字和动画处理与提示1相同 */
+    showTips2(str?) {
+        let noticeItem = instantiate(this.tips2Prefab);
         this.noticePage.addChild(noticeItem);
 
         let notice = noticeItem.getComponent(tipsNotice);

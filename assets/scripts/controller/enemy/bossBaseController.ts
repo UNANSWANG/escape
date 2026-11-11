@@ -614,7 +614,7 @@ export class bossBaseController extends Component {
                 messages.push('掉落' + itemData.name + '*1');
             }
         }
-        uiMgr.showRewardTips(messages);
+        uiMgr.showRewardTips2(messages);
     }
 
     /** 播放死亡动画后隐藏。 */

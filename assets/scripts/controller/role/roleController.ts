@@ -114,8 +114,9 @@ export class roleController extends Component {
     roleNameLab: Label = null;
     /** 打药剩余时间文本。 */
     private remainTimeLab: Label = null;
-    /** 打药剩余时间环形进度。 */
-    private remainCircle: Sprite = null;
+    /** 打药倒计时容器及其子节点的环形进度。 */
+    private remainCircle: Node = null;
+    private remainCircleFill: Sprite = null;
     /**武器层下方的特效挂点。 */
     bottomEffectNode: Node = null;
     /**角色身上的上层特效挂点。 */
@@ -213,11 +214,10 @@ export class roleController extends Component {
         this.roleNameLab = this.node.getChildByName('roleNameLab')?.getComponent(Label);
         this.remainTimeLab = this.node.getChildByName('remainTimeLab')?.getComponent(Label);
         if (this.remainTimeLab) this.remainTimeLab.node.active = false;
-        this.remainCircle = this.node.getChildByName('remainCircle')?.getComponent(Sprite);
-        if (this.remainCircle) {
-            this.remainCircle.node.active = false;
-            this.remainCircle.fillRange = 0;
-        }
+        this.remainCircle = this.node.getChildByName('remainCircle');
+        this.remainCircleFill = this.remainCircle?.getChildByName('circle')?.getComponent(Sprite);
+        if (this.remainCircle) this.remainCircle.active = false;
+        if (this.remainCircleFill) this.remainCircleFill.fillRange = 0;
         this.hpNode = this.node.getChildByName('hpNode');
         this.hpBar = this.hpNode?.getChildByName('bar')?.getComponent(Sprite);
         this.baseHp = this.hpNode?.getChildByName('base')?.getComponent(Sprite);
@@ -785,11 +785,13 @@ export class roleController extends Component {
             remainTimeNode.active = this.isUsingDrug;
             if (this.isUsingDrug) this.remainTimeLab.string = this.drugRemainTime.toFixed(1);
         }
-        const remainCircleNode = this.remainCircle?.node;
+        const remainCircleNode = this.remainCircle;
         if (remainCircleNode) {
             remainCircleNode.active = this.isUsingDrug;
-            this.remainCircle.fillRange = this.isUsingDrug && this.drugDuration > 0
-                ? Math.max(0, Math.min(1, this.drugRemainTime / this.drugDuration))
+        }
+        if (this.remainCircleFill) {
+            this.remainCircleFill.fillRange = this.isUsingDrug && this.drugDuration > 0
+                ? -Math.max(0, Math.min(1, 1 - this.drugRemainTime / this.drugDuration))
                 : 0;
         }
     }
@@ -814,11 +816,8 @@ export class roleController extends Component {
         this.drugCompleteCallback = null;
         const remainTimeNode = this.remainTimeLab?.node;
         if (remainTimeNode) remainTimeNode.active = false;
-        const remainCircleNode = this.remainCircle?.node;
-        if (remainCircleNode) {
-            this.remainCircle.fillRange = 0;
-            remainCircleNode.active = false;
-        }
+        if (this.remainCircleFill) this.remainCircleFill.fillRange = 0;
+        if (this.remainCircle) this.remainCircle.active = false;
     }
 
     /**更新战斗状态；超时后将枪口复位。 */

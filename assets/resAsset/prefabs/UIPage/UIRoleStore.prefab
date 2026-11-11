@@ -5929,7 +5929,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "initiativeImg",
+    "_name": "activeImg",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {

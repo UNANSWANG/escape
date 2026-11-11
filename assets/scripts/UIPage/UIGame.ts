@@ -1195,6 +1195,11 @@ export class UIGame extends UIBase {
 
     /**初始化玩家 */
     initPlayer() {
+        const activeSkillImg = this.skillBtn2?.getChildByName('img')?.getComponent(Sprite);
+        if (activeSkillImg) {
+            activeSkillImg.spriteFrame = null;
+            void ccTools.loadImg(activeSkillImg, imgPath.activeIcon + pData.roleId);
+        }
         playerMgr.player = instantiate(uiMgr.rolePrefab);
         const opacity = playerMgr.player.getComponent(UIOpacity) ?? playerMgr.player.addComponent(UIOpacity);
         opacity.opacity = 0;

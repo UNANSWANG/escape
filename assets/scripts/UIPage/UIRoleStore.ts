@@ -225,11 +225,29 @@ export class UIRoleStore extends UIBase {
     /**显示当前角色的基础信息页面 */
     showInfoPage() {
         this.setDetailPage(0);
+        this.refreshSkillIcons();
         const descLab = this.pageList[0]?.getChildByName("descLab")?.getComponent(Label);
         if (descLab) {
             descLab.string = this.selectedRole?.infoDesc ?? "";
         }
         this.refreshRoleLevelInfo();
+    }
+
+    /**根据当前角色刷新被动和主动技能图片。 */
+    private refreshSkillIcons() {
+        const page = this.pageList[0];
+        const roleId = this.selectedRole?.roleId;
+        const icons: [string, string][] = [
+            ["passiveImg", imgPath.passiveIcon],
+            ["activeImg", imgPath.activeIcon],
+        ];
+        for (const [name, path] of icons) {
+            const sprite = page?.getChildByName(name)?.getComponent(Sprite);
+            if (!sprite) continue;
+            ccTools.cancelAssetLoad(sprite);
+            sprite.spriteFrame = null;
+            if (roleId !== undefined) void ccTools.loadImg(sprite, path + roleId);
+        }
     }
 
     /**刷新当前角色等级对应的技能描述和升级材料 */

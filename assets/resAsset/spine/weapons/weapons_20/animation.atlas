@@ -4,10 +4,52 @@ size: 256,256
 format: RGBA8888
 filter: Linear,Linear
 repeat: none
+tx/20/1
+  rotate: false
+  xy: 126, 142
+  size: 24, 9
+  orig: 49, 71
+  offset: 23, 60
+  index: -1
+tx/20/2
+  rotate: false
+  xy: 90, 125
+  size: 34, 26
+  orig: 49, 71
+  offset: 9, 43
+  index: -1
+tx/20/3
+  rotate: false
+  xy: 114, 153
+  size: 46, 43
+  orig: 49, 71
+  offset: 1, 26
+  index: -1
+tx/20/4
+  rotate: false
+  xy: 162, 140
+  size: 34, 56
+  orig: 49, 71
+  offset: 1, 8
+  index: -1
+tx/20/5
+  rotate: false
+  xy: 2, 97
+  size: 45, 56
+  orig: 49, 71
+  offset: 0, 2
+  index: -1
+tx/20/6
+  rotate: false
+  xy: 49, 118
+  size: 39, 35
+  orig: 49, 71
+  offset: 10, 0
+  index: -1
 weapons_20
   rotate: false
-  xy: 2, 88
-  size: 137, 51
-  orig: 137, 51
+  xy: 2, 155
+  size: 110, 41
+  orig: 110, 41
   offset: 0, 0
   index: -1

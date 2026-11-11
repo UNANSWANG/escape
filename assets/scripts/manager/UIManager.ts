@@ -54,6 +54,8 @@ export class UIManager {
     skillRangeCirclePrefab: Prefab = null;
     /**矩形技能范围指示器预制体 */
     skillRangeRectPrefab: Prefab = null;
+    skillRangeRectLeftPrefab: Prefab = null;
+    dragonBreathPrefab: Prefab = null;
     /**角色打药使用的注射器预制体。 */
     syringePrefab: Prefab = null;
     /**开场直升机预制体。 */
@@ -189,6 +191,8 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, ItemPath.helicopter, false),
             ccResTools.loadPrefab(this.resBundle, animationItemPath.bomb, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.skillRangeRect, false),
+            ccResTools.loadPrefab(this.resBundle, ItemPath.skillRangeRectLeft, false),
+            ccResTools.loadPrefab(this.resBundle, animationItemPath.dragonBreath, false),
         ]);
 
         if (prefabs.some((prefab) => !prefab)) {
@@ -215,6 +219,8 @@ export class UIManager {
         this.helicopterPrefab = prefabs[17];
         this.bulletExplosionPrefab = prefabs[18];
         this.skillRangeRectPrefab = prefabs[19];
+        this.skillRangeRectLeftPrefab = prefabs[20];
+        this.dragonBreathPrefab = prefabs[21];
     }
 
     /**等待按顺序播放的奖励提示。 */

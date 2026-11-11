@@ -23,9 +23,12 @@ export class skillRangeRectLeftController extends Component {
             graphics.strokeColor = Color.WHITE;
             graphics.lineWidth = 8;
             if (rangeWidth > graphics.lineWidth && rangeHeight > graphics.lineWidth) {
+                // Graphics 坐标相对 line 原点，边框跟随 bg 的位置和锚点。
+                const offsetX = (bgNode?.position.x ?? 0) - lineNode.position.x;
+                const offsetY = (bgNode?.position.y ?? 0) - lineNode.position.y;
                 graphics.rect(
-                    -rangeWidth / 2 + graphics.lineWidth / 2,
-                    -rangeHeight / 2 + graphics.lineWidth / 2,
+                    offsetX - rangeWidth * (bg?.anchorX ?? 0.5) + graphics.lineWidth / 2,
+                    offsetY - rangeHeight * (bg?.anchorY ?? 0.5) + graphics.lineWidth / 2,
                     rangeWidth - graphics.lineWidth,
                     rangeHeight - graphics.lineWidth,
                 );

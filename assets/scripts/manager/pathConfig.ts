@@ -98,6 +98,7 @@ export enum ItemPath {
     skillRangeCircle = "prefabs/game/skillRangeCircle",
     /**矩形技能范围指示器 */
     skillRangeRect = "prefabs/game/skillRangeRect",
+    skillRangeRectLeft = "prefabs/game/skillRangeRectLeft",
     /**注射器 */
     syringe = "prefabs/game/syringe",
     /**直升机 */
@@ -116,6 +117,8 @@ export enum animationItemPath {
     shovelSmoke = "prefabs/anim/shovelSmoke",
     /**子弹爆炸动画 */
     bomb = "prefabs/anim/bomb",
+    /**龙息动画 */
+    dragonBreath = "prefabs/anim/dragonBreath",
 }
 
 /**音效路径 */

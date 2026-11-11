@@ -20,7 +20,7 @@ repeat: none
   index: -1
 11
   rotate: false
-  xy: 407, 182
+  xy: 2, 49
   size: 120, 127
   orig: 140, 135
   offset: 0, 8
@@ -72,5 +72,12 @@ repeat: none
   xy: 245, 2
   size: 101, 207
   orig: 101, 208
+  offset: 0, 0
+  index: -1
+lz
+  rotate: false
+  xy: 407, 185
+  size: 127, 124
+  orig: 127, 124
   offset: 0, 0
   index: -1

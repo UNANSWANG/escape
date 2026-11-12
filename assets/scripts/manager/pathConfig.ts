@@ -210,7 +210,7 @@ export enum imgPath {
     /**角色头像 */
     roleAvatar = "texture/role/avatar/avatar_",
     /**显示地图 */
-    showMap = "texture/mapPage/show/map_",
+    showMap = "texture/map/show/map_",
     /**小地图头像 */
     smallMapAvatar = "texture/role/mapAvatar/avatar_",
 }

@@ -1,4 +1,4 @@
-import { _decorator, Node, Animation, instantiate, UITransform } from 'cc';
+import { _decorator, Node, Animation, instantiate, UITransform, Prefab } from 'cc';
 import { UIBase } from './UIBase';
 import { ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -16,6 +16,9 @@ export class UISmallMap extends UIBase {
     mapParent: Node;
 
     private mapLoadVersion = 0;
+    private loadedMapIdx = -1;
+    private mapNode: Node = null;
+    private mapPrefabLoad: { mapIdx: number; promise: Promise<Prefab> } = null;
 
     protected onLoad(): void {
         this.bindBtn();
@@ -30,12 +33,19 @@ export class UISmallMap extends UIBase {
     /**加载当前地图的小地图，并让背景宽高各增加 20。 */
     async initData() {
         const version = ++this.mapLoadVersion;
-        ccTools.destroyAllChild(this.mapParent);
         const mapIdx = pData.selectMapData[0];
+        if (this.loadedMapIdx === mapIdx && this.mapNode?.isValid && this.mapNode.parent === this.mapParent) return;
+        ccTools.destroyAllChild(this.mapParent);
+        this.mapNode = null;
+        this.loadedMapIdx = -1;
         const path = ItemPath.smallMap + mapIdx;
-        const prefab = await ccResTools.loadPrefab(uiMgr.resBundle, path);
+        if (this.mapPrefabLoad?.mapIdx !== mapIdx) {
+            this.mapPrefabLoad = { mapIdx, promise: ccResTools.loadPrefab(uiMgr.resBundle, path) };
+        }
+        const prefab = await this.mapPrefabLoad.promise;
         if (!this.node.isValid || version !== this.mapLoadVersion || !this.node.activeInHierarchy) return;
         if (!prefab) {
+            this.mapPrefabLoad = null;
             console.warn('加载小地图预制体失败', path);
             return;
         }
@@ -49,6 +59,8 @@ export class UISmallMap extends UIBase {
         this.mapParent.addChild(map);
         map.setPosition(0, 0, 0);
         this.mapBg.getComponent(UITransform).setContentSize(mapTransform.width + 20, mapTransform.height + 20);
+        this.mapNode = map;
+        this.loadedMapIdx = mapIdx;
     }
 
     onUI_Close() {

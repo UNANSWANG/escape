@@ -1,5 +1,8 @@
-import { _decorator, Component, Node, UITransform, Vec3 } from 'cc';
+import { _decorator, Component, Node, Sprite, UITransform, Vec3 } from 'cc';
 import { playerMgr } from '../manager/playerManager';
+import { imgPath } from '../manager/pathConfig';
+import { pData } from '../manager/playerData';
+import { ccTools } from '../extention/generalTools';
 const { ccclass } = _decorator;
 
 @ccclass('smallMapController')
@@ -8,6 +11,7 @@ export class smallMapController extends Component {
     private mapTransform: UITransform = null;
     private playerMapPosition = new Vec3();
     private iconScaleX = 1;
+    private avatarRoleId = -1;
 
     protected onLoad(): void {
         this.roleIcon = this.node.getChildByName('roleIcon');
@@ -16,7 +20,17 @@ export class smallMapController extends Component {
     }
 
     protected onEnable(): void {
+        this.initRoleAvatar();
         this.syncRoleIcon();
+    }
+
+    private async initRoleAvatar(): Promise<void> {
+        const sprite = this.roleIcon?.getComponent(Sprite);
+        const roleId = playerMgr.playerComp?.roleId ?? pData.roleId;
+        if (!sprite || this.avatarRoleId === roleId) return;
+        this.avatarRoleId = roleId;
+        const loaded = await ccTools.loadImg(sprite, imgPath.smallMapAvatar + roleId);
+        if (!loaded && this.avatarRoleId === roleId) this.avatarRoleId = -1;
     }
 
     protected lateUpdate(): void {

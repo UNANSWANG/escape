@@ -1,11 +1,16 @@
-import { _decorator, Node, Animation} from 'cc';
+import { _decorator, Component, Node, Animation} from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
-const { ccclass } = _decorator;
+const { ccclass, property } = _decorator;
 
 @ccclass('UISmallMap')
 export class UISmallMap extends UIBase {
+    @property(Node)
+    mapBg: Node;
+
+    @property(Node)
+    mapParent: Node;
 
     protected onLoad(): void {
         this.bindBtn();
@@ -38,5 +43,4 @@ export class UISmallMap extends UIBase {
         uiMgr.closePage(UIPath.UISmallMap);
     }
 }
-
 

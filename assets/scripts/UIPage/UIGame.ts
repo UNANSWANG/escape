@@ -457,6 +457,7 @@ export class UIGame extends UIBase {
 
     bindBtn() {
         this.setBtn.addComponent(zoomButton).onClick = this.clickSetBtn.bind(this);
+        this.smallMapNode.addComponent(zoomButton).onClick = this.clickSmallMap.bind(this);
         const autoAimBtn = this.shootBtn.getChildByName("btn");
         autoAimBtn?.addComponent(zoomButton);
         autoAimBtn?.on(NodeEventType.TOUCH_START, this.onShootButtonStart, this);
@@ -2346,6 +2347,11 @@ export class UIGame extends UIBase {
         this.resetManualAimRocker();
         this.refreshAimingBtnDisplay();
         this.stopAutoAim();
+    }
+
+    /**点击小地图打开地图界面 */
+    clickSmallMap() {
+        uiMgr.openPage(UIPath.UISmallMap);
     }
 
     /**点击设置按钮 */

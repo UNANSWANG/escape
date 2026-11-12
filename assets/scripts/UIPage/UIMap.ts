@@ -70,7 +70,7 @@ export class UIMap extends UIBase {
         this.initData();
     }
 
-    /**读取地图配置并更新名称；首次打开可恢复存档，之后保留临时地图和难度 */
+    /**读取地图配置并更新名称、图片和置灰状态；首次打开可恢复存档，之后保留临时地图和难度 */
     initData() {
         this.mapData = this.mapList.children.map((mapNode, index) => mapConfig.getDataByMapIdx(index));
         this.mapList.children.forEach((mapNode, index) => {
@@ -78,6 +78,11 @@ export class UIMap extends UIBase {
             const nameLab = mapNode.getChildByName('nameLab')?.getComponent(Label);
             if (mapData && nameLab) {
                 nameLab.string = mapData.name;
+            }
+            const mapImg = mapNode.getChildByName('img')?.getComponent(Sprite);
+            if (mapImg) {
+                mapImg.grayscale = !mapData;
+                ccTools.loadImg(mapImg, imgPath.showMap + (mapData?.mapIdx ?? 0));
             }
         });
         if (!this.hasInitializedSelection) {
@@ -143,6 +148,14 @@ export class UIMap extends UIBase {
         const nameLab = this.detailsNode.getChildByName('nameLab')?.getComponent(Label);
         if (nameLab) {
             nameLab.string = selectedMapData?.name ?? '';
+        }
+        const mapImg = this.detailsNode.getChildByName('map')?.getComponent(Sprite);
+        if (mapImg) {
+            ccTools.cancelAssetLoad(mapImg);
+            mapImg.spriteFrame = null;
+            if (selectedMapData) {
+                ccTools.loadImg(mapImg, imgPath.showMap + selectedMapData.mapIdx);
+            }
         }
         this.initDifficultyTabs(preserveDifficulty);
         this.detailsNode.active = this.selectedMapIdx !== -1;

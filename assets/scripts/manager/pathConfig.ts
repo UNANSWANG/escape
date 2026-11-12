@@ -205,6 +205,8 @@ export enum imgPath {
     passiveIcon = "texture/roleStore/skillIcon/passive_",
     /**角色头像 */
     roleAvatar = "texture/role/avatar/avatar_",
+    /**显示地图 */
+    showMap = "texture/mapPage/show/map_",
 }
 
 /**spine路径 */

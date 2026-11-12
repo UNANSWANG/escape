@@ -48,6 +48,8 @@ export enum UIPath {
     UIShowItem = "prefabs/UIPage/UIShowItem",
     /**添加金币页面 */
     UIMoneyAdd = "prefabs/UIPage/UIMoneyAdd",
+    /**小地图页面 */
+    UISmallMap = "prefabs/UIPage/UISmallMap",
 }
 
 /**物品路径 */
@@ -105,6 +107,8 @@ export enum ItemPath {
     helicopter = "prefabs/game/helicopter",
     /**地图 */
     map = "prefabs/map/map_",
+    /**小地图 */
+    smallMap = "prefabs/smallMap/smallMap",
 }
 
 /**animation动画预制体 */
@@ -207,6 +211,8 @@ export enum imgPath {
     roleAvatar = "texture/role/avatar/avatar_",
     /**显示地图 */
     showMap = "texture/mapPage/show/map_",
+    /**小地图头像 */
+    smallMapAvatar = "texture/role/mapAvatar/avatar_",
 }
 
 /**spine路径 */

@@ -609,7 +609,7 @@ export class bossBaseController extends Component {
             const itemData = getItemDataByItemId(itemId);
             if (itemData) {
                 pData.fixStorehouseData(itemId, 1);
-                messages.push(`获得<color=#FFEB00>${itemData.name}</color>`);
+                messages.push(`获得<color=#FFEB00>${itemData.name}</color>(已放入仓库)`);
             }
         }
         uiMgr.showRewardTips2(messages);

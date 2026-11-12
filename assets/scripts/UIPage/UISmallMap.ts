@@ -1,14 +1,11 @@
-import { _decorator, Component, Node, Animation} from 'cc';
+import { _decorator, Node, Animation} from 'cc';
 import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
-import { zoomButton } from '../extention/zoomButton';
-const { ccclass, property } = _decorator;
+const { ccclass } = _decorator;
 
 @ccclass('UISmallMap')
 export class UISmallMap extends UIBase {
-    @property(Node)
-    closeBtn: Node;
 
     protected onLoad(): void {
         this.bindBtn();
@@ -25,7 +22,7 @@ export class UISmallMap extends UIBase {
     }
 
     bindBtn() {
-        this.closeBtn.addComponent(zoomButton).onClick = this.clickCloseBtn.bind(this);
+        this.node.getChildByName('mask').on(Node.EventType.TOUCH_END, this.clickCloseBtn, this);
     }
 
     ///

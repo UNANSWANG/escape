@@ -134,6 +134,9 @@ export class UIGame extends UIBase {
     @property(Node)
     bossHpBar: Node;
 
+    @property(Node)
+    smallMapNode: Node;
+
     ///
     ///需要获取的节点
     ///

@@ -193,12 +193,18 @@ export class UIMain extends UIBase {
         gm.Event.off(GameEvent.refreshRank, this.refreshRank, this);
     }
 
-    /**按本次运行的确认状态刷新地图按钮；未确认时显示默认文本 */
+    /**初始化或确认地图选择时刷新按钮；图片使用已保存的地图，无记录时默认索引 0 */
     private refreshMapSelection() {
         const [mapIdx, difficultyType] = pData.selectMapData;
         const mapData = pData.hasConfirmedMapSelection
             ? mapConfig.getMapData(mapIdx, difficultyType)
             : null;
+        const mapImg = this.mapBtn.getChildByName('mapMask')?.getChildByName('img')?.getComponent(Sprite);
+        if (mapImg) {
+            ccTools.cancelAssetLoad(mapImg);
+            mapImg.spriteFrame = null;
+            ccTools.loadImg(mapImg, imgPath.showMap + (mapConfig.getDataByMapIdx(mapIdx)[0]?.mapIdx ?? 0));
+        }
         const mapNameLab = this.mapBtn.getChildByName('mapNameLab')?.getComponent(Label);
         const difficultyLab = this.mapBtn.getChildByName('difficultyLab')?.getComponent(Label);
         if (mapNameLab) {

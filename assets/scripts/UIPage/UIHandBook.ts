@@ -97,15 +97,13 @@ export class UIHandBook extends UIBase {
             const isDefeated = state === BossBookState.Defeated;
             const img = itemNode.getChildByName("img");
             if (img) {
-                img.active = !isLocked;
+                img.active = true;
                 const sprite = img.getComponent(Sprite);
                 if (sprite) {
+                    sprite.spriteFrame = null;
                     sprite.grayscale = isDefeated;
+                    ccTools.loadImg(sprite, (isLocked ? imgPath.bossMask : imgPath.bossBody) + bossData.id);
                 }
-            }
-            const bossMask = itemNode.getChildByName("bossMask");
-            if (bossMask) {
-                bossMask.active = isLocked;
             }
             const lock = itemNode.getChildByName("lock");
             if (lock) {

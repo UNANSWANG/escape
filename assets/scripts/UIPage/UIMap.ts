@@ -1,6 +1,6 @@
-import { _decorator, Component, Node, Animation, EventTouch, Color, Label, Prefab, instantiate, Vec3, UITransform, Widget, tween, Tween } from 'cc';
+import { _decorator, Component, Node, Animation, EventTouch, Color, Label, Sprite, Prefab, instantiate, Vec3, UITransform, Widget, tween, Tween } from 'cc';
 import { UIBase } from './UIBase';
-import { ItemPath, UIPath } from '../manager/pathConfig';
+import { imgPath, ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { pData } from '../manager/playerData';
@@ -217,6 +217,14 @@ export class UIMap extends UIBase {
             }
         });
         const selectedData = rows.find((row) => row.difficultyType === this.selectedDifficultyType);
+        const bossImg = this.detailsNode.getChildByName('bossImg')?.getComponent(Sprite);
+        if (bossImg) {
+            ccTools.cancelAssetLoad(bossImg);
+            bossImg.spriteFrame = null;
+            if (selectedData && Number.isInteger(selectedData.bossId) && selectedData.bossId >= 0) {
+                ccTools.loadImg(bossImg, imgPath.bossBody + selectedData.bossId);
+            }
+        }
         this.refreshItemLists(selectedData);
     }
 

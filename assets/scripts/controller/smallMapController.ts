@@ -9,6 +9,7 @@ const { ccclass } = _decorator;
 export class smallMapController extends Component {
     private roleIcon: Node = null;
     private mapTransform: UITransform = null;
+    private mapMaskTransform: UITransform = null;
     private playerMapPosition = new Vec3();
     private iconScaleX = 1;
     private avatarRoleId = -1;
@@ -16,6 +17,9 @@ export class smallMapController extends Component {
     protected onLoad(): void {
         this.roleIcon = this.node.getChildByName('roleIcon');
         this.mapTransform = this.getComponent(UITransform);
+        if (this.node.parent?.name === 'mapMask') {
+            this.mapMaskTransform = this.node.parent.getComponent(UITransform);
+        }
         if (this.roleIcon) this.iconScaleX = Math.abs(this.roleIcon.scale.x);
     }
 
@@ -59,6 +63,26 @@ export class smallMapController extends Component {
             const direction = roleAnim.scale.x < 0 ? -1 : 1;
             this.roleIcon.setScale(this.iconScaleX * direction, this.roleIcon.scale.y, this.roleIcon.scale.z);
         }
+
+        this.followRoleIcon();
+    }
+
+    private followRoleIcon(): void {
+        if (!this.mapMaskTransform || !this.mapTransform) return;
+        const maskWidth = this.mapMaskTransform.width;
+        const maskHeight = this.mapMaskTransform.height;
+        const mapWidth = this.mapTransform.width * Math.abs(this.node.scale.x);
+        const mapHeight = this.mapTransform.height * Math.abs(this.node.scale.y);
+        const rolePosition = this.roleIcon.position;
+        const desiredX = maskWidth * (0.5 - this.mapMaskTransform.anchorX) - rolePosition.x * Math.abs(this.node.scale.x);
+        const desiredY = maskHeight * (0.5 - this.mapMaskTransform.anchorY) - rolePosition.y * Math.abs(this.node.scale.y);
+        const minX = maskWidth * (1 - this.mapMaskTransform.anchorX) - mapWidth * (1 - this.mapTransform.anchorX);
+        const maxX = -maskWidth * this.mapMaskTransform.anchorX + mapWidth * this.mapTransform.anchorX;
+        const minY = maskHeight * (1 - this.mapMaskTransform.anchorY) - mapHeight * (1 - this.mapTransform.anchorY);
+        const maxY = -maskHeight * this.mapMaskTransform.anchorY + mapHeight * this.mapTransform.anchorY;
+        const x = minX <= maxX ? Math.min(maxX, Math.max(minX, desiredX)) : (minX + maxX) / 2;
+        const y = minY <= maxY ? Math.min(maxY, Math.max(minY, desiredY)) : (minY + maxY) / 2;
+        this.node.setPosition(x, y, this.node.position.z);
     }
 }
 

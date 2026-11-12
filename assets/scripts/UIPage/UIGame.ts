@@ -7,6 +7,7 @@ import { BossBookState, configData, floatColorArr, GameEvent, QualityColorArr } 
 import { gm } from '../manager/gm';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
+import { ccResTools } from '../extention/resTools';
 import { playerMgr } from '../manager/playerManager';
 import { CameraController } from '../controller/CameraController';
 import { enemyMgr } from '../manager/enemyManager';
@@ -274,6 +275,8 @@ export class UIGame extends UIBase {
     private bossAvatarImg: Sprite = null;
     private bossBar: Sprite = null;
     private bossBarBase: Sprite = null;
+    private smallMapIdx = -1;
+    private isMapKeyPressed = false;
 
     protected onLoad(): void {
         this.bossNameLab = this.bossHpBar?.getChildByName('nameLab')?.getComponent(Label);
@@ -290,6 +293,7 @@ export class UIGame extends UIBase {
     }
 
     async onUI_Open(data?: any) {
+        this.isMapKeyPressed = false;
         ++this.openVersion;
         this.addListener();
         this.refreshAimingBtnDisplay();
@@ -360,7 +364,23 @@ export class UIGame extends UIBase {
         this.mapNode = map;
         pData.mapHalfSize = new Vec2(bg.width / 2, bg.height / 2);
         this.gameCameraComp?.setMapBounds(bg.getBoundingBoxToWorld());
+        await this.initSmallMap(version);
         return true;
+    }
+
+    /**在游戏界面的地图遮罩中创建唯一的小地图。 */
+    private async initSmallMap(version: number): Promise<void> {
+        const mapMask = this.smallMapNode?.getChildByName('mapMask');
+        const mapIdx = pData.selectMapData[0];
+        if (!mapMask || !Number.isInteger(mapIdx) || mapIdx < 0) return;
+        if (this.smallMapIdx === mapIdx && mapMask.children.length > 0) return;
+        ccTools.destroyAllChild(mapMask);
+        const prefab = await ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.smallMap + mapIdx);
+        if (version !== this.openVersion || !this.node.activeInHierarchy || !prefab) return;
+        const smallMap = instantiate(prefab);
+        mapMask.addChild(smallMap);
+        smallMap.setPosition(0, 0, 0);
+        this.smallMapIdx = mapIdx;
     }
 
     private clearMap(): void {
@@ -2122,10 +2142,7 @@ export class UIGame extends UIBase {
     /**监听按钮点击事件 */
     onKeyDown(event: EventKeyboard) {
         if (this.isOpening) return;
-        if (this.isBackpackOpen()) {
-            if (event.keyCode === KeyCode.KEY_B) this.clickBagBtn();
-            return;
-        }
+        if (this.isBackpackOpen() && event.keyCode !== KeyCode.KEY_B) return;
 
         switch (event.keyCode) {
             case KeyCode.KEY_W:
@@ -2175,6 +2192,15 @@ export class UIGame extends UIBase {
             case KeyCode.KEY_K:
                 this.clickSkillBtn2();
                 break;
+            case KeyCode.KEY_M:
+                if (this.isMapKeyPressed) break;
+                this.isMapKeyPressed = true;
+                if (uiMgr.isPageOpen(UIPath.UISmallMap)) {
+                    uiMgr.closePage(UIPath.UISmallMap);
+                } else {
+                    this.clickSmallMap();
+                }
+                break;
             case KeyCode.KEY_B:
                 this.clickBagBtn();
                 break;
@@ -2186,6 +2212,10 @@ export class UIGame extends UIBase {
 
     /**监听键盘松开，恢复剩余按键的方向或停止移动 */
     onKeyUp(event: EventKeyboard) {
+        if (event.keyCode === KeyCode.KEY_M) {
+            this.isMapKeyPressed = false;
+            return;
+        }
         if (this.isOpening) return;
         if (this.isBackpackOpen()) return;
 
@@ -2308,6 +2338,7 @@ export class UIGame extends UIBase {
             uiMgr.closePage(UIPath.UIBackpack);
             return;
         }
+        if (uiMgr.isPageOpen(UIPath.UISmallMap)) return;
         this.clearKeyboardGameInput();
         uiMgr.openPage(UIPath.UIBackpack);
     }
@@ -2315,6 +2346,7 @@ export class UIGame extends UIBase {
     /**点击打开容器按钮 */
     clickOpenContainerBtn() {
         if (this.isOpening) return;
+        if (uiMgr.isPageOpen(UIPath.UISmallMap)) return;
         if (!this.currentContainer) return;
         this.clearKeyboardGameInput();
         this.currentContainer.open();
@@ -2351,6 +2383,7 @@ export class UIGame extends UIBase {
 
     /**点击小地图打开地图界面 */
     clickSmallMap() {
+        if (this.isBackpackOpen()) return;
         uiMgr.openPage(UIPath.UISmallMap);
     }
 

@@ -53,6 +53,7 @@ interface PerspectiveArea {
 /** 遮挡物的碰撞检测区域及显示节点。 */
 interface ShelterArea {
     colliderTransform: UITransform;
+    polygon: PolygonCollider2D | null;
     imgNode: Node;
 }
 
@@ -787,10 +788,9 @@ export class UIGame extends UIBase {
         let isInsideShelter = false;
         for (const shelter of this.shelterAreas) {
             if (!shelter.imgNode?.isValid || !shelter.colliderTransform?.isValid) continue;
-            const shelterBounds = shelter.colliderTransform.getBoundingBoxToWorld();
-            if (!aiBounds.intersects(shelterBounds)) continue;
+            if (!this.intersectsShelterArea(aiBounds, shelter)) continue;
             isInsideShelter = true;
-            if (playerBounds?.intersects(shelterBounds)) return false;
+            if (playerBounds && this.intersectsShelterArea(playerBounds, shelter)) return false;
         }
         return isInsideShelter;
     }
@@ -806,8 +806,40 @@ export class UIGame extends UIBase {
             if (!colliderTransform || !imgNode) continue;
 
             imgNode.active = true;
-            this.shelterAreas.push({ colliderTransform, imgNode });
+            const polygon = colliderTransform.node.getComponent(PolygonCollider2D);
+            this.shelterAreas.push({ colliderTransform, polygon, imgNode });
         }
+    }
+
+    /**与 colliderList 一样优先读取多边形组件，否则使用节点范围。 */
+    private intersectsShelterArea(bounds: Rect, shelter: ShelterArea) {
+        const polygon = shelter.polygon;
+        if (!polygon?.isValid || polygon.points.length < 3) {
+            return bounds.intersects(shelter.colliderTransform.getBoundingBoxToWorld());
+        }
+
+        // 读取世界坐标顶点，包含组件偏移和节点的缩放、旋转。
+        const points: Array<{ x: number; y: number }> = [];
+        for (const point of polygon.points) {
+            this.pushColliderWorldPoint(polygon.node, point.x + polygon.offset.x, point.y + polygon.offset.y, points);
+        }
+        const left = bounds.x, bottom = bounds.y;
+        const right = left + bounds.width, top = bottom + bounds.height;
+        // 多边形顶点在矩形内，或矩形角点在多边形内，都算相交。
+        if (points.some(point => point.x >= left && point.x <= right && point.y >= bottom && point.y <= top)
+            || this.pointInsideStaticPolygon(left, bottom, points)
+            || this.pointInsideStaticPolygon(right, bottom, points)
+            || this.pointInsideStaticPolygon(right, top, points)
+            || this.pointInsideStaticPolygon(left, top, points)) return true;
+
+        for (let i = 0; i < points.length; i++) {
+            const a = points[i], b = points[(i + 1) % points.length];
+            if (this.staticSegmentsIntersect(a.x, a.y, b.x, b.y, left, bottom, right, bottom)
+                || this.staticSegmentsIntersect(a.x, a.y, b.x, b.y, right, bottom, right, top)
+                || this.staticSegmentsIntersect(a.x, a.y, b.x, b.y, right, top, left, top)
+                || this.staticSegmentsIntersect(a.x, a.y, b.x, b.y, left, top, left, bottom)) return true;
+        }
+        return false;
     }
 
     /**玩家与遮挡物检测区域相交时隐藏遮挡物，离开后恢复显示。 */
@@ -823,7 +855,7 @@ export class UIGame extends UIBase {
         const playerBounds = playerTransform.getBoundingBoxToWorld();
         for (const shelter of this.shelterAreas) {
             if (!shelter.imgNode?.isValid || !shelter.colliderTransform?.isValid) continue;
-            const isIntersecting = playerBounds.intersects(shelter.colliderTransform.getBoundingBoxToWorld());
+            const isIntersecting = this.intersectsShelterArea(playerBounds, shelter);
             const shouldShow = !isIntersecting;
             if (shelter.imgNode.active !== shouldShow) shelter.imgNode.active = shouldShow;
         }

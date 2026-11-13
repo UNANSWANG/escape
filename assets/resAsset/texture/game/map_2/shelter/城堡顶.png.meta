@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "949721f5-ed88-43ee-9653-970228a897e8",
+  "uuid": "adcd1e69-7439-472e-b1c1-2d2485bcdf83",
   "files": [
     ".json",
     ".png"
@@ -10,14 +10,14 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "949721f5-ed88-43ee-9653-970228a897e8@6c48a",
+      "uuid": "adcd1e69-7439-472e-b1c1-2d2485bcdf83@6c48a",
       "displayName": "城堡顶",
       "id": "6c48a",
       "name": "texture",
       "userData": {
         "wrapModeS": "clamp-to-edge",
         "wrapModeT": "clamp-to-edge",
-        "imageUuidOrDatabaseUri": "949721f5-ed88-43ee-9653-970228a897e8",
+        "imageUuidOrDatabaseUri": "adcd1e69-7439-472e-b1c1-2d2485bcdf83",
         "isUuid": true,
         "visible": false,
         "minfilter": "linear",
@@ -34,7 +34,7 @@
     },
     "f9941": {
       "importer": "sprite-frame",
-      "uuid": "949721f5-ed88-43ee-9653-970228a897e8@f9941",
+      "uuid": "adcd1e69-7439-472e-b1c1-2d2485bcdf83@f9941",
       "displayName": "城堡顶",
       "id": "f9941",
       "name": "spriteFrame",
@@ -43,9 +43,9 @@
         "rotated": false,
         "offsetX": 0.5,
         "offsetY": 1,
-        "trimX": 2,
+        "trimX": 1,
         "trimY": 1,
-        "width": 1558,
+        "width": 1560,
         "height": 1671,
         "rawWidth": 1561,
         "rawHeight": 1675,
@@ -60,16 +60,16 @@
         "meshType": 0,
         "vertices": {
           "rawPosition": [
-            -779,
+            -780,
             -835.5,
             0,
-            779,
+            780,
             -835.5,
             0,
-            -779,
+            -780,
             835.5,
             0,
-            779,
+            780,
             835.5,
             0
           ],
@@ -82,38 +82,38 @@
             3
           ],
           "uv": [
-            2,
+            1,
             1674,
-            1560,
+            1561,
             1674,
-            2,
+            1,
             3,
-            1560,
+            1561,
             3
           ],
           "nuv": [
-            0.0012812299807815502,
+            0.0006406149903907751,
             0.001791044776119403,
-            0.9993593850096092,
+            1,
             0.001791044776119403,
-            0.0012812299807815502,
+            0.0006406149903907751,
             0.9994029850746269,
-            0.9993593850096092,
+            1,
             0.9994029850746269
           ],
           "minPos": [
-            -779,
+            -780,
             -835.5,
             0
           ],
           "maxPos": [
-            779,
+            780,
             835.5,
             0
           ]
         },
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "949721f5-ed88-43ee-9653-970228a897e8@6c48a",
+        "imageUuidOrDatabaseUri": "adcd1e69-7439-472e-b1c1-2d2485bcdf83@6c48a",
         "atlasUuid": "",
         "trimType": "auto"
       },
@@ -129,6 +129,6 @@
     "type": "sprite-frame",
     "fixAlphaTransparencyArtifacts": false,
     "hasAlpha": true,
-    "redirect": "949721f5-ed88-43ee-9653-970228a897e8@6c48a"
+    "redirect": "adcd1e69-7439-472e-b1c1-2d2485bcdf83@6c48a"
   }
 }

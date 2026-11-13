@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "9759b9c8-28f9-4e57-978a-2edcf02f3284",
+  "uuid": "76edacd3-3190-4c34-bf72-20ab14aeeb36",
   "files": [
     ".json",
     ".png"
@@ -10,14 +10,14 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "9759b9c8-28f9-4e57-978a-2edcf02f3284@6c48a",
+      "uuid": "76edacd3-3190-4c34-bf72-20ab14aeeb36@6c48a",
       "displayName": "信号塔上",
       "id": "6c48a",
       "name": "texture",
       "userData": {
         "wrapModeS": "clamp-to-edge",
         "wrapModeT": "clamp-to-edge",
-        "imageUuidOrDatabaseUri": "9759b9c8-28f9-4e57-978a-2edcf02f3284",
+        "imageUuidOrDatabaseUri": "76edacd3-3190-4c34-bf72-20ab14aeeb36",
         "isUuid": true,
         "visible": false,
         "minfilter": "linear",
@@ -34,7 +34,7 @@
     },
     "f9941": {
       "importer": "sprite-frame",
-      "uuid": "9759b9c8-28f9-4e57-978a-2edcf02f3284@f9941",
+      "uuid": "76edacd3-3190-4c34-bf72-20ab14aeeb36@f9941",
       "displayName": "信号塔上",
       "id": "f9941",
       "name": "spriteFrame",
@@ -113,7 +113,7 @@
           ]
         },
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "9759b9c8-28f9-4e57-978a-2edcf02f3284@6c48a",
+        "imageUuidOrDatabaseUri": "76edacd3-3190-4c34-bf72-20ab14aeeb36@6c48a",
         "atlasUuid": "",
         "trimType": "auto"
       },
@@ -129,6 +129,6 @@
     "type": "sprite-frame",
     "fixAlphaTransparencyArtifacts": false,
     "hasAlpha": true,
-    "redirect": "9759b9c8-28f9-4e57-978a-2edcf02f3284@6c48a"
+    "redirect": "76edacd3-3190-4c34-bf72-20ab14aeeb36@6c48a"
   }
 }

@@ -11,6 +11,7 @@ import { videoMgr } from '../manager/videoManager';
 import { weaponsConfig } from '../json/jsonWeapons';
 import { equipmentConfig } from '../json/jsonEquipment';
 import { itemConfig } from '../json/jsonItem';
+import { rankConfig } from '../json/jsonRank';
 const { ccclass, property } = _decorator;
 
 
@@ -43,6 +44,9 @@ export class UIConsole extends UIBase {
     @property(Toggle)
     adToggle: Toggle;
 
+    @property(Node)
+    maxRankBtn: Node;
+
     protected onLoad(): void {
         this.bindBtn();
     }
@@ -66,6 +70,7 @@ export class UIConsole extends UIBase {
         this.addAllWeaponBtn.addComponent(zoomButton).onClick = this.clickAddWeaponBtn.bind(this);
         this.addAllEquipBtn.addComponent(zoomButton).onClick = this.clickAddEquipBtn.bind(this);
         this.addAllItemBtn.addComponent(zoomButton).onClick = this.clickAddItemBtn.bind(this);
+        this.maxRankBtn.addComponent(zoomButton).onClick = this.clickMaxRankBtn.bind(this);
     }
 
     /**刷新只攻击玩家自身开关 */
@@ -131,6 +136,16 @@ export class UIConsole extends UIBase {
             .map((itemData) => [itemData.itemId, 99]);
         if (rewardData.length === 0) return;
         uiMgr.openPage(UIPath.UIReward, { rewardData });
+    }
+
+    /**点击提升到表内最高段位，已超过最高段位时保持不变。 */
+    clickMaxRankBtn() {
+        const maxRank = (rankConfig.tableData ?? []).reduce((maxId, row) => Math.max(maxId, row.id), 0);
+        if (pData.rank >= maxRank) return;
+
+        pData.rank = maxRank;
+        ccStorageTools.setData(SaveKey.rank, pData.rank);
+        gm.Event.emit(GameEvent.refreshRank);
     }
 
     /**点击全皮肤 */

@@ -258,6 +258,8 @@ export class UIGame extends UIBase {
     private isDrugAdWatching = false;
     /** 静态障碍物使用世界坐标缓存；仅在场景障碍物变化时重建。 */
     private staticColliders: StaticCollisionShape[] = [];
+    /** 静态碰撞数据版本，用于使 NPC 寻路网格缓存失效。 */
+    staticCollisionRevision = 0;
     private readonly collisionCellSize = 256;
     private collisionCells: Map<string, StaticCollisionShape[]> = new Map();
     private collisionQueryStamp = 0;
@@ -625,6 +627,7 @@ export class UIGame extends UIBase {
 
     /** colliderList 的直属子节点：有 PolygonCollider2D 时取顶点，否则取 UITransform 矩形。 */
     rebuildStaticColliders() {
+        this.staticCollisionRevision++;
         this.staticColliders.length = 0;
         this.collisionCells.clear();
         if (!this.colliderList) return;

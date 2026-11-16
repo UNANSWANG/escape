@@ -1,17 +1,40 @@
 import { Node, UITransform, Vec3 } from 'cc';
 import type { StaticCollisionShape, UIGame } from '../UIPage/UIGame';
 
+interface NavigationGrid {
+    blocked: Int8Array;
+    checkedLinks: Uint8Array;
+    openLinks: Uint8Array;
+    costs: Float64Array;
+    parents: Int32Array;
+    closed: Uint8Array;
+}
+
 /**
  * 让任意带脚底 UITransform 的节点在世界坐标中沿地图静态碰撞体移动。
  * 碰撞后会保留切线方向的位移，因此角色可以自然贴着墙边滑动。
  */
 export class StaticCollisionMover {
+    /** 同一地图、碰撞盒和网格共用静态检测结果，重建碰撞数据时整体失效。 */
+    private static navigationCaches = new WeakMap<UIGame, { revision: number; grids: Map<string, NavigationGrid> }>();
     private candidates: StaticCollisionShape[] = [];
     private origin = new Vec3();
     private destination = new Vec3();
     private contactNormal = new Vec3();
     private mapMin = new Vec3();
     private mapMax = new Vec3();
+
+    /** 目标小幅移动时保留绕行路线，只在最后一段仍可通行时更新终点。 */
+    retargetPath(node: Node, collider: UITransform, game: UIGame, target: Vec3, path: Vec3[], nextIndex: number) {
+        if (nextIndex >= path.length || !path.length) return false;
+        node.getWorldPosition(this.origin);
+        const bounds = collider.getBoundingBoxToWorld();
+        const anchor = nextIndex < path.length - 1 ? path[path.length - 2] : this.origin;
+        if (!this.canTraverse(game, anchor.x, anchor.y, target.x, target.y,
+            bounds.x - this.origin.x, bounds.y - this.origin.y, bounds.width, bounds.height)) return false;
+        path[path.length - 1].set(target.x, target.y, this.origin.z);
+        return true;
+    }
 
     /**
      * 使用 A* 在整张地图的可通行网格中寻找路线。
@@ -52,8 +75,25 @@ export class StaticCollisionMover {
         if (columns <= 0 || rows <= 0) return false;
 
         const total = columns * rows;
-        const blocked = new Int8Array(total);
-        blocked.fill(-1);
+        let cache = StaticCollisionMover.navigationCaches.get(game);
+        if (!cache || cache.revision !== game.staticCollisionRevision) {
+            cache = { revision: game.staticCollisionRevision, grids: new Map() };
+            StaticCollisionMover.navigationCaches.set(game, cache);
+        }
+        const key = [this.mapMin.x, this.mapMin.y, columns, rows, cellSize,
+            offsetX, offsetY, bounds.width, bounds.height].join(',');
+        let grid = cache.grids.get(key);
+        if (!grid) {
+            // 限制不同碰撞盒规格的缓存数量，避免长局中无界增长。
+            if (cache.grids.size >= 8) cache.grids.delete(cache.grids.keys().next().value);
+            grid = {
+                blocked: new Int8Array(total), checkedLinks: new Uint8Array(total), openLinks: new Uint8Array(total),
+                costs: new Float64Array(total), parents: new Int32Array(total), closed: new Uint8Array(total),
+            };
+            grid.blocked.fill(-1);
+            cache.grids.set(key, grid);
+        }
+        const { blocked, checkedLinks, openLinks, costs, parents, closed } = grid;
         const cellX = (index: number) => this.mapMin.x + index % columns * cellSize;
         const cellY = (index: number) => this.mapMin.y + Math.floor(index / columns) * cellSize;
         const isBlocked = (index: number) => {
@@ -98,11 +138,9 @@ export class StaticCollisionMover {
         const goalIndex = nearestCell(targetX, targetY, false);
         if (startIndex < 0 || goalIndex < 0) return false;
 
-        const costs = new Float64Array(total);
         costs.fill(Infinity);
-        const parents = new Int32Array(total);
         parents.fill(-1);
-        const closed = new Uint8Array(total);
+        closed.fill(0);
         const heapNodes: number[] = [];
         const heapScores: number[] = [];
         const pushHeap = (index: number, score: number) => {
@@ -165,7 +203,8 @@ export class StaticCollisionMover {
             closed[current] = 1;
             const column = current % columns;
             const row = Math.floor(current / columns);
-            for (const direction of directions) {
+            for (let directionIndex = 0; directionIndex < directions.length; directionIndex++) {
+                const direction = directions[directionIndex];
                 const nextColumn = column + direction[0];
                 const nextRow = row + direction[1];
                 if (nextColumn < 0 || nextColumn >= columns || nextRow < 0 || nextRow >= rows) continue;
@@ -174,10 +213,16 @@ export class StaticCollisionMover {
                 // 对角移动时两侧正交格都必须可走，防止从障碍物尖角穿过。
                 if (direction[0] && direction[1]
                     && (isBlocked(row * columns + nextColumn) || isBlocked(nextRow * columns + column))) continue;
-                if (!this.canTraverse(game, cellX(current), cellY(current), cellX(next), cellY(next),
-                    offsetX, offsetY, bounds.width, bounds.height)) continue;
                 const nextCost = costs[current] + direction[2];
                 if (nextCost >= costs[next]) continue;
+                // 先排除无法改善路线的邻居；静态网格边只做一次精确碰撞检测。
+                const link = 1 << directionIndex;
+                if (!(checkedLinks[current] & link)) {
+                    checkedLinks[current] |= link;
+                    if (this.canTraverse(game, cellX(current), cellY(current), cellX(next), cellY(next),
+                        offsetX, offsetY, bounds.width, bounds.height)) openLinks[current] |= link;
+                }
+                if (!(openLinks[current] & link)) continue;
                 costs[next] = nextCost;
                 parents[next] = current;
                 pushHeap(next, nextCost + heuristic(next));

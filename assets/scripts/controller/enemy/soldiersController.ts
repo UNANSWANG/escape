@@ -525,10 +525,10 @@ export class soldiersController extends Component {
                 directionX * moveDistance, directionY * moveDistance, this.actualMove);
             const forwardProgress = this.actualMove.x * directionX + this.actualMove.y * directionY;
             if (forwardProgress < moveDistance * 0.2) {
-                // 场景碰撞体或目标在寻路后发生变化，下一帧重新规划，不继续顶墙。
+                // 受阻后等待重规划间隔，避免连续顶墙时每帧运行整图寻路。
                 this.navigationPath.length = 0;
                 this.navigationIndex = 0;
-                this.navigationReplanRemaining = 0;
+                this.navigationReplanRemaining = this.navigationReplanInterval + Math.random() * 0.1;
             }
         }
 
@@ -548,10 +548,16 @@ export class soldiersController extends Component {
     }
 
     private rebuildNavigationPath(target: Vec3) {
+        this.navigationReplanRemaining = this.navigationReplanInterval + Math.random() * 0.1;
+        if (this.moveCollider && this.gameComp
+            && this.collisionMover.retargetPath(this.node, this.moveCollider, this.gameComp,
+                target, this.navigationPath, this.navigationIndex)) {
+            this.navigationTarget.set(target);
+            return;
+        }
         this.navigationPath.length = 0;
         this.navigationIndex = 0;
         this.navigationTarget.set(target);
-        this.navigationReplanRemaining = this.navigationReplanInterval;
         if (!this.moveCollider || !this.gameComp) {
             this.navigationPath.push(new Vec3(target.x, target.y, this.node.worldPosition.z));
             return;

@@ -81,11 +81,15 @@ export class AIPatrol {
             const target = player.node.worldPosition;
             const targetMoved = (target.x - this.target.x) ** 2 + (target.y - this.target.y) ** 2 > 24 * 24;
             if (this.replanRemaining <= 0 && (!this.path.length || targetMoved)) {
+                const retargeted = this.mover.retargetPath(role.node, collider, role.gameComp,
+                    target, this.path, this.pathIndex);
                 this.target.set(target);
-                this.path.length = 0;
-                this.pathIndex = 0;
-                this.mover.findPath(role.node, collider, role.gameComp, this.target, this.path);
-                this.replanRemaining = 0.35;
+                if (!retargeted) {
+                    this.path.length = 0;
+                    this.pathIndex = 0;
+                    this.mover.findPath(role.node, collider, role.gameComp, this.target, this.path);
+                }
+                this.replanRemaining = 0.35 + Math.random() * 0.1;
             }
             if (!this.path.length) {
                 role.playRoleAnim(roleAnimName.idle, true);
@@ -150,9 +154,9 @@ export class AIPatrol {
         if (progress < moveDistance * 0.2) {
             this.path.length = 0;
             this.pathIndex = 0;
-            if (!this.mover.findPath(role.node, collider, role.gameComp, this.target, this.path)) {
-                this.retryRemaining = 1;
-            }
+            // 巡逻和追击都延后重试，不在本帧再次寻路。
+            this.retryRemaining = 0.35 + Math.random() * 0.1;
+            this.replanRemaining = this.retryRemaining;
         }
     }
 

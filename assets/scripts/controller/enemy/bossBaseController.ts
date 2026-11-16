@@ -531,14 +531,19 @@ export class bossBaseController extends Component {
         // 已走完路线立即更新；寻路失败仍按间隔重试。
         if (pathFinished || this.navigationReplanRemaining <= 0
             && (this.navigationIndex >= this.navigationPath.length || targetMoved)) {
-            this.navigationPath.length = 0;
-            this.navigationIndex = 0;
             this.navigationTarget.set(target);
-            this.navigationReplanRemaining = 0.35;
-            if (this.moveCollider && this.gameComp) {
-                this.collisionMover.findPath(this.node, this.moveCollider, this.gameComp, target, this.navigationPath);
-            } else {
-                this.navigationPath.push(new Vec3(target.x, target.y, current.z));
+            this.navigationReplanRemaining = 0.35 + Math.random() * 0.1;
+            const retargeted = this.moveCollider && this.gameComp
+                && this.collisionMover.retargetPath(this.node, this.moveCollider, this.gameComp,
+                    target, this.navigationPath, this.navigationIndex);
+            if (!retargeted) {
+                this.navigationPath.length = 0;
+                this.navigationIndex = 0;
+                if (this.moveCollider && this.gameComp) {
+                    this.collisionMover.findPath(this.node, this.moveCollider, this.gameComp, target, this.navigationPath);
+                } else {
+                    this.navigationPath.push(new Vec3(target.x, target.y, current.z));
+                }
             }
         }
         let waypoint = this.navigationPath[this.navigationIndex];

@@ -14,7 +14,7 @@ export class userManager {
     Ad_video_tt: string = "";
 
     /**用户昵称 */
-    nickName: string = "";
+    nickName: string = "游客996";
     /**用户头像url */
     avatarUrl: string = "";
     /**是否授权朋友信息 */

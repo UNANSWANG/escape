@@ -146,7 +146,7 @@ export enum audioPath {
 /**图片路径 */
 export enum imgPath {
     /**默认头像 */
-    defAvatar = "texture/rank/moren",
+    defAvatar = "texture/rank/defaultAvatar",
     /**子弹 */
     bullet = "texture/game/bullet/bullet_",
     /**银币 */

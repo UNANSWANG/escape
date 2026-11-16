@@ -49,6 +49,8 @@ export interface JsonMapData {
     mapIdx: number;
     /**难度类型 */
     difficultyType: number;
+    /**解锁段位 */
+    unlockRank: number;
     /**奖励列表 */
     rewardList: string;
     /**装备推荐 */

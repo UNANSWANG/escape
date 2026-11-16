@@ -1,7 +1,8 @@
-import { _decorator, instantiate, Node, UITransform, Vec3 } from 'cc';
+import { _decorator, instantiate, Node, Rect, sp, UITransform, Vec3 } from 'cc';
 import { roleController, roleType } from './roleController';
 import { uiMgr } from '../../manager/UIManager';
-import { enemyMgr } from '../../manager/enemyManager';
+import { enemyMgr, EnemyTarget } from '../../manager/enemyManager';
+import { playerMgr } from '../../manager/playerManager';
 import { gm } from '../../manager/gm';
 const { ccclass } = _decorator;
 
@@ -13,14 +14,14 @@ export class role1 extends roleController {
     /**无人机跟随的响应时间（秒），越大则移动延迟越明显。 */
     droneFollowDelay = 0.2;
     private droneNode: Node = null;
+    private droneSkeleton: sp.Skeleton = null;
+    private droneArea: UITransform = null;
     private droneRemainTime = 0;
     private droneTickTime = 0;
     private droneHealPercent = 0;
     private droneDamagePercent = 0;
     private droneTargetPos = new Vec3();
     private droneNextPos = new Vec3();
-    private droneCheckPos = new Vec3();
-    private droneBoundsWorldPos = new Vec3();
 
     /**被动：将当前等级配置的治疗加成百分比转换为治疗倍率。 */
     get healingEffectScale(): number {
@@ -41,20 +42,32 @@ export class role1 extends roleController {
         const duration = Number(this.roleLevelData?.initiativeTime);
         if (!uiTransform || !Number.isFinite(duration) || duration <= 0) return false;
 
+        const drone = instantiate(uiMgr.dronePrefab);
+        const skeleton = drone.getChildByName('animation')?.getComponent(sp.Skeleton);
+        const area = drone.getChildByName('area')?.getComponent(UITransform);
+        if (!skeleton || !area) {
+            drone.destroy();
+            return false;
+        }
         const values = this.getInitiativeValues();
         this.droneHealPercent = Math.max(0, values[0] ?? 0) / 100;
         this.droneDamagePercent = Math.max(0, values[1] ?? 0) / 100;
         this.droneRemainTime = duration;
         this.droneTickTime = 0;
-        this.droneNode = instantiate(uiMgr.dronePrefab);
+        this.droneNode = drone;
+        this.droneSkeleton = skeleton;
+        this.droneArea = area;
         this.gameComp.gameUINode.addChild(this.droneNode);
+        this.droneNode.layer = this.gameComp.gameUINode.layer;
         this.getDroneTargetPosition(uiTransform);
         this.droneNode.setPosition(this.droneTargetPos);
         this.startSkillCooldown(2);
+        skeleton.timeScale = gm.isGamePause ? 0 : 1;
+        skeleton.setAnimation(0, 'animation', true);
         return true;
     }
 
-    /**在人物移动后更新无人机，坐标和效果范围统一使用 gameUINode 的本地坐标。 */
+    /**在人物移动后更新无人机，跟随位置使用 gameUINode 本地坐标，效果范围读取 area 世界包围盒。 */
     protected lateUpdate(dt: number): void {
         super.lateUpdate(dt);
         if (!this.droneNode) return;
@@ -63,6 +76,7 @@ export class role1 extends roleController {
             this.finishDrone();
             return;
         }
+        if (this.droneSkeleton?.isValid) this.droneSkeleton.timeScale = gm.isGamePause ? 0 : 1;
         if (gm.isGamePause || dt <= 0) return;
         const uiTransform = uiNode.getComponent(UITransform);
         if (!uiTransform) {
@@ -80,7 +94,7 @@ export class role1 extends roleController {
         // 先结算再结束，确保持续 8 秒时包含第 8 秒的效果。
         while (this.droneTickTime >= 1 - 1e-6) {
             this.droneTickTime = Math.max(0, this.droneTickTime - 1);
-            this.applyDroneEffect(uiTransform);
+            this.applyDroneEffect();
         }
         if (this.droneRemainTime <= 1e-6) this.finishDrone();
     }
@@ -97,40 +111,36 @@ export class role1 extends roleController {
 
     private getDroneTargetPosition(uiTransform: UITransform) {
         uiTransform.convertToNodeSpaceAR(this.node.worldPosition, this.droneTargetPos);
-        this.droneTargetPos.y += 140;
-        this.droneTargetPos.z = 0;
+        // this.droneTargetPos.y += 140;
+        // this.droneTargetPos.z = 0;
     }
 
-    /** Use hitArea bounds for the drone effect area. */
-    private isInDroneRange(hitTransform: UITransform, uiTransform: UITransform) {
-        if (!hitTransform) return false;
-        const dronePos = this.droneNode.position;
-        const bounds = hitTransform.getBoundingBoxToWorld();
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        for (let i = 0; i < 4; i++) {
-            this.droneBoundsWorldPos.set(i % 2 === 0 ? bounds.xMin : bounds.xMax,
-                i < 2 ? bounds.yMin : bounds.yMax, hitTransform.node.worldPosition.z);
-            uiTransform.convertToNodeSpaceAR(this.droneBoundsWorldPos, this.droneCheckPos);
-            minX = Math.min(minX, this.droneCheckPos.x);
-            maxX = Math.max(maxX, this.droneCheckPos.x);
-            minY = Math.min(minY, this.droneCheckPos.y);
-            maxY = Math.max(maxY, this.droneCheckPos.y);
-        }
-        return maxX >= dronePos.x - 50 && minX <= dronePos.x + 50
-            && maxY >= dronePos.y - 140 && minY <= dronePos.y;
-    }
-
-    private applyDroneEffect(uiTransform: UITransform) {
-        if (this.droneHealPercent > 0 && this.isInDroneRange(this.hitArea, uiTransform)) {
+    /** 每次结算读取预制体 area 的世界范围，与目标 hitArea 相交即生效。 */
+    private applyDroneEffect() {
+        if (!this.droneArea?.isValid || !this.droneArea.node.activeInHierarchy) return;
+        const bounds = this.droneArea.getBoundingBoxToWorld();
+        if (this.droneHealPercent > 0 && this.hitArea
+            && bounds.intersects(this.hitArea.getBoundingBoxToWorld())) {
             this.heal(this.maxHp * this.droneHealPercent);
         }
         if (this.droneDamagePercent <= 0) return;
-        for (const enemy of enemyMgr.allEnemies) {
-            if (enemy === this || !enemy?.node?.isValid || !enemy.node.activeInHierarchy || enemy.hp <= 0) continue;
-            if (this.isInDroneRange(enemy.hitArea, uiTransform)) {
-                enemy.takeDamage(enemy.maxHp * this.droneDamagePercent);
-            }
+        // 人机无人机只攻击玩家；玩家无人机攻击全部敌方。
+        if (this.isAI) {
+            this.damageDroneTarget(playerMgr.playerComp, bounds);
+            return;
         }
+        for (const enemy of enemyMgr.allEnemies) {
+            this.damageDroneTarget(enemy, bounds);
+        }
+    }
+
+    /** 对范围内所有存活的敌对目标结算，施放者自身不受伤。 */
+    private damageDroneTarget(target: EnemyTarget, bounds: Rect) {
+        if (!target || target === this || !target.node?.isValid
+            || target.node === this.node || !target.node.activeInHierarchy || target.hp <= 0) return;
+        const hitArea = target.hitArea;
+        if (!hitArea?.isValid || !bounds.intersects(hitArea.getBoundingBoxToWorld())) return;
+        target.takeDamage(target.maxHp * this.droneDamagePercent);
     }
 
     /**兼容表格中 JSON 字符串及已解析数组。 */
@@ -152,6 +162,8 @@ export class role1 extends roleController {
     private finishDrone() {
         if (this.droneNode?.isValid) this.droneNode.destroy();
         this.droneNode = null;
+        this.droneSkeleton = null;
+        this.droneArea = null;
         this.droneRemainTime = 0;
         this.droneTickTime = 0;
     }

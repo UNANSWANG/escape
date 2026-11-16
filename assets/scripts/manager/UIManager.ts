@@ -186,7 +186,6 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, ItemPath.supplyBox, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.eliminationBox, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.bossBox, false),
-            ccResTools.loadPrefab(this.resBundle, ItemPath.drone, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.skillRangeCircle, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.syringe, false),
             ccResTools.loadPrefab(this.resBundle, animationItemPath.bulletShell, false),
@@ -197,6 +196,7 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, ItemPath.skillRangeRect, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.skillRangeRectLeft, false),
             ccResTools.loadPrefab(this.resBundle, animationItemPath.dragonBreath, false),
+            ccResTools.loadPrefab(this.resBundle, ItemPath.drone, false),
         ]);
 
         if (prefabs.some((prefab) => !prefab)) {
@@ -214,17 +214,17 @@ export class UIManager {
         this.supplyBoxPrefab = prefabs[8];
         this.eliminationBoxPrefab = prefabs[9];
         this.bossBoxPrefab = prefabs[10];
-        this.dronePrefab = prefabs[11];
-        this.skillRangeCirclePrefab = prefabs[12];
-        this.syringePrefab = prefabs[13];
-        this.bulletShellPrefab = prefabs[14];
-        this.whirlwindPrefab = prefabs[15];
-        this.shovelSmokePrefab = prefabs[16];
-        this.helicopterPrefab = prefabs[17];
-        this.bulletExplosionPrefab = prefabs[18];
-        this.skillRangeRectPrefab = prefabs[19];
-        this.skillRangeRectLeftPrefab = prefabs[20];
-        this.dragonBreathPrefab = prefabs[21];
+        this.skillRangeCirclePrefab = prefabs[11];
+        this.syringePrefab = prefabs[12];
+        this.bulletShellPrefab = prefabs[13];
+        this.whirlwindPrefab = prefabs[14];
+        this.shovelSmokePrefab = prefabs[15];
+        this.helicopterPrefab = prefabs[16];
+        this.bulletExplosionPrefab = prefabs[17];
+        this.skillRangeRectPrefab = prefabs[18];
+        this.skillRangeRectLeftPrefab = prefabs[19];
+        this.dragonBreathPrefab = prefabs[20];
+        this.dronePrefab = prefabs[21];
     }
 
     /**等待按顺序播放的奖励提示。 */

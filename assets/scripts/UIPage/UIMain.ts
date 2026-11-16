@@ -71,6 +71,15 @@ export class UIMain extends UIBase {
     @property(Sprite)
     rankBadge: Sprite = null;
 
+    @property(Label)
+    roleNameLab: Label = null;
+
+    @property(Node)
+    roleAvatarNode: Node = null;
+
+    @property(Sprite)
+    roleAvatarImg: Sprite = null;
+
     //人物动画配置
     /**主页角色向左移动的范围 */
     roleMoveLeftRange = 250;
@@ -120,13 +129,15 @@ export class UIMain extends UIBase {
         this.refreshRoleAnim();
         this.refreshMapSelection();
         this.refreshShowContent();
+        // 每次进入主页时，根据已有用户信息刷新头像和昵称。
+        this.refreshUserProfile();
         gm.Event.emit(GameEvent.refreshPlayerMonetary);
     }
 
     bindBtn() {
         this.startBtnComp = this.startBtn.addComponent(zoomButton);
-        this.startBtnComp.onClick = this.cliskStartBtn.bind(this);
-        this.setBtn.addComponent(zoomButton).onClick = this.cliskSetBtn.bind(this);
+        this.startBtnComp.onClick = this.clickStartBtn.bind(this);
+        this.setBtn.addComponent(zoomButton).onClick = this.clickSetBtn.bind(this);
         this.rankBtn.addComponent(zoomButton).onClick = this.clickRankBtn.bind(this);
         this.revisitBtn.addComponent(zoomButton).onClick = this.clickRevisitBtn.bind(this);
         this.handbookBtn.addComponent(zoomButton).onClick = this.clickHandbookBtn.bind(this);
@@ -136,12 +147,27 @@ export class UIMain extends UIBase {
         this.roleBtn.addComponent(zoomButton).onClick = this.clickRoleBtn.bind(this);
         this.roomBtn.addComponent(zoomButton).onClick = this.clickRoomBtn.bind(this);
         this.mapBtn.addComponent(zoomButton).onClick = this.clickMapBtn.bind(this);
+        this.roleAvatarNode?.on(Node.EventType.TOUCH_END, this.clickRoleAvatar, this);
         this.showContent?.children.forEach((showNode, slotIndex) => {
             const button = showNode.getComponent(zoomButton) || showNode.addComponent(zoomButton);
             button.onClick = this.clickShowItem.bind(this, slotIndex);
         });
     }
 
+    /**使用当前用户信息刷新主页头像和昵称 */
+    private refreshUserProfile() {
+        // 微信授权异步返回时，主页组件可能已经销毁。
+        if (!this.isValid) return;
+        if (this.roleNameLab) {
+            this.roleNameLab.string = userMgr.nickName;
+        }
+        if (userMgr.avatarUrl) {
+            ccTools.loadUrlImg(this.roleAvatarImg, userMgr.avatarUrl);
+        }
+        // 没有头像链接时保留预制体中的默认头像。
+    }
+
+    /**刷新显示物品的列表 */
     private refreshShowContent() {
         this.showContent?.children.forEach((showNode, slotIndex) => {
             const itemId = pData.getShowItem(slotIndex);
@@ -333,12 +359,20 @@ export class UIMain extends UIBase {
         }
     }
 
+    /**回到主页或打开匹配页失败时恢复开始按钮 */
+    private resetStartButton() {
+        this.isOpeningMatch = false;
+        if (this.startBtnComp) {
+            this.startBtnComp.interactable = true;
+        }
+    }
+
     ///
     ///点击事件
     ///
 
     /**开始游戏 */
-    cliskStartBtn() {
+    clickStartBtn() {
         if (this.isOpeningMatch) {
             return;
         }
@@ -363,16 +397,8 @@ export class UIMain extends UIBase {
         });
     }
 
-    /**回到主页或打开匹配页失败时恢复开始按钮 */
-    private resetStartButton() {
-        this.isOpeningMatch = false;
-        if (this.startBtnComp) {
-            this.startBtnComp.interactable = true;
-        }
-    }
-
     /**点击设置 */
-    cliskSetBtn() {
+    clickSetBtn() {
         uiMgr.openPage(UIPath.UISetting, { mode: 0 });
     }
 
@@ -452,8 +478,22 @@ export class UIMain extends UIBase {
         uiMgr.openPage(UIPath.UIMap);
     }
 
+    /**点击显示物品 */
     clickShowItem(slotIndex: number) {
         uiMgr.openPage(UIPath.UIShowItem, slotIndex);
+    }
+
+    /**点击头像，仅在没有头像链接时请求微信用户信息 */
+    private clickRoleAvatar() {
+        // 已有头像链接时直接返回，避免重复请求授权。
+        if (userMgr.avatarUrl) return;
+        // 获取微信用户信息仅支持已初始化平台接口的微信环境。
+        if (gm.platType !== PlatType.wx || !gm.API) return;
+        const wxMgr = gm.API as WXManager;
+        wxMgr.getUserProfile(() => {
+            // WXManager 已更新用户信息，成功后同步刷新主页显示。
+            this.refreshUserProfile();
+        });
     }
 }
 

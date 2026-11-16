@@ -42,17 +42,7 @@ export class UIReward extends UIBase {
 
     /**领取并持久化当前奖励 */
     private applyRewards() {
-        const storehouseRewards: number[][] = [];
-        for (const [itemId, num] of this.rewardData) {
-            if (itemId === 200001) {
-                pData.fixMoney(num);
-            } else if (itemId === 200002) {
-                pData.fixGold(num);
-            } else {
-                storehouseRewards.push([itemId, num]);
-            }
-        }
-        pData.fixStorehouseDatas(storehouseRewards);
+        pData.applyRewards(this.rewardData);
     }
 
     bindBtn() {

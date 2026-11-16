@@ -207,8 +207,10 @@ export class playerData {
             changes.push([previousItemId, 1]);
         }
         this.showItems[`item${slotIndex}`] = { itemId };
-        this.fixStorehouseDatas(changes);
-        this.saveShowItems();
+        ccStorageTools.batch(() => {
+            this.fixStorehouseDatas(changes);
+            this.saveShowItems();
+        });
         return true;
     }
 
@@ -218,8 +220,10 @@ export class playerData {
             return false;
         }
         delete this.showItems[`item${slotIndex}`];
-        this.fixStorehouseData(itemId, 1);
-        this.saveShowItems();
+        ccStorageTools.batch(() => {
+            this.fixStorehouseData(itemId, 1);
+            this.saveShowItems();
+        });
         return true;
     }
 
@@ -294,8 +298,10 @@ export class playerData {
         }
         const quality = itemConfig.getDataByItemId(itemId).quality;
         this.claimedCollectionRewards.add(itemId);
-        ccStorageTools.setData(SaveKey.claimedCollectionRewards, Array.from(this.claimedCollectionRewards));
-        this.fixGold(configData.collectionBookGold[quality]);
+        ccStorageTools.batch(() => {
+            ccStorageTools.setData(SaveKey.claimedCollectionRewards, Array.from(this.claimedCollectionRewards));
+            this.fixGold(configData.collectionBookGold[quality]);
+        });
         gm.Event.emit(GameEvent.refreshRed);
         return true;
     }
@@ -342,12 +348,7 @@ export class playerData {
 
     /**增减单个仓库物品数量 */
     fixStorehouseData(itemId: number, num: number) {
-        if (this.updateStorehouseData(itemId, num)) {
-            this.saveStorehouseData();
-            if (num > 0) {
-                this.unlockCollection(itemId);
-            }
-        }
+        this.fixStorehouseDatas([[itemId, num]]);
     }
 
     /**批量增减仓库物品数量，全部修改完成后只存储一次 */
@@ -371,9 +372,27 @@ export class playerData {
         }
 
         if (isChanged) {
-            this.saveStorehouseData();
-            this.unlockCollections(acquiredItemIds);
+            ccStorageTools.batch(() => {
+                this.saveStorehouseData();
+                this.unlockCollections(acquiredItemIds);
+            });
         }
+    }
+
+    applyRewards(rewards: number[][]) {
+        ccStorageTools.batch(() => {
+            const storehouseRewards: number[][] = [];
+            for (const [itemId, num] of rewards) {
+                if (itemId === 200001) {
+                    this.fixMoney(num);
+                } else if (itemId === 200002) {
+                    this.fixGold(num);
+                } else {
+                    storehouseRewards.push([itemId, num]);
+                }
+            }
+            this.fixStorehouseDatas(storehouseRewards);
+        });
     }
 
     /** 撤离成功时将背包物品批量转入仓库，并清空本局背包数据。 */
@@ -406,16 +425,20 @@ export class playerData {
             items.set(itemId, (items.get(itemId) || 0) + 1);
         }
         this.lostItems = Array.from(items.entries());
-        ccStorageTools.setData(SaveKey.lostItems, this.lostItems);
         this.equipmentIds = this.defaultEquipmentIds.slice();
-        this.saveEquipmentIds();
+        ccStorageTools.batch(() => {
+            ccStorageTools.setData(SaveKey.lostItems, this.lostItems);
+            this.saveEquipmentIds();
+        });
     }
 
     recoverLostItems(): boolean {
         if (this.lostItems.length === 0) return false;
-        this.fixStorehouseDatas(this.lostItems);
-        this.lostItems = [];
-        ccStorageTools.setData(SaveKey.lostItems, this.lostItems);
+        ccStorageTools.batch(() => {
+            this.fixStorehouseDatas(this.lostItems);
+            this.lostItems = [];
+            ccStorageTools.setData(SaveKey.lostItems, this.lostItems);
+        });
         return true;
     }
 
@@ -550,8 +573,10 @@ export class playerData {
     }
 
     private saveEquipmentIds() {
-        ccStorageTools.setData(SaveKey.equipmentIds, this.equipmentIds.slice());
-        ccStorageTools.setData(SaveKey.equipmentItemIdVersion, 1);
+        ccStorageTools.setDatas([
+            [SaveKey.equipmentIds, this.equipmentIds.slice()],
+            [SaveKey.equipmentItemIdVersion, 1],
+        ]);
         gm.Event.emit(GameEvent.refreshEquipmentDisplay);
     }
 
@@ -616,8 +641,10 @@ export class playerData {
         const result = this.getRankScoreResult(score);
         this.rank = result.rank;
         this.rankScore = result.rankScore;
-        ccStorageTools.setData(SaveKey.rank, this.rank);
-        ccStorageTools.setData(SaveKey.rankScore, this.rankScore);
+        ccStorageTools.setDatas([
+            [SaveKey.rank, this.rank],
+            [SaveKey.rankScore, this.rankScore],
+        ]);
         gm.Event.emit(GameEvent.refreshRank);
         return result.actualChange;
     }
@@ -641,8 +668,10 @@ export class playerData {
         const dropped = Number.isFinite(saved) ? Math.max(0, Math.floor(saved)) : 0;
         const gold = Math.min(5, Math.max(0, limit - dropped));
         if (gold <= 0) return 0;
-        ccStorageTools.setLimitTimeData(key, dropped + gold);
-        this.fixGold(gold);
+        ccStorageTools.batch(() => {
+            ccStorageTools.setLimitTimeData(key, dropped + gold);
+            this.fixGold(gold);
+        });
         return gold;
     }
 
@@ -744,8 +773,10 @@ export class playerData {
         const rankScore = ccStorageTools.getNumberData(SaveKey.rankScore);
         this.rank = Number.isSafeInteger(rank) && rank >= 0 ? rank : 0;
         this.rankScore = Number.isSafeInteger(rankScore) && rankScore >= 0 ? rankScore : 0;
-        ccStorageTools.setData(SaveKey.rank, this.rank);
-        ccStorageTools.setData(SaveKey.rankScore, this.rankScore);
+        ccStorageTools.setDatas([
+            [SaveKey.rank, this.rank],
+            [SaveKey.rankScore, this.rankScore],
+        ]);
         const showItems = ccStorageTools.getData(SaveKey.showItems);
         this.showItems = {};
         if (showItems && typeof showItems === 'object' && !Array.isArray(showItems)) {

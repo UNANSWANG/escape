@@ -833,12 +833,14 @@ export class UIStorehouse extends UIBase {
         }
 
         const replacedItemId = this.getEquippedItemId(slotIndex);
-        pData.setEquipmentId(slotIndex, equipmentId);
         const storehouseChanges = [[selectedItem.itemId, -1]];
         if (replacedItemId >= 0) {
             storehouseChanges.push([replacedItemId, 1]);
         }
-        pData.fixStorehouseDatas(storehouseChanges);
+        ccStorageTools.batch(() => {
+            pData.setEquipmentId(slotIndex, equipmentId);
+            pData.fixStorehouseDatas(storehouseChanges);
+        });
         this.refreshAfterEquipmentChange();
     }
 
@@ -851,12 +853,16 @@ export class UIStorehouse extends UIBase {
         }
 
         const removedItemId = this.getEquippedItemId(slotIndex);
-        if (removedItemId < 0 || !pData.removeEquipment(slotIndex)) {
+        const isRemoved = removedItemId >= 0 && ccStorageTools.batch(() => {
+            if (!pData.removeEquipment(slotIndex)) return false;
+            pData.fixStorehouseData(removedItemId, 1);
+            return true;
+        });
+        if (!isRemoved) {
             this.hideAllSelect();
             return;
         }
 
-        pData.fixStorehouseData(removedItemId, 1);
         this.refreshAfterEquipmentChange();
     }
 

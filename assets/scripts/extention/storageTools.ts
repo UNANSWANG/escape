@@ -5,6 +5,8 @@ let KEY_STORAGE = "playerData";
 export class storageTools {
     /**数据 */
     private data: any = {};
+    private batchDepth = 0;
+    private hasPendingSave = false;
 
     /**初始化数据 */
     initData() {
@@ -26,6 +28,10 @@ export class storageTools {
 
     /**保存数据 */
     saveData() {
+        if (this.batchDepth > 0) {
+            this.hasPendingSave = true;
+            return;
+        }
         // localStorage.setItem(KEY_STORAGE, JSON.stringify(this.data));
         // return;
         if (gm.platType != PlatType.h5) {
@@ -40,6 +46,27 @@ export class storageTools {
     setData(key: string, value: any) {
         // console.log("设置数据", key, value);
         this.data[key] = value;
+        this.saveData();
+    }
+
+    batch<T>(action: () => T): T {
+        this.batchDepth++;
+        try {
+            return action();
+        } finally {
+            this.batchDepth--;
+            if (this.batchDepth === 0 && this.hasPendingSave) {
+                this.hasPendingSave = false;
+                this.saveData();
+            }
+        }
+    }
+
+    setDatas(entries: Array<[string, any]>) {
+        if (entries.length === 0) return;
+        for (const [key, value] of entries) {
+            this.data[key] = value;
+        }
         this.saveData();
     }
 

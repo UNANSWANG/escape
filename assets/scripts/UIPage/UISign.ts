@@ -167,8 +167,10 @@ export class UISign extends UIBase {
         }
 
         this.isGetToday = true;
-        ccStorageTools.setData(SaveKey.signDays, this.signDays + 1);
-        ccStorageTools.setLimitTimeData(SaveKey.isGetSign, 1);
+        ccStorageTools.batch(() => {
+            ccStorageTools.setData(SaveKey.signDays, this.signDays + 1);
+            ccStorageTools.setLimitTimeData(SaveKey.isGetSign, 1);
+        });
         this.getBtn.active = false;
         this.adBtn.active = false;
         this.onClose();

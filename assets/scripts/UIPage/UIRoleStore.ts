@@ -9,6 +9,7 @@ import { JsonRoleData, roleConfig } from '../json/jsonRole';
 import { roleAvatarItemController } from '../controller/roleAvatarItemController';
 import { showItemController } from '../controller/showItemController';
 import { pData } from '../manager/playerData';
+import { ccStorageTools } from '../extention/storageTools';
 import { roleLevelConfig, JsonRoleLevelData } from '../json/jsonRoleLevel';
 import { getItemDataByItemId } from '../json/jsonItemData';
 import { roleShowController } from '../controller/role/roleShowController';
@@ -311,13 +312,15 @@ export class UIRoleStore extends UIBase {
             uiMgr.showTips("银币不足");
             return;
         }
-        if (upgradeItems.length > 0) {
-            pData.fixStorehouseDatas(upgradeItems.map(([itemId, itemNum]) => [itemId, -itemNum]));
-        }
-        if (upgradeMoney > 0) {
-            pData.fixMoney(-upgradeMoney);
-        }
-        pData.setRoleLevel(roleId, currentLevel + 1);
+        ccStorageTools.batch(() => {
+            if (upgradeItems.length > 0) {
+                pData.fixStorehouseDatas(upgradeItems.map(([itemId, itemNum]) => [itemId, -itemNum]));
+            }
+            if (upgradeMoney > 0) {
+                pData.fixMoney(-upgradeMoney);
+            }
+            pData.setRoleLevel(roleId, currentLevel + 1);
+        });
         uiMgr.showTips("升级成功");
         this.refreshRoleLevelInfo();
     }

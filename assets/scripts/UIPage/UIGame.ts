@@ -746,10 +746,13 @@ export class UIGame extends UIBase {
     private updateRolePerspectives() {
         this.updateRolePerspective(playerMgr.player);
         for (const ai of this.aiRoles) {
-            this.updateRolePerspective(ai.node, this.isAIHiddenByShelter(ai.node));
+            this.updateRolePerspective(ai.node, this.isRoleHiddenByShelter(ai.node));
         }
-        for (const soldier of [...enemyMgr.soldiersArr, ...enemyMgr.bossesArr]) {
-            this.updateRolePerspective(soldier?.node);
+        for (const soldier of enemyMgr.soldiersArr) {
+            this.updateRolePerspective(soldier?.node, this.isRoleHiddenByShelter(soldier?.node));
+        }
+        for (const boss of enemyMgr.bossesArr) {
+            this.updateRolePerspective(boss?.node);
         }
     }
 
@@ -775,24 +778,22 @@ export class UIGame extends UIBase {
         if (opacity.opacity !== targetOpacity) opacity.opacity = targetOpacity;
     }
 
-    private isAIHiddenByShelter(aiNode: Node) {
-        if (!aiNode?.isValid) return false;
-        const aiTransform = aiNode.getChildByName('colliderBox')?.getComponent(UITransform)
-            ?? aiNode.getComponent(UITransform);
-        if (!aiTransform) return false;
+    private isRoleHiddenByShelter(roleNode: Node) {
+        if (!roleNode?.isValid) return false;
+        const roleTransform = roleNode.getChildByName('colliderBox')?.getComponent(UITransform)
+            ?? roleNode.getComponent(UITransform);
+        if (!roleTransform) return false;
         const playerNode = playerMgr.player;
         const playerTransform = playerNode?.getChildByName('colliderBox')?.getComponent(UITransform)
             ?? playerNode?.getComponent(UITransform);
-        const aiBounds = aiTransform.getBoundingBoxToWorld();
+        const roleBounds = roleTransform.getBoundingBoxToWorld();
         const playerBounds = playerTransform?.getBoundingBoxToWorld();
-        let isInsideShelter = false;
         for (const shelter of this.shelterAreas) {
             if (!shelter.imgNode?.isValid || !shelter.colliderTransform?.isValid) continue;
-            if (!this.intersectsShelterArea(aiBounds, shelter)) continue;
-            isInsideShelter = true;
-            if (playerBounds && this.intersectsShelterArea(playerBounds, shelter)) return false;
+            if (!this.intersectsShelterArea(roleBounds, shelter)) continue;
+            if (!playerBounds || !this.intersectsShelterArea(playerBounds, shelter)) return true;
         }
-        return isInsideShelter;
+        return false;
     }
 
     /**缓存 shelterList 直属子节点中的 collider 和 img。 */

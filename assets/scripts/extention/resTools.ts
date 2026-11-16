@@ -1,11 +1,40 @@
-import { _decorator, AnimationClip, AssetManager, assetManager, Component, ImageAsset, JsonAsset, Node, Prefab, sp, SpriteFrame, Texture2D, TiledMapAsset } from 'cc';
+import { _decorator, AnimationClip, AssetManager, assetManager, Component, ImageAsset, JsonAsset, Node, Prefab, sp, Sprite, SpriteFrame, Texture2D, TiledMapAsset } from 'cc';
 import { gm, PlatType } from '../manager/gm';
 import { GameEvent } from '../manager/configData';
 const { ccclass, property } = _decorator;
 
+@ccclass('RemoteImageLease')
+export class RemoteImageLease extends Component {
+    private frame: SpriteFrame = null;
+    private listeningForDestroy = false;
+
+    setFrame(frame: SpriteFrame) {
+        if (frame && !this.listeningForDestroy) {
+            // 未激活过的节点也可能销毁，不能只依赖组件的 onDestroy。
+            this.node.once(Node.EventType.NODE_DESTROYED, this.onDestroy, this);
+            this.listeningForDestroy = true;
+        }
+        const previous = this.frame;
+        this.frame = frame;
+        if (previous) ccResTools.releaseRemoteImage(previous);
+    }
+
+    protected onDestroy(): void {
+        this.node.off(Node.EventType.NODE_DESTROYED, this.onDestroy, this);
+        this.setFrame(null);
+    }
+
+    /**对象池回收时立即释放头像引用。 */
+    onPoolPut() {
+        const sprite = this.getComponent(Sprite);
+        if (sprite?.spriteFrame === this.frame) sprite.spriteFrame = null;
+        this.setFrame(null);
+    }
+}
+
 @ccclass('resTools')
 export class resTools {
-    /**已完成的图片资源缓存，本地与远端使用不同前缀避免路径碰撞 */
+    /**已完成的本地图片资源缓存 */
     picMap: Map<string, SpriteFrame> = new Map();
     /**已完成的Spine资源缓存 */
     spineMap: Map<string, sp.SkeletonData> = new Map();
@@ -13,6 +42,9 @@ export class resTools {
     private picLoadingMap: Map<string, Promise<SpriteFrame>> = new Map();
     /**正在加载的Spine Promise，同路径并发请求共享一次加载 */
     private spineLoadingMap: Map<string, Promise<sp.SkeletonData>> = new Map();
+    /**远程头像按最近使用顺序保留，正在显示或等待回写的图片不淘汰。 */
+    private remoteImages = new Map<string, SpriteFrame>();
+    private readonly remoteImageLimit = 64;
     //加载bundle
     loadBundle($name): Promise<AssetManager.Bundle> {
         return new Promise(($resolve) => {
@@ -59,15 +91,21 @@ export class resTools {
             }
         });
     }
-    /**加载网络图片 */
+    /**加载网络图片并取得一份使用引用，调用方需转交给 RemoteImageLease 或主动释放。 */
     async loadPicByUrl($url: string): Promise<SpriteFrame> {
         let cacheKey = `remote:${$url}`;
-        if (this.picMap.has(cacheKey)) {
-            return this.picMap.get(cacheKey);
+        const cached = this.remoteImages.get(cacheKey);
+        if (cached) {
+            this.remoteImages.delete(cacheKey);
+            this.remoteImages.set(cacheKey, cached);
+            cached.addRef();
+            return cached;
         }
         if (this.picLoadingMap.has(cacheKey)) {
             // 相同URL已在加载时直接等待同一个Promise，避免重复创建纹理
-            return this.picLoadingMap.get(cacheKey);
+            const frame = await this.picLoadingMap.get(cacheKey);
+            frame?.addRef();
+            return frame;
         }
 
         let loading = new Promise<SpriteFrame>(($resolve) => {
@@ -78,18 +116,43 @@ export class resTools {
                     return;
                 }
                 let $img = res instanceof ImageAsset ? res : new ImageAsset(res);
+                $img.addRef();
                 let $tex = new Texture2D();
                 let $spriteFrame = new SpriteFrame();
+                // 独立管理头像纹理，避免进入动态图集后误释放共享图集纹理。
+                $spriteFrame.packable = false;
                 $tex.image = $img;
                 $spriteFrame.texture = $tex;
-                this.picMap.set(cacheKey, $spriteFrame);
+                this.remoteImages.set(cacheKey, $spriteFrame);
                 $resolve($spriteFrame);
             });
         });
         this.picLoadingMap.set(cacheKey, loading);
-        let result = await loading;
-        this.picLoadingMap.delete(cacheKey);
-        return result;
+        try {
+            const result = await loading;
+            result?.addRef();
+            return result;
+        } finally {
+            this.picLoadingMap.delete(cacheKey);
+        }
+    }
+
+    releaseRemoteImage(frame: SpriteFrame) {
+        frame.decRef(false);
+        this.trimRemoteImages();
+    }
+
+    trimRemoteImages() {
+        for (const [key, frame] of this.remoteImages) {
+            if (this.remoteImages.size <= this.remoteImageLimit) break;
+            if (frame.refCount > 0) continue;
+            this.remoteImages.delete(key);
+            const texture = frame.texture as Texture2D;
+            const image = texture?.image;
+            frame.destroy();
+            texture?.destroy();
+            image?.decRef();
+        }
     }
 
     /**加载预制体*/

@@ -2,7 +2,7 @@ import { _decorator, Component, Node, sp, Sprite, Vec2, Vec3 } from 'cc';
 import { gm } from '../manager/gm';
 import { audioManager, audioMgr } from '../manager/audioManager';
 import { uiMgr } from '../manager/UIManager';
-import { ccResTools } from './resTools';
+import { ccResTools, RemoteImageLease } from './resTools';
 import { configData } from '../manager/configData';
 import { pData } from '../manager/playerData';
 import { imgPath } from '../manager/pathConfig';
@@ -149,6 +149,7 @@ export class generalTools {
             return false;
         }
         sprite.spriteFrame = img;
+        sprite.node.getComponent(RemoteImageLease)?.setFrame(null);
         return true;
     }
 
@@ -166,9 +167,13 @@ export class generalTools {
             return false;
         }
         if (!this.isAssetLoadCurrent(sprite, loadVersion)) {
+            ccResTools.releaseRemoteImage(img);
             return false;
         }
+        const lease = sprite.node.getComponent(RemoteImageLease) || sprite.node.addComponent(RemoteImageLease);
         sprite.spriteFrame = img;
+        lease.setFrame(img);
+        ccResTools.trimRemoteImages();
         return true;
     }
 

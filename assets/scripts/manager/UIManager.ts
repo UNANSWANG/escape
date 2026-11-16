@@ -72,6 +72,10 @@ export class UIManager {
 
     /**以路径末段名称为键缓存界面实例，关闭后保留供再次打开 */
     private uiMap: Map<string, Node> = new Map();
+    /**预加载和打开页面共享创建任务，避免并发创建多个实例。 */
+    private pageLoadingTasks = new Map<string, Promise<Node>>();
+    /**同一页面同时收到多个打开请求时，仅执行一次打开回调。 */
+    private pageOpeningTasks = new Map<string, Promise<void>>();
     /**等待依次打开的界面队列 */
     private queuePageArr: queuePageData[] = [];
     /**当前通过队列打开的界面 */
@@ -318,20 +322,33 @@ export class UIManager {
 
     /**加载并实例化界面后缓存，保持隐藏；已缓存的界面直接复用 */
     async preLoadPage(pagePath: string) {
+        await this.getOrCreatePage(pagePath);
+    }
+
+    private async getOrCreatePage(pagePath: string): Promise<Node> {
         if (!this.resBundle) {
             throw new Error("资源包尚未加载");
         }
-        let keyName = this.getUIName(pagePath);
-        if (this.uiMap.has(keyName)) {
-            return;
+        const keyName = this.getUIName(pagePath);
+        const cached = this.uiMap.get(keyName);
+        if (cached?.isValid) return cached;
+        const pending = this.pageLoadingTasks.get(keyName);
+        if (pending) return pending;
+        const task = (async () => {
+            const prefab = await ccResTools.loadPrefab(this.resBundle, pagePath);
+            if (!prefab) throw new Error(`加载页面失败: ${pagePath}`);
+            const node = instantiate(prefab);
+            node.active = false;
+            this.uiMap.set(keyName, node);
+            return node;
+        })();
+        this.pageLoadingTasks.set(keyName, task);
+        try {
+            return await task;
+        } finally {
+            // 成功和失败都移除任务，失败后允许重试。
+            this.pageLoadingTasks.delete(keyName);
         }
-        let pagePre = await ccResTools.loadPrefab(this.resBundle, pagePath);
-        if (!pagePre) {
-            throw new Error(`加载页面失败: ${pagePath}`);
-        }
-        let pageNode = instantiate(pagePre);
-        this.uiMap.set(keyName, pageNode);
-        pageNode.active = false;
     }
 
     /**复用或加载界面实例，挂载到 UI 容器并调用 onUI_Open(data) */
@@ -339,20 +356,21 @@ export class UIManager {
         if (!this.resBundle) {
             return;
         }
-        let keyName = this.getUIName(pagePath);
-        let pageNode = null;
-        if (this.uiMap.has(keyName)) {
-            pageNode = this.uiMap.get(keyName);
+        const keyName = this.getUIName(pagePath);
+        const pending = this.pageOpeningTasks.get(keyName);
+        if (pending) return pending;
+        const task = (async () => {
+            const pageNode = await this.getOrCreatePage(pagePath);
             this.uiPage.addChild(pageNode);
-        } else {
-            let pagePre = await ccResTools.loadPrefab(this.resBundle, pagePath);
-            pageNode = instantiate(pagePre);
-            this.uiPage.addChild(pageNode);
-            this.uiMap.set(keyName, pageNode);
+            pageNode.active = true;
+            pageNode.getComponent(UIBase).onUI_Open(data);
+        })();
+        this.pageOpeningTasks.set(keyName, task);
+        try {
+            await task;
+        } finally {
+            this.pageOpeningTasks.delete(keyName);
         }
-        pageNode.active = true;
-        let uiComp: UIBase = pageNode.getComponent(UIBase);
-        uiComp.onUI_Open(data);
     }
 
     /**将界面加入队列，关闭当前队列界面后依次打开 */

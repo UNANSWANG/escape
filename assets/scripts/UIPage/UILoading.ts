@@ -87,17 +87,18 @@ export class UILoading extends Component {
     }
 
     protected onEnable(): void {
+        gm.Event.on(GameEvent.tableLoadComplete, this.tableLoadComplete, this);
         gm.Event.on(GameEvent.checkLoginLoad, this.checkLoadComplete, this);
         gm.Event.on(GameEvent.commonTableFinish, this.commonTableFinish, this);
     }
 
     protected onDisable(): void {
+        gm.Event.off(GameEvent.tableLoadComplete, this.tableLoadComplete, this);
         gm.Event.off(GameEvent.checkLoginLoad, this.checkLoadComplete, this);
         gm.Event.off(GameEvent.commonTableFinish, this.commonTableFinish, this);
     }
 
     async initData() {
-        gm.Event.on(GameEvent.tableLoadComplete, this.tableLoadComplete, this);
         this.initStorageData();
         this.initSDK();
 

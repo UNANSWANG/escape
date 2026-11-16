@@ -42,12 +42,9 @@ export class ttVideo {
                 this._videoAd.onClose(($res: { isEnded: boolean } | undefined) => {
                     console.log("tt广告结束>>>>");
                     console.warn("=====>tt视频关闭", $res);
-                    if (typeof this._onVideoCloseCallback === 'function') {
-                        this._onVideoCloseCallback($res?.isEnded ? 1 : 0);
-                    }
-                    this._onVideoCloseCallback = undefined;
+                    this.finishVideo($res?.isEnded ? 1 : 0);
                     try {
-                        this._videoAd.load(); // 关闭之后 load 下一条
+                        Promise.resolve(this._videoAd.load()).catch(error => console.error('预加载下一条广告失败', error));
                     } catch (error) {
                         console.error("加载下一条广告失败:", error);
                     }
@@ -75,20 +72,27 @@ export class ttVideo {
             }
         }
 
+        // 保存本次回调，旧请求的异步失败不能结束后续广告请求。
+        const callback = this._onVideoCloseCallback;
         try {
-            this._videoAd.show().catch(err => {
-                this._videoAd.load()
-                    .then(() => this._videoAd.show())
-                    .catch(() => {
-                        //加载失败
-                        if (gm.hgSdk) {
-                            gm.hgSdk.rewardedVideoCallback(false);
-                        }
-                        noComplete && noComplete();
-                    });
-            });
-        } catch ($err) {
-
+            try {
+                await this._videoAd.show();
+            } catch (error) {
+                if (this._onVideoCloseCallback !== callback) return;
+                await this._videoAd.load();
+                if (this._onVideoCloseCallback !== callback) return;
+                await this._videoAd.show();
+            }
+        } catch (error) {
+            console.error('激励广告播放失败', error);
+            if (this._onVideoCloseCallback === callback) this.finishVideo(0);
         }
+    }
+
+    /**先释放业务闭包，再执行回调，避免重复结束通知重复发奖。 */
+    private finishVideo(status: number) {
+        const callback = this._onVideoCloseCallback;
+        this._onVideoCloseCallback = undefined;
+        callback && callback(status);
     }
 }

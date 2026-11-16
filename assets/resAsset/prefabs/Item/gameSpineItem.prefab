@@ -112,7 +112,7 @@
     "_skeletonData": null,
     "defaultSkin": "",
     "defaultAnimation": "",
-    "_premultipliedAlpha": false,
+    "_premultipliedAlpha": true,
     "_timeScale": 1,
     "_preCacheMode": -1,
     "_cacheMode": 0,

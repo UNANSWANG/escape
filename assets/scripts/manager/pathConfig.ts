@@ -231,4 +231,8 @@ export enum spinePath {
     gem = "spine/roleSkill/gem/gem",
     /**剑雨spine（文件夹） */
     swordRain = "spine/bossSkill/swordRain",
+    /**光盾（文件夹） */
+    shield = "spine/roleSkill/shield",
+    /**无人机回血（文件夹） */
+    droneHeal = "spine/roleSkill/droneHeal",
 }

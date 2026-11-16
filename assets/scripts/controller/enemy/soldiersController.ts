@@ -1,4 +1,4 @@
-import { _decorator, Animation, Color, Component, Node, sp, Sprite, tween, Tween, UITransform, UIOpacity, Vec2, Vec3 } from 'cc';
+import { _decorator, Animation, Color, Component, Label, Node, sp, Sprite, tween, Tween, UITransform, UIOpacity, Vec2, Vec3 } from 'cc';
 import { ccTools } from '../../extention/generalTools';
 import { UIGame } from '../../UIPage/UIGame';
 import { audioPath, imgPath, spinePath, UIPath } from '../../manager/pathConfig';
@@ -71,6 +71,7 @@ export class soldiersController extends Component {
     hitArea: UITransform = null;
     /**手持武器节点 */
     weaponNode: Node = null;
+    private nameLab: Label = null;
     /**血量节点 */
     hpNode: Node = null;
     /**血量图片 */
@@ -127,6 +128,7 @@ export class soldiersController extends Component {
         this.moveSmokeAnim = this.moveSmokeNode?.getComponent(Animation);
         this.setMoveSmokeVisible(false);
         this.weaponNode = this.node.getChildByName("weapons");
+        this.nameLab = this.node.getChildByName('nameLab')?.getComponent(Label);
         this.weaponDefaultX = this.weaponNode?.position.x ?? 0;
         this.hpNode = this.node.getChildByName("hpNode");
         this.hpBar = this.hpNode.getChildByName("bar").getComponent(Sprite);
@@ -205,6 +207,10 @@ export class soldiersController extends Component {
     /** 兵种的生命值、移速和追击参数与武器装配分开初始化。 */
     private initArmsData() {
         const arms = armsConfig.getDataById(this.armsId);
+        if (this.nameLab) {
+            this.nameLab.string = arms?.name ?? '';
+            this.nameLab.node.active = true;
+        }
         const speed = Number(arms?.speed);
         this.moveSpeed = Number.isFinite(speed) ? Math.max(0, speed) : configData.moveSpeed;
         if (!arms) return;
@@ -637,6 +643,7 @@ export class soldiersController extends Component {
         this.setMoveSmokeVisible(false);
         if (this.weaponNode) this.weaponNode.active = false;
         if (this.hpNode) this.hpNode.active = false;
+        if (this.nameLab) this.nameLab.node.active = false;
         if (this.effectNode) this.effectNode.active = false;
         const finish = () => {
             if (this.isValid && this.hp <= 0) this.node.active = false;

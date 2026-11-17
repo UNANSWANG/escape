@@ -11,6 +11,7 @@ import { equipmentConfig } from '../json/jsonEquipment';
 import { getItemDataByItemId } from '../json/jsonItemData';
 import { weaponsConfig } from '../json/jsonWeapons';
 import { rankConfig } from '../json/jsonRank';
+import { mapConfig } from '../json/jsonMap';
 const { ccclass, property } = _decorator;
 
 //用户游戏内数据
@@ -38,6 +39,10 @@ export class playerData {
     selectMapData: [number, number] = [-1, -1];
     /**本次运行是否确认过地图选择；仅存内存，重启后为 false，恢复存档不会将其设为 true */
     hasConfirmedMapSelection = false;
+    /**永久解锁记录，格式为 [[地图索引, 难度], ...]，降段不移除 */
+    private unlockedMaps: [number, number][] = [];
+    /**旧版 id 存档在地图表加载后转换为地图索引和难度 */
+    private legacyUnlockedMapIds: number[] = [];
     /**银币 */
     money = 0;
     /**金币 */
@@ -635,16 +640,47 @@ export class playerData {
         return { rank, rankScore, actualChange };
     }
 
+    /**检查当前段位可解锁的地图难度，只追加记录，不因降段重新上锁。 */
+    checkMapUnlocks(): void {
+        if (!mapConfig.tableData) return;
+        // 存档初始化早于配置表加载，旧版数据需在这里转换。
+        let changed = this.legacyUnlockedMapIds.length > 0;
+        for (const row of mapConfig.tableData ?? []) {
+            if (!Number.isInteger(row.mapIdx) || row.mapIdx < 0
+                || !Number.isInteger(row.difficultyType) || row.difficultyType < 0) continue;
+            const legacyUnlocked = this.legacyUnlockedMapIds.includes(row.id);
+            if (this.isMapUnlocked(row.mapIdx, row.difficultyType)) continue;
+            if (!legacyUnlocked && (
+                !Number.isInteger(row.unlockRank) || row.unlockRank < 0
+                || this.rank < row.unlockRank)) continue;
+            this.unlockedMaps.push([row.mapIdx, row.difficultyType]);
+            changed = true;
+        }
+        if (changed) {
+            ccStorageTools.setData(SaveKey.unlockedMaps, this.unlockedMaps.map(([mapIdx, difficultyType]) => [mapIdx, difficultyType]));
+            this.legacyUnlockedMapIds = [];
+        }
+    }
+
+    /**按地图索引和难度查询永久解锁记录，不受当前段位下降影响。 */
+    isMapUnlocked(mapIdx: number, difficultyType: number): boolean {
+        return this.unlockedMaps.some(([index, difficulty]) => index === mapIdx && difficulty === difficultyType);
+    }
+
     /**修改段位积分并保存，结算后同步刷新段位显示。 */
     fixRankScore(score: number): number {
         if (!Number.isFinite(score)) return 0;
         const result = this.getRankScoreResult(score);
+        const previousRank = this.rank;
         this.rank = result.rank;
         this.rankScore = result.rankScore;
         ccStorageTools.setDatas([
             [SaveKey.rank, this.rank],
             [SaveKey.rankScore, this.rankScore],
         ]);
+        if (this.rank > previousRank) {
+            this.checkMapUnlocks();
+        }
         gm.Event.emit(GameEvent.refreshRank);
         return result.actualChange;
     }
@@ -788,6 +824,20 @@ export class playerData {
             }
         }
         const selectMapData = ccStorageTools.getData(SaveKey.selectMapData);
+        const unlockedMaps = ccStorageTools.getData(SaveKey.unlockedMaps);
+        this.unlockedMaps = [];
+        this.legacyUnlockedMapIds = [];
+        if (Array.isArray(unlockedMaps)) {
+            for (const entry of unlockedMaps) {
+                if (Number.isInteger(entry) && entry >= 0) {
+                    this.legacyUnlockedMapIds.push(entry);
+                } else if (Array.isArray(entry) && entry.length === 2
+                    && entry.every((value) => Number.isInteger(value) && value >= 0)
+                    && !this.isMapUnlocked(entry[0], entry[1])) {
+                    this.unlockedMaps.push([entry[0], entry[1]]);
+                }
+            }
+        }
         this.selectMapData = Array.isArray(selectMapData) && selectMapData.length === 2
             && selectMapData.every((value) => Number.isInteger(value) && value >= 0)
             ? [selectMapData[0], selectMapData[1]] : [-1, -1];

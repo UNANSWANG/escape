@@ -178,6 +178,8 @@ export enum SaveKey {
     rankScore = "rankScore",
     /**已确认的地图选择，格式为 [地图索引, 难度类型] */
     selectMapData = "selectMapData",
+    /**已永久解锁的地图难度，格式为 [[地图索引, 难度], ...] */
+    unlockedMaps = "unlockedMaps",
     /**关卡数据 */
     level = "level",
     /**银币 */

@@ -81,7 +81,7 @@ export class UIMap extends UIBase {
             }
             const mapImg = mapNode.getChildByName('img')?.getComponent(Sprite);
             if (mapImg) {
-                mapImg.grayscale = !mapData;
+                mapImg.grayscale = !this.mapData[index].some((row) => pData.isMapUnlocked(index, row.difficultyType));
                 ccTools.loadImg(mapImg, imgPath.showMap + (mapData?.mapIdx ?? 0));
             }
         });
@@ -201,23 +201,44 @@ export class UIMap extends UIBase {
         }
     }
 
-    /**仅显示配置中存在的难度页签；保留有效选择，否则默认选中第一个可用页签 */
+    /**优先选择已解锁难度；全部锁定时预览配置中最低难度的详情 */
     private initDifficultyTabs(preserveDifficulty: boolean) {
         const rows = this.mapData[this.selectedMapIdx] ?? [];
         const tabs = this.detailsNode.getChildByName('tabLayout').children;
         tabs.forEach((tabNode, difficultyType) => {
             tabNode.active = rows.some((row) => row.difficultyType === difficultyType);
+            const unlocked = pData.isMapUnlocked(this.selectedMapIdx, difficultyType);
+            const lockNode = tabNode.getChildByName('lock');
+            if (lockNode) {
+                lockNode.active = tabNode.active && !unlocked;
+            }
+            const selectNode = tabNode.getChildByName('select');
+            if (selectNode) {
+                selectNode.active = false;
+            }
         });
         const difficultyType = preserveDifficulty && tabs[this.selectedDifficultyType]?.active
+            && pData.isMapUnlocked(this.selectedMapIdx, this.selectedDifficultyType)
             ? this.selectedDifficultyType
-            : tabs.findIndex((tabNode) => tabNode.active);
-        this.clickDifficulty(difficultyType);
+            : tabs.findIndex((tabNode, index) => tabNode.active && pData.isMapUnlocked(this.selectedMapIdx, index));
+        const previewDifficultyType = difficultyType === -1
+            ? tabs.findIndex((tabNode) => tabNode.active)
+            : difficultyType;
+        this.refreshDifficultyDetails(previewDifficultyType);
     }
 
-    /**更新临时难度、难度名称和页签高亮，不保存到玩家数据或本地 */
+    /**锁定页签不可点击，只有初始化详情时可以预览锁定难度 */
     private clickDifficulty(difficultyType: number) {
+        // 锁定页签点击后直接返回，不改变当前难度及详情。
+        if (difficultyType !== -1 && !pData.isMapUnlocked(this.selectedMapIdx, difficultyType)) return;
+        this.refreshDifficultyDetails(difficultyType);
+    }
+
+    /**更新难度详情；锁定难度仅供预览，隐藏确认按钮和页签高亮 */
+    private refreshDifficultyDetails(difficultyType: number) {
         const rows = this.mapData[this.selectedMapIdx] ?? [];
         this.selectedDifficultyType = rows.some((row) => row.difficultyType === difficultyType) ? difficultyType : -1;
+        this.sureBtn.active = pData.isMapUnlocked(this.selectedMapIdx, this.selectedDifficultyType);
         const difficultyLab = this.detailsNode.getChildByPath('mapDifficulty/difficultyLab')?.getComponent(Label);
         if (difficultyLab) {
             difficultyLab.string = difficultyNames[this.selectedDifficultyType] ?? '';
@@ -226,7 +247,7 @@ export class UIMap extends UIBase {
         this.detailsNode.getChildByName('tabLayout').children.forEach((tabNode, index) => {
             const selectNode = tabNode.getChildByName('select');
             if (selectNode) {
-                selectNode.active = index === this.selectedDifficultyType;
+                selectNode.active = index === this.selectedDifficultyType && pData.isMapUnlocked(this.selectedMapIdx, index);
             }
         });
         const selectedData = rows.find((row) => row.difficultyType === this.selectedDifficultyType);
@@ -294,7 +315,8 @@ export class UIMap extends UIBase {
     /**确认有效选择并保存到本地，标记本次运行已确认，通知主页刷新后关闭界面 */
     clickSureBtn() {
         const rows = this.mapData[this.selectedMapIdx] ?? [];
-        if (!rows.some((row) => row.difficultyType === this.selectedDifficultyType)) {
+        if (!rows.some((row) => row.difficultyType === this.selectedDifficultyType)
+            || !pData.isMapUnlocked(this.selectedMapIdx, this.selectedDifficultyType)) {
             return;
         }
         pData.selectMapData = [this.selectedMapIdx, this.selectedDifficultyType];

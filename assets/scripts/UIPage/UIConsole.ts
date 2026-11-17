@@ -145,6 +145,7 @@ export class UIConsole extends UIBase {
 
         pData.rank = maxRank;
         ccStorageTools.setData(SaveKey.rank, pData.rank);
+        pData.checkMapUnlocks();
         gm.Event.emit(GameEvent.refreshRank);
     }
 

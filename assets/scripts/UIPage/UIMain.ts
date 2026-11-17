@@ -379,7 +379,7 @@ export class UIMain extends UIBase {
 
         const [mapIdx, difficultyType] = pData.selectMapData;
         const mapData = mapConfig.getMapData(mapIdx, difficultyType);
-        if (!pData.hasConfirmedMapSelection || !mapData) {
+        if (!pData.hasConfirmedMapSelection || !mapData || !pData.isMapUnlocked(mapIdx, difficultyType)) {
             this.clickMapBtn();
             return;
         }

@@ -207,9 +207,6 @@ export class UILoading extends Component {
 
         //小兵通用配置
         soldierCommonConfig.patrolWaitTime = JSON.parse(commonConfig.getValue("patrolWaitTime"));
-        soldierCommonConfig.npcAttackPercent = Number(commonConfig.getValue("npcAttackPercent")) / 100;
-        soldierCommonConfig.npcAttackRangePercent = Number(commonConfig.getValue("npcAttackRangePercent")) / 100;
-        soldierCommonConfig.npcFireRatePercent = Number(commonConfig.getValue("npcFireRatePercent")) / 100;
 
         //武器通用配置
         weaponCommonConfig.attackRangePercent = JSON.parse(commonConfig.getValue("attackRangePercent"));

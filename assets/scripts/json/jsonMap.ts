@@ -63,6 +63,12 @@ export interface JsonMapData {
     gameTime: number;
     /**ai等级列表 */
     agentList: string;
+    /**npc攻击力百分比 */
+    npcAttackPercent: number,
+    /**npc的攻击范围百分比 */
+    npcAttackRangePercent: number,
+    /**npc的射速百分比 */
+    npcFireRatePercent: number,
 }
 
 

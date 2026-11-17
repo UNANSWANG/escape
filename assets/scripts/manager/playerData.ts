@@ -1,6 +1,6 @@
 import { _decorator, math, Vec2, Vec3 } from 'cc';
 import { ccStorageTools } from '../extention/storageTools';
-import { BossBookState, configData, GameEvent, gmConfig, MonetaryType, SaveKey } from './configData';
+import { BossBookState, configData, GameEvent, gmConfig, MonetaryType, SaveKey, soldierCommonConfig } from './configData';
 import { gm, PlatType } from './gm';
 import { httpMgr } from '../sdk/network/httpManager';
 import { urlConfig } from '../sdk/network/netConfig';
@@ -94,6 +94,16 @@ export class playerData {
         pData.adNum = 0;
         this.isGuide = ccStorageTools.getNumberData(SaveKey.guide) != 1 || gmConfig.forceGuide;
         this.gameStartTime = ccTimeTools.getTime();
+
+        // 按本局地图和难度初始化 NPC 属性，表内百分数转换为倍率。
+        const [mapIdx, difficultyType] = this.selectMapData;
+        const mapData = mapConfig.getMapData(mapIdx, difficultyType);
+        const attackPercent = Number(mapData?.npcAttackPercent);
+        const attackRangePercent = Number(mapData?.npcAttackRangePercent);
+        const fireRatePercent = Number(mapData?.npcFireRatePercent);
+        soldierCommonConfig.npcAttackPercent = Number.isFinite(attackPercent) ? Math.max(0, attackPercent) / 100 : 0.2;
+        soldierCommonConfig.npcAttackRangePercent = Number.isFinite(attackRangePercent) ? Math.max(0, attackRangePercent) / 100 : 0.8;
+        soldierCommonConfig.npcFireRatePercent = Number.isFinite(fireRatePercent) ? Math.max(0, fireRatePercent) / 100 : 0.8;
 
         //初始化背包内最大容量
         const backpackData = equipmentConfig.getDataByItemId(this.equipmentIds[5]);

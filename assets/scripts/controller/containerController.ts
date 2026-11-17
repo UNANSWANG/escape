@@ -99,7 +99,7 @@ export class containerController extends Component {
 
     /** 按容器配置随机生成物品索引 */
     private initItemData() {
-        const rewardLevel = pData.selectMapData[1];
+        const rewardLevel = pData.rewardLevel;
         const containerData = containerConfig.getDataByType(this.containerType, rewardLevel);
         if (!containerData) {
             console.warn(`Container config is unavailable for type: ${this.containerType}, rewardLevel: ${rewardLevel}`);

@@ -26,7 +26,7 @@ export class jsonContainer extends jsonBase {
         super.processTableData();
     }
 
-    /** 根据容器类型和奖励等级获取配置；奖励等级与进入地图的难度一致 */
+    /** 根据容器类型和当前关卡奖励等级获取配置；奖励等级来自地图表。 */
     getDataByType(type: ContainerType, rewardLevel: number): JsonContainerData | null {
         if (!this.data) return null;
         const rows = Array.isArray(this.data) ? this.data : Object.values(this.data);

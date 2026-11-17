@@ -69,6 +69,8 @@ export interface JsonMapData {
     npcAttackRangePercent: number,
     /**npc的射速百分比 */
     npcFireRatePercent: number,
+    /**奖励等级 */
+    rewardLevel: number,
 }
 
 

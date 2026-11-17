@@ -80,7 +80,7 @@ export class UIBackpack extends UIBase {
         this.revealedItemStates = data?.showSearchNode ? (data.revealedItemStates ?? []) : null;
         this.sourceContainer = data?.showSearchNode ? (data.sourceContainer ?? null) : null;
         const containerData = this.sourceContainer
-            ? containerConfig.getDataByType(this.sourceContainer.containerType, pData.selectMapData[1])
+            ? containerConfig.getDataByType(this.sourceContainer.containerType, pData.rewardLevel)
             : null;
         this.containerTitleLab.string = containerData?.name ?? "";
         this.containerTitleLab.color = new Color(containerData?.fontColor || "#FFFFFF");

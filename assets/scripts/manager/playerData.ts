@@ -71,6 +71,8 @@ export class playerData {
     private isGameReportDirty = false;
     /**游戏开始的时间戳 */
     gameStartTime = 0;
+    /**当前关卡奖励等级，由地图表配置，每局初始化。 */
+    rewardLevel = 0;
     /**装备栏默认值；近战武器和背包不能留空。 */
     private readonly defaultEquipmentIds: number[] = [-1, -1, 0, -1, -1, 100001];
     /**装备 itemId 数组[主武器（weapons），副武器（weapons），近战武器（weapons），头盔（equipment），护甲（equipment），背包（equipment）] */
@@ -98,6 +100,8 @@ export class playerData {
         // 按本局地图和难度初始化 NPC 属性，表内百分数转换为倍率。
         const [mapIdx, difficultyType] = this.selectMapData;
         const mapData = mapConfig.getMapData(mapIdx, difficultyType);
+        const rewardLevel = Number(mapData?.rewardLevel);
+        this.rewardLevel = Number.isInteger(rewardLevel) && rewardLevel >= 0 ? rewardLevel : 0;
         const attackPercent = Number(mapData?.npcAttackPercent);
         const attackRangePercent = Number(mapData?.npcAttackRangePercent);
         const fireRatePercent = Number(mapData?.npcFireRatePercent);

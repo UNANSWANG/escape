@@ -905,7 +905,8 @@ export class roleController extends Component {
         this.roleId = id;
         this.skinId = skinId;
         this.roleData = roleConfig.getRoleDataById(this.roleId);
-        this.roleLevelData = roleLevelConfig.getRoleLevelData(this.roleId, pData.getRoleLevel(this.roleId));
+        // AI 固定使用 1 级角色配置，玩家使用存档等级。
+        this.roleLevelData = roleLevelConfig.getRoleLevelData(this.roleId, this.isAI ? 1 : pData.getRoleLevel(this.roleId));
         if (!this.roleData) return;
 
         // 按角色表设置生命上限，入场时恢复满血；无效配置沿用默认上限。
@@ -1038,7 +1039,7 @@ export class roleController extends Component {
             this.refreshEquipmentDisplay();
         }
         if (tableName === 'roleLevel' && this.roleData) {
-            this.roleLevelData = roleLevelConfig.getRoleLevelData(this.roleId, pData.getRoleLevel(this.roleId));
+            this.roleLevelData = roleLevelConfig.getRoleLevelData(this.roleId, this.isAI ? 1 : pData.getRoleLevel(this.roleId));
             this.initData();
         }
     }

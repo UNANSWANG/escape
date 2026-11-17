@@ -5,6 +5,7 @@ import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { pData } from '../manager/playerData';
 import { JsonMapData, mapConfig } from '../json/jsonMap';
+import { rankConfig } from '../json/jsonRank';
 import { difficultyNames, mapDifficultyColorArr, GameEvent, SaveKey } from '../manager/configData';
 import { ccStorageTools } from '../extention/storageTools';
 import { gm } from '../manager/gm';
@@ -227,10 +228,15 @@ export class UIMap extends UIBase {
         this.refreshDifficultyDetails(previewDifficultyType);
     }
 
-    /**锁定页签不可点击，只有初始化详情时可以预览锁定难度 */
+    /**锁定页签提示解锁段位，只有初始化详情时可以预览锁定难度 */
     private clickDifficulty(difficultyType: number) {
-        // 锁定页签点击后直接返回，不改变当前难度及详情。
-        if (difficultyType !== -1 && !pData.isMapUnlocked(this.selectedMapIdx, difficultyType)) return;
+        if (difficultyType !== -1 && !pData.isMapUnlocked(this.selectedMapIdx, difficultyType)) {
+            const row = mapConfig.getMapData(this.selectedMapIdx, difficultyType);
+            if (row) {
+                uiMgr.showTips(`段位达到${rankConfig.getRankName(row.unlockRank)}解锁`);
+            }
+            return;
+        }
         this.refreshDifficultyDetails(difficultyType);
     }
 

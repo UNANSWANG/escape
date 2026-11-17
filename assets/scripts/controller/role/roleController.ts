@@ -11,6 +11,7 @@ import { sniperController } from '../sniperController';
 import { weaponsController } from '../weaponsController';
 import { uiMgr } from '../../manager/UIManager';
 import { JsonRoleData, roleConfig } from '../../json/jsonRole';
+import { commonConfig } from '../../json/jsonCommon';
 import { JsonRoleLevelData, roleLevelConfig } from '../../json/jsonRoleLevel';
 import { weaponsConfig } from '../../json/jsonWeapons';
 import { equipmentConfig } from '../../json/jsonEquipment';
@@ -925,9 +926,14 @@ export class roleController extends Component {
         if (this.roleNameLab) this.roleNameLab.string = this.isPlayer ? '' : nickname;
     }
 
-    /**初始化数据 */
+    /**初始化通用技能数值，专属角色可重写。 */
     initData(){
-        
+        const duration = commonConfig.getValueNumber('skill1Duration');
+        const speedScale = commonConfig.getValueNumber('skill1SpeedScale');
+        const cooldown = commonConfig.getValueNumber('skill1Cooldown');
+        this.skill1Duration = Number.isFinite(duration) ? Math.max(0, duration) : 5;
+        this.skill1SpeedScale = Number.isFinite(speedScale) ? Math.max(0, speedScale) : 1.2;
+        this.skill1Cooldown = Number.isFinite(cooldown) ? Math.max(0, cooldown) : 15;
     }
 
     /** 将游戏外装备栏前三项（主武器、副武器、近战武器）应用到对应武器节点。 */

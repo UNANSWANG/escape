@@ -179,7 +179,7 @@ export enum SaveKey {
     /**已确认的地图选择，格式为 [地图索引, 难度类型] */
     selectMapData = "selectMapData",
     /**已永久解锁的地图难度，格式为 [[地图索引, 难度], ...] */
-    unlockedMaps = "unlockedMaps2",
+    unlockedMaps = "unlockedMaps",
     /**关卡数据 */
     level = "level",
     /**银币 */
@@ -194,6 +194,7 @@ export enum SaveKey {
     props = "props",
     /**仓库数据 */
     storehouse = "storehouse",
+    /**显示物品 */
     showItems = "showItems",
     /**最近一次失败丢失的背包物品及穿戴装备，格式为 [[itemId, 数量], ...] */
     lostItems = "lostItems",

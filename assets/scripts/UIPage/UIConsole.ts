@@ -141,12 +141,16 @@ export class UIConsole extends UIBase {
     /**点击提升到表内最高段位，已超过最高段位时保持不变。 */
     clickMaxRankBtn() {
         const maxRank = (rankConfig.tableData ?? []).reduce((maxId, row) => Math.max(maxId, row.id), 0);
-        if (pData.rank >= maxRank) return;
+        if (pData.rank >= maxRank) {
+            uiMgr.showTips('已达到最高段位');
+            return;
+        }
 
         pData.rank = maxRank;
         ccStorageTools.setData(SaveKey.rank, pData.rank);
         pData.checkMapUnlocks();
         gm.Event.emit(GameEvent.refreshRank);
+        uiMgr.showTips('段位提升完成');
     }
 
     /**点击全皮肤 */

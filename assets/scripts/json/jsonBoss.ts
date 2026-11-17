@@ -36,16 +36,10 @@ export interface JsonBossData {
     name: string;
     /**掉落物品id */
     dropItemId: number;
-    /**掉落物品概率（百分数，20 表示 20%） */
-    dropItemProb: number;
     /**该 Boss 每日掉落金币上限 */
     dropGoldLimit: number;
     /**描述 */
     desc: string;
-    /**血量 */
-    hp: number;
-    /**攻击力 */
-    attack: number;
     /**移动速度 */
     speed: number;
     /**攻击距离 */

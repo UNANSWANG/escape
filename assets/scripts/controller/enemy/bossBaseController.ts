@@ -1,6 +1,7 @@
 import { _decorator, CCFloat, CCInteger, Color, Component, Graphics, Label, Node, sp, Sprite, Tween, tween, UITransform, Vec3 } from 'cc';
 import { EDITOR, PREVIEW } from 'cc/env';
 import { bossConfig } from '../../json/jsonBoss';
+import { bossLevelConfig, JsonBossLevelData } from '../../json/jsonBossLevel';
 import { getItemDataByItemId } from '../../json/jsonItemData';
 import { uiMgr } from '../../manager/UIManager';
 import { BossBookState, enemyCommonConfig, GameEvent, gmConfig } from '../../manager/configData';
@@ -177,6 +178,8 @@ export class bossBaseController extends Component {
     private facingX = -1;
     /** 是否初始化成功。 */
     private initialized = false;
+    /** 本局地图难度对应的 Boss 属性及奖励配置。 */
+    private bossLevelData: JsonBossLevelData = null;
     /** 返回、站岗恢复的累计秒数。 */
     private recoveryElapsed = 0;
     /** 追击期间自然增怒的累计秒数。 */
@@ -249,13 +252,21 @@ export class bossBaseController extends Component {
     /** 读取配置，resetHp 决定是否回满血。 */
     private applyBossData(resetHp: boolean) {
         const data = bossConfig.getDataById(this.id);
+        this.bossLevelData = null;
         if (!data) {
             console.warn('boss 表中找不到配置，id=' + this.id);
             return false;
         }
-        this.maxHp = Math.max(1, Number(data.hp) || 1);
+        const difficultyType = pData.selectMapData[1];
+        const levelData = bossLevelConfig.getDataByBossIdAndType(this.id, difficultyType);
+        if (!levelData) {
+            console.warn(`bossLevel 表中找不到配置，bossId=${this.id}, type=${difficultyType}`);
+            return false;
+        }
+        this.bossLevelData = levelData;
+        this.maxHp = Math.max(1, Number(levelData.hp) || 1);
         this.hp = resetHp ? this.maxHp : Math.min(this.hp, this.maxHp);
-        this.attackDamage = Math.max(0, Number(data.attack) || 0);
+        this.attackDamage = Math.max(0, Number(levelData.attack) || 0);
         this.moveSpeed = Math.max(0, Number(data.speed) || 0);
         this.attackDistance = Math.max(0, Number(data.attackDistance) || 0);
         const interval = Number(data.attackInterval);
@@ -277,7 +288,7 @@ export class bossBaseController extends Component {
             this.initData();
             return;
         }
-        if (tableName !== 'boss' || !this.gameComp) return;
+        if ((tableName !== 'boss' && tableName !== 'bossLevel') || !this.gameComp) return;
         this.initData();
         this.initialized = this.applyBossData(!this.initialized);
         this.isInAttackRange = false;
@@ -604,11 +615,12 @@ export class bossBaseController extends Component {
     /**击败后立即结算奖励，先显示击杀与金币提示，再显示可能获得的武器。 */
     private grantDefeatRewards() {
         const data = bossConfig.getDataById(this.id);
-        if (!data) return;
-        const gold = pData.grantBossDropGold(this.id, Number(data.dropGoldLimit));
+        const levelData = this.bossLevelData;
+        if (!data || !levelData) return;
+        const gold = pData.grantBossDropGold(this.id, Number(data.dropGoldLimit), Number(levelData.dropGoldNum));
         const messages = [`<color=#FFFFFF>成功击杀<color=#00D6FF>${data.name}</color>，获得<color=#FFEB00>金币*${gold}</color></color>`];
 
-        const probability = Math.max(0, Math.min(100, Number(data.dropItemProb) || 0));
+        const probability = Math.max(0, Math.min(100, Number(levelData.dropItemProb) || 0));
         if (probability > 0 && Math.random() * 100 < probability) {
             const itemId = Number(data.dropItemId);
             const itemData = getItemDataByItemId(itemId);

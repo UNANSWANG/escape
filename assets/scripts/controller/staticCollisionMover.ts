@@ -1,6 +1,37 @@
 import { Node, UITransform, Vec3 } from 'cc';
 import type { StaticCollisionShape, UIGame } from '../UIPage/UIGame';
 
+/** 纯矩形路径直接求最早接触时间；保留原二分的 1/4096 精度，多边形返回 null 走原算法。 */
+export function rectangularMoveFraction(x: number, y: number, width: number, height: number,
+    dx: number, dy: number, candidates: ReadonlyArray<StaticCollisionShape>): number | null {
+    const left = Math.min(x, x + dx);
+    const bottom = Math.min(y, y + dy);
+    const right = Math.max(x + width, x + width + dx);
+    const top = Math.max(y + height, y + height + dy);
+    let fraction = 1;
+    for (const shape of candidates) {
+        if (right <= shape.minX || left >= shape.maxX || top <= shape.minY || bottom >= shape.maxY) continue;
+        if (shape.points) return null;
+        if (x + width > shape.minX && x < shape.maxX && y + height > shape.minY && y < shape.maxY) return 0;
+        let enter = 0;
+        let exit = 1;
+        if (!dx) {
+            if (x + width <= shape.minX || x >= shape.maxX) continue;
+        } else {
+            enter = Math.max(enter, Math.min((shape.minX - x - width) / dx, (shape.maxX - x) / dx));
+            exit = Math.min(exit, Math.max((shape.minX - x - width) / dx, (shape.maxX - x) / dx));
+        }
+        if (!dy) {
+            if (y + height <= shape.minY || y >= shape.maxY) continue;
+        } else {
+            enter = Math.max(enter, Math.min((shape.minY - y - height) / dy, (shape.maxY - y) / dy));
+            exit = Math.min(exit, Math.max((shape.minY - y - height) / dy, (shape.maxY - y) / dy));
+        }
+        if (enter + 0.000000001 < exit) fraction = Math.min(fraction, Math.floor(enter * 4096) / 4096);
+    }
+    return fraction;
+}
+
 interface NavigationGrid {
     blocked: Int8Array;
     checkedLinks: Uint8Array;
@@ -21,6 +52,7 @@ export class StaticCollisionMover {
     private origin = new Vec3();
     private destination = new Vec3();
     private contactNormal = new Vec3();
+    private slideMoveFraction = 1;
     private mapMin = new Vec3();
     private mapMax = new Vec3();
 
@@ -118,11 +150,12 @@ export class StaticCollisionMover {
                         if (isBlocked(index)) continue;
                         const wx = cellX(index);
                         const wy = cellY(index);
+                        const distance = (wx - x) * (wx - x) + (wy - y) * (wy - y);
+                        if (distance >= bestDistance) continue;
                         const canConnect = connectFromPoint
                             ? this.canTraverse(game, x, y, wx, wy, offsetX, offsetY, bounds.width, bounds.height)
                             : this.canTraverse(game, wx, wy, x, y, offsetX, offsetY, bounds.width, bounds.height);
                         if (!canConnect) continue;
-                        const distance = (wx - x) * (wx - x) + (wy - y) * (wy - y);
                         if (distance < bestDistance) {
                             best = index;
                             bestDistance = distance;
@@ -303,7 +336,9 @@ export class StaticCollisionMover {
         // 第一次接触后沿边滑动，并允许继续处理墙角处的相邻边。
         for (let contact = 0; contact < 3; contact++) {
             if (Math.abs(remainingX) + Math.abs(remainingY) < 0.0001) break;
-            const fraction = this.allowedMoveFraction(x, y, bounds.width, bounds.height, remainingX, remainingY);
+            const fraction = contact === 0
+                ? this.allowedMoveFraction(x, y, bounds.width, bounds.height, remainingX, remainingY)
+                : this.slideMoveFraction;
             x += remainingX * fraction;
             y += remainingY * fraction;
             if (fraction >= 1) break;
@@ -333,6 +368,8 @@ export class StaticCollisionMover {
     }
 
     private allowedMoveFraction(x: number, y: number, width: number, height: number, dx: number, dy: number) {
+        const rectangularFraction = rectangularMoveFraction(x, y, width, height, dx, dy, this.candidates);
+        if (rectangularFraction !== null) return rectangularFraction;
         if (!this.sweepIntersectsStaticShape(x, y, width, height, dx, dy, 1)) return 1;
         if (this.intersectsStaticShape(x, y, width, height)) return 0;
         let low = 0;
@@ -439,10 +476,13 @@ export class StaticCollisionMover {
                 const inward = dx * edge.nx + dy * edge.ny;
                 const slideX = dx - inward * edge.nx;
                 const slideY = dy - inward * edge.ny;
+                const maxProgress = slideX * slideX + slideY * slideY;
+                if (maxProgress <= bestProgress) continue;
                 const fraction = this.allowedMoveFraction(x, y, width, height, slideX, slideY);
-                const progress = (slideX * slideX + slideY * slideY) * fraction * fraction;
+                const progress = maxProgress * fraction * fraction;
                 if (progress <= bestProgress) continue;
                 bestProgress = progress;
+                this.slideMoveFraction = fraction;
                 out.set(edge.nx, edge.ny, 0);
             }
         }

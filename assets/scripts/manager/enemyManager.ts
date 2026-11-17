@@ -1,4 +1,5 @@
-import { _decorator, Node, Vec2 } from 'cc';
+import { _decorator, director, Rect, Vec2 } from 'cc';
+import { EnemySpatialGrid } from './enemySpatialGrid';
 import { soldiersController } from '../controller/enemy/soldiersController';
 import type { bossBaseController } from '../controller/enemy/bossBaseController';
 import type { roleController } from '../controller/role/roleController';
@@ -15,6 +16,37 @@ export class enemyManager {
     bossesArr: bossBaseController[] = [];
 
     aiRoles: roleController[] = [];
+
+    private spatialGrid = new EnemySpatialGrid();
+    private spatialFrame = -1;
+    private spatialGroups: ReadonlyArray<EnemyTarget>[] = [];
+    private spatialCounts: number[] = [];
+
+    /** 共用当帧包围盒；名单变化后在下一次查询立即同步。 */
+    queryEnemies(bounds: Rect, out: EnemyTarget[]) {
+        const frame = director.getTotalFrames();
+        if (this.spatialFrame !== frame
+            || this.spatialGroups[0] !== this.soldiersArr || this.spatialCounts[0] !== this.soldiersArr.length
+            || this.spatialGroups[1] !== this.bossesArr || this.spatialCounts[1] !== this.bossesArr.length
+            || this.spatialGroups[2] !== this.aiRoles || this.spatialCounts[2] !== this.aiRoles.length) {
+            this.spatialGroups[0] = this.soldiersArr;
+            this.spatialGroups[1] = this.bossesArr;
+            this.spatialGroups[2] = this.aiRoles;
+            this.spatialCounts[0] = this.soldiersArr.length;
+            this.spatialCounts[1] = this.bossesArr.length;
+            this.spatialCounts[2] = this.aiRoles.length;
+            this.spatialGrid.sync(this.spatialGroups);
+            this.spatialFrame = frame;
+        }
+        return this.spatialGrid.query(bounds, out);
+    }
+
+    clearSpatialIndex() {
+        this.spatialGrid.clear();
+        this.spatialGroups.length = 0;
+        this.spatialCounts.length = 0;
+        this.spatialFrame = -1;
+    }
 
     /** 统一受击目标。士兵与 Boss 保留各自的管理列表。 */
     get allEnemies(): EnemyTarget[] {
@@ -42,6 +74,7 @@ export class enemyManager {
         }
         if(idx != -1){
             this.soldiersArr.splice(idx, 1);
+            this.spatialFrame = -1;
         }
     }
 }

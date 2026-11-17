@@ -1,6 +1,7 @@
 import { _decorator, Component, Sprite, UITransform, Vec3 } from 'cc';
 import { bulletExplosionController } from './bulletExplosionController';
 import { enemyMgr } from '../manager/enemyManager';
+import type { EnemyTarget } from '../manager/enemyManager';
 import { poolMgr } from '../manager/poolManager';
 import { playerMgr } from '../manager/playerManager';
 import { gm } from '../manager/gm';
@@ -22,6 +23,8 @@ export class bulletController extends Component {
     private damage = 0;
     private targetPlayer = false;
     private obstacleCandidates: StaticCollisionShape[] = [];
+    private enemyCandidates: EnemyTarget[] = [];
+    private bulletTransform: UITransform = null;
     private moveStartWorld = new Vec3();
     private moveEndWorld = new Vec3();
     private bulletSprite: Sprite = null;
@@ -79,6 +82,7 @@ export class bulletController extends Component {
         this.targetPlayer = false;
         this.flightSpeed = 0;
         this.obstacleCandidates.length = 0;
+        this.enemyCandidates.length = 0;
     }
 
     protected update(dt: number): void {
@@ -217,15 +221,13 @@ export class bulletController extends Component {
      * 命中第一个存活敌人后立即回收子弹，确保一发子弹只造成一次伤害。
      */
     private checkHitEnemy() {
-        const bulletTransform = this.getComponent(UITransform);
+        const bulletTransform = this.bulletTransform ??= this.getComponent(UITransform);
         if (!bulletTransform) return false;
         const bulletBounds = bulletTransform.getBoundingBoxToWorld();
 
-        for (const enemy of enemyMgr.allEnemies) {
+        enemyMgr.queryEnemies(bulletBounds, this.enemyCandidates);
+        for (const enemy of this.enemyCandidates) {
             if (!enemy?.node?.isValid || !enemy.node.activeInHierarchy || enemy.hp <= 0) continue;
-            // Use the dedicated hitArea instead of animation bounds.
-            const enemyTransform = enemy.hitArea;
-            if (!enemyTransform || !bulletBounds.intersects(enemyTransform.getBoundingBoxToWorld())) continue;
 
             enemy.takeDamage(this.damage);
             this.recycle(true);
@@ -237,7 +239,7 @@ export class bulletController extends Component {
     private checkHitPlayer() {
         const player = playerMgr.playerComp;
         if (!player?.node?.isValid || !player.node.activeInHierarchy || player.hp <= 0) return false;
-        const bulletTransform = this.getComponent(UITransform);
+        const bulletTransform = this.bulletTransform ??= this.getComponent(UITransform);
         const playerTransform = player.hitArea;
         if (!bulletTransform || !playerTransform
             || !bulletTransform.getBoundingBoxToWorld().intersects(playerTransform.getBoundingBoxToWorld())) return false;

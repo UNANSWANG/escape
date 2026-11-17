@@ -613,6 +613,7 @@ export class UIGame extends UIBase {
         this.shelterAreas.length = 0;
         this.isDrugAdWatching = false;
 
+        enemyMgr.clearSpatialIndex();
         ccTools.destroyAllChild(this.roleNode);
         this.aiRoles.length = 0;
 

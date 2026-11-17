@@ -1,5 +1,6 @@
 import { _decorator, Animation, Component, instantiate, Label, Mat4, Node, sp, Sprite, tween, Tween, UIOpacity, UITransform, Vec3 } from 'cc';
 import { enemyMgr } from '../../manager/enemyManager';
+import { rectangularMoveFraction } from '../staticCollisionMover';
 import { UIGame, StaticCollisionShape } from '../../UIPage/UIGame';
 import { configData, GameEvent, playerCommonConfig, SaveKey } from '../../manager/configData';
 import { ccStorageTools } from '../../extention/storageTools';
@@ -91,6 +92,7 @@ export class roleController extends Component {
     private moveWorldOrigin = new Vec3();
     private moveInverseParent = new Mat4();
     private moveContactNormal = new Vec3();
+    private slideMoveFraction = 1;
     /** 角色脚下的移动碰撞区域，由预制体 colliderBox 控制尺寸与位置。 */
     private moveCollider: UITransform = null;
     /**角色当前播放的动画名 */
@@ -375,7 +377,9 @@ export class roleController extends Component {
         // 一次接触可沿边滑动；最多再处理两个相邻边或墙角。
         for (let contact = 0; contact < 3; contact++) {
             if (Math.abs(remainingX) + Math.abs(remainingY) < 0.0001) break;
-            const fraction = this.allowedMoveFraction(x, y, bounds.width, bounds.height, remainingX, remainingY);
+            const fraction = contact === 0
+                ? this.allowedMoveFraction(x, y, bounds.width, bounds.height, remainingX, remainingY)
+                : this.slideMoveFraction;
             x += remainingX * fraction;
             y += remainingY * fraction;
             if (fraction >= 1) break;
@@ -510,7 +514,8 @@ export class roleController extends Component {
     }
 
     private allowedMoveFraction(x: number, y: number, width: number, height: number, dx: number, dy: number) {
-        // 检测整个移动路径，终点已越过薄障碍时也不会漏检。
+        const rectangularFraction = rectangularMoveFraction(x, y, width, height, dx, dy, this.moveCollisionCandidates);
+        if (rectangularFraction !== null) return rectangularFraction;
         if (!this.sweepIntersectsStaticShape(x, y, width, height, dx, dy, 1)) return 1;
         if (this.intersectsStaticShape(x, y, width, height)) return 0;
         let low = 0, high = 1;
@@ -615,10 +620,13 @@ export class roleController extends Component {
                 if (gap < -0.01 || gap > 0.25) continue;
                 const inward = dx * edge.nx + dy * edge.ny;
                 const slideX = dx - inward * edge.nx, slideY = dy - inward * edge.ny;
+                const maxProgress = slideX * slideX + slideY * slideY;
+                if (maxProgress <= bestProgress) continue;
                 const fraction = this.allowedMoveFraction(x, y, width, height, slideX, slideY);
-                const progress = (slideX * slideX + slideY * slideY) * fraction * fraction;
+                const progress = maxProgress * fraction * fraction;
                 if (progress <= bestProgress) continue;
                 bestProgress = progress;
+                this.slideMoveFraction = fraction;
                 out.set(edge.nx, edge.ny, 0);
             }
         }

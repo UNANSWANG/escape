@@ -35,6 +35,7 @@ export class UIMatch extends UIBase {
     private currentMatchIndex = 0;
     private matchItems: Node[] = [];
     private nicknamePool: string[] = [];
+    private gamePreload: Promise<void> = null;
 
     protected onLoad(): void {
         this.bindBtn();
@@ -47,9 +48,6 @@ export class UIMatch extends UIBase {
     initData(count: number) {
         this.unscheduleAllCallbacks();
         this.clearItems();
-        Promise.all([uiMgr.preLoadGame(), uiMgr.preLoadMap()]).catch((error) => {
-            console.error('匹配界面预加载游戏资源失败', error);
-        });
         this.matchTime = 0;
         this.currentMatchIndex = 0;
         this.isMatching = true;
@@ -84,6 +82,9 @@ export class UIMatch extends UIBase {
             console.warn('agentRole 表中没有符合地图 agentList 的 AI 配置', agentTypes);
             return;
         }
+        this.gamePreload = uiMgr.preLoadMatch(mapIdx, playerMgr.matchedAIRoles);
+        // 提前启动但由匹配完成逻辑处理失败，避免产生未处理的拒绝。
+        this.gamePreload.catch(error => console.warn('本局资源预加载失败', error));
         for (let index = 0; index < itemCount; index++) {
             const item = instantiate(this.itemPre);
             this.contentLayout.addChild(item);
@@ -112,7 +113,9 @@ export class UIMatch extends UIBase {
 
     showMatchItem(item: Node, nickname: string, isPlayerData = false) {
         this.setItemVisible(item, true);
-        this.addRoleShow(item, isPlayerData);
+        this.addRoleShow(item, isPlayerData).catch(error => {
+            console.warn('匹配角色展示加载失败', error);
+        });
         const lightTransform = item.getChildByName('light')?.getComponent(UITransform);
         if (lightTransform) {
             Tween.stopAllByTarget(lightTransform);
@@ -126,7 +129,7 @@ export class UIMatch extends UIBase {
     }
 
     private async addRoleShow(item: Node, isPlayerData: boolean) {
-        await uiMgr.preLoadGame();
+        await uiMgr.preLoadRoleShow();
         // 加载期间可能已关闭界面或重新匹配，仅为当前列表中的条目添加角色。
         if (!item?.isValid || !this.matchItems.includes(item) || !uiMgr.roleShowPrefab) {
             return;
@@ -155,13 +158,13 @@ export class UIMatch extends UIBase {
             const matchItems = this.matchItems;
             this.scheduleOnce(async () => {
                 try {
-                    await Promise.all([uiMgr.preLoadGame(), uiMgr.preLoadMap()]);
+                    await this.gamePreload;
                     if (!this.node.activeInHierarchy || this.matchItems !== matchItems) return;
                     uiMgr.startGame();
                     this.onClose();
                 } catch (error) {
                     if (this.node.activeInHierarchy && this.matchItems === matchItems) {
-                        this.titleLab.string = '地图加载失败，请重新匹配';
+                        this.titleLab.string = '游戏资源加载失败，请重新匹配';
                         console.error('开始游戏前预加载失败', error);
                     }
                 }

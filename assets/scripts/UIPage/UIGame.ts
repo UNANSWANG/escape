@@ -7,7 +7,6 @@ import { BossBookState, configData, floatColorArr, GameEvent, QualityColorArr } 
 import { gm } from '../manager/gm';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
-import { ccResTools } from '../extention/resTools';
 import { playerMgr } from '../manager/playerManager';
 import { CameraController } from '../controller/CameraController';
 import { enemyMgr } from '../manager/enemyManager';
@@ -304,6 +303,7 @@ export class UIGame extends UIBase {
     }
 
     onUI_Close(): void {
+        uiMgr.cancelPreload(this);
         audioMgr.stopSceneEffects();
         // 先提升版本号，使本局尚未完成的异步地图加载结果失效
         this.openVersion++;
@@ -314,6 +314,7 @@ export class UIGame extends UIBase {
 
     /**重新开始单局 */
     private async restartGame() {
+        uiMgr.cancelPreload(this);
         // 每次重开都先作废上一局的异步任务并立即清场，不能等新地图加载完成后再清理
         let version = ++this.openVersion;
         this.clearData();
@@ -339,6 +340,7 @@ export class UIGame extends UIBase {
         }
 
         this.initData();
+        void uiMgr.preLoadInGamePages(this);
     }
 
     /** 根据所选地图索引加载地图，完成后再初始化本局角色和地图数据。 */
@@ -378,7 +380,7 @@ export class UIGame extends UIBase {
         if (!mapMask || !Number.isInteger(mapIdx) || mapIdx < 0) return;
         if (this.smallMapIdx === mapIdx && mapMask.children.length > 0) return;
         ccTools.destroyAllChild(mapMask);
-        const prefab = await ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.smallMap + mapIdx);
+        const prefab = await uiMgr.preLoadSmallMap(mapIdx);
         if (version !== this.openVersion || !this.node.activeInHierarchy || !prefab) return;
         const smallMap = instantiate(prefab);
         mapMask.addChild(smallMap);

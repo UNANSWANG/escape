@@ -112,9 +112,11 @@ export class UIMain extends UIBase {
         this.resetStartButton();
         this.addListener();
         this.initData();
+        void uiMgr.preLoadMainPages(this);
     }
 
     onUI_Close(data?: any): void {
+        uiMgr.cancelPreload(this);
         this.resetStartButton();
         this.stopRoleWalking();
         this.unscheduleAllCallbacks();

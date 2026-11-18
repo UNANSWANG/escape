@@ -42,6 +42,29 @@ export class poolManager extends Component {
         
     }
 
+    /**仅补齐少量常用节点，每帧创建一个；已有缓存足够时直接跳过。 */
+    async preWarmCombat(prefabs: { bullet: Prefab; label: Prefab; shell: Prefab; explosion: Prefab },
+        nextFrame: () => Promise<void>, isCurrent: () => boolean) {
+        const entries = [
+            { pool: this.bulletPool, prefab: prefabs.bullet, count: 8 },
+            { pool: this.gameLabelNodePool, prefab: prefabs.label, count: 4 },
+            { pool: this.bulletShellNodePool, prefab: prefabs.shell, count: 4 },
+            { pool: this.bulletExplosionNodePool, prefab: prefabs.explosion, count: 4 },
+        ];
+        for (const entry of entries) {
+            // 固定尝试次数，战斗消耗对象池时不持续追补。
+            const missing = Math.max(0, entry.count - entry.pool.size());
+            for (let index = 0; index < missing; index++) {
+                await nextFrame();
+                if (!isCurrent()) return;
+                if (!entry.prefab || entry.pool.size() >= entry.count) break;
+                const node = instantiate(entry.prefab);
+                node.active = false;
+                entry.pool.put(node);
+            }
+        }
+    }
+
     /**获取生产提示节点 */
     getProduceTipsNode(prefab: Prefab) {
         return this.getNode(this.produceTipsPool, prefab);

@@ -1,13 +1,18 @@
-import { _decorator, AssetManager, Component, instantiate, Node, Prefab, Sprite, tween, UITransform, Vec3 } from 'cc';
+import { _decorator, AssetManager, Component, director, Director, instantiate, Node, Prefab, Sprite, tween, UITransform, Vec3 } from 'cc';
 import { UIBase } from '../UIPage/UIBase';
 import { UIBackpack } from '../UIPage/UIBackpack';
-import { animationItemPath, audioPath, gamePath, imgPath, ItemPath, UIPath } from './pathConfig';
+import { animationItemPath, audioPath, gamePath, imgPath, ItemPath, spinePath, UIPath } from './pathConfig';
 import { ccResTools } from '../extention/resTools';
 import { tipsNotice } from '../UIPage/tips/tipsNotice';
 import { pData } from './playerData';
 import { ccTools } from '../extention/generalTools';
 import { audioMgr } from './audioManager';
-import { MonetaryType } from './configData';
+import { configData, MonetaryType } from './configData';
+import { weaponsConfig } from '../json/jsonWeapons';
+import { equipmentConfig } from '../json/jsonEquipment';
+import { armsConfig } from '../json/jsonArms';
+import { soldiersData } from '../data/soldiersData';
+import { poolMgr } from './poolManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIManager')
@@ -87,6 +92,185 @@ export class UIManager {
     /** 按地图索引缓存加载任务，匹配期间提前加载地图及其依赖。 */
     private mapPreloadTasks = new Map<number, Promise<Prefab>>();
 
+    /**资源请求共享缓存，失败后允许重试。 */
+    private prefabTasks = new Map<string, Promise<Prefab>>();
+    /**页面创建串行执行，避免多个下载同时完成时集中实例化。 */
+    private pageCreationTail: Promise<void> = Promise.resolve();
+    private backgroundPreloadVersions = new WeakMap<Component, number>();
+
+    private nextPreloadFrame(): Promise<void> {
+        return new Promise(resolve => director.once(Director.EVENT_AFTER_DRAW, () => resolve()));
+    }
+
+    preLoadPrefab(path: string): Promise<Prefab> {
+        const cached = this.prefabTasks.get(path);
+        if (cached) return cached;
+        if (!this.resBundle) return Promise.reject(new Error('资源包尚未加载'));
+        const task = ccResTools.loadPrefab(this.resBundle, path, false).then(prefab => {
+            if (!prefab) throw new Error('加载预制体失败: ' + path);
+            return prefab;
+        }).catch(error => {
+            this.prefabTasks.delete(path);
+            throw error;
+        });
+        this.prefabTasks.set(path, task);
+        return task;
+    }
+
+    /**每帧最多推进一项后台任务，离开页面后停止后续任务。 */
+    private async preLoadInFrames(tasks: Array<() => Promise<unknown>>, isCurrent: () => boolean) {
+        for (const task of tasks) {
+            await this.nextPreloadFrame();
+            if (!isCurrent()) return;
+            try {
+                await task();
+            } catch (error) {
+                console.warn('后台预加载失败，使用时将重试', error);
+            }
+        }
+    }
+
+    /**每次打开页面生成新的批次，旧批次不再继续发起任务。 */
+    private beginBackgroundPreload(owner: Component) {
+        const version = (this.backgroundPreloadVersions.get(owner) || 0) + 1;
+        this.backgroundPreloadVersions.set(owner, version);
+        return () => owner.isValid && owner.node.activeInHierarchy
+            && this.backgroundPreloadVersions.get(owner) === version;
+    }
+
+    /**关闭或重开页面时立即作废其后台批次。 */
+    cancelPreload(owner: Component) {
+        this.backgroundPreloadVersions.set(owner, (this.backgroundPreloadVersions.get(owner) || 0) + 1);
+    }
+
+    /**加载页只等待大厅首屏和通用资源。 */
+    async preLoadStartup() {
+        await Promise.all([this.preLoadCommonPrefab(), this.preLoadPage(UIPath.UIMain)]);
+    }
+
+    /**大厅常用界面按使用优先级分帧准备。 */
+    preLoadMainPages(owner: Component) {
+        const isCurrent = this.beginBackgroundPreload(owner);
+        const paths = [UIPath.UIMap, UIPath.UIMatch, UIPath.UISetting, UIPath.UIReward,
+            UIPath.UIRevisit, UIPath.UIStorehouse, UIPath.UIRoleStore, UIPath.UISign,
+            UIPath.UIShowItem, UIPath.UIStore, UIPath.UIHandBook];
+        return this.preLoadInFrames([
+            ...paths.map(path => () => this.preLoadPage(path)),
+            () => this.preLoadRoleShow(),
+            () => this.preLoadPage(gamePath.UIGame),
+        ], isCurrent);
+    }
+
+    /**局内界面和对象池在后台分帧准备，关闭或重开后停止旧批次。 */
+    async preLoadInGamePages(owner: Component) {
+        const isCurrent = this.beginBackgroundPreload(owner);
+        await this.preLoadInFrames([
+            () => this.preLoadPage(UIPath.UIFail),
+            () => this.preLoadPage(UIPath.UIBackpack),
+            () => this.preLoadPrefab(ItemPath.item),
+            () => this.preLoadPage(UIPath.UISmallMap),
+            () => this.preLoadPage(UIPath.UISuccess),
+            () => this.preLoadPrefab(ItemPath.showItem),
+        ], isCurrent);
+        try {
+            await poolMgr.preWarmCombat({
+                bullet: this.bulletPrefab,
+                label: this.gameLabelItemPrefab,
+                shell: this.bulletShellPrefab,
+                explosion: this.bulletExplosionPrefab,
+            }, () => this.nextPreloadFrame(), isCurrent);
+        } catch (error) {
+            console.warn('对象池分帧预热失败', error);
+        }
+    }
+
+    async preLoadRoleShow() {
+        this.roleShowPrefab = await this.preLoadPrefab(ItemPath.roleShow);
+    }
+
+    preLoadSmallMap(mapIndex = pData.selectMapData[0]) {
+        if (!Number.isInteger(mapIndex) || mapIndex < 0) {
+            return Promise.reject(new Error('小地图索引无效: ' + mapIndex));
+        }
+        return this.preLoadPrefab(ItemPath.smallMap + mapIndex);
+    }
+
+    /**匹配确定阵容后准备动态外观，不能只等待角色 Prefab。 */
+    private async preLoadRoundAppearance(mapIndex: number, agents: Array<{
+        roleId: number; weaponId: number; helmetId: number; armorId: number;
+    }>) {
+        const roles = new Set([pData.roleId, ...agents.map(agent => agent.roleId)]);
+        const weapons = new Set(pData.equipmentIds.slice(0, 3));
+        const equipment = new Set(pData.equipmentIds.slice(3, 5));
+        const spines = new Set<string>();
+        const pictures = new Set<string>();
+        for (const agent of agents) {
+            weapons.add(agent.weaponId);
+            equipment.add(agent.helmetId);
+            equipment.add(agent.armorId);
+        }
+        for (const roleId of roles) {
+            spines.add(spinePath.role + roleId);
+            pictures.add(imgPath.roleLeftHand + roleId);
+            pictures.add(imgPath.roleRightHand + roleId);
+            pictures.add(imgPath.activeIcon + roleId);
+            pictures.add(imgPath.smallMapAvatar + roleId);
+        }
+        if (roles.has(0)) spines.add(spinePath.gem);
+        if (roles.has(2)) spines.add(spinePath.shield);
+        const map = await this.preLoadMap(mapIndex);
+        const soldiers = map.data.getChildByName('soldiersList');
+        for (const spawn of soldiers?.children || []) {
+            const data = spawn.getComponent(soldiersData);
+            const arms = data && armsConfig.getDataById(data.armsId);
+            if (arms) weapons.add(arms.weaponId);
+        }
+        if (soldiers?.children.length) {
+            for (let id = 0; id < configData.soldierAnimCount; id++) {
+                spines.add(spinePath.soldier + id);
+                pictures.add(imgPath.soldierLeftHand + id);
+                pictures.add(imgPath.soldierRightHand + id);
+            }
+        }
+        if (map.data.getChildByName('bossList')?.children.some(node => node.getComponent('bossController1'))) {
+            spines.add(spinePath.swordRain);
+        }
+        for (const id of weapons) {
+            const data = weaponsConfig.getDataByItemId(id);
+            if (data) {
+                spines.add(spinePath.weapon + data.itemId);
+                pictures.add(imgPath.weaponIcon + data.itemId);
+            }
+        }
+        for (const id of equipment) {
+            const data = equipmentConfig.getDataByItemId(id);
+            if (data) pictures.add(imgPath.equipment + data.itemId);
+        }
+        // 限制同时加载数量，避免解码任务在同一时刻大量完成。
+        const tasks = [
+            ...Array.from(spines, path => () => ccResTools.loadSpine(this.resBundle,
+                path === spinePath.gem ? path : path + '/animation')),
+            ...Array.from(pictures, path => () => ccResTools.loadPic(this.resBundle, path)),
+        ];
+        for (let index = 0; index < tasks.length; index += 4) {
+            const assets = await Promise.all(tasks.slice(index, index + 4).map(task => task()));
+            if (assets.some(asset => !asset)) throw new Error('本局角色或武器资源加载失败');
+            await this.nextPreloadFrame();
+        }
+    }
+
+    /**匹配确定阵容后统一准备本局资源，全部完成才可开始游戏。 */
+    async preLoadMatch(mapIndex: number, agents: Array<{
+        roleId: number; weaponId: number; helmetId: number; armorId: number;
+    }>) {
+        await Promise.all([
+            this.preLoadGame(),
+            this.preLoadMap(mapIndex),
+            this.preLoadSmallMap(mapIndex),
+            this.preLoadRoundAppearance(mapIndex, agents),
+        ]);
+    }
+
     preLoadMap(mapIndex = pData.selectMapData[0]): Promise<Prefab> {
         if (!this.resBundle || !Number.isInteger(mapIndex) || mapIndex < 0) {
             return Promise.reject(new Error(`无法预加载地图，索引无效或资源包未加载: ${mapIndex}`));
@@ -138,7 +322,7 @@ export class UIManager {
         this.effectItemPrefab = await ccResTools.loadPrefab(this.resBundle, ItemPath.effectItem, false);
     }
 
-    /**预加载结算界面、游戏预制体和动画；并发调用共享任务，失败后允许重试 */
+    /**匹配期间准备开战必需资源；并发调用共享任务，失败后允许重试 */
     async preLoadGame() {
         if (this.gamePreloadComplete) {
             return;
@@ -165,9 +349,7 @@ export class UIManager {
         }
 
         await Promise.all([
-            // this.preLoadPage(gamePath.UIGame),
-            this.preLoadPage(UIPath.UISuccess),
-            this.preLoadPage(UIPath.UIFail),
+            this.preLoadPage(gamePath.UIGame),
             this.loadGamePrefab(),
         ]);
     }
@@ -182,7 +364,7 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, ItemPath.gameSpineItem, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.role, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.soldier, false),
-            ccResTools.loadPrefab(this.resBundle, ItemPath.roleShow, false),
+            this.preLoadPrefab(ItemPath.roleShow),
             ccResTools.loadPrefab(this.resBundle, ItemPath.supplyBox, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.eliminationBox, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.bossBox, false),
@@ -335,12 +517,17 @@ export class UIManager {
         const pending = this.pageLoadingTasks.get(keyName);
         if (pending) return pending;
         const task = (async () => {
-            const prefab = await ccResTools.loadPrefab(this.resBundle, pagePath);
-            if (!prefab) throw new Error(`加载页面失败: ${pagePath}`);
-            const node = instantiate(prefab);
-            node.active = false;
-            this.uiMap.set(keyName, node);
-            return node;
+            const prefab = await this.preLoadPrefab(pagePath);
+            const creation = this.pageCreationTail.then(async () => {
+                await this.nextPreloadFrame();
+                const node = instantiate(prefab);
+                node.active = false;
+                this.uiMap.set(keyName, node);
+                return node;
+            });
+            // 某项失败不阻塞后续页面创建。
+            this.pageCreationTail = creation.then(() => undefined, () => undefined);
+            return creation;
         })();
         this.pageLoadingTasks.set(keyName, task);
         try {

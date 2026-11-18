@@ -1,6 +1,5 @@
 import { _decorator, Component, director, Label, Node, sp, Sprite } from 'cc';
 import { ccResTools } from '../extention/resTools';
-import { gamePath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { jsonMgr } from '../manager/jsonManager';
 import { gm, PlatType } from '../manager/gm';
@@ -46,7 +45,9 @@ export class UILoading extends Component {
 
     start() {
         this.refreshProgress();
-        this.initData();
+        this.initData().catch(error => {
+            console.error('启动资源加载失败', error);
+        });
     }
 
     /**拼接背景向右无缝循环移动 */
@@ -107,40 +108,20 @@ export class UILoading extends Component {
         audioMgr.playBackgroundMusic();
         this.loadTable();
 
-        //TODO 临时加载游戏部分
-        uiMgr.preLoadGame();
-        this.preLoadPage();
+        // 启动阶段只准备大厅首屏，其余资源按使用阶段加载。
+        await this.preLoadPage();
     }
 
     /**预加载bundle */
     async preLoadBundle() {
-        return new Promise<void>(async (resolve, reject) => {
-            let resBundle = await ccResTools.loadBundle("res");
-            uiMgr.resBundle = resBundle;
-            resolve();
-        });
+        uiMgr.resBundle = await ccResTools.loadBundle("res");
     }
-    loadItems = [UIPath.UIMain, UIPath.UISetting, UIPath.UIMatch, gamePath.UIGame];
 
     /**预加载界面 */
     async preLoadPage() {
-        return new Promise<void>(async (resolve, reject) => {
-            let prefabLoad = uiMgr.preLoadCommonPrefab();
-
-            let pageLoad = Promise.all(this.loadItems.map(async ($path) => {
-                try {
-                    await uiMgr.preLoadPage($path);
-                } catch (error) {
-                    console.error(`加载 ${$path} 失败:`, error);
-                }
-            }));
-
-            await Promise.all([prefabLoad, pageLoad]);
-
-            this.uiComplete = true;
-            this.checkLoadComplete();
-            resolve();
-        });
+        await uiMgr.preLoadStartup();
+        this.uiComplete = true;
+        this.checkLoadComplete();
     }
 
     /**刷新进度条 */

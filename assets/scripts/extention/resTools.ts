@@ -47,8 +47,12 @@ export class resTools {
     private readonly remoteImageLimit = 64;
     //加载bundle
     loadBundle($name): Promise<AssetManager.Bundle> {
-        return new Promise(($resolve) => {
+        return new Promise(($resolve, reject) => {
             assetManager.loadBundle($name, (err, res: AssetManager.Bundle) => {
+                if (err || !res) {
+                    reject(err || new Error(`加载bundle失败: ${$name}`));
+                    return;
+                }
                 console.log("加载bundle完成:", $name);
                 $resolve(res);
             })
@@ -157,7 +161,7 @@ export class resTools {
 
     /**加载预制体*/
     loadPrefab($bundle: AssetManager.Bundle, $path: string, showLoading: boolean = true): Promise<Prefab> {
-        return new Promise(($resolve) => {
+        return new Promise(($resolve, reject) => {
             $bundle.load($path, Prefab,
                 (finish: number, total: number) => {
                     if (showLoading) {
@@ -165,6 +169,10 @@ export class resTools {
                     }
                 },
                 (err, prefab: Prefab) => {
+                    if (err || !prefab) {
+                        reject(err || new Error(`加载预制体失败: ${$path}`));
+                        return;
+                    }
                     $resolve(prefab);
                 })
         });

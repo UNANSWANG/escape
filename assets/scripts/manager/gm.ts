@@ -6,7 +6,7 @@ import { ccTimeTools } from '../extention/timeTools';
 import { GameEvent } from './configData';
 import { pData } from './playerData';
 import { uiMgr } from './UIManager';
-const { ccclass, property } = _decorator;
+const { ccclass, property, executionOrder } = _decorator;
 
 export enum PlatType {
     /**网页h5 */
@@ -19,6 +19,8 @@ export enum PlatType {
     ks = "ks",
 }
 @ccclass('gm')
+// 场景内的 UILoading 会在 onEnable 订阅事件，须先创建事件中心。
+@executionOrder(-100)
 export class gm extends Component {
     static API: BasePlat = null;
     static hgSdk: any = null;

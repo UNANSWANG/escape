@@ -6,8 +6,6 @@ export enum gamePath {
 
 /**界面路径 */
 export enum UIPath {
-    /**加载页面 */
-    UILoading = "UILoading",
     /**主页面 */
     UIMain = "prefabs/UIPage/UIMain",
     /**成功页面 */

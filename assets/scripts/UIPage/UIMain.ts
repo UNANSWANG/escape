@@ -485,17 +485,29 @@ export class UIMain extends UIBase {
         uiMgr.openPage(UIPath.UIShowItem, slotIndex);
     }
 
-    /**点击头像，仅在没有头像链接时请求微信用户信息 */
+    /**点击头像，先完成隐私授权，再获取微信头像和昵称。 */
     private clickRoleAvatar() {
         // 已有头像链接时直接返回，避免重复请求授权。
         if (userMgr.avatarUrl) return;
         // 获取微信用户信息仅支持已初始化平台接口的微信环境。
         if (gm.platType !== PlatType.wx || !gm.API) return;
         const wxMgr = gm.API as WXManager;
-        wxMgr.getUserProfile(() => {
-            // WXManager 已更新用户信息，成功后同步刷新主页显示。
-            this.refreshUserProfile();
-        });
+        const getUserInfo = () => {
+            if (!this.isValid || !this.node.activeInHierarchy) return;
+            wxMgr.getUserProfile(() => {
+                // WXManager 已更新用户信息，成功后同步刷新主页显示。
+                this.refreshUserProfile();
+            });
+        };
+        if (!wxMgr.isAuthorize) {
+            wxMgr.requirePrivacyAuthorize(() => {
+                getUserInfo();
+            }, () => {
+                console.log('用户未同意隐私授权');
+            });
+        } else {
+            getUserInfo();
+        }
     }
 }
 

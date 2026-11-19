@@ -114,7 +114,7 @@ export class WXManager extends BasePlat {
                                         var avatarUrl = userInfo.avatarUrl;
                                         userMgr.nickName = nickName;
                                         userMgr.avatarUrl = avatarUrl;
-                                        gm.Event.emit(GameEvent.refreshUserProfile);
+                                        // 登录阶段只更新用户数据，主页打开时统一刷新头像和昵称。
                                     },
                                     fail(err) {
                                         console.log(`getUserInfo 调用失败`, err);

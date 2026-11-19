@@ -48,6 +48,8 @@ export enum UIPath {
     UIMoneyAdd = "prefabs/UIPage/UIMoneyAdd",
     /**小地图页面 */
     UISmallMap = "prefabs/UIPage/UISmallMap",
+    /**游戏引导页面 */
+    UIGameGuide = "prefabs/UIPage/UIGameGuide",
 }
 
 /**物品路径 */

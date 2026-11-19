@@ -275,13 +275,11 @@ export class UIMap extends UIBase {
             for (const child of parent.children) child.active = false;
         }
         if (!data) return;
-        const itemIds = [...this.parseList(data.rewardList), ...this.parseList(data.equipList)];
         try {
-            const [prefab] = await Promise.all([
-                uiMgr.preLoadPrefab(ItemPath.showItem),
-                uiMgr.preLoadItemIcons(itemIds),
-            ]);
-            this.showItemPrefab = prefab;
+            // 缓存命中时直接复用节点，首次只等待模板，不等待物品图片。
+            if (!this.showItemPrefab) {
+                this.showItemPrefab = await uiMgr.preLoadPrefab(ItemPath.showItem);
+            }
         } catch (error) {
             console.warn('地图物品资源加载失败', error);
             return;

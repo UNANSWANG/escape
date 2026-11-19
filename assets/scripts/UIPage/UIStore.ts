@@ -1,6 +1,6 @@
-import { _decorator, Node, Prefab, Label, instantiate } from 'cc';
+import { _decorator, Node, Prefab, Label, instantiate, director, Director } from 'cc';
 import { UIBase } from './UIBase';
-import { UIPath } from '../manager/pathConfig';
+import { ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
@@ -28,6 +28,7 @@ export class UIStore extends UIBase {
     private pageLoadId = 0;
     private selectedTabIndex = 0;
     private tabsInitialized = false;
+    private preloadVersion = 0;
     private storePages = new Map<number, Node>();
     private storePageLoads = new Map<number, Promise<Node | null>>();
 
@@ -36,6 +37,7 @@ export class UIStore extends UIBase {
     }
 
     onUI_Open() {
+        this.preloadVersion++;
         this.initData();
     }
 
@@ -44,7 +46,23 @@ export class UIStore extends UIBase {
             this.initTabs();
             this.tabsInitialized = true;
         }
-        this.clickTabBtn(this.selectedTabIndex);
+        const version = this.preloadVersion;
+        void this.clickTabBtn(this.selectedTabIndex).then(() => this.preloadStorePages(version));
+    }
+
+    /**首屏显示后逐帧预热其余页签模板，关闭或重开后停止后续任务。 */
+    private async preloadStorePages(version: number) {
+        const paths = [ItemPath.storeItem, ItemPath.superWeaponItem,
+            ...this.storeTabsArray.map(index => UIPath.storePage + index)];
+        for (const path of paths) {
+            await new Promise<void>(resolve => director.once(Director.EVENT_AFTER_DRAW, () => resolve()));
+            if (!this.isValid || !this.node.activeInHierarchy || version !== this.preloadVersion) return;
+            try {
+                await uiMgr.preLoadPrefab(path);
+            } catch (error) {
+                console.warn(`商城模板预加载失败: ${path}`, error);
+            }
+        }
     }
 
     private initTabs() {
@@ -76,15 +94,6 @@ export class UIStore extends UIBase {
         }
         this.selectedTabIndex = index;
         const pageLoadId = ++this.pageLoadId;
-        this.storePages.forEach((pageNode) => {
-            pageNode.active = false;
-        });
-        this.tabContent.children.forEach((tabNode, tabIndex) => {
-            const selectNode = tabNode.getChildByName("select");
-            if (selectNode) {
-                selectNode.active = tabIndex === index;
-            }
-        });
         let pageNode = this.storePages.get(storeTabIndex);
         if (!pageNode?.isValid) {
             let pageLoad = this.storePageLoads.get(storeTabIndex);
@@ -94,6 +103,9 @@ export class UIStore extends UIBase {
             }
             try {
                 pageNode = await pageLoad;
+            } catch (error) {
+                console.warn('商城页签加载失败', error);
+                return;
             } finally {
                 this.storePageLoads.delete(storeTabIndex);
             }
@@ -101,7 +113,14 @@ export class UIStore extends UIBase {
         if (pageLoadId !== this.pageLoadId || !this.node.isValid || !pageNode?.isValid) {
             return;
         }
-        pageNode.active = true;
+        // 目标页的文字和按钮就绪后再切换，加载期间保留当前内容。
+        this.storePages.forEach((cachedPage) => {
+            cachedPage.active = cachedPage === pageNode;
+        });
+        this.tabContent.children.forEach((tabNode, tabIndex) => {
+            const selectNode = tabNode.getChildByName("select");
+            if (selectNode) selectNode.active = tabIndex === index;
+        });
         pageNode.getComponent(storePageBase)?.refreshPage();
     }
 
@@ -119,7 +138,12 @@ export class UIStore extends UIBase {
         pageNode.active = false;
         this.pageContent.addChild(pageNode);
         pageNode.setPosition(0, 0, 0);
-        await pageNode.getComponent(storePageBase)?.initData();
+        try {
+            await pageNode.getComponent(storePageBase)?.initData();
+        } catch (error) {
+            pageNode.destroy();
+            throw error;
+        }
         if (!this.node.isValid || !pageNode.isValid) {
             return null;
         }
@@ -138,6 +162,7 @@ export class UIStore extends UIBase {
 
     onUI_Close() {
         this.pageLoadId++;
+        this.preloadVersion++;
         this.storePages.forEach((pageNode) => {
             pageNode.active = false;
         });
@@ -145,6 +170,7 @@ export class UIStore extends UIBase {
 
     protected onDestroy(): void {
         this.pageLoadId++;
+        this.preloadVersion++;
         this.storePages.clear();
         this.storePageLoads.clear();
     }

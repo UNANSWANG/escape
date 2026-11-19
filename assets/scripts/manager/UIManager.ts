@@ -647,10 +647,8 @@ export class UIManager {
             this.foregroundItemLoads++;
             let pageNode: Node;
             try {
-                [pageNode] = await Promise.all([
-                    this.getOrCreatePage(pagePath),
-                    this.preLoadPageItems(pagePath, data).catch(error => console.warn('界面物品预加载失败', error)),
-                ]);
+                // 只等待界面本身，物品节点自行异步填充图片，不阻塞文字和按钮显示。
+                pageNode = await this.getOrCreatePage(pagePath);
             } finally {
                 this.foregroundItemLoads--;
             }

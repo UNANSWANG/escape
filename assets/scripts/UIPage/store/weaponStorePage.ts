@@ -25,10 +25,7 @@ export class weaponStorePage extends storePageBase {
 
     async initData() {
         const weaponData = weaponsConfig.getAllData().slice(1).filter((weapon) => weapon.kinds === 0 && weapon.isStore === 1);
-        const [itemPrefab] = await Promise.all([
-            uiMgr.preLoadPrefab(ItemPath.storeItem),
-            uiMgr.preLoadItemIcons(weaponData.slice(0, 12).map(item => item.itemId)),
-        ]);
+        const itemPrefab = await uiMgr.preLoadPrefab(ItemPath.storeItem);
         if (!this.node.isValid || !this.content?.isValid) {
             return;
         }
@@ -46,6 +43,7 @@ export class weaponStorePage extends storePageBase {
 
             const weaponImg = itemNode.getChildByName("img")?.getComponent(Sprite);
             if (weaponImg) {
+                weaponImg.spriteFrame = null;
                 ccTools.loadImg(weaponImg, imgPath.weaponIcon + weapon.itemId);
             }
             const nameLab = itemNode.getChildByName("nameLab")?.getComponent(Label);

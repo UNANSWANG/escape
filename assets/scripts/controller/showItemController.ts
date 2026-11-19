@@ -19,6 +19,10 @@ export class showItemController extends Component {
         }
         const bgSp = this.node.getChildByName('bg')?.getComponent(Sprite);
         const itemSp = this.node.getChildByName('img')?.getComponent(Sprite);
+        if (bgSp) {
+            ccTools.cancelAssetLoad(bgSp);
+            bgSp.spriteFrame = null;
+        }
         if (itemSp) {
             const isWeapon = Number.isInteger(itemId) && itemId >= 0 && itemId <= 100000;
             itemSp.node.angle = isWeapon ? -35 : 0;

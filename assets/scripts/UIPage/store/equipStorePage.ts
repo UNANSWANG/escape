@@ -25,10 +25,7 @@ export class equipStorePage extends storePageBase {
 
     async initData() {
         const equipmentData = equipmentConfig.getAllData().slice(1);
-        const [itemPrefab] = await Promise.all([
-            uiMgr.preLoadPrefab(ItemPath.storeItem),
-            uiMgr.preLoadItemIcons(equipmentData.slice(0, 12).map(item => item.itemId)),
-        ]);
+        const itemPrefab = await uiMgr.preLoadPrefab(ItemPath.storeItem);
         if (!this.node.isValid || !this.content?.isValid) {
             return;
         }
@@ -46,6 +43,7 @@ export class equipStorePage extends storePageBase {
 
             const equipmentImg = itemNode.getChildByName("img")?.getComponent(Sprite);
             if (equipmentImg) {
+                equipmentImg.spriteFrame = null;
                 equipmentImg.node.angle = 0;
                 ccTools.loadImg(equipmentImg, imgPath.equipIcon + equipment.itemId);
             }

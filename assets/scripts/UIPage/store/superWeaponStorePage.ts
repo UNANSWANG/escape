@@ -19,10 +19,7 @@ export class superWeaponStorePage extends storePageBase {
 
     async initData() {
         const weaponData = weaponsConfig.getAllData().filter((weapon) => weapon.kinds === 1 && weapon.isStore === 1);
-        const [itemPrefab] = await Promise.all([
-            uiMgr.preLoadPrefab(ItemPath.superWeaponItem),
-            uiMgr.preLoadItemIcons(weaponData.slice(0, 12).map(item => item.itemId)),
-        ]);
+        const itemPrefab = await uiMgr.preLoadPrefab(ItemPath.superWeaponItem);
         if (!this.node.isValid || !this.content.isValid) {
             return;
         }
@@ -36,6 +33,7 @@ export class superWeaponStorePage extends storePageBase {
             this.content.addChild(itemNode);
             const weaponImg = itemNode.getChildByName("img")?.getComponent(Sprite);
             if (weaponImg) {
+                weaponImg.spriteFrame = null;
                 ccTools.loadImg(weaponImg, imgPath.weaponIcon + weapon.itemId);
             }
             const nameLab = itemNode.getChildByName("nameLab")?.getComponent(Label);

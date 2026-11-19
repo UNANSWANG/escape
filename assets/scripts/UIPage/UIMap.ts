@@ -9,7 +9,6 @@ import { rankConfig } from '../json/jsonRank';
 import { difficultyNames, mapDifficultyColorArr, GameEvent, SaveKey } from '../manager/configData';
 import { ccStorageTools } from '../extention/storageTools';
 import { gm } from '../manager/gm';
-import { ccResTools } from '../extention/resTools';
 import { ccTools } from '../extention/generalTools';
 import { showItemController } from '../controller/showItemController';
 const { ccclass, property } = _decorator;
@@ -45,7 +44,6 @@ export class UIMap extends UIBase {
     /**是否已完成首次选择初始化，避免再次打开时用存档覆盖临时选择 */
     private hasInitializedSelection = false;
     private showItemPrefab: Prefab = null;
-    private showItemLoadPromise: Promise<Prefab> = null;
     private itemListVersion = 0;
     private mapFocusTween: Tween<Node> = null;
 
@@ -63,6 +61,7 @@ export class UIMap extends UIBase {
     onUI_Close() {
         this.mapFocusTween?.stop();
         this.mapFocusTween = null;
+        this.itemListVersion++;
     }
 
     onUI_Open() {
@@ -272,16 +271,20 @@ export class UIMap extends UIBase {
         const version = ++this.itemListVersion;
         const itemLayout = this.detailsNode.getChildByName('itemLayout');
         const equipLayout = this.detailsNode.getChildByName('equipLayout');
-        ccTools.destroyAllChild(itemLayout);
-        ccTools.destroyAllChild(equipLayout);
+        for (const parent of [itemLayout, equipLayout]) {
+            for (const child of parent.children) child.active = false;
+        }
         if (!data) return;
-
-        if (!this.showItemPrefab) {
-            if (!this.showItemLoadPromise) {
-                this.showItemLoadPromise = ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.showItem);
-            }
-            this.showItemPrefab = await this.showItemLoadPromise;
-            this.showItemLoadPromise = null;
+        const itemIds = [...this.parseList(data.rewardList), ...this.parseList(data.equipList)];
+        try {
+            const [prefab] = await Promise.all([
+                uiMgr.preLoadPrefab(ItemPath.showItem),
+                uiMgr.preLoadItemIcons(itemIds),
+            ]);
+            this.showItemPrefab = prefab;
+        } catch (error) {
+            console.warn('地图物品资源加载失败', error);
+            return;
         }
         if (version !== this.itemListVersion || !this.node.isValid) return;
         if (!this.showItemPrefab) {
@@ -290,23 +293,32 @@ export class UIMap extends UIBase {
         }
         this.initItemList(itemLayout, data.rewardList);
         this.initItemList(equipLayout, data.equipList);
+        const otherIds: number[] = [];
+        for (const row of this.mapData[this.selectedMapIdx] || []) {
+            otherIds.push(...this.parseList(row.rewardList), ...this.parseList(row.equipList));
+        }
+        void uiMgr.preLoadItemIcons(otherIds, true, () => this.isValid
+            && this.node.activeInHierarchy && version === this.itemListVersion)
+            .catch(error => console.warn('地图其他难度物品预加载失败', error));
+    }
+
+    private parseList(list: string): number[] {
+        try {
+            const items = JSON.parse(list);
+            return Array.isArray(items) ? items.filter(id => Number.isInteger(id) && id >= 0) : [];
+        } catch {
+            console.warn('地图物品列表格式错误: ' + list);
+            return [];
+        }
     }
 
     private initItemList(parent: Node, list: string) {
-        let itemIds: unknown;
-        try {
-            itemIds = JSON.parse(list);
-        } catch {
-            console.warn(`地图物品列表格式错误: ${list}`);
-            return;
-        }
-        if (!Array.isArray(itemIds)) return;
-        for (const itemId of itemIds) {
-            if (!Number.isInteger(itemId) || itemId < 0) continue;
-            const itemNode = instantiate(this.showItemPrefab);
-            parent.addChild(itemNode);
+        this.parseList(list).forEach((itemId, index) => {
+            const itemNode = parent.children[index] || instantiate(this.showItemPrefab);
+            if (!itemNode.parent) parent.addChild(itemNode);
+            itemNode.active = true;
             itemNode.getComponent(showItemController).initData(itemId);
-        }
+        });
     }
 
     ///

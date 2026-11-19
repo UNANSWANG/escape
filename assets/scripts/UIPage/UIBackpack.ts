@@ -9,7 +9,6 @@ import { JsonItemData } from '../json/jsonItem';
 import { pData } from '../manager/playerData';
 import { itemController } from '../controller/itemController';
 import { configData, QualityColorArr } from '../manager/configData';
-import { ccResTools } from '../extention/resTools';
 import { weaponsConfig } from '../json/jsonWeapons';
 import { equipmentConfig } from '../json/jsonEquipment';
 import { containerController } from '../controller/containerController';
@@ -86,7 +85,7 @@ export class UIBackpack extends UIBase {
         this.containerTitleLab.color = new Color(containerData?.fontColor || "#FFFFFF");
         this.hideAllSelect();
         if (!this.itemPrefab) {
-            this.itemPrefab = await ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.item);
+            this.itemPrefab = await uiMgr.preLoadPrefab(ItemPath.item);
         }
         if (!this.itemPrefab) {
             console.warn(`加载背包物品预制体失败: ${ItemPath.item}`);

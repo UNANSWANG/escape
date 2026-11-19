@@ -7,12 +7,17 @@ import { tipsNotice } from '../UIPage/tips/tipsNotice';
 import { pData } from './playerData';
 import { ccTools } from '../extention/generalTools';
 import { audioMgr } from './audioManager';
-import { configData, MonetaryType } from './configData';
+import { configData, MonetaryType, SaveKey } from './configData';
 import { weaponsConfig } from '../json/jsonWeapons';
 import { equipmentConfig } from '../json/jsonEquipment';
 import { armsConfig } from '../json/jsonArms';
 import { soldiersData } from '../data/soldiersData';
 import { poolMgr } from './poolManager';
+import { mapConfig } from '../json/jsonMap';
+import { getItemDataByItemId } from '../json/jsonItemData';
+import { signConfig } from '../json/jsonSign';
+import { ccStorageTools } from '../extention/storageTools';
+import { roleLevelConfig } from '../json/jsonRoleLevel';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIManager')
@@ -97,6 +102,91 @@ export class UIManager {
     /**页面创建串行执行，避免多个下载同时完成时集中实例化。 */
     private pageCreationTail: Promise<void> = Promise.resolve();
     private backgroundPreloadVersions = new WeakMap<Component, number>();
+    private foregroundItemLoads = 0;
+
+    private parseItemIds(value: string, pairs = false): number[] {
+        try {
+            const items = JSON.parse(value);
+            if (!Array.isArray(items)) return [];
+            return items.map(item => pairs ? item?.[0] : item)
+                .filter(itemId => Number.isInteger(itemId) && itemId >= 0);
+        } catch {
+            return [];
+        }
+    }
+
+    async preLoadItemIcons(itemIds: number[], background = false, isCurrent = () => true) {
+        const paths = new Set<string>();
+        for (const itemId of itemIds) {
+            const data = getItemDataByItemId(itemId);
+            if (!data) continue;
+            paths.add(ccTools.getItemIconPath(itemId));
+            paths.add(imgPath.itemBg + data.quality);
+            if (itemId === 200001) paths.add(imgPath.money);
+            if (itemId === 200002) paths.add(imgPath.gold);
+        }
+        const pictures = Array.from(paths).filter(Boolean);
+        for (let index = 0; index < pictures.length; index += 4) {
+            while (background && this.foregroundItemLoads > 0 && isCurrent()) await this.nextPreloadFrame();
+            if (!isCurrent()) return;
+            await Promise.all(pictures.slice(index, index + 4)
+                .map(path => ccResTools.loadPic(this.resBundle, path, undefined, background)));
+            if (background) await this.nextPreloadFrame();
+        }
+    }
+
+    private getPageItemIds(pagePath: string, data?: any): number[] {
+        switch (pagePath) {
+            case UIPath.UIMap: {
+                const rows = mapConfig.getDataByMapIdx(pData.selectMapData[0]);
+                const selected = rows.find(row => row.difficultyType === pData.selectMapData[1]) || rows[0];
+                return selected ? [...this.parseItemIds(selected.rewardList), ...this.parseItemIds(selected.equipList)] : [];
+            }
+            case UIPath.UIStore:
+                return weaponsConfig.getAllData().filter(weapon => weapon.kinds === 1 && weapon.isStore === 1)
+                    .slice(0, 12).map(weapon => weapon.itemId);
+            case UIPath.UIStorehouse:
+            case UIPath.UIShowItem:
+                return [...pData.equipmentIds, ...pData.getStorehouseData().filter(item => item[1] > 0)
+                    .slice(0, 20).map(item => item[0])];
+            case UIPath.UIRoleStore: {
+                const level = roleLevelConfig.getRoleLevelData(pData.roleId, pData.getRoleLevel(pData.roleId));
+                return level ? this.parseItemIds(level.upgradeItem, true) : [];
+            }
+            case UIPath.UISign: {
+                const days = Math.max(0, ccStorageTools.getNumberData(SaveKey.signDays));
+                const received = ccStorageTools.getLimitTimeData(SaveKey.isGetSign) === 1;
+                const types = signConfig.getTypes();
+                const week = Math.floor((received ? Math.max(0, days - 1) : days) / 7);
+                return signConfig.getDataByType(types[Math.min(week, types.length - 1)])
+                    .map(row => this.parseItemIds(row.reward)[0]).filter(itemId => Number.isInteger(itemId));
+            }
+            case UIPath.UIReward:
+                return (data?.rewardData || []).map(item => item[0]);
+            case UIPath.UISuccess:
+                return (data?.backpackItems || []).map(item => item[0]);
+            case UIPath.UIFail:
+                return pData.lostItems.map(item => item[0]);
+            default:
+                return [];
+        }
+    }
+
+    private async preLoadPageItems(pagePath: string, data?: any, background = false, isCurrent = () => true) {
+        const prefabs: string[] = [];
+        if ([UIPath.UIMap, UIPath.UIShowItem, UIPath.UIRoleStore, UIPath.UIFail, UIPath.UISuccess].includes(pagePath as UIPath)) {
+            prefabs.push(ItemPath.showItem);
+        }
+        if (pagePath === UIPath.UIStore) {
+            prefabs.push(UIPath.storePage + 1, ItemPath.superWeaponItem, ItemPath.storeItem);
+        }
+        await Promise.all([
+            ...prefabs.map(path => this.preLoadPrefab(path)),
+            this.preLoadItemIcons(this.getPageItemIds(pagePath, data), background, isCurrent),
+            ...(pagePath === UIPath.UIStore ? Array.from({ length: 5 }, (_, quality) =>
+                ccResTools.loadPic(this.resBundle, imgPath.storeItemBg + quality, undefined, background)) : []),
+        ]);
+    }
 
     private nextPreloadFrame(): Promise<void> {
         return new Promise(resolve => director.once(Director.EVENT_AFTER_DRAW, () => resolve()));
@@ -121,6 +211,7 @@ export class UIManager {
     private async preLoadInFrames(tasks: Array<() => Promise<unknown>>, isCurrent: () => boolean) {
         for (const task of tasks) {
             await this.nextPreloadFrame();
+            while (this.foregroundItemLoads > 0 && isCurrent()) await this.nextPreloadFrame();
             if (!isCurrent()) return;
             try {
                 await task();
@@ -155,7 +246,15 @@ export class UIManager {
             UIPath.UIRevisit, UIPath.UIStorehouse, UIPath.UIRoleStore, UIPath.UISign,
             UIPath.UIShowItem, UIPath.UIStore, UIPath.UIHandBook];
         return this.preLoadInFrames([
-            ...paths.map(path => () => this.preLoadPage(path)),
+            () => this.preLoadPrefab(ItemPath.showItem),
+            () => this.preLoadPageItems(UIPath.UIMap, undefined, true, isCurrent),
+            () => this.preLoadPrefab(ItemPath.item),
+            ...Array.from({ length: 5 }, (_, quality) => () =>
+                ccResTools.loadPic(this.resBundle, imgPath.itemBg + quality, undefined, true)),
+            ...paths.map(path => async () => {
+                await this.preLoadPageItems(path, undefined, true, isCurrent);
+                if (isCurrent()) await this.preLoadPage(path);
+            }),
             () => this.preLoadRoleShow(),
             () => this.preLoadPage(gamePath.UIGame),
         ], isCurrent);
@@ -547,7 +646,16 @@ export class UIManager {
         const pending = this.pageOpeningTasks.get(keyName);
         if (pending) return pending;
         const task = (async () => {
-            const pageNode = await this.getOrCreatePage(pagePath);
+            this.foregroundItemLoads++;
+            let pageNode: Node;
+            try {
+                [pageNode] = await Promise.all([
+                    this.getOrCreatePage(pagePath),
+                    this.preLoadPageItems(pagePath, data).catch(error => console.warn('界面物品预加载失败', error)),
+                ]);
+            } finally {
+                this.foregroundItemLoads--;
+            }
             this.uiPage.addChild(pageNode);
             pageNode.active = true;
             pageNode.getComponent(UIBase).onUI_Open(data);

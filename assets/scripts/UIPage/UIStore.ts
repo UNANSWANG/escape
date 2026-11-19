@@ -4,7 +4,6 @@ import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
-import { ccResTools } from '../extention/resTools';
 import { storePageBase } from './store/storePageBase';
 const { ccclass, property } = _decorator;
 
@@ -108,7 +107,7 @@ export class UIStore extends UIBase {
 
     private async loadStorePage(storeTabIndex: number): Promise<Node | null> {
         const pagePath = UIPath.storePage + storeTabIndex;
-        const pagePrefab = await ccResTools.loadPrefab(uiMgr.resBundle, pagePath);
+        const pagePrefab = await uiMgr.preLoadPrefab(pagePath);
         if (!this.node.isValid || !this.pageContent.isValid) {
             return null;
         }

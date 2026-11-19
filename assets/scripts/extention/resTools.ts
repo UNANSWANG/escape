@@ -42,6 +42,10 @@ export class resTools {
     private picLoadingMap: Map<string, Promise<SpriteFrame>> = new Map();
     /**正在加载的Spine Promise，同路径并发请求共享一次加载 */
     private spineLoadingMap: Map<string, Promise<sp.SkeletonData>> = new Map();
+    private prefabLoadingMaps = new WeakMap<AssetManager.Bundle, Map<string, Promise<Prefab>>>();
+    private pictureQueue: Array<{ key: string; background: boolean; run: () => void }> = [];
+    private activePictures = 0;
+    private activeBackgroundPictures = 0;
     /**远程头像按最近使用顺序保留，正在显示或等待回写的图片不淘汰。 */
     private remoteImages = new Map<string, SpriteFrame>();
     private readonly remoteImageLimit = 64;
@@ -161,7 +165,16 @@ export class resTools {
 
     /**加载预制体*/
     loadPrefab($bundle: AssetManager.Bundle, $path: string, showLoading: boolean = true): Promise<Prefab> {
-        return new Promise(($resolve, reject) => {
+        if (!$bundle) return Promise.reject(new Error('资源包尚未加载'));
+        const cached = $bundle.get($path, Prefab);
+        if (cached) return Promise.resolve(cached);
+        let tasks = this.prefabLoadingMaps.get($bundle);
+        if (!tasks) {
+            tasks = new Map();
+            this.prefabLoadingMaps.set($bundle, tasks);
+        }
+        if (tasks.has($path)) return tasks.get($path);
+        const task = new Promise<Prefab>(($resolve, reject) => {
             $bundle.load($path, Prefab,
                 (finish: number, total: number) => {
                     if (showLoading) {
@@ -175,7 +188,12 @@ export class resTools {
                     }
                     $resolve(prefab);
                 })
+        }).then(prefab => { tasks.delete($path); return prefab; }, error => {
+            tasks.delete($path);
+            throw error;
         });
+        tasks.set($path, task);
+        return task;
     }
 
     /**加载animation动画 */
@@ -199,22 +217,50 @@ export class resTools {
         });
     }
 
-    /**
-     * 加载一张图片,
-     * @param $bundle 
-     * @param $path 资源路径，默认补上 /spriteFrame 后缀
-     * @param call 回调
-     * @returns 
-     */
-    async loadPic($bundle: AssetManager.Bundle, $path: string, call?): Promise<SpriteFrame> {
+    /**同步查询已解析的图片，命中后可在当前帧直接赋值。 */
+    getCachedPic(bundle: AssetManager.Bundle, path: string): SpriteFrame | null {
+        if (!bundle) return null;
+        return this.picMap.get(`local:${bundle.name}:${path}/spriteFrame`)
+            || bundle.get(path + '/spriteFrame', SpriteFrame) || null;
+    }
+
+    /**前台最多并发四项，后台仅占一个名额，为当前界面保留加载容量。 */
+    private pumpPictures() {
+        while (this.activePictures < 4) {
+            let index = this.pictureQueue.findIndex(task => !task.background);
+            if (index < 0) {
+                if (this.activeBackgroundPictures >= 1) return;
+                index = this.pictureQueue.findIndex(task => task.background);
+            }
+            if (index < 0) return;
+            const task = this.pictureQueue.splice(index, 1)[0];
+            this.activePictures++;
+            if (task.background) this.activeBackgroundPictures++;
+            task.run();
+        }
+    }
+
+    /**加载图片；同路径共享任务，前台请求可提升尚未开始的后台任务优先级。 */
+    async loadPic($bundle: AssetManager.Bundle, $path: string, call?, background = false): Promise<SpriteFrame> {
+        if (!$bundle) return null;
+        const cached = this.getCachedPic($bundle, $path);
+        if (cached) {
+            call && call(cached);
+            return cached;
+        }
         $path += '/spriteFrame';
-        let cacheKey = `local:${$path}`;
+        let cacheKey = `local:${$bundle.name}:${$path}`;
         if (this.picMap.has(cacheKey)) {
             let cached = this.picMap.get(cacheKey);
             call && call(cached);
             return cached;
         }
         if (this.picLoadingMap.has(cacheKey)) {
+            const queued = this.pictureQueue.find(task => task.key === cacheKey);
+            if (queued && !background) {
+                queued.background = false;
+                this.pumpPictures();
+            }
             // 相同资源路径只发起一次bundle.load
             let loadingResult = await this.picLoadingMap.get(cacheKey);
             call && call(loadingResult);
@@ -226,17 +272,29 @@ export class resTools {
                 $resolve(null);
                 return;
             }
-            $bundle.load($path, SpriteFrame, (err, res: SpriteFrame) => {
-                if (err || !res) {
-                    console.error("加载图片失败", $path, err);
-                    $resolve(null);
-                    return;
+            const task = { key: cacheKey, background, run: () => {
+                const complete = (err, res: SpriteFrame) => {
+                    this.activePictures--;
+                    if (task.background) this.activeBackgroundPictures--;
+                    if (err || !res) {
+                        console.error("加载图片失败", $path, err);
+                        $resolve(null);
+                    } else {
+                        this.picMap.set(cacheKey, res);
+                        $resolve(res);
+                    }
+                    this.pumpPictures();
+                };
+                try {
+                    $bundle.load($path, SpriteFrame, complete);
+                } catch (error) {
+                    complete(error, null);
                 }
-                this.picMap.set(cacheKey, res);
-                $resolve(res);
-            });
+            } };
+            this.pictureQueue.push(task);
         });
         this.picLoadingMap.set(cacheKey, loading);
+        this.pumpPictures();
         let result = await loading;
         this.picLoadingMap.delete(cacheKey);
         call && call(result);

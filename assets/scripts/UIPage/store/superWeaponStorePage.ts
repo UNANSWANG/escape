@@ -3,7 +3,6 @@ import { storePageBase } from './storePageBase';
 import { weaponsConfig, JsonWeaponsData } from '../../json/jsonWeapons';
 import { imgPath, ItemPath, UIPath } from '../../manager/pathConfig';
 import { uiMgr } from '../../manager/UIManager';
-import { ccResTools } from '../../extention/resTools';
 import { ccTools } from '../../extention/generalTools';
 import { zoomButton } from '../../extention/zoomButton';
 import { pData } from '../../manager/playerData';
@@ -20,7 +19,10 @@ export class superWeaponStorePage extends storePageBase {
 
     async initData() {
         const weaponData = weaponsConfig.getAllData().filter((weapon) => weapon.kinds === 1 && weapon.isStore === 1);
-        const itemPrefab = await ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.superWeaponItem);
+        const [itemPrefab] = await Promise.all([
+            uiMgr.preLoadPrefab(ItemPath.superWeaponItem),
+            uiMgr.preLoadItemIcons(weaponData.slice(0, 12).map(item => item.itemId)),
+        ]);
         if (!this.node.isValid || !this.content.isValid) {
             return;
         }

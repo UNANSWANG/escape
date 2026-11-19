@@ -8,7 +8,6 @@ import { ccTools } from '../extention/generalTools';
 import { pData } from '../manager/playerData';
 import { configData, GameEvent } from '../manager/configData';
 import { audioMgr } from '../manager/audioManager';
-import { ccResTools } from '../extention/resTools';
 import { showItemController } from '../controller/showItemController';
 import { RankScoreAnimation } from '../extention/rankScoreAnimation';
 import { MonetaryValueAnimation } from '../extention/monetaryValueAnimation';
@@ -97,7 +96,7 @@ export class UIFail extends UIBase {
         const items = pData.lostItems.map(([itemId, num]) => [itemId, num]);
         if (items.length === 0) return;
         if (!this.showItemPrefab) {
-            this.showItemPrefab = await ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.showItem, false);
+            this.showItemPrefab = await uiMgr.preLoadPrefab(ItemPath.showItem);
         }
         if (version !== this.itemListVersion || !this.node.isValid || !this.node.activeInHierarchy) return;
         if (!this.showItemPrefab) {

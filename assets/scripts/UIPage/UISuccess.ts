@@ -8,7 +8,6 @@ import { gm } from '../manager/gm';
 import { audioMgr } from '../manager/audioManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
-import { ccResTools } from '../extention/resTools';
 import { showItemController } from '../controller/showItemController';
 import { RankScoreAnimation } from '../extention/rankScoreAnimation';
 import { MonetaryValueAnimation } from '../extention/monetaryValueAnimation';
@@ -83,7 +82,7 @@ export class UISuccess extends UIBase {
         ccTools.destroyAllChild(this.itemContent);
         if (items.length === 0) return;
         if (!this.showItemPrefab) {
-            this.showItemPrefab = await ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.showItem, false);
+            this.showItemPrefab = await uiMgr.preLoadPrefab(ItemPath.showItem);
         }
         if (version !== this.itemListVersion || !this.node.isValid || !this.node.activeInHierarchy) return;
         if (!this.showItemPrefab) {

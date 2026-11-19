@@ -4,7 +4,6 @@ import { imgPath, ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
-import { ccResTools } from '../extention/resTools';
 import { JsonRoleData, roleConfig } from '../json/jsonRole';
 import { roleAvatarItemController } from '../controller/roleAvatarItemController';
 import { showItemController } from '../controller/showItemController';
@@ -116,7 +115,7 @@ export class UIRoleStore extends UIBase {
 
         if (!this.roleAvatarPrefab) {
             if (!this.roleAvatarPrefabLoad) {
-                this.roleAvatarPrefabLoad = ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.roleAvatarItem);
+                this.roleAvatarPrefabLoad = uiMgr.preLoadPrefab(ItemPath.roleAvatarItem);
             }
             try {
                 this.roleAvatarPrefab = await this.roleAvatarPrefabLoad;
@@ -351,7 +350,7 @@ export class UIRoleStore extends UIBase {
         const upgradeItems = this.parseUpgradeItems(levelData.upgradeItem);
         if (!this.showItemPrefab) {
             if (!this.showItemPrefabLoad) {
-                this.showItemPrefabLoad = ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.showItem);
+                this.showItemPrefabLoad = uiMgr.preLoadPrefab(ItemPath.showItem);
             }
             this.showItemPrefab = await this.showItemPrefabLoad;
             this.showItemPrefabLoad = null;

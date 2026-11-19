@@ -3,7 +3,6 @@ import { UIBase } from './UIBase';
 import { ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
-import { ccResTools } from '../extention/resTools';
 import { pData } from '../manager/playerData';
 import { itemConfig } from '../json/jsonItem';
 import { showItemController } from '../controller/showItemController';
@@ -56,7 +55,7 @@ export class UIShowItem extends UIBase {
         }
         try {
             if (!this.showItemPrefabLoad) {
-                this.showItemPrefabLoad = ccResTools.loadPrefab(uiMgr.resBundle, ItemPath.showItem);
+                this.showItemPrefabLoad = uiMgr.preLoadPrefab(ItemPath.showItem);
             }
             const prefab = await this.showItemPrefabLoad;
             if (!this.isValid || version !== this.refreshVersion) {

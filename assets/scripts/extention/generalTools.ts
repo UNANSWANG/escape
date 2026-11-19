@@ -140,7 +140,8 @@ export class generalTools {
 
         // 同一组件后发请求会提升版本，先发请求完成后不会回写旧资源
         let loadVersion = this.beginAssetLoad(sprite);
-        let img = await ccResTools.loadPic(uiMgr.resBundle, url);
+        const cached = ccResTools.getCachedPic(uiMgr.resBundle, url);
+        let img = cached || await ccResTools.loadPic(uiMgr.resBundle, url);
         if (!img) {
             console.log("加载图片失败", url);
             return false;

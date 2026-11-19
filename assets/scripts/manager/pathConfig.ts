@@ -148,9 +148,9 @@ export enum imgPath {
     /**子弹 */
     bullet = "texture/game/bullet/bullet_",
     /**银币 */
-    money = "texture/common/money",
+    money = "texture/icon/item/item_200001",
     /**金币 */
-    gold = "texture/common/money2",
+    gold = "texture/icon/item/item_200002",
     /**排行榜底 */
     rankItemBg = "texture/rank/bg/bg_",
     /**排行榜线 */

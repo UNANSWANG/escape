@@ -47,8 +47,7 @@ export class rewardItem extends Component {
             const isCurrency = itemId === 200001 || itemId === 200002;
             const scale = isCurrency ? 1 : 0.7;
             this.imgSp.node.setScale(scale, scale, scale);
-            const iconPath = itemId === 200001 ? imgPath.money
-                : itemId === 200002 ? imgPath.gold : ccTools.getItemIconPath(itemId);
+            const iconPath = ccTools.getItemIconPath(itemId);
             ccTools.loadImg(this.imgSp, iconPath);
         }
     }

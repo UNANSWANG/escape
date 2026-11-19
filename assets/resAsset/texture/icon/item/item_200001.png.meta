@@ -11,7 +11,7 @@
     "6c48a": {
       "importer": "texture",
       "uuid": "e3ada27f-ca9b-4540-b7d7-0ea956d22e77@6c48a",
-      "displayName": "money",
+      "displayName": "item_200001",
       "id": "6c48a",
       "name": "texture",
       "userData": {
@@ -35,7 +35,7 @@
     "f9941": {
       "importer": "sprite-frame",
       "uuid": "e3ada27f-ca9b-4540-b7d7-0ea956d22e77@f9941",
-      "displayName": "money",
+      "displayName": "item_200001",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {

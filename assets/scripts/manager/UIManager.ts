@@ -122,8 +122,6 @@ export class UIManager {
             if (!data) continue;
             paths.add(ccTools.getItemIconPath(itemId));
             paths.add(imgPath.itemBg + data.quality);
-            if (itemId === 200001) paths.add(imgPath.money);
-            if (itemId === 200002) paths.add(imgPath.gold);
         }
         const pictures = Array.from(paths).filter(Boolean);
         for (let index = 0; index < pictures.length; index += 4) {

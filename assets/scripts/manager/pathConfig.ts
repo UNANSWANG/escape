@@ -96,6 +96,7 @@ export enum ItemPath {
     skillRangeCircle = "prefabs/game/skillRangeCircle",
     /**矩形技能范围指示器 */
     skillRangeRect = "prefabs/game/skillRangeRect",
+    /**矩形技能范围指示器-左 */
     skillRangeRectLeft = "prefabs/game/skillRangeRectLeft",
     /**注射器 */
     syringe = "prefabs/game/syringe",

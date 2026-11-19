@@ -154,7 +154,7 @@ export class UIFail extends UIBase {
             }
             this.clickMainBtn();
         };
-        videoMgr.watchVideo(68, () => finish(true), () => finish(false));
+        videoMgr.watchVideo(17, () => finish(true), () => finish(false));
     }
 
     ///

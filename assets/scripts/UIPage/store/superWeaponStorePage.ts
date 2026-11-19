@@ -74,7 +74,7 @@ export class superWeaponStorePage extends storePageBase {
         const rewardData: number[][] = [[weapon.itemId, 1]];
         if (weapon.isAdBuy === 1) {
             this.purchasing = true;
-            videoMgr.watchVideo(68, () => {
+            videoMgr.watchVideo(61, () => {
                 this.openReward(rewardData);
             }, () => {
                 this.purchasing = false;

@@ -186,7 +186,7 @@ export class UISign extends UIBase {
         }
 
         this.isWatchingAd = true;
-        videoMgr.watchVideo(68, () => {
+        videoMgr.watchVideo(10, () => {
             this.isWatchingAd = false;
             this.receiveReward(3);
         }, () => {

@@ -2313,7 +2313,7 @@ export class UIGame extends UIBase {
 
         this.isDrugAdWatching = true;
         const gameVersion = this.openVersion;
-        videoMgr.watchVideo(68, () => {
+        videoMgr.watchVideo(65, () => {
             this.isDrugAdWatching = false;
             const rewardCount = Number(isBig ? commonConfig.getValue("drugAdCountBig") : commonConfig.getValue("drugAdCount"));
             this.setDrugCount(isBig, this.getDrugCount(isBig) + Math.max(0, rewardCount));

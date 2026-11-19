@@ -60,8 +60,6 @@ export enum ItemPath {
     bullet = "prefabs/Item/bullet",
     /**游戏内连线 */
     gameLine = "prefabs/Item/gameLine",
-    /**游戏通用物体 */
-    gameItem = "prefabs/Item/gameItem",
     /**游戏图片物体 */
     gameSpriteItem = "prefabs/Item/gameSpriteItem",
     /**游戏文本物体 */

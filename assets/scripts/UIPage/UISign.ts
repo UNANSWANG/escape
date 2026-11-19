@@ -102,8 +102,11 @@ export class UISign extends UIBase {
                 if (img) {
                     const isWeapon = Number.isInteger(itemId) && itemId >= 0 && itemId <= 100000;
                     img.node.angle = isWeapon ? -35 : 0;
-                    const scale = itemId === 200001 || itemId === 200002 ? 0.8 : 0.5;
-                    img.node.setScale(scale, scale, scale);
+                    // 最后一项使用预制体中单独配置的缩放。
+                    if (index !== this.itemList.length - 1) {
+                        const scale = itemId === 200001 || itemId === 200002 ? 0.8 : 0.5;
+                        img.node.setScale(scale, scale, scale);
+                    }
                     const iconPath = ccTools.getItemIconPath(itemId);
                     ccTools.loadImg(img, iconPath);
                 }

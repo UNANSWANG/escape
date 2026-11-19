@@ -209,6 +209,7 @@ export class UIMain extends UIBase {
         gm.Event.on(GameEvent.refreshMapSelection, this.refreshMapSelection, this);
         gm.Event.on(GameEvent.refreshShowContent, this.refreshShowContent, this);
         gm.Event.on(GameEvent.refreshRank, this.refreshRank, this);
+        gm.Event.on(GameEvent.refreshUserProfile, this.refreshUserProfile, this);
     }
 
     /**删除监听 */
@@ -219,6 +220,7 @@ export class UIMain extends UIBase {
         gm.Event.off(GameEvent.refreshMapSelection, this.refreshMapSelection, this);
         gm.Event.off(GameEvent.refreshShowContent, this.refreshShowContent, this);
         gm.Event.off(GameEvent.refreshRank, this.refreshRank, this);
+        gm.Event.off(GameEvent.refreshUserProfile, this.refreshUserProfile, this);
     }
 
     /**初始化或确认地图选择时刷新按钮；图片使用已保存的地图，无记录时默认索引 0 */
@@ -488,16 +490,16 @@ export class UIMain extends UIBase {
     /**点击头像，先完成隐私授权，再获取微信头像和昵称。 */
     private clickRoleAvatar() {
         // 已有头像链接时直接返回，避免重复请求授权。
-        if (userMgr.avatarUrl) return;
+        if (userMgr.avatarUrl) {
+            this.refreshUserProfile();
+            return;
+        }
         // 获取微信用户信息仅支持已初始化平台接口的微信环境。
         if (gm.platType !== PlatType.wx || !gm.API) return;
         const wxMgr = gm.API as WXManager;
         const getUserInfo = () => {
             if (!this.isValid || !this.node.activeInHierarchy) return;
-            wxMgr.getUserProfile(() => {
-                // WXManager 已更新用户信息，成功后同步刷新主页显示。
-                this.refreshUserProfile();
-            });
+            wxMgr.getUserProfile();
         };
         if (!wxMgr.isAuthorize) {
             wxMgr.requirePrivacyAuthorize(() => {

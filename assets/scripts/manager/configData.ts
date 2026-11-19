@@ -96,6 +96,8 @@ export const gmConfig = {
 
 /**游戏事件 */
 export enum GameEvent {
+    /**平台获取头像昵称后刷新用户展示。 */
+    refreshUserProfile = "refreshUserProfile",
     /** Boss 追击状态变化，参数为 Boss 实例和是否追击。 */
     bossChaseChanged = "bossChaseChanged",
     /** Boss 血量变化，参数为 Boss 实例和是否立即同步虚影。 */

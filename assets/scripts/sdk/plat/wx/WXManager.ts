@@ -3,6 +3,7 @@ import { ccTimeTools } from "../../../extention/timeTools";
 import { gm } from "../../../manager/gm";
 import { uiMgr } from "../../../manager/UIManager";
 import { userMgr } from "../../../manager/userManager";
+import { GameEvent } from "../../../manager/configData";
 import { httpMgr } from "../../network/httpManager";
 import { urlConfig } from "../../network/netConfig";
 import { BasePlat } from "../BasePlat";
@@ -114,6 +115,7 @@ export class WXManager extends BasePlat {
                                         var avatarUrl = userInfo.avatarUrl;
                                         userMgr.nickName = nickName;
                                         userMgr.avatarUrl = avatarUrl;
+                                        gm.Event.emit(GameEvent.refreshUserProfile);
                                     },
                                     fail(err) {
                                         console.log(`getUserInfo 调用失败`, err);
@@ -286,6 +288,7 @@ export class WXManager extends BasePlat {
                 console.log("获取用户信息", res.userInfo);
                 userMgr.nickName = res.userInfo.nickName;
                 userMgr.avatarUrl = res.userInfo.avatarUrl;
+                gm.Event.emit(GameEvent.refreshUserProfile);
 
                 success && success();
             },

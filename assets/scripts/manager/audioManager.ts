@@ -292,11 +292,12 @@ export class audioManager {
         } else {
             this.dic_loading.set(key, 1);
             bundle.load($name, AudioClip, (err, res) => {
-                if (!res) {
-                    console.error("没有找到声音资源>>>", $name);
+                // 失败也要清除加载标记，允许回到前台或再次进入时重试。
+                this.dic_loading.delete(key);
+                if (err || !res) {
+                    console.error("没有找到声音资源>>>", $name, err);
                     return;
                 }
-                this.dic_loading.delete(key);
                 this._dic.set(key, res);
 
                 this.musicSource.clip = res;

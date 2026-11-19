@@ -9,21 +9,18 @@ export class storageTools {
     private hasPendingSave = false;
 
     /**初始化数据 */
-    initData() {
-        // this.data = JSON.parse(localStorage.getItem(KEY_STORAGE) || "{}");
-        // return;
+    async initData() {
         if (gm.platType != PlatType.h5) {
             //使用平台存储
-            // this.data = 
-            gm.API.getStorage(KEY_STORAGE);
+            this.setexternalData(await gm.API.getStorage(KEY_STORAGE));
         } else {
-            this.data = JSON.parse(localStorage.getItem(KEY_STORAGE) || "{}");
+            this.setexternalData(JSON.parse(localStorage.getItem(KEY_STORAGE) || "{}"));
         }
     }
 
     /**外部设置数据 */
     setexternalData(data: any) {
-        this.data = data;
+        this.data = data && typeof data === "object" && !Array.isArray(data) ? data : {};
     }
 
     /**保存数据 */

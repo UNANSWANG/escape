@@ -1,6 +1,5 @@
 import { _decorator, Component, director, game, Node, EventTarget, Game } from 'cc';
 import { audioMgr } from './audioManager';
-import { ccStorageTools } from '../extention/storageTools';
 import { BasePlat } from '../sdk/plat/BasePlat';
 import { ccTimeTools } from '../extention/timeTools';
 import { GameEvent } from './configData';
@@ -46,7 +45,6 @@ export class gm extends Component {
             console.log = () => { };
         }
 
-        this.initStorage();
         audioMgr.initAudio(this.node);
         this.addListener();
     }
@@ -89,11 +87,6 @@ export class gm extends Component {
             }
             audioMgr.playBackgroundMusic();
         }, this);
-    }
-
-    /**初始化存储数据 */
-    initStorage() {
-        ccStorageTools.initData();
     }
 
     /**游戏暂停 */

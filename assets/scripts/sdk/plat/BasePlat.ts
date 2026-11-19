@@ -44,9 +44,9 @@ export class BasePlat {
     }
 
     /**获取数据 */
-    getStorage(key: string) {
+    getStorage(key: string): any {
         if (HTML5) {
-            JSON.parse(localStorage.getItem(key) || "{}");
+            return JSON.parse(localStorage.getItem(key) || "{}");
         }
     }
 

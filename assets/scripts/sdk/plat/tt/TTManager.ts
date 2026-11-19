@@ -1,5 +1,4 @@
 
-import { ccStorageTools } from "../../../extention/storageTools";
 import { GameEvent } from "../../../manager/configData";
 import { gm } from "../../../manager/gm";
 import { pData } from "../../../manager/playerData";
@@ -174,20 +173,17 @@ export class TTManager extends BasePlat {
         });
     }
 
-    getStorage(key: string): any {
-        this.PLAT.getStorage({
-            key: key,
-            success: (res) => {
-                console.log('getStorage调用成功', res);
-                ccStorageTools.setexternalData(res.data);
-                // return res.data;
-            },
-            fail: (res) => {
-                console.log('getStorage调用失败返回{}', res);
-                ccStorageTools.setexternalData({});
-                // return {};
-            }
-        })
+    getStorage(key: string): Promise<any> {
+        return new Promise((resolve) => {
+            this.PLAT.getStorage({
+                key,
+                success: (res) => resolve(res.data),
+                fail: (res) => {
+                    console.log('getStorage调用失败返回{}', res);
+                    resolve({});
+                }
+            });
+        });
     }
 
     initVideo() {

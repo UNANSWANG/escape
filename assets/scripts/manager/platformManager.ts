@@ -8,13 +8,16 @@ import { httpMgr } from '../sdk/network/httpManager';
 import { netConfig, urlConfig } from '../sdk/network/netConfig';
 import { GameEvent } from './configData';
 import { pData } from './playerData';
+import { ccStorageTools } from '../extention/storageTools';
 const { ccclass, property } = _decorator;
 
 @ccclass('platformManager')
 export class platformManager extends Component {
+    /**平台识别、存档恢复和登录完成后，加载页才能初始化玩家数据。 */
+    static ready: Promise<void>;
     protected onLoad(): void {
         this.initNetwork();
-        this.initPlat();
+        platformManager.ready = this.initPlat();
     }
 
     /**初始化平台 */
@@ -24,7 +27,6 @@ export class platformManager extends Component {
             gm.API = new TTManager();
             gm.platType = PlatType.tt;
             gm.API.deploy();
-            await gm.API.login();
             console.warn("初始化抖音平台");
         } else if (window["ks"]) {
             //快手
@@ -35,7 +37,6 @@ export class platformManager extends Component {
             gm.API = new WXManager();
             gm.platType = PlatType.wx;
             gm.API.deploy();
-            await gm.API.login();
             console.warn("初始化微信平台");
         } else {
             gm.API = new BasePlat();
@@ -43,6 +44,8 @@ export class platformManager extends Component {
             console.warn("初始化h5平台");
         }
 
+        await ccStorageTools.initData();
+        if (gm.API) await gm.API.login();
         this.login();
     }
 

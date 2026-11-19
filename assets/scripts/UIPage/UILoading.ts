@@ -7,6 +7,7 @@ import {  configData, equipmentCommonConfig, GameEvent, playerCommonConfig, sold
 import { pData } from '../manager/playerData';
 import { audioMgr } from '../manager/audioManager';
 import { commonConfig } from '../json/jsonCommon';
+import { platformManager } from '../manager/platformManager';
 const { ccclass, property } = _decorator;
 
 interface BackgroundLoopData {
@@ -100,6 +101,8 @@ export class UILoading extends Component {
     }
 
     async initData() {
+        await platformManager.ready;
+        audioMgr.initStorageData();
         this.initStorageData();
         this.initSDK();
 

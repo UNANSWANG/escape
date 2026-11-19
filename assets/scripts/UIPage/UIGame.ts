@@ -1664,7 +1664,7 @@ export class UIGame extends UIBase {
         player.playDeath(() => this.onGameFail());
     }
 
-    /**死亡或撤离超时后停止本局，保存背包及穿戴装备掉落并打开失败结算。 */
+    /**死亡、撤离超时或主动退出时停止本局，保存背包及穿戴装备掉落并打开失败结算。 */
     private onGameFail(): void {
         if (this.isFailTriggered || this.isLeaveSuccessTriggered) return;
         this.isFailTriggered = true;
@@ -2429,7 +2429,7 @@ export class UIGame extends UIBase {
     /**点击设置按钮 */
     clickSetBtn() {
         if (this.isOpening) return;
-        uiMgr.openPage(UIPath.UISetting, { mode: 1 });
+        uiMgr.openPage(UIPath.UISetting, { mode: 1, onExitGame: () => this.onGameFail() });
         gm.gamePause();
     }
 }

@@ -6,7 +6,6 @@ import { zoomButton } from '../extention/zoomButton';
 import { audioMgr } from '../manager/audioManager';
 import { gm } from '../manager/gm';
 import { GameEvent } from '../manager/configData';
-import { pData } from '../manager/playerData';
 import { userMgr } from '../manager/userManager';
 const { ccclass, property } = _decorator;
 const SliderEventSlide = 'slide';
@@ -51,6 +50,8 @@ export class UISetting extends UIBase {
 
     /**模式：0：普通模式 1：关卡模式（重新开始和返回主页） */
     mode = 0;
+    /**局内返回时由游戏页执行统一失败结算。 */
+    private onExitGame: (() => void) | null = null;
     /**控制台连点次数 */
     consoleClickCount = 0;
 
@@ -65,6 +66,7 @@ export class UISetting extends UIBase {
     }
 
     initData(data) {
+        this.onExitGame = typeof data?.onExitGame === 'function' ? data.onExitGame : null;
         if (data && data.mode) {
             this.mode = data.mode;
         } else {
@@ -145,13 +147,18 @@ export class UISetting extends UIBase {
         this.effectProgress.fillRange = this.effctSlider.progress;
     }
 
-    /**点击主页 */
+    /**局内返回按失败结算，关闭设置时保持游戏暂停。 */
     clickHomeBtn() {
+        if (this.mode === 1) {
+            if (!this.onExitGame) return;
+            const onExitGame = this.onExitGame;
+            this.onExitGame = null;
+            this.consoleClickCount = 0;
+            uiMgr.closePage(UIPath.UISetting);
+            onExitGame();
+            return;
+        }
         this.onClose();
-        //上报失败
-        pData.reportLevel(false);
-        pData.SDKReportLevelExit();
-        uiMgr.closeGame();
     }
 
     /**点击重新开始 */

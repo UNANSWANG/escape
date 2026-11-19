@@ -1,7 +1,7 @@
-import { _decorator, Button, Component, Node } from 'cc';
+import { _decorator, Button } from 'cc';
 import { audioMgr } from '../manager/audioManager';
 import { audioPath } from '../manager/pathConfig';
-const { ccclass, property } = _decorator;
+const { ccclass } = _decorator;
 
 @ccclass('zoomButton')
 export class zoomButton extends Button {
@@ -11,9 +11,18 @@ export class zoomButton extends Button {
     private playClickSound: boolean = true;
 
     protected onLoad(): void {
-        this.node.on(Node.EventType.TOUCH_END, this.clickBtn, this);
         this.transition = Button.Transition.SCALE;
         this.zoomScale = 0.9;
+    }
+
+    public onEnable(): void {
+        super.onEnable();
+        this.node.on(Button.EventType.CLICK, this.clickBtn, this);
+    }
+
+    public onDisable(): void {
+        this.node.off(Button.EventType.CLICK, this.clickBtn, this);
+        super.onDisable();
     }
 
     /**设置是否播放音效 */
@@ -22,12 +31,12 @@ export class zoomButton extends Button {
     }
 
     clickBtn() {
-        if (!this.interactable) {
+        if (!this.interactable || !this.enabledInHierarchy) {
             return;
         }
 
         //点击音效
-        if(this.playClickSound){
+        if (this.playClickSound) {
             audioMgr.playEffect(audioPath.click);
         }
         this.onClick && this.onClick();

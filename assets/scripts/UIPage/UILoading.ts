@@ -8,6 +8,11 @@ import { pData } from '../manager/playerData';
 import { audioMgr } from '../manager/audioManager';
 import { commonConfig } from '../json/jsonCommon';
 import { platformManager } from '../manager/platformManager';
+import { ccStorageTools } from '../extention/storageTools';
+import { SaveKey } from '../manager/configData';
+import { UIPath } from '../manager/pathConfig';
+import { mapConfig } from '../json/jsonMap';
+import { playerMgr } from '../manager/playerManager';
 const { ccclass, property } = _decorator;
 
 interface BackgroundLoopData {
@@ -43,6 +48,8 @@ export class UILoading extends Component {
     private fakeProgressElapsedTime = 0;
     /**是否已经准备跳转场景 */
     private isSceneLoading = false;
+    private guidePreload: Promise<void> = null;
+    private guideReady = false;
 
     start() {
         this.refreshProgress();
@@ -111,7 +118,7 @@ export class UILoading extends Component {
         audioMgr.playBackgroundMusic();
         this.loadTable();
 
-        // 启动阶段只准备大厅首屏，其余资源按使用阶段加载。
+        // 先准备通用资源和大厅；未完成引导时，在全部配置就绪后补齐首局资源。
         await this.preLoadPage();
     }
 
@@ -154,10 +161,37 @@ export class UILoading extends Component {
             return;
         }
 
+        if (ccStorageTools.getNumberData(SaveKey.gameGuide) !== 1 && !this.guideReady) {
+            if (!this.guidePreload) {
+                this.guidePreload = this.prepareGuideGame();
+                void this.guidePreload.then(() => {
+                    this.guideReady = true;
+                    this.checkLoadComplete();
+                }).catch(error => {
+                    console.error('引导开局资源加载失败', error);
+                    this.guidePreload = null;
+                });
+            }
+            return;
+        }
+
         this.isSceneLoading = true;
         this.currentProgressPercent = 1;
         this.refreshProgress();
         this.scheduleOnce(() => director.loadScene("main"), 0);
+    }
+
+    /**表格和登录就绪后准备完整首局，跳过匹配表现但沿用匹配阵容生成。 */
+    private async prepareGuideGame() {
+        const map = mapConfig.getDataByMapIdx(0).slice()
+            .sort((a, b) => a.difficultyType - b.difficultyType)[0];
+        if (!map) throw new Error('第一张地图没有可用的难度配置');
+        pData.selectMapData = [map.mapIdx, map.difficultyType];
+        playerMgr.prepareMatch(map.mapIdx, map.difficultyType, map.gameNumber);
+        await Promise.all([
+            uiMgr.preLoadPage(UIPath.UIGameGuide),
+            uiMgr.preLoadMatch(map.mapIdx, playerMgr.matchedAIRoles),
+        ]);
     }
 
     /**获取通用配置中的百分比区间，兼容旧的单值配置 */

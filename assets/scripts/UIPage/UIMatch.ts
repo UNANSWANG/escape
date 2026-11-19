@@ -5,9 +5,6 @@ import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { configData } from '../manager/configData';
 import { ccTools } from '../extention/generalTools';
-import { nicknameConfig } from '../json/jsonNickname';
-import { agentRoleConfig } from '../json/jsonAgentRole';
-import { mapConfig } from '../json/jsonMap';
 import { pData } from '../manager/playerData';
 import { playerMgr } from '../manager/playerManager';
 import { roleShowController } from '../controller/role/roleShowController';
@@ -34,7 +31,6 @@ export class UIMatch extends UIBase {
     private isMatching = false;
     private currentMatchIndex = 0;
     private matchItems: Node[] = [];
-    private nicknamePool: string[] = [];
     private gamePreload: Promise<void> = null;
 
     protected onLoad(): void {
@@ -53,33 +49,14 @@ export class UIMatch extends UIBase {
         this.isMatching = true;
         this.titleLab.string = '匹配中...';
         this.refreshTimeLab();
-        this.nicknamePool = Array.from(new Set(
-            (nicknameConfig.roleNicknameAllData || [])
-                .map((data) => data.nickname?.trim())
-                .filter((nickname) => !!nickname && nickname !== '你')
-        ));
-        ccTools.shuffleArray(this.nicknamePool);
-
-        const itemCount = Number.isFinite(count) ? Math.max(1, Math.floor(count)) : 6;
-        playerMgr.matchedAIRoles = [];
         const [mapIdx, difficultyType] = pData.selectMapData;
-        const rawTypes: unknown = mapConfig.getMapData(mapIdx, difficultyType)?.agentList;
-        let agentTypes: number[] = [];
+        let itemCount: number;
         try {
-            const parsed: unknown = typeof rawTypes === 'string' ? JSON.parse(rawTypes) : rawTypes;
-            if (Array.isArray(parsed)) agentTypes = parsed.filter(value => Number.isInteger(value));
-        } catch {
-            console.warn('地图 agentList 配置格式错误', rawTypes);
-        }
-        playerMgr.matchedAIRoles = agentRoleConfig.randomRoles(agentTypes, itemCount - 1).map((data, index) => ({
-            ...data,
-            nickname: this.nicknamePool.pop() || `玩家${index + 1}`,
-        }));
-        console.log('本局随机人机表 ID:', playerMgr.matchedAIRoles.map(data => data.id));
-        if (playerMgr.matchedAIRoles.length !== itemCount - 1) {
+            itemCount = playerMgr.prepareMatch(mapIdx, difficultyType, count);
+        } catch (error) {
             this.isMatching = false;
             this.titleLab.string = '未找到可用的 AI 配置';
-            console.warn('agentRole 表中没有符合地图 agentList 的 AI 配置', agentTypes);
+            console.warn(error);
             return;
         }
         this.gamePreload = uiMgr.preLoadMatch(mapIdx, playerMgr.matchedAIRoles);

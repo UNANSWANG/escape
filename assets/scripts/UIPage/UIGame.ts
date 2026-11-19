@@ -3,7 +3,8 @@ import { uiMgr } from '../manager/UIManager';
 import { pData } from '../manager/playerData';
 import { UIBase } from './UIBase';
 import { imgPath, ItemPath, UIPath } from '../manager/pathConfig';
-import { BossBookState, configData, floatColorArr, GameEvent, QualityColorArr } from '../manager/configData';
+import { BossBookState, configData, floatColorArr, GameEvent, QualityColorArr, SaveKey } from '../manager/configData';
+import { ccStorageTools } from '../extention/storageTools';
 import { gm } from '../manager/gm';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
@@ -1254,6 +1255,13 @@ export class UIGame extends UIBase {
         playerMgr.player.setSiblingIndex(this.roleNode.children.length - 1);
         this.updateRolePerspectives();
         this.updateShelterVisibility();
+        if (ccStorageTools.getNumberData(SaveKey.gameGuide) !== 1) {
+            gm.gamePause();
+            void uiMgr.openPage(UIPath.UIGameGuide).catch(error => {
+                console.error('打开游戏引导失败', error);
+                if (this.isValid && this.node.activeInHierarchy) gm.gameResume();
+            });
+        }
     }
 
     /**初始化玩家 */

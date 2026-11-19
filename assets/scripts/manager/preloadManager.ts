@@ -17,7 +17,11 @@ export class preloadManager extends Component {
         /**初始化界面管理 */
         uiMgr.initData(this.node);
 
-        uiMgr.openPage(UIPath.UIMain);
+        if (ccStorageTools.getNumberData(SaveKey.gameGuide) !== 1) {
+            uiMgr.startGame();
+        } else {
+            uiMgr.openPage(UIPath.UIMain);
+        }
 
         gm.Event.on(GameEvent.fullSkin, pData.getAllSkin, pData);
     }

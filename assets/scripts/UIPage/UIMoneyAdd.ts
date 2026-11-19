@@ -109,7 +109,7 @@ export class UIMoneyAdd extends UIBase {
             }
         } else {
             this.isWatchingAd = true;
-            videoMgr.watchVideo(4, complete, () => {
+            videoMgr.watchVideo(isGold ? 6 : 4, complete, () => {
                 this.isWatchingAd = false;
             });
         }

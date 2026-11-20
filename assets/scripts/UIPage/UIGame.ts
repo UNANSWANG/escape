@@ -139,6 +139,9 @@ export class UIGame extends UIBase {
     @property(Node)
     smallMapNode: Node;
 
+    @property(Node)
+    guideBtn: Node;
+
     ///
     ///需要获取的节点
     ///

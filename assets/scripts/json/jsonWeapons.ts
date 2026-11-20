@@ -80,5 +80,7 @@ export interface JsonWeaponsData {
     chargeTime: number;
     /**换弹时间 */
     reloadTime: number;
+    /**音效文件 */
+    effectName: string;
 }
 

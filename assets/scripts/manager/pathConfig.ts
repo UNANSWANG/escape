@@ -138,8 +138,18 @@ export enum audioPath {
     fail = "audio/shibai",
     /**获得金币音效 */
     getMoney = "audio/jinbihuode",
-    /**点击准备音效 */
-    clickPrepare = "audio/zhunbei",
+    /**换弹音效 */
+    reload = "audio/reload",
+    /**击中敌人反馈 */
+    hitEnemyFeedback = "audio/hitEnemyFeedback",
+    /**击中金属反馈 */
+    hitMetalFeedback = "audio/hitMetalFeedback",
+    /**走路右 */
+    walkRight = "audio/walkRight",
+    /**走路左 */
+    walkLeft = "audio/walkLeft",
+    /**武器 */
+    weapon = "audio/weapon/",
 }
 
 /**图片路径 */

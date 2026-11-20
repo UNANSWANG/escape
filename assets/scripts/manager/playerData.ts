@@ -17,7 +17,7 @@ const { ccclass, property } = _decorator;
 //用户游戏内数据
 @ccclass('playerData')
 export class playerData {
-    /**当前地图的上报编号：地图索引 * 10 + 难度。 */
+    /**当前地图的上报编号：(地图索引 + 1) * 10 + (难度 + 1)。 */
     level = 0;
     /**当前段位；超过基础段位后继续递增，表示王者2、王者3等 */
     rank = 0;
@@ -86,7 +86,7 @@ export class playerData {
 
         // 按本局地图和难度初始化 NPC 属性，表内百分数转换为倍率。
         const [mapIdx, difficultyType] = this.selectMapData;
-        this.level = mapIdx * 10 + difficultyType;
+        this.level = (mapIdx + 1) * 10 + (difficultyType + 1);
         const mapData = mapConfig.getMapData(mapIdx, difficultyType);
         const rewardLevel = Number(mapData?.rewardLevel);
         this.rewardLevel = Number.isInteger(rewardLevel) && rewardLevel >= 0 ? rewardLevel : 0;

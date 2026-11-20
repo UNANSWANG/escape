@@ -7625,7 +7625,7 @@
       "__id__": 1
     },
     "_children": [],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 330
@@ -7640,7 +7640,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": -110,
-      "y": -134,
+      "y": -214,
       "z": 0
     },
     "_lrot": {
@@ -7722,8 +7722,8 @@
     },
     "defaultSkin": "default",
     "defaultAnimation": "animation",
-    "_premultipliedAlpha": true,
-    "_timeScale": 1,
+    "_premultipliedAlpha": false,
+    "_timeScale": 1.2,
     "_preCacheMode": 0,
     "_cacheMode": 0,
     "_sockets": [],
@@ -7732,7 +7732,7 @@
     "_debugBones": false,
     "_debugSlots": false,
     "_enableBatch": false,
-    "loop": true,
+    "loop": false,
     "_id": ""
   },
   {

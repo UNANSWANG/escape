@@ -14,7 +14,7 @@ export class userManager {
     Ad_video_tt: string = "";
 
     /**用户昵称 */
-    nickName: string = "鼠鼠996";
+    nickName: string = "";
     /**用户头像url */
     avatarUrl: string = "";
     /**是否授权朋友信息 */
@@ -24,8 +24,8 @@ export class userManager {
 
     /**接口公告参数 */
     params = {
-        /**后台游戏id 抖音：9，微信：8*/
-        game_id: 8,
+        /**后台游戏id 抖音：14，微信：15*/
+        game_id: 15,
         /**后台账号ID*/
         uid: 0,
         /**用户openId */

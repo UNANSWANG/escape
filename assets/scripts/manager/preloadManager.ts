@@ -5,6 +5,7 @@ import { ccStorageTools } from '../extention/storageTools';
 import { GameEvent, SaveKey } from './configData';
 import { gm } from './gm';
 import { pData } from './playerData';
+import { userMgr } from './userManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('preloadManager')
@@ -16,6 +17,10 @@ export class preloadManager extends Component {
     initData() {
         /**初始化界面管理 */
         uiMgr.initData(this.node);
+
+        if (userMgr.nickName === "") {
+            userMgr.nickName = "鼠鼠" + userMgr.params.uid;
+        }
 
         if (ccStorageTools.getNumberData(SaveKey.gameGuide) !== 1) {
             uiMgr.startGame();

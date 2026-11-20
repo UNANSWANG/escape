@@ -40,6 +40,7 @@ export class audioManager {
     private _isVibrat: boolean = true;
     /**正在播放的背景音乐 */
     private _curMusicPath: string = audioPath.background;
+    private _backgroundMusicRequested = false;
 
     /**初始化音频管理 */
     initAudio(node) {
@@ -272,7 +273,9 @@ export class audioManager {
 
     /**关闭背景音乐 */
     closeBackgroundMusic() {
+        this._backgroundMusicRequested = false;
         this.musicSource.stop();
+        this.musicSource.clip = null;
     }
 
     /**切换振动开关 */
@@ -345,7 +348,12 @@ export class audioManager {
 
     /**播放背景音乐（单次播放，互不干涉） */
     playBackgroundMusic($name: string = this._curMusicPath, bundle: AssetManager.Bundle = uiMgr.resBundle) {
-        if (!this._isMusic || !bundle) {
+        if (this._curMusicPath !== $name || !$name) {
+            this.closeBackgroundMusic();
+        }
+        this._curMusicPath = $name;
+        this._backgroundMusicRequested = !!$name && this._isMusic;
+        if (!this._backgroundMusicRequested || !bundle) {
             return;
         }
         let key = $name;
@@ -368,7 +376,7 @@ export class audioManager {
                     return;
                 }
                 this._dic.set(key, res);
-
+                if (!this._backgroundMusicRequested || !this._isMusic || this._curMusicPath !== key) return;
                 this.musicSource.clip = res;
                 this.musicSource.volume = this._musicVolume;
                 this.musicSource.play();

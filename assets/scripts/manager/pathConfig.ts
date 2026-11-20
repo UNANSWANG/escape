@@ -129,7 +129,7 @@ export enum audioPath {
     /**主页背景音乐 */
     background = "audio/zhuyeBGM",
     /**游戏内背景音乐 */
-    gameBackground = "audio/juneiBGM",
+    gameBackground = "",
     /**游戏内点击音效 */
     click = "audio/dianji",
     /**单局胜利音效 */

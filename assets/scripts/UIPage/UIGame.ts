@@ -325,6 +325,7 @@ export class UIGame extends UIBase {
         this.clearData();
         this.clearMap();
         pData.levelInit();
+        this.guideBtn.active = pData.selectMapData[0] === 0 && pData.selectMapData[1] === 0;
         this.isGamePause = true;
         this.isOpening = true;
         this.setGameControlsVisible(false);
@@ -486,6 +487,7 @@ export class UIGame extends UIBase {
     }
 
     bindBtn() {
+        this.guideBtn.addComponent(zoomButton).onClick = this.clickGuideBtn.bind(this);
         this.setBtn.addComponent(zoomButton).onClick = this.clickSetBtn.bind(this);
         this.smallMapNode.addComponent(zoomButton).onClick = this.clickSmallMap.bind(this);
         const autoAimBtn = this.shootBtn.getChildByName("btn");
@@ -1261,11 +1263,7 @@ export class UIGame extends UIBase {
         this.updateRolePerspectives();
         this.updateShelterVisibility();
         if (ccStorageTools.getNumberData(SaveKey.gameGuide) !== 1) {
-            gm.gamePause();
-            void uiMgr.openPage(UIPath.UIGameGuide).catch(error => {
-                console.error('打开游戏引导失败', error);
-                if (this.isValid && this.node.activeInHierarchy) gm.gameResume();
-            });
+            this.clickGuideBtn();
         }
     }
 
@@ -2437,6 +2435,15 @@ export class UIGame extends UIBase {
     clickSmallMap() {
         if (this.isBackpackOpen()) return;
         uiMgr.openPage(UIPath.UISmallMap);
+    }
+
+    clickGuideBtn() {
+        if (this.isOpening || pData.selectMapData[0] !== 0 || pData.selectMapData[1] !== 0) return;
+        gm.gamePause();
+        void uiMgr.openPage(UIPath.UIGameGuide).catch(error => {
+            console.error('打开游戏引导失败', error);
+            if (this.isValid && this.node.activeInHierarchy) gm.gameResume();
+        });
     }
 
     /**点击设置按钮 */

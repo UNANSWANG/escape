@@ -148,7 +148,6 @@ export class UILoading extends Component {
 
     /**表格加载完成 */
     tableLoadComplete() {
-        pData.initPropsNum();
         // 玩家存档已恢复、地图表已加载，补齐首次进入及遗漏的地图解锁。
         pData.checkMapUnlocks();
         this.tableComplete = true;
@@ -192,21 +191,6 @@ export class UILoading extends Component {
             uiMgr.preLoadPage(UIPath.UIGameGuide),
             uiMgr.preLoadMatch(map.mapIdx, playerMgr.matchedAIRoles),
         ]);
-    }
-
-    /**获取通用配置中的百分比区间，兼容旧的单值配置 */
-    private getCommonPercentRange(key: string): [number, number] {
-        let configValue = commonConfig.getValue(key);
-        if (typeof configValue == "string") {
-            configValue = JSON.parse(configValue);
-        }
-
-        if (Array.isArray(configValue)) {
-            return [Number(configValue[0]) / 100, Number(configValue[1]) / 100];
-        }
-
-        let percentValue = Number(configValue) / 100;
-        return [percentValue, percentValue];
     }
 
     /**通用配置表加载完成 */

@@ -194,8 +194,6 @@ export enum SaveKey {
     signDays = "signDays",
     /**今日是否已签到 */
     isGetSign = "isGetSign",
-    /**道具存储 */
-    props = "props",
     /**仓库数据 */
     storehouse = "storehouse",
     /**显示物品 */
@@ -210,14 +208,10 @@ export enum SaveKey {
     bossBookStates = "bossBookStates",
     /**当前装备 itemId 数据 */
     equipmentIds = "equipmentIds",
-    /**装备存档已转换为 itemId */
-    equipmentItemIdVersion = "equipmentItemIdVersion",
     /**角色等级，按角色 id 保存 */
     roleLevels = "roleLevels",
     /**当前出战角色 id */
     roleId = "roleId",
-    /**引导 */
-    guide = "guide",
     /**音效开关 */
     effect = "effect",
     /**音效音量 */
@@ -236,8 +230,6 @@ export enum SaveKey {
     moneyAddShare2 = "moneyAddShare2",
     /**用户头像 */
     avatarUrl = "avatarUrl",
-    /**敌人是否只攻击自身（gm配置） */
-    onlyAttackSelf = "onlyAttackSelf",
     /**是否免广告（gm配置） */
     isFreeAd = "isFreeAd",
     /**是否开启自动瞄准 */

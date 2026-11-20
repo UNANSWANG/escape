@@ -23,8 +23,6 @@ export class playerData {
     rank = 0;
     /**当前段位内的积分 */
     rankScore = 0;
-    /**道具集合 */
-    propsNums = {};
     /**仓库数据，格式为 [[itemId, 数量], ...] */
     storehouseData: number[][] = [];
     private showItems: { [key: string]: { itemId: number } } = {};
@@ -41,8 +39,6 @@ export class playerData {
     hasConfirmedMapSelection = false;
     /**永久解锁记录，格式为 [[地图索引, 难度], ...]，降段不移除 */
     private unlockedMaps: [number, number][] = [];
-    /**旧版 id 存档在地图表加载后转换为地图索引和难度 */
-    private legacyUnlockedMapIds: number[] = [];
     /**银币 */
     money = 0;
     /**金币 */
@@ -59,8 +55,6 @@ export class playerData {
     unlockedRoleSkin: { [key: string]: boolean } = {};
     /**云端限时数据（每日0点重置），格式与 storageTools 一致：{ key: 值, key_time: 记录当天0点时间戳 } */
     limitTimeData: { [key: string]: any } = {};
-    /**是否为引导关 */
-    isGuide = false;
     /**是否开启自动瞄准 */
     isAutoAiming = true;
     /**角色默认id，角色皮肤表加载后赋值 */
@@ -94,7 +88,6 @@ export class playerData {
 
     levelInit() {
         pData.adNum = 0;
-        this.isGuide = ccStorageTools.getNumberData(SaveKey.guide) != 1 || gmConfig.forceGuide;
         this.gameStartTime = ccTimeTools.getTime();
 
         // 按本局地图和难度初始化 NPC 属性，表内百分数转换为倍率。
@@ -274,7 +267,7 @@ export class playerData {
         return true;
     }
 
-    /**读取 Boss 图鉴存档，旧存档或无效状态默认未解锁 */
+    /**读取 Boss 图鉴存档，未记录或无效状态默认未解锁 */
     private initBossBookStates(data: any) {
         this.bossBookStates = {};
         if (!data || typeof data !== "object" || Array.isArray(data)) {
@@ -541,31 +534,13 @@ export class playerData {
         return this.defaultEquipmentIds[slotIndex];
     }
 
-    /**读取并兼容旧版装备存档。 */
+    /**按 itemId 读取装备存档，并补齐默认装备。 */
     private initEquipmentIds(data: any) {
-        const isItemIdData = ccStorageTools.getNumberData(SaveKey.equipmentItemIdVersion) === 1;
-        if (!isItemIdData && Array.isArray(data)) {
-            // 存档初始化早于配置表加载，等待武器和装备表就绪后再迁移。
-            if (!weaponsConfig.getAllData().length || !equipmentConfig.getAllData().length) {
-                const migrate = () => {
-                    if (!weaponsConfig.getAllData().length || !equipmentConfig.getAllData().length) return;
-                    gm.Event.off(GameEvent.loadTable, migrate, this);
-                    this.initEquipmentIds(data);
-                };
-                gm.Event.on(GameEvent.loadTable, migrate, this);
-                return;
-            }
-            data = data.map((id, index) => {
-                if (!Number.isInteger(id) || id < 0) return id;
-                const config = index < 3 ? weaponsConfig : equipmentConfig;
-                return config.getDataById(id)?.itemId ?? config.getDataByItemId(id)?.itemId ?? -1;
-            });
-        }
         this.equipmentIds = this.normalizeEquipmentIds(data);
         const isNormalizedData = Array.isArray(data)
             && data.length === this.equipmentIds.length
             && data.every((equipmentId, index) => equipmentId === this.equipmentIds[index]);
-        if (!isItemIdData || !isNormalizedData) {
+        if (!isNormalizedData) {
             this.saveEquipmentIds();
         }
     }
@@ -592,10 +567,7 @@ export class playerData {
     }
 
     private saveEquipmentIds() {
-        ccStorageTools.setDatas([
-            [SaveKey.equipmentIds, this.equipmentIds.slice()],
-            [SaveKey.equipmentItemIdVersion, 1],
-        ]);
+        ccStorageTools.setData(SaveKey.equipmentIds, this.equipmentIds.slice());
         gm.Event.emit(GameEvent.refreshEquipmentDisplay);
     }
 
@@ -614,11 +586,6 @@ export class playerData {
     }
 
     /**获取带等级道具的存储键 */
-    private getLevelPropsNumKey(propsType: string, level: number) {
-        return propsType + "_" + level;
-    }
-
-
     /**预览积分结算；最低段位不扣分，其余段位先保底到 0，0 分再次扣分才降段。 */
     getRankScoreResult(score: number): { rank: number; rankScore: number; actualChange: number } {
         let rank = this.rank;
@@ -657,22 +624,18 @@ export class playerData {
     /**检查当前段位可解锁的地图难度，只追加记录，不因降段重新上锁。 */
     checkMapUnlocks(): void {
         if (!mapConfig.tableData) return;
-        // 存档初始化早于配置表加载，旧版数据需在这里转换。
-        let changed = this.legacyUnlockedMapIds.length > 0;
+        let changed = false;
         for (const row of mapConfig.tableData ?? []) {
             if (!Number.isInteger(row.mapIdx) || row.mapIdx < 0
                 || !Number.isInteger(row.difficultyType) || row.difficultyType < 0) continue;
-            const legacyUnlocked = this.legacyUnlockedMapIds.includes(row.id);
             if (this.isMapUnlocked(row.mapIdx, row.difficultyType)) continue;
-            if (!legacyUnlocked && (
-                !Number.isInteger(row.unlockRank) || row.unlockRank < 0
-                || this.rank < row.unlockRank)) continue;
+            if (!Number.isInteger(row.unlockRank) || row.unlockRank < 0
+                || this.rank < row.unlockRank) continue;
             this.unlockedMaps.push([row.mapIdx, row.difficultyType]);
             changed = true;
         }
         if (changed) {
             ccStorageTools.setData(SaveKey.unlockedMaps, this.unlockedMaps.map(([mapIdx, difficultyType]) => [mapIdx, difficultyType]));
-            this.legacyUnlockedMapIds = [];
         }
     }
 
@@ -787,11 +750,6 @@ export class playerData {
         // }
     }
 
-    /**没有云端道具数据时，按商城配置初始化每种道具数量 */
-    initPropsNum() {
-
-    }
-
     /**串行上报，避免旧请求后返回并覆盖新数据 */
     private async flushGameReport() {
         if (this.isReportingGame || !this.isGameReportDirty || !gm.isLogin) {
@@ -806,7 +764,6 @@ export class playerData {
                 ext: {
                     skinId: this.skinId,
                     unlockedRoleSkin: Object.assign({}, this.unlockedRoleSkin),
-                    propsNums: Object.assign({}, this.propsNums),
                     limitTimeData: Object.assign({}, this.limitTimeData),
                 },
             });
@@ -841,12 +798,9 @@ export class playerData {
         const selectMapData = ccStorageTools.getData(SaveKey.selectMapData);
         const unlockedMaps = ccStorageTools.getData(SaveKey.unlockedMaps);
         this.unlockedMaps = [];
-        this.legacyUnlockedMapIds = [];
         if (Array.isArray(unlockedMaps)) {
             for (const entry of unlockedMaps) {
-                if (Number.isInteger(entry) && entry >= 0) {
-                    this.legacyUnlockedMapIds.push(entry);
-                } else if (Array.isArray(entry) && entry.length === 2
+                if (Array.isArray(entry) && entry.length === 2
                     && entry.every((value) => Number.isInteger(value) && value >= 0)
                     && !this.isMapUnlocked(entry[0], entry[1])) {
                     this.unlockedMaps.push([entry[0], entry[1]]);
@@ -861,7 +815,6 @@ export class playerData {
         this.claimedCollectionRewards = new Set<number>(Array.isArray(claimedCollectionRewards)
             ? claimedCollectionRewards.filter((itemId) => Number.isInteger(itemId) && itemId >= 0)
             : []);
-        this.propsNums = ccStorageTools.getData(SaveKey.props) || {};
         const roleId = ccStorageTools.getNumberData(SaveKey.roleId);
         this.roleId = Number.isInteger(roleId) && roleId >= 0 ? roleId : 0;
         const roleLevels = ccStorageTools.getData(SaveKey.roleLevels);
@@ -887,10 +840,9 @@ export class playerData {
         this.initEquipmentIds(ccStorageTools.getData(SaveKey.equipmentIds));
         this.money = Math.max(0, ccStorageTools.getNumberData(SaveKey.money));
         this.gold = Math.max(0, ccStorageTools.getNumberData(SaveKey.gold));
-        gmConfig.onlyAttackSelf = ccStorageTools.getNumberData(SaveKey.onlyAttackSelf) == 1;
         gmConfig.isFreeAd = ccStorageTools.getNumberData(SaveKey.isFreeAd) == 1;
         const autoAimingData = ccStorageTools.getData(SaveKey.isAutoAiming);
-        // 旧存档没有此字段时，保持原有自动瞄准行为。
+        // 未设置时默认开启自动瞄准。
         this.isAutoAiming = autoAimingData === null ? true : Number(autoAimingData) === 1;
     }
 

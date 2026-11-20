@@ -96,6 +96,7 @@ export class gm extends Component {
         }
 
         gm.isGamePause = true;
+        audioMgr.stopWalkEffect();
         gm.Event.emit(GameEvent.gamePause);
     }
 

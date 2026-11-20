@@ -5,7 +5,8 @@ import type { EnemyTarget } from '../manager/enemyManager';
 import { poolMgr } from '../manager/poolManager';
 import { playerMgr } from '../manager/playerManager';
 import { gm } from '../manager/gm';
-import { imgPath } from '../manager/pathConfig';
+import { audioPath, imgPath } from '../manager/pathConfig';
+import { audioMgr } from '../manager/audioManager';
 import { uiMgr } from '../manager/UIManager';
 import { ccResTools } from '../extention/resTools';
 import type { StaticCollisionShape } from '../UIPage/UIGame';
@@ -230,7 +231,7 @@ export class bulletController extends Component {
             if (!enemy?.node?.isValid || !enemy.node.activeInHierarchy || enemy.hp <= 0) continue;
 
             enemy.takeDamage(this.damage);
-            this.recycle(true);
+            this.recycle(true, true);
             return true;
         }
         return false;
@@ -244,18 +245,19 @@ export class bulletController extends Component {
         if (!bulletTransform || !playerTransform
             || !bulletTransform.getBoundingBoxToWorld().intersects(playerTransform.getBoundingBoxToWorld())) return false;
         player.takeDamage(this.damage);
-        this.recycle(true);
+        this.recycle(true, true);
         return true;
     }
 
     /**回收子弹 */
-    private recycle(showExplosion = false) {
+    private recycle(showExplosion = false, hitCharacter = false) {
         const parent = this.node.parent;
         if (showExplosion && parent?.isValid && uiMgr.bulletExplosionPrefab) {
             const effect = poolMgr.getBulletExplosionNode(uiMgr.bulletExplosionPrefab);
             parent.addChild(effect);
             effect.setWorldPosition(this.node.worldPosition);
             effect.getComponent(bulletExplosionController).play();
+            audioMgr.playSceneEffect(hitCharacter ? audioPath.hitEnemyFeedback : audioPath.hitBuildingFeedback);
         }
         poolMgr.putBulletNode(this.node);
     }

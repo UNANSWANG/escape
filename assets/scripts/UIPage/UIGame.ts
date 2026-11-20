@@ -150,6 +150,7 @@ export class UIGame extends UIBase {
     private currentMoveDirection: Vec3 = new Vec3();
     /**是否正在移动 */
     private isMoving = false;
+
     /**玩家本次输入请求的方向；技能锁定结束后用它恢复控制。 */
     private inputMoveDirection: Vec3 = new Vec3();
     /**上一帧是否由技能锁定移动方向。 */
@@ -581,6 +582,7 @@ export class UIGame extends UIBase {
     }
 
     clearData() {
+        audioMgr.stopWalkEffect();
         this.clearBossHpBar();
         this.unscheduleAllCallbacks();
         this.clearOpening();

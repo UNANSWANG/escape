@@ -21,6 +21,11 @@ export class audioManager {
     private _audioSource: AudioSource = null;
     /**游戏页内使用的场景音效组件 */
     private _sceneAudioSource: AudioSource = null;
+    /** 玩家脚步循环使用独立通道。 */
+    private _walkSource: AudioSource = null;
+    private _walkPath = '';
+    private _walkVersion = 0;
+    private _walkLoads = new Map<string, Promise<AudioClip>>();
     /**场景音效会话序号，用于丢弃退出游戏前的异步播放请求 */
     private _sceneEffectVersion: number = 0;
     /**音效开关 */
@@ -57,13 +62,19 @@ export class audioManager {
         if (!node || (this._sceneAudioSource?.isValid && this._sceneAudioSource.node == node)) {
             return;
         }
-        this._sceneEffectVersion++;
+        this.stopSceneEffects();
+        if (this._walkSource?.isValid) this._walkSource.destroy();
         if (this._sceneAudioSource?.isValid) {
             this._sceneAudioSource.stop();
         }
 
         this._sceneAudioSource = node.addComponent(AudioSource);
         this._sceneAudioSource.volume = this._effectVolume;
+        this._walkSource = node.addComponent(AudioSource);
+        // 游戏页会缓存复用，重新激活时不能自动恢复上一局的脚步。
+        this._walkSource.playOnAwake = false;
+        this._walkSource.loop = true;
+        this._walkSource.volume = this._effectVolume;
     }
 
     /**初始化内存的存储数据 */
@@ -126,6 +137,7 @@ export class audioManager {
     }
 
     private applyEffectVolume() {
+        if (this._walkSource?.isValid) this._walkSource.volume = this._effectVolume;
         if (!this.audios) {
             return;
         }
@@ -161,9 +173,66 @@ export class audioManager {
 
     /**停止游戏页内的全部场景音效 */
     stopSceneEffects() {
+        this.stopWalkEffect();
         this._sceneEffectVersion++;
         if (this._sceneAudioSource?.isValid) {
             this._sceneAudioSource.stop();
+        }
+    }
+
+    /** 按移动方向切换玩家脚步循环，相同方向持续移动时不重播。 */
+    playWalkEffect(path: string) {
+        const source = this._walkSource;
+        const bundle = uiMgr.resBundle;
+        if (!bundle || !this.canEffectPlay(source)) {
+            this.stopWalkEffect();
+            return;
+        }
+        if (this._walkPath === path) return;
+        this.stopWalkEffect();
+        this._walkPath = path;
+        const version = this._walkVersion;
+        const play = (clip: AudioClip) => {
+            if (version !== this._walkVersion || !this.canEffectPlay(source)) return;
+            if (!clip) {
+                this.stopWalkEffect();
+                return;
+            }
+            source.clip = clip;
+            source.play();
+        };
+        const cached = this._dic.get(path);
+        if (cached) {
+            play(cached);
+            return;
+        }
+        let loading = this._walkLoads.get(path);
+        if (!loading) {
+            loading = new Promise<AudioClip>(resolve => {
+                bundle.load(path, AudioClip, (err, clip) => {
+                    this._walkLoads.delete(path);
+                    if (err || !clip) {
+                        console.error('没有找到声音资源>>>', path, err);
+                        resolve(null);
+                        return;
+                    }
+                    this._dic.set(path, clip);
+                    resolve(clip);
+                });
+            });
+            this._walkLoads.set(path, loading);
+        }
+        loading.then(play);
+    }
+
+    /** 停止脚步，并作废尚未完成的加载播放请求。 */
+    stopWalkEffect() {
+        this._walkPath = '';
+        this._walkVersion++;
+        if (this._walkSource?.isValid && this._walkSource.clip) {
+            this._walkSource.stop();
+            // 清空 clip 也会作废 AudioSource 内部尚未完成的播放器加载。
+            this._walkSource.clip = null;
         }
     }
 

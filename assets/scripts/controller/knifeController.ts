@@ -142,6 +142,7 @@ export class knifeController extends weaponsController {
         if (!entry) return false;
 
         this.updateAttackInterval();
+        this.playAttackEffect();
         this.isAttacking = true;
         this.curWeaponAnimName = weaponsAnimName.attack;
         const version = ++this.attackAnimationVersion;

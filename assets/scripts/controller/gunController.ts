@@ -1,5 +1,7 @@
 import { _decorator, Animation, Node, UITransform, Vec3 } from 'cc';
 import { uiMgr } from '../manager/UIManager';
+import { audioMgr } from '../manager/audioManager';
+import { audioPath } from '../manager/pathConfig';
 import { poolMgr } from '../manager/poolManager';
 import { bulletController } from './bulletController';
 import { weaponsAnimName, weaponsController, WeaponStats } from './weaponsController';
@@ -160,6 +162,7 @@ export class gunController extends weaponsController {
 
     /** 完成本次开火。无论本次生成几枚分裂子弹，均只在此扣除 1 发弹药。 */
     protected finishFire(bulletParent: Node) {
+        this.playAttackEffect();
         this.playGunFire();
         if (this.hasInfiniteAmmo) {
             this.playShootAnim(bulletParent);
@@ -192,6 +195,7 @@ export class gunController extends weaponsController {
         if (this.hasInfiniteAmmo) return false;
         if (this.isReloading || this.currentAmmo >= this.capacity) return false;
         this.isReloading = true;
+        audioMgr.playSceneEffect(audioPath.reload);
         this.node.emit('reload-start', this.reloadTime);
         const reloadAnimation = this.weaponSkeleton?.findAnimation(gunAnimName.reload);
         const reloadEntry = this.reloadTime > 0 && reloadAnimation?.duration > 0

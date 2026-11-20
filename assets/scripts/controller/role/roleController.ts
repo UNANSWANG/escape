@@ -19,7 +19,9 @@ import { equipmentConfig } from '../../json/jsonEquipment';
 import { pData } from '../../manager/playerData';
 import { ccTools } from '../../extention/generalTools';
 import { syringeController } from '../syringeController';
-import { imgPath, spinePath } from '../../manager/pathConfig';
+import { audioPath, imgPath, spinePath } from '../../manager/pathConfig';
+import { audioMgr } from '../../manager/audioManager';
+import { playerMgr } from '../../manager/playerManager';
 import type { EnemyTarget } from '../../manager/enemyManager';
 const { ccclass } = _decorator;
 
@@ -718,6 +720,16 @@ export class roleController extends Component {
         const animation = this.roleAnim?.skeletonData ? this.roleAnim.getCurrent(0)?.animation?.name : '';
         const isMoveAnimation = animation === roleAnimName.move || animation === roleAnimName.run;
         this.setMoveSmokeVisible(isMoveAnimation && !gm.isGamePause && this.hp > 0 && !this.isPlayingDeath);
+        if (this.isPlayer && playerMgr.playerComp === this
+            && this.gameComp?.isValid && this.gameComp.node.activeInHierarchy) {
+            const canWalk = !gm.isGamePause && this.hp > 0 && !this.isPlayingDeath;
+            if (isMoveAnimation && canWalk) {
+                const facingRight = this.roleAnim.node.scale.x < 0;
+                audioMgr.playWalkEffect(facingRight ? audioPath.walkRight : audioPath.walkLeft);
+            } else {
+                audioMgr.stopWalkEffect();
+            }
+        }
     }
 
     private setMoveSmokeVisible(visible: boolean): void {
@@ -735,6 +747,7 @@ export class roleController extends Component {
 
     /**组件停用时终止通用技能1，避免加速状态遗留到下次启用。 */
     protected onDisable(): void {
+        if (this.isPlayer && this.gameComp && playerMgr.playerComp === this) audioMgr.stopWalkEffect();
         this.setMoveSmokeVisible(false);
         this.finishCommonSkill1();
         this.clearDrugUse();
@@ -1238,6 +1251,7 @@ export class roleController extends Component {
     playDeath(onComplete?: () => void) {
         if (this.isPlayingDeath) return;
         this.isPlayingDeath = true;
+        if (this.isPlayer && this.gameComp && playerMgr.playerComp === this) audioMgr.stopWalkEffect();
         this.setMoveSmokeVisible(false);
         if (this.isAI) this.gameComp?.spawnDeathBox('ai', this.node.worldPosition);
         this.finishCommonSkill1();

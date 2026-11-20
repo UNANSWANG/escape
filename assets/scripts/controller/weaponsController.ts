@@ -1,6 +1,7 @@
 import { _decorator, Component, Mat4, Node, sp, Tween, tween, UITransform, Vec3 } from 'cc';
 import { ccTools } from '../extention/generalTools';
-import { spinePath } from '../manager/pathConfig';
+import { audioPath, spinePath } from '../manager/pathConfig';
+import { audioMgr } from '../manager/audioManager';
 const { ccclass } = _decorator;
 
 /** 所有手持武器共用的动画名称。 */
@@ -28,6 +29,8 @@ export interface WeaponStats {
     chargeTime?: number;
     /** 换弹时间（秒）；未配置时为 0。 */
     reloadTime?: number;
+    /** 攻击音效文件名。 */
+    effectName?: string;
 }
 
 /**
@@ -50,6 +53,11 @@ export class weaponsController extends Component {
     get hasInfiniteAmmo(): boolean { return this.capacity === -1; }
     /** 换弹时间（秒），由 weapons 表 reloadTime 配置；未配置时为 0。 */
     reloadTime = 0;
+    private effectName = '';
+
+    protected playAttackEffect() {
+        if (this.effectName) audioMgr.playSceneEffect(audioPath.weapon + this.effectName);
+    }
     /** 攻击距离：用于自动索敌，并限制远程子弹的最大飞行距离。 */
     attackRange = 600;
     /** 装备该武器时的角色移动速度倍率。 */
@@ -84,6 +92,7 @@ export class weaponsController extends Component {
 
     /** 应用 weapons 表中的基础数值；非法值保留当前默认值。 */
     applyStats(stats: WeaponStats) {
+        this.effectName = stats.effectName || '';
         if (Number.isFinite(stats.type)) {
             const rightNode = this.node.getChildByName('right');
             if (rightNode) rightNode.active = stats.type !== 0;

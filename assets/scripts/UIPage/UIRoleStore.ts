@@ -1,4 +1,4 @@
-import { _decorator, Node, Prefab, Label, Sprite, instantiate } from 'cc';
+import { _decorator, Node, Prefab, Label, Sprite, instantiate, sp } from 'cc';
 import { UIBase } from './UIBase';
 import { imgPath, ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
@@ -66,12 +66,14 @@ export class UIRoleStore extends UIBase {
     private roleShow: roleShowController = null;
 
     protected onLoad(): void {
+        this.hideUpgradeAnim();
         this.roleShow = this.getComponentInChildren(roleShowController);
         this.roleShow?.setShowEquipment(false);
         this.bindBtn();
     }
 
     onUI_Open() {
+        this.hideUpgradeAnim();
         this.initData();
     }
 
@@ -324,7 +326,27 @@ export class UIRoleStore extends UIBase {
             pData.setRoleLevel(roleId, currentLevel + 1);
         });
         uiMgr.showTips("升级成功");
+        this.playUpgradeAnim();
         this.refreshRoleLevelInfo();
+    }
+
+    private playUpgradeAnim() {
+        const skeleton = this.upgradeAnim?.getComponent(sp.Skeleton);
+        if (!skeleton) return;
+        this.hideUpgradeAnim();
+        this.upgradeAnim.active = true;
+        skeleton.setCompleteListener(() => this.hideUpgradeAnim());
+        skeleton.setAnimation(0, "animation", false);
+    }
+
+    private hideUpgradeAnim() {
+        if (!this.upgradeAnim) return;
+        const skeleton = this.upgradeAnim.getComponent(sp.Skeleton);
+        if (skeleton) {
+            skeleton.setCompleteListener(null);
+            skeleton.clearTracks();
+        }
+        this.upgradeAnim.active = false;
     }
 
     /**解析升级材料配置 */
@@ -419,6 +441,7 @@ export class UIRoleStore extends UIBase {
     }
 
     onUI_Close() {
+        this.hideUpgradeAnim();
         this.roleAvatarRefreshId++;
     }
 

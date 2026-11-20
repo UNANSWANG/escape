@@ -4,9 +4,51 @@ size: 512,512
 format: RGBA8888
 filter: Linear,Linear
 repeat: none
+tx/3_0/1
+  rotate: false
+  xy: 59, 357
+  size: 54, 24
+  orig: 78, 79
+  offset: 10, 52
+  index: -1
+tx/3_0/2
+  rotate: false
+  xy: 187, 314
+  size: 68, 67
+  orig: 78, 79
+  offset: 2, 11
+  index: -1
+tx/3_0/3
+  rotate: false
+  xy: 257, 311
+  size: 55, 70
+  orig: 78, 79
+  offset: 1, 7
+  index: -1
+tx/3_0/4
+  rotate: false
+  xy: 314, 309
+  size: 67, 72
+  orig: 78, 79
+  offset: 1, 4
+  index: -1
+tx/3_0/5
+  rotate: false
+  xy: 115, 319
+  size: 70, 62
+  orig: 78, 79
+  offset: 6, 1
+  index: -1
+tx/3_0/6
+  rotate: false
+  xy: 2, 363
+  size: 55, 18
+  orig: 78, 79
+  offset: 17, 3
+  index: -1
 weapons_0
   rotate: false
-  xy: 2, 277
+  xy: 2, 203
   size: 379, 104
   orig: 379, 104
   offset: 0, 0

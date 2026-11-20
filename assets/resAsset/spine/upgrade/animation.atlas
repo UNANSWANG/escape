@@ -1,0 +1,139 @@
+
+animation.png
+size: 859,859
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+tx-1
+  rotate: true
+  xy: 653, 740
+  size: 117, 180
+  orig: 151, 232
+  offset: 18, 19
+  index: -1
+tx-10
+  rotate: true
+  xy: 369, 500
+  size: 121, 166
+  orig: 151, 232
+  offset: 14, 50
+  index: -1
+tx-11
+  rotate: true
+  xy: 524, 370
+  size: 124, 169
+  orig: 151, 232
+  offset: 13, 47
+  index: -1
+tx-12
+  rotate: false
+  xy: 713, 407
+  size: 122, 161
+  orig: 151, 232
+  offset: 14, 46
+  index: -1
+tx-13
+  rotate: true
+  xy: 2, 381
+  size: 122, 168
+  orig: 151, 232
+  offset: 14, 45
+  index: -1
+tx-14
+  rotate: true
+  xy: 172, 378
+  size: 123, 172
+  orig: 151, 232
+  offset: 14, 48
+  index: -1
+tx-15
+  rotate: true
+  xy: 346, 375
+  size: 123, 176
+  orig: 151, 232
+  offset: 14, 49
+  index: -1
+tx-16
+  rotate: true
+  xy: 2, 626
+  size: 117, 181
+  orig: 151, 232
+  offset: 21, 51
+  index: -1
+tx-17
+  rotate: true
+  xy: 489, 743
+  size: 114, 162
+  orig: 151, 232
+  offset: 24, 53
+  index: -1
+tx-19
+  rotate: true
+  xy: 341, 744
+  size: 113, 146
+  orig: 151, 232
+  offset: 26, 60
+  index: -1
+tx-2
+  rotate: true
+  xy: 185, 624
+  size: 118, 205
+  orig: 151, 232
+  offset: 17, 4
+  index: -1
+tx-20
+  rotate: true
+  xy: 186, 745
+  size: 112, 153
+  orig: 151, 232
+  offset: 27, 59
+  index: -1
+tx-3
+  rotate: true
+  xy: 2, 745
+  size: 112, 182
+  orig: 151, 232
+  offset: 20, 26
+  index: -1
+tx-4
+  rotate: true
+  xy: 184, 503
+  size: 119, 183
+  orig: 151, 232
+  offset: 16, 26
+  index: -1
+tx-5
+  rotate: true
+  xy: 2, 505
+  size: 119, 180
+  orig: 151, 232
+  offset: 16, 28
+  index: -1
+tx-6
+  rotate: true
+  xy: 392, 623
+  size: 118, 172
+  orig: 151, 232
+  offset: 17, 40
+  index: -1
+tx-7
+  rotate: true
+  xy: 566, 620
+  size: 118, 169
+  orig: 151, 232
+  offset: 16, 44
+  index: -1
+tx-8
+  rotate: true
+  xy: 537, 496
+  size: 122, 174
+  orig: 151, 232
+  offset: 15, 45
+  index: -1
+tx-9
+  rotate: false
+  xy: 737, 570
+  size: 120, 168
+  orig: 151, 232
+  offset: 14, 47
+  index: -1

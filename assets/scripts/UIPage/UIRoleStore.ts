@@ -46,6 +46,9 @@ export class UIRoleStore extends UIBase {
     @property(Node)
     useBtn: Node;
 
+    @property(Node)
+    upgradeAnim: Node;
+
     /**页签名称，与角色类型一一对应 */
     private tabNames: string[] = ["全部", "突击", "治疗", "肉盾"]//, "功能"];
     /**-1 表示全部，其余对应角色表的 type */

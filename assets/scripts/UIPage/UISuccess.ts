@@ -74,7 +74,7 @@ export class UISuccess extends UIBase {
         this.refreshItems(items);
 
         pData.SDKReportLevelComplete();
-        pData.addLevel();
+        pData.reportLevelComplete();
     }
 
     private async refreshItems(items: [number, number][]) {

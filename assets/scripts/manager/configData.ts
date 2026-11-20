@@ -172,7 +172,7 @@ export const mapDifficultyColorArr = ["#71F452", "#FFD709", "#FF0635"];
 /**飘字颜色：0 为玩家受到治疗，1 为所有目标受到伤害。 */
 export const floatColorArr = ["#71F452", "#FF0635","#8809ff",];
 
-/**存储的键值 */
+/**本地与云端存储的键值，由 storageTools 统一分流。 */
 export enum SaveKey {
     /**游戏操作引导：0 未引导，1 已引导；缺省按 0 处理。 */
     gameGuide = "gameGuide",
@@ -184,8 +184,6 @@ export enum SaveKey {
     selectMapData = "selectMapData",
     /**已永久解锁的地图难度，格式为 [[地图索引, 难度], ...] */
     unlockedMaps = "unlockedMaps",
-    /**关卡数据 */
-    level = "level",
     /**银币 */
     money = "money",
     /**金币 */

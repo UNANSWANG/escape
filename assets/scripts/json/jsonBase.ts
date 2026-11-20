@@ -1,6 +1,5 @@
 import { ccResTools } from "../extention/resTools";
-import { ccStorageTools } from "../extention/storageTools";
-import { GameEvent, SaveKey } from "../manager/configData";
+import { GameEvent } from "../manager/configData";
 import { gm } from "../manager/gm";
 import { uiMgr } from "../manager/UIManager";
 
@@ -19,8 +18,6 @@ export class jsonBase {
     protected isTableLoadComplete = false;
 
     async initTable() {
-        //登录回调检测表格提前加载完成
-        gm.Event.on(GameEvent.checkLoginLoad, this.checkAdvanceComplete, this);
         if (this.tableUrl1) {
             //线上表格
             let tempData = await ccResTools.loadJsonByUrl(this.tableUrl1);
@@ -31,8 +28,6 @@ export class jsonBase {
                 this.tableLoadComplete();
             } else {
                 if (this.tableUrl2) {
-                    //检查是否提前回调
-                    this.checkAdvanceComplete();
                     //线上表格2
                     let tempData2 : any = await ccResTools.loadJsonByUrl(this.tableUrl2);
                     //合并表格2数据
@@ -55,21 +50,6 @@ export class jsonBase {
     /**表格处理 */
     protected processTableData() {
 
-    }
-
-    /**检测表格是否提前回调（适用于有2表的） */
-    protected checkAdvanceComplete() {
-        //已经登录，且表格1已经有数据，才需要检查
-        if (gm.isLogin && this.data) {
-            if (this.tableName == "levelTable") {
-                //已登录，通过关卡判断是否需要直接结束加载
-                let maxLevel = ccStorageTools.getNumberData(SaveKey.level) || 0;
-                //第一张关卡表有30关，快到30关的时候，需要等待2表加载完成
-                if (maxLevel < 25) {
-                    this.tableLoadComplete();
-                }
-            }
-        }
     }
 
     /**表格加载结束回调 */

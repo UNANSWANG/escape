@@ -17,7 +17,7 @@ const { ccclass, property } = _decorator;
 //用户游戏内数据
 @ccclass('playerData')
 export class playerData {
-    /**当前已通关关卡数 */
+    /**当前地图的上报编号：地图索引 * 10 + 难度。 */
     level = 0;
     /**当前段位；超过基础段位后继续递增，表示王者2、王者3等 */
     rank = 0;
@@ -45,7 +45,7 @@ export class playerData {
     gold = 0;
     /**当前关卡所看广告数 */
     adNum = 0;
-    /**当前出战角色 id，保存到本地 */
+    /**当前出战角色 id，保存到云端 */
     roleId = 0;
     /**角色等级，按角色 id 保存；未记录的角色默认为 1 级 */
     roleLevels: { [roleId: string]: number } = {};
@@ -53,16 +53,10 @@ export class playerData {
     skinId = 0;
     /**已解锁角色皮肤 */
     unlockedRoleSkin: { [key: string]: boolean } = {};
-    /**云端限时数据（每日0点重置），格式与 storageTools 一致：{ key: 值, key_time: 记录当天0点时间戳 } */
-    limitTimeData: { [key: string]: any } = {};
     /**是否开启自动瞄准 */
     isAutoAiming = true;
     /**角色默认id，角色皮肤表加载后赋值 */
     private defaultRoleId: number = null;
-    /**游戏数据上报状态，避免连续修改产生乱序覆盖 */
-    private isReportingGame = false;
-    /**是否存在尚未上报的游戏数据修改 */
-    private isGameReportDirty = false;
     /**游戏开始的时间戳 */
     gameStartTime = 0;
     /**当前关卡奖励等级，由地图表配置，每局初始化。 */
@@ -92,6 +86,7 @@ export class playerData {
 
         // 按本局地图和难度初始化 NPC 属性，表内百分数转换为倍率。
         const [mapIdx, difficultyType] = this.selectMapData;
+        this.level = mapIdx * 10 + difficultyType;
         const mapData = mapConfig.getMapData(mapIdx, difficultyType);
         const rewardLevel = Number(mapData?.rewardLevel);
         this.rewardLevel = Number.isInteger(rewardLevel) && rewardLevel >= 0 ? rewardLevel : 0;
@@ -120,7 +115,7 @@ export class playerData {
         if (gm.hgSdk) {
             gm.hgSdk.track('LEVEL_ENTER', {
                 enter_level_id: 0,	    //进入的关卡进度（ 0 ~ 1 之间的数值），需保留两位小数
-                level_id: (pData.level + 1),    	//关卡ID，数值
+                level_id: this.level,
             });
         }
     }
@@ -131,7 +126,7 @@ export class playerData {
             gm.hgSdk.track('LEVEL_EXIT', {
                 ad_cnt: pData.adNum,
                 enter_level_id: 0,	    //进入的关卡进度（ 0 ~ 1 之间的数值），需保留两位小数
-                level_id: (pData.level + 1),    	//关卡ID，数值
+                level_id: this.level,
             });
         }
     }
@@ -142,7 +137,7 @@ export class playerData {
             gm.hgSdk.track('LEVEL_LOSE', {
                 ad_cnt: pData.adNum,
                 enter_level_id: 0,	    //进入的关卡进度（ 0 ~ 1 之间的数值），需保留两位小数
-                level_id: (pData.level + 1),    	//关卡ID，数值
+                level_id: this.level,
             });
         }
     }
@@ -153,7 +148,7 @@ export class playerData {
             gm.hgSdk.track('LEVEL_PASS', {
                 ad_cnt: pData.adNum,
                 enter_level_id: 0,	    //进入的关卡进度（ 0 ~ 1 之间的数值），需保留两位小数
-                level_id: (pData.level + 1),    	//关卡ID，数值
+                level_id: this.level,
             });
         }
     }
@@ -172,24 +167,19 @@ export class playerData {
         let gameAllTime = curTime - this.gameStartTime;
         let levelReprotData = {
             is_pass: isPass ? 1 : 0,
-            level: this.level + 1,
-            level_id: this.level + 1,
+            level: this.level,
+            level_id: this.level,
             level_progress: progress,
             time_used: gameAllTime,
         }
 
-        //TODO 测试
-        // console.warn("上报关卡给后端", levelReprotData);
-        // httpMgr.post(urlConfig.levelReport, levelReprotData);
+        httpMgr.post(urlConfig.levelReport, levelReprotData);
     }
 
-    /**增加用户关卡数 */
-    addLevel() {
+    /**上报当前地图通关结果及微信好友榜编号。 */
+    reportLevelComplete() {
         //上报关卡完成
         this.reportLevel(true);
-
-        this.level++;
-        ccStorageTools.setData(SaveKey.level, this.level);
 
         //上传微信好友榜
         if (gm.platType === PlatType.wx) {
@@ -713,7 +703,7 @@ export class playerData {
         }
     }
 
-    /**设置当前出战角色并保存到本地 */
+    /**设置当前出战角色并保存到云端 */
     setRoleId(roleId: number) {
         if (!Number.isInteger(roleId) || roleId < 0) return;
         const isChanged = this.roleId !== roleId;
@@ -728,7 +718,7 @@ export class playerData {
         return Number.isInteger(level) && level > 0 ? level : 1;
     }
 
-    /**设置角色等级并保存到本地 */
+    /**设置角色等级并保存到云端 */
     setRoleLevel(roleId: number, level: number) {
         if (!Number.isInteger(roleId) || roleId < 0 || !Number.isInteger(level) || level < 1) {
             return;
@@ -748,31 +738,6 @@ export class playerData {
         // for (let i = 0; i < ; i++) {
         //     this.unlockedRoleSkin[i + ""] = true;
         // }
-    }
-
-    /**串行上报，避免旧请求后返回并覆盖新数据 */
-    private async flushGameReport() {
-        if (this.isReportingGame || !this.isGameReportDirty || !gm.isLogin) {
-            return;
-        }
-
-        this.isGameReportDirty = false;
-        this.isReportingGame = true;
-        try {
-            await httpMgr.post(urlConfig.reportGame, {
-                gold: this.money,
-                ext: {
-                    skinId: this.skinId,
-                    unlockedRoleSkin: Object.assign({}, this.unlockedRoleSkin),
-                    limitTimeData: Object.assign({}, this.limitTimeData),
-                },
-            });
-        } finally {
-            this.isReportingGame = false;
-            if (this.isGameReportDirty) {
-                this.flushGameReport();
-            }
-        }
     }
 
     /**初始化存储数据 */

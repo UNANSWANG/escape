@@ -172,3 +172,45 @@ l9
   orig: 398, 158
   offset: 0, 0
   index: -1
+tx/1
+  rotate: false
+  xy: 279, 695
+  size: 18, 8
+  orig: 37, 53
+  offset: 17, 44
+  index: -1
+tx/2
+  rotate: false
+  xy: 251, 683
+  size: 26, 20
+  orig: 37, 53
+  offset: 6, 32
+  index: -1
+tx/3
+  rotate: false
+  xy: 863, 880
+  size: 33, 33
+  orig: 37, 53
+  offset: 1, 19
+  index: -1
+tx/4
+  rotate: false
+  xy: 898, 871
+  size: 25, 42
+  orig: 37, 53
+  offset: 1, 6
+  index: -1
+tx/5
+  rotate: false
+  xy: 827, 871
+  size: 34, 42
+  orig: 37, 53
+  offset: 0, 1
+  index: -1
+tx/6
+  rotate: false
+  xy: 925, 886
+  size: 30, 27
+  orig: 37, 53
+  offset: 7, 0
+  index: -1

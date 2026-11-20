@@ -6,8 +6,50 @@ filter: Linear,Linear
 repeat: none
 lljr
   rotate: false
-  xy: 2, 631
-  size: 854, 225
-  orig: 854, 225
+  xy: 2, 418
+  size: 641, 169
+  orig: 641, 169
   offset: 0, 0
+  index: -1
+tx/21/huaban-6458203805_01
+  rotate: false
+  xy: 163, 589
+  size: 88, 54
+  orig: 92, 61
+  offset: 2, 6
+  index: -1
+tx/21/huaban-6458203805_02
+  rotate: false
+  xy: 253, 589
+  size: 78, 54
+  orig: 92, 61
+  offset: 12, 5
+  index: -1
+tx/21/huaban-6458203805_03
+  rotate: false
+  xy: 50, 590
+  size: 62, 53
+  orig: 92, 62
+  offset: 28, 3
+  index: -1
+tx/21/huaban-6458203805_04
+  rotate: false
+  xy: 333, 589
+  size: 48, 54
+  orig: 92, 62
+  offset: 42, 2
+  index: -1
+tx/21/huaban-6458203805_05
+  rotate: false
+  xy: 114, 590
+  size: 47, 53
+  orig: 92, 61
+  offset: 43, 2
+  index: -1
+tx/21/huaban-6458203805_06
+  rotate: false
+  xy: 2, 590
+  size: 46, 53
+  orig: 92, 61
+  offset: 43, 2
   index: -1

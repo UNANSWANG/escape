@@ -6,8 +6,50 @@ filter: Linear,Linear
 repeat: none
 boss2
   rotate: false
-  xy: 2, 578
-  size: 827, 251
-  orig: 827, 251
+  xy: 2, 766
+  size: 620, 188
+  orig: 620, 188
   offset: 0, 0
+  index: -1
+tx/21/huaban-6458203805_01
+  rotate: false
+  xy: 624, 900
+  size: 88, 54
+  orig: 92, 61
+  offset: 2, 6
+  index: -1
+tx/21/huaban-6458203805_02
+  rotate: false
+  xy: 714, 900
+  size: 78, 54
+  orig: 92, 61
+  offset: 12, 5
+  index: -1
+tx/21/huaban-6458203805_03
+  rotate: false
+  xy: 794, 901
+  size: 62, 53
+  orig: 92, 62
+  offset: 28, 3
+  index: -1
+tx/21/huaban-6458203805_04
+  rotate: false
+  xy: 858, 900
+  size: 48, 54
+  orig: 92, 62
+  offset: 42, 2
+  index: -1
+tx/21/huaban-6458203805_05
+  rotate: false
+  xy: 794, 846
+  size: 47, 53
+  orig: 92, 61
+  offset: 43, 2
+  index: -1
+tx/21/huaban-6458203805_06
+  rotate: false
+  xy: 908, 901
+  size: 46, 53
+  orig: 92, 61
+  offset: 43, 2
   index: -1

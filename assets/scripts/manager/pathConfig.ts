@@ -142,8 +142,8 @@ export enum audioPath {
     reload = "audio/reload",
     /**击中敌人反馈 */
     hitEnemyFeedback = "audio/hitEnemyFeedback",
-    /**击中金属反馈 */
-    hitMetalFeedback = "audio/hitMetalFeedback",
+    /**击中建筑反馈 */
+    hitBuildingFeedback = "audio/hitBuildingFeedback",
     /**走路右 */
     walkRight = "audio/walkRight",
     /**走路左 */

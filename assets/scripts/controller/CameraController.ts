@@ -16,11 +16,20 @@ export class CameraController extends Component {
     @property
     DesignHeight: number = 1920;
 
+    @property({ tooltip: '常规跟随速度，越小越有滞后感' })
+    FollowSharpness: number = 5;
+
+    @property({ tooltip: '落后较远时的追赶速度' })
+    CatchUpSharpness: number = 12;
+
+    @property({ tooltip: '最大落后距离占较短视野半径的比例，范围 0.05 到 0.8' })
+    MaxFollowLagRatio: number = 0.35;
+
     private camera: Camera = null;
     // private shelter: Node = null;
     private playerPos = new Vec3();
     private cameraPos: Vec3 = null;
-    private lastFollowPos = new Vec3(NaN, NaN, NaN);
+    private followWorldPos = new Vec3();
     private halfViewWidth = 0;
     private halfViewHeight = 0;
     private cameraWorldPos: Vec3 = new Vec3();
@@ -93,7 +102,6 @@ export class CameraController extends Component {
         // 分辨率或缩放变化后，即使开场锁定了位置也必须重新校正边界。
         this.cameraPos = this.limitCameraPos(this.node.position);
         if (!this.node.position.equals(this.cameraPos)) this.node.setPosition(this.cameraPos);
-        this.lastFollowPos.set(NaN, NaN, NaN);
         if (projectionChanged) gm.Event.emit(GameEvent.refreshGameCamera);
     }
 
@@ -185,7 +193,6 @@ export class CameraController extends Component {
 
         this.cameraPos = this.limitCameraPos(pos);
         if (!this.node.position.equals(this.cameraPos)) this.node.setPosition(this.cameraPos);
-        this.lastFollowPos.set(NaN, NaN, NaN);
     }
 
     /**锁定相机坐标，解锁前忽略其他位置控制 */
@@ -198,7 +205,6 @@ export class CameraController extends Component {
     /**解除相机坐标锁定 */
     unlockCameraPos() {
         this.isPositionLocked = false;
-        this.lastFollowPos.set(NaN, NaN, NaN);
     }
 
     /**根据屏幕滑动距离移动相机，表现为拖动画面 */
@@ -236,13 +242,31 @@ export class CameraController extends Component {
 
     lateUpdate(deltaTime: number) {
         this.updateViewScales(deltaTime);
-        if (!this.isPositionLocked && playerMgr.cameraFollow && playerMgr.player) {
-            playerMgr.player.getWorldPosition(this.playerPos);
-            if (this.node.parent) this.node.parent.inverseTransformPoint(this.playerPos, this.playerPos);
-            if (this.playerPos.equals(this.lastFollowPos)) return;
-            this.setCameraPos(this.playerPos);
-            this.lastFollowPos.set(this.playerPos);
-        }
+        if (this.isPositionLocked || !playerMgr.cameraFollow || !playerMgr.player
+            || gm.isGamePause || !Number.isFinite(deltaTime) || deltaTime <= 0) return;
 
+        playerMgr.player.getWorldPosition(this.playerPos);
+        if (this.node.parent) this.node.parent.inverseTransformPoint(this.playerPos, this.playerPos);
+        this.playerPos.z = this.node.position.z;
+        this.followWorldPos.set(this.limitCameraPos(this.playerPos));
+        if (this.node.parent) Vec3.transformMat4(this.followWorldPos, this.followWorldPos, this.node.parent.worldMatrix);
+        this.node.getWorldPosition(this.cameraWorldPos);
+
+        const distance = Vec3.distance(this.cameraWorldPos, this.followWorldPos);
+        const lagRatio = Number.isFinite(this.MaxFollowLagRatio)
+            ? Math.min(0.8, Math.max(0.05, this.MaxFollowLagRatio)) : 0.35;
+        const maxLag = Math.max(1, Math.min(this.halfViewWidth, this.halfViewHeight) * lagRatio);
+        const followSharpness = Number.isFinite(this.FollowSharpness) ? Math.max(0.1, this.FollowSharpness) : 5;
+        const catchUpSharpness = Number.isFinite(this.CatchUpSharpness)
+            ? Math.max(followSharpness, this.CatchUpSharpness) : Math.max(followSharpness, 12);
+        const catchUpRatio = Math.min(1, distance / maxLag);
+        const sharpness = followSharpness + (catchUpSharpness - followSharpness) * catchUpRatio * catchUpRatio;
+        let followRatio = 1 - Math.exp(-sharpness * deltaTime);
+        if (distance <= 0.05) followRatio = 1;
+        else followRatio = Math.max(followRatio, 1 - maxLag / distance);
+
+        Vec3.lerp(this.followWorldPos, this.cameraWorldPos, this.followWorldPos, followRatio);
+        if (this.node.parent) this.node.parent.inverseTransformPoint(this.followWorldPos, this.followWorldPos);
+        this.setCameraPos(this.followWorldPos);
     }
 }

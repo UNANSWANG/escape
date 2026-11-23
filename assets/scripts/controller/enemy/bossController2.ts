@@ -9,6 +9,14 @@ import { uiMgr } from '../../manager/UIManager';
 import { skillRangeRectLeftController } from '../indicator/skillRangeRectLeftController';
 const { ccclass } = _decorator;
 
+/** 本 Boss 专属技能动画。 */
+enum Boss2SkillAnimName {
+    /** 技能起手：原地播放一次，完成后进入蓄力并显示范围预警。 */
+    skill1 = 'skill1',
+    /** 蓄力及吐息：循环播放；吐息结束后再播放一次作为收招。 */
+    skill2 = 'skill2',
+}
+
 enum SkillStage { None, Start, Prepare, Active, Finish }
 
 @ccclass('bossController2')
@@ -53,7 +61,7 @@ export class bossController2 extends bossBaseController {
         this.clearNavigationPath();
         this.skillVersion++;
         this.skillStage = SkillStage.Start;
-        this.playOnce('skill1', () => this.startPrepare());
+        this.playOnce(Boss2SkillAnimName.skill1, () => this.startPrepare());
         return true;
     }
 
@@ -65,7 +73,7 @@ export class bossController2 extends bossBaseController {
         }
     }
 
-    private playOnce(name: string, complete: () => void): void {
+    private playOnce(name: Boss2SkillAnimName, complete: () => void): void {
         const version = this.skillVersion;
         const stage = this.skillStage;
         let completed = false;
@@ -83,7 +91,7 @@ export class bossController2 extends bossBaseController {
     private startPrepare(): void {
         this.skillStage = SkillStage.Prepare;
         this.remaining = this.chargeTime;
-        this.playAnimation('skill2', true, true);
+        this.playAnimation(Boss2SkillAnimName.skill2, true, true);
         this.skillRoot = new Node('dragonBreathSkill');
         this.skillRoot.layer = this.node.layer;
         this.skillRoot.addComponent(UITransform);
@@ -205,7 +213,7 @@ export class bossController2 extends bossBaseController {
     private finishBreath(): void {
         this.clearEffects();
         this.skillStage = SkillStage.Finish;
-        this.playOnce('skill2', () => {
+        this.playOnce(Boss2SkillAnimName.skill2, () => {
             this.stopSkill();
             this.playAnimation(BossAnimName.idle, true, true);
         });

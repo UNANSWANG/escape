@@ -517,6 +517,12 @@ export class playerData {
         return true;
     }
 
+    /**重置引导进度，下一次开局重新准备新手装备。 */
+    resetGameGuide() {
+        ccStorageTools.setData(SaveKey.gameGuide, 0);
+        this.guideEquipmentPrepared = false;
+    }
+
     prepareGuideEquipment() {
         if (this.guideEquipmentPrepared) return;
         const storehouseChanges: number[][] = [];

@@ -158,7 +158,7 @@ export class UIConsole extends UIBase {
     }
 
     clickGuideBtn() {
-        ccStorageTools.setData(SaveKey.gameGuide, 0);
+        pData.resetGameGuide();
         uiMgr.showTips('引导已重置');
     }
 

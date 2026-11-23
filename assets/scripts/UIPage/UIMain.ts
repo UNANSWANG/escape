@@ -391,6 +391,11 @@ export class UIMain extends UIBase {
         this.isOpeningMatch = true;
         this.startBtnComp.interactable = false;
 
+        if (ccStorageTools.getNumberData(SaveKey.gameGuide) !== 1) {
+            pData.prepareGuideEquipment();
+            gm.Event.emit(GameEvent.refreshEquipmentDisplay);
+        }
+
         // uiMgr.startGame();
         // return;
         uiMgr.openPage(UIPath.UIMatch, mapData.gameNumber).then(() => {

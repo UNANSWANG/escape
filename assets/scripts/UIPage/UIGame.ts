@@ -142,6 +142,9 @@ export class UIGame extends UIBase {
     @property(Node)
     guideBtn: Node;
 
+    @property(Node)
+    guideBox: Node;
+
     ///
     ///需要获取的节点
     ///
@@ -209,6 +212,7 @@ export class UIGame extends UIBase {
     private leaveGuideArrow: Node = null;
     private leaveGuideTarget: Node = null;
     private leaveGuideLocalPos = new Vec3();
+    private guideLab: Label = null;
     /**玩家是否正在任意撤离点内。 */
     private isPlayerInLeavePoint = false;
     /**本次撤离剩余时间（秒），离开撤离点后重置。 */
@@ -592,6 +596,8 @@ export class UIGame extends UIBase {
     }
 
     clearData() {
+        if (this.guideBox?.isValid) this.guideBox.active = false;
+        this.guideLab = null;
         if (this.leaveGuide?.isValid) this.leaveGuide.active = false;
         this.isGuideLevel = false;
         this.leaveGuide = null;
@@ -1270,6 +1276,7 @@ export class UIGame extends UIBase {
         this.initSoldier();
         this.initBoss();
         if (this.isGuideLevel) {
+            this.showGuidePrompt('新手引导：击败BOSS');
             this.showLeaveGuide(enemyMgr.bossesArr[0]?.node ?? null);
         }
         // 敌人创建完成后，将玩家放到父节点的最后一层。
@@ -1284,6 +1291,8 @@ export class UIGame extends UIBase {
     /**初始化玩家 */
     initPlayer() {
         this.isGuideLevel = ccStorageTools.getNumberData(SaveKey.gameGuide) !== 1;
+        this.guideLab = this.guideBox?.getChildByName('guideLab')?.getComponent(Label) ?? null;
+        if (this.guideBox) this.guideBox.active = false;
         const activeSkillImg = this.skillBtn2?.getChildByName('img')?.getComponent(Sprite);
         if (activeSkillImg) {
             activeSkillImg.spriteFrame = null;
@@ -1651,7 +1660,14 @@ export class UIGame extends UIBase {
 
     onBossDefeated(boss: bossBaseController) {
         if (!this.isGuideLevel || boss.node !== this.leaveGuideTarget) return;
+        this.showGuidePrompt('新手引导：前往撤离点');
         this.showLeaveGuide(this.leaveList?.children[0] ?? null);
+    }
+
+    private showGuidePrompt(text: string) {
+        if (!this.isGuideLevel || !this.guideBox?.isValid || !this.guideLab?.isValid) return;
+        this.guideLab.string = text;
+        this.guideBox.active = true;
     }
 
     /**仅在落地显示或切换目标时启动方向更新。 */

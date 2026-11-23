@@ -47,6 +47,9 @@ export class UIConsole extends UIBase {
     @property(Node)
     maxRankBtn: Node;
 
+    @property(Node)
+    guideBtn: Node;
+
     protected onLoad(): void {
         this.bindBtn();
     }
@@ -71,6 +74,7 @@ export class UIConsole extends UIBase {
         this.addAllEquipBtn.addComponent(zoomButton).onClick = this.clickAddEquipBtn.bind(this);
         this.addAllItemBtn.addComponent(zoomButton).onClick = this.clickAddItemBtn.bind(this);
         this.maxRankBtn.addComponent(zoomButton).onClick = this.clickMaxRankBtn.bind(this);
+        this.guideBtn.addComponent(zoomButton).onClick = this.clickGuideBtn.bind(this);
     }
 
     /**刷新只攻击玩家自身开关 */
@@ -151,6 +155,11 @@ export class UIConsole extends UIBase {
         pData.checkMapUnlocks();
         gm.Event.emit(GameEvent.refreshRank);
         uiMgr.showTips('段位提升完成');
+    }
+
+    clickGuideBtn() {
+        ccStorageTools.setData(SaveKey.gameGuide, 0);
+        uiMgr.showTips('引导已重置');
     }
 
     /**点击全皮肤 */

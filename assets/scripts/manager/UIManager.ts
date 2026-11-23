@@ -664,6 +664,11 @@ export class UIManager {
         }
     }
 
+    /**打开节点引导；所有目标挖空高亮，点击首个节点后关闭并回调。 */
+    showGuide(targets: Node | Node[], onClick?: () => void): Promise<void> {
+        return this.openPage(UIPath.UIGuide, { targets, onClick });
+    }
+
     /**将界面加入队列，关闭当前队列界面后依次打开 */
     openQueuePage(pagePath: string, data?: any) {
         if (!this.resBundle || !pagePath) {

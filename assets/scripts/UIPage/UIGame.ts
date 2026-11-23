@@ -204,6 +204,11 @@ export class UIGame extends UIBase {
     private shelterList: Node = null;
     /**地图中的全部撤离点。 */
     private leaveList: Node = null;
+    private isGuideLevel = false;
+    private leaveGuide: Node = null;
+    private leaveGuideArrow: Node = null;
+    private leaveGuideTarget: Node = null;
+    private leaveGuideLocalPos = new Vec3();
     /**玩家是否正在任意撤离点内。 */
     private isPlayerInLeavePoint = false;
     /**本次撤离剩余时间（秒），离开撤离点后重置。 */
@@ -587,6 +592,11 @@ export class UIGame extends UIBase {
     }
 
     clearData() {
+        if (this.leaveGuide?.isValid) this.leaveGuide.active = false;
+        this.isGuideLevel = false;
+        this.leaveGuide = null;
+        this.leaveGuideArrow = null;
+        this.leaveGuideTarget = null;
         audioMgr.stopWalkEffect();
         this.clearBossHpBar();
         this.unscheduleAllCallbacks();
@@ -1116,6 +1126,7 @@ export class UIGame extends UIBase {
 
     /**撤离计时结束后暂停战斗，飞机登机演出结束才结算。 */
     private playEvacuation() {
+        this.stopLeaveGuide();
         // 也取消仍未离场的开场飞机，避免两架飞机及旧回调重叠。
         this.clearOpening();
         gm.gamePause();
@@ -1258,6 +1269,9 @@ export class UIGame extends UIBase {
         this.initAI();
         this.initSoldier();
         this.initBoss();
+        if (this.isGuideLevel) {
+            this.showLeaveGuide(enemyMgr.bossesArr[0]?.node ?? null);
+        }
         // 敌人创建完成后，将玩家放到父节点的最后一层。
         playerMgr.player.setSiblingIndex(this.roleNode.children.length - 1);
         this.updateRolePerspectives();
@@ -1269,6 +1283,7 @@ export class UIGame extends UIBase {
 
     /**初始化玩家 */
     initPlayer() {
+        this.isGuideLevel = ccStorageTools.getNumberData(SaveKey.gameGuide) !== 1;
         const activeSkillImg = this.skillBtn2?.getChildByName('img')?.getComponent(Sprite);
         if (activeSkillImg) {
             activeSkillImg.spriteFrame = null;
@@ -1278,6 +1293,9 @@ export class UIGame extends UIBase {
         const opacity = playerMgr.player.getComponent(UIOpacity) ?? playerMgr.player.addComponent(UIOpacity);
         opacity.opacity = 0;
         this.roleNode.addChild(playerMgr.player);
+        this.leaveGuide = playerMgr.player.getChildByName('guide');
+        this.leaveGuideArrow = this.leaveGuide?.getChildByName('arrow') ?? null;
+        if (this.leaveGuide) this.leaveGuide.active = false;
         playerMgr.cameraFollow = false;
         this.initRolePos(playerMgr.player);
         this.keepNodeInsideMap(playerMgr.player);
@@ -1631,6 +1649,45 @@ export class UIGame extends UIBase {
         }
     }
 
+    onBossDefeated(boss: bossBaseController) {
+        if (!this.isGuideLevel || boss.node !== this.leaveGuideTarget) return;
+        this.showLeaveGuide(this.leaveList?.children[0] ?? null);
+    }
+
+    /**仅在落地显示或切换目标时启动方向更新。 */
+    private showLeaveGuide(target: Node | null) {
+        this.leaveGuideTarget = target;
+        this.unschedule(this.updateLeaveGuide);
+        this.updateLeaveGuide();
+        if (this.leaveGuide?.active) this.schedule(this.updateLeaveGuide);
+    }
+
+    private stopLeaveGuide() {
+        this.unschedule(this.updateLeaveGuide);
+        if (this.leaveGuide?.isValid) this.leaveGuide.active = false;
+    }
+
+    private updateLeaveGuide() {
+        if (!this.leaveGuide?.isValid || !this.leaveGuideArrow?.isValid) {
+            this.stopLeaveGuide();
+            return;
+        }
+        const visible = this.isGuideLevel && !!this.leaveGuideTarget?.isValid
+            && this.leaveGuideTarget.activeInHierarchy && (playerMgr.playerComp?.hp ?? 0) > 0
+            && !this.isFailTriggered && !this.isLeaveSuccessTriggered && !this.isEvacuating;
+        if (!visible) {
+            this.stopLeaveGuide();
+            return;
+        }
+        this.leaveGuide.active = true;
+        this.leaveGuide.inverseTransformPoint(this.leaveGuideLocalPos, this.leaveGuideTarget.worldPosition);
+        const directionX = this.leaveGuideLocalPos.x - this.leaveGuideArrow.position.x;
+        const directionY = this.leaveGuideLocalPos.y - this.leaveGuideArrow.position.y;
+        if (Math.hypot(directionX, directionY) > 0.001) {
+            this.leaveGuideArrow.angle = Math.atan2(directionY, directionX) * 180 / Math.PI - 90;
+        }
+    }
+
     /**根据当前地图和难度初始化本局时限，配置单位为秒。 */
     private initGameCountdown(): void {
         const [mapIdx, difficultyType] = pData.selectMapData;
@@ -1666,6 +1723,7 @@ export class UIGame extends UIBase {
     /**玩家死亡时进入本局失败结算。 */
     onPlayerDead() {
         if (this.isFailTriggered || this.isLeaveSuccessTriggered) return;
+        this.stopLeaveGuide();
         const player = playerMgr.playerComp;
         if (!player) {
             this.onGameFail();
@@ -1678,6 +1736,7 @@ export class UIGame extends UIBase {
     /**死亡、撤离超时或主动退出时停止本局，保存背包及穿戴装备掉落并打开失败结算。 */
     private onGameFail(): void {
         if (this.isFailTriggered || this.isLeaveSuccessTriggered) return;
+        this.stopLeaveGuide();
         this.isFailTriggered = true;
         gm.gamePause();
         pData.saveLostItems();

@@ -210,6 +210,9 @@
     "OrthoHeight": 450,
     "DesignWidth": 1334,
     "DesignHeight": 750,
+    "FollowSharpness": 5,
+    "CatchUpSharpness": 12,
+    "MaxFollowLagRatio": 0.35,
     "_id": ""
   },
   {

@@ -3,8 +3,6 @@ import { UIBase } from './UIBase';
 import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
-import { ccStorageTools } from '../extention/storageTools';
-import { SaveKey } from '../manager/configData';
 import { gm } from '../manager/gm';
 const { ccclass, property } = _decorator;
 
@@ -20,11 +18,6 @@ export class UIGameGuide extends UIBase {
     onUI_Open() {
         let anim = this.getComponent(Animation);
         anim.play();
-        this.initData();
-    }
-
-    initData() {
-        ccStorageTools.setData(SaveKey.gameGuide, 1);
     }
 
     bindBtn() {

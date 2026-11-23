@@ -1164,6 +1164,10 @@ export class UIGame extends UIBase {
             this.isOpening = true;
             const backpackItems = pData.backpackItems.map(([itemId, num]) => [itemId, num]);
             pData.moveBackpackItemsToStorehouse();
+            // 引导关成功撤离并进入胜利结算后，才记录引导完成。
+            if (this.isGuideLevel) {
+                ccStorageTools.setData(SaveKey.gameGuide, 1);
+            }
             uiMgr.openPage(UIPath.UISuccess, {
                 survivalTime: this.survivalTime,
                 skinId: pData.skinId,

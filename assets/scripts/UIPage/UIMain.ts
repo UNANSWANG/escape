@@ -251,7 +251,7 @@ export class UIMain extends UIBase {
         const targetScore = rankData?.rankScore ?? 0;
         if (this.rankBadge && rankData) {
             // 超出配置的段位沿用最后一个段位的配置 id，徽章也保持为最后一枚。
-            ccTools.loadImg(this.rankBadge, imgPath.rankBadge + rankData.id);
+            ccTools.loadImg(this.rankBadge, imgPath.rankBadge + rankData.rankId);
         }
         if (this.rankNameLab) this.rankNameLab.string = rankConfig.getRankName(pData.rank);
         if (this.rankLab) this.rankLab.string = pData.rankScore + '/' + targetScore;

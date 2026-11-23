@@ -35,6 +35,8 @@ export interface JsonRankData {
     id: number;
     /**名称 */
     name: string;
+    /**段位id */
+    rankId: number;
     /**段位积分 */
     rankScore: number;
 }

@@ -117,7 +117,7 @@ export class UIFail extends UIBase {
     private refreshRankBadge() {
         const rankData = rankConfig.getRankData(pData.rank);
         if (this.rankBadge && rankData) {
-            ccTools.loadImg(this.rankBadge, imgPath.rankBadge + rankData.id);
+            ccTools.loadImg(this.rankBadge, imgPath.rankBadge + rankData.rankId);
         }
     }
 

@@ -1172,6 +1172,7 @@ export class UIGame extends UIBase {
                 survivalTime: this.survivalTime,
                 skinId: pData.skinId,
                 backpackItems,
+                isGuideLevel: this.isGuideLevel,
             });
         };
         if (!skeleton || !showPos || !endPos

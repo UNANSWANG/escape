@@ -124,6 +124,17 @@ export class UIStore extends UIBase {
         pageNode.getComponent(storePageBase)?.refreshPage();
     }
 
+    getWeaponGuideTab(): Node {
+        return this.tabContent.children[this.storeTabsArray.indexOf(2)];
+    }
+
+    async openWeaponGuidePage(): Promise<Node> {
+        await this.clickTabBtn(this.storeTabsArray.indexOf(2));
+        const page = this.storePages.get(2);
+        if (!page?.isValid || !page.activeInHierarchy) throw new Error('武器商城页未就绪');
+        return page;
+    }
+
     private async loadStorePage(storeTabIndex: number): Promise<Node | null> {
         const pagePath = UIPath.storePage + storeTabIndex;
         const pagePrefab = await uiMgr.preLoadPrefab(pagePath);

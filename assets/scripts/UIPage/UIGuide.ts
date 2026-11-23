@@ -48,7 +48,7 @@ export class UIGuide extends UIBase {
         }
         this.clickTarget = nodes[0];
         this.onClick = onClick;
-        this.clickTarget.on(Node.EventType.TOUCH_END, this.clickGuideTarget, this);
+        if (!onClick) this.clickTarget.on(Node.EventType.TOUCH_END, this.clickGuideTarget, this);
         this.node.setSiblingIndex(this.node.parent.children.length - 1);
         this.refreshGuide();
     }
@@ -99,9 +99,13 @@ export class UIGuide extends UIBase {
                 this.passingTouches.add(id);
             }
         }
-        event.preventSwallow = this.passingTouches.has(id);
+        const passing = this.passingTouches.has(id);
+        event.preventSwallow = passing && !this.onClick;
         if (event.type === Node.EventType.TOUCH_END || event.type === Node.EventType.TOUCH_CANCEL) {
             this.passingTouches.delete(id);
+        }
+        if (passing && this.onClick && event.type === Node.EventType.TOUCH_END) {
+            this.clickGuideTarget(event);
         }
     }
 

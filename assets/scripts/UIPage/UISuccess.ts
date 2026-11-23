@@ -3,7 +3,8 @@ import { UIBase } from './UIBase';
 import { audioPath, imgPath, ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { pData } from '../manager/playerData';
-import { configData, GameEvent } from '../manager/configData';
+import { configData, GameEvent, SaveKey } from '../manager/configData';
+import { ccStorageTools } from '../extention/storageTools';
 import { gm } from '../manager/gm';
 import { audioMgr } from '../manager/audioManager';
 import { zoomButton } from '../extention/zoomButton';
@@ -42,12 +43,16 @@ export class UISuccess extends UIBase {
     private itemListVersion = 0;
     private rankScoreAnimation = new RankScoreAnimation();
     private valueAnimation = new MonetaryValueAnimation();
+    private isGuideLevel = false;
+    private returningToMain = false;
 
     protected onLoad(): void {
         this.bindBtn();
     }
 
     onUI_Open(data?) {
+        this.isGuideLevel = data?.isGuideLevel === true;
+        this.returningToMain = false;
         let anim = this.getComponent(Animation);
         anim.play();
         gm.gamePause();
@@ -128,9 +133,22 @@ export class UISuccess extends UIBase {
     ///
 
     /**点击返回主界面按钮 */
-    clickMainBtn() {
+    async clickMainBtn() {
+        if (this.returningToMain) return;
+        this.returningToMain = true;
+        const guideLevel = this.isGuideLevel;
+        if (guideLevel) {
+            pData.selectMapData = [0, 0];
+            pData.hasConfirmedMapSelection = true;
+            ccStorageTools.setData(SaveKey.selectMapData, pData.selectMapData.slice());
+        }
         this.onClose();
-        uiMgr.closeGame();
+        try {
+            await uiMgr.closeGame();
+            if (guideLevel) await uiMgr.startPostGameGuide();
+        } catch (error) {
+            console.error('返回大厅引导失败', error);
+        }
     }
 
     onClose() {

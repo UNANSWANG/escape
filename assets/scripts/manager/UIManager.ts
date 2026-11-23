@@ -18,6 +18,9 @@ import { getItemDataByItemId } from '../json/jsonItemData';
 import { signConfig } from '../json/jsonSign';
 import { ccStorageTools } from '../extention/storageTools';
 import { roleLevelConfig } from '../json/jsonRoleLevel';
+import type { UIMain } from '../UIPage/UIMain';
+import type { UIStore } from '../UIPage/UIStore';
+import type { weaponStorePage } from '../UIPage/store/weaponStorePage';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIManager')
@@ -576,7 +579,7 @@ export class UIManager {
     }
 
     /**清理本局背包并关闭游戏，恢复主页和主页背景音乐 */
-    closeGame() {
+    async closeGame() {
         this.clearBackpack();
         this.closePage(UIPath.UIBackpack);
         let keyName = this.getUIName(gamePath.UIGame);
@@ -587,7 +590,7 @@ export class UIManager {
         }
         audioMgr.closeBackgroundMusic();
         audioMgr.playBackgroundMusic(audioPath.background);
-        uiMgr.openPage(UIPath.UIMain);
+        await uiMgr.openPage(UIPath.UIMain);
     }
 
     /**清除玩家背包数据，并同步重置已创建的背包界面 */
@@ -667,6 +670,41 @@ export class UIManager {
     /**打开节点引导；所有目标挖空高亮，点击首个节点后关闭并回调。 */
     showGuide(targets: Node | Node[], onClick?: () => void): Promise<void> {
         return this.openPage(UIPath.UIGuide, { targets, onClick });
+    }
+
+    async startPostGameGuide() {
+        const main = (await this.getOrCreatePage(UIPath.UIMain)).getComponent('UIMain') as UIMain;
+        await new Promise<void>((resolve, reject) => {
+            this.openPage(UIPath.UIReward, {
+                rewardData: [[200001, 100000], [100003, 1], [100013, 1], [100023, 1]],
+                showGetBtn: true,
+                onClose: resolve,
+            }).catch(reject);
+        });
+        await this.waitGuideClick(main.storeBtn, () => this.openPage(UIPath.UIStore));
+        const store = (await this.getOrCreatePage(UIPath.UIStore)).getComponent('UIStore') as UIStore;
+        await this.waitGuideClick(store.getWeaponGuideTab(), () => store.openWeaponGuidePage().then(() => undefined));
+        const pageNode = await store.openWeaponGuidePage();
+        const weaponPage = pageNode.getComponent('weaponStorePage') as weaponStorePage;
+        await this.waitGuideClick(weaponPage.getGuideBuyButton(4), () => new Promise<void>((resolve, reject) => {
+            weaponPage.buyGuideWeapon(4, resolve).then(purchased => {
+                if (!purchased) reject(new Error('引导武器购买失败'));
+            }).catch(reject);
+        }));
+        await this.waitGuideClick(store.closeBtn, () => store.clickCloseBtn());
+        await this.waitGuideClick(main.startBtn, () => main.clickStartBtn());
+    }
+
+    private async waitGuideClick(target: Node, action: () => void | Promise<void>): Promise<void> {
+        await this.nextPreloadFrame();
+        if (!target?.isValid || !target.activeInHierarchy) {
+            return Promise.reject(new Error('引导目标节点不可用'));
+        }
+        return new Promise<void>((resolve, reject) => {
+            this.showGuide(target, () => {
+                Promise.resolve().then(action).then(resolve, reject);
+            }).catch(reject);
+        });
     }
 
     /**将界面加入队列，关闭当前队列界面后依次打开 */

@@ -1,4 +1,4 @@
-import { _decorator, Color, Label, Node, Sprite, instantiate } from 'cc';
+import { _decorator, Color, Label, Layout, Node, ScrollView, Sprite, UITransform, Vec2, instantiate } from 'cc';
 import { storePageBase } from './storePageBase';
 import { weaponsConfig, JsonWeaponsData } from '../../json/jsonWeapons';
 import { imgPath, ItemPath, UIPath } from '../../manager/pathConfig';
@@ -22,6 +22,7 @@ export class weaponStorePage extends storePageBase {
 
     private selectedWeapon: JsonWeaponsData | null = null;
     private purchasing = false;
+    private buyButtons = new Map<number, Node>();
 
     async initData() {
         const weaponData = weaponsConfig.getAllData().slice(1).filter((weapon) => weapon.kinds === 0 && weapon.isStore === 1);
@@ -35,6 +36,7 @@ export class weaponStorePage extends storePageBase {
         }
 
         ccTools.destroyAllChild(this.content);
+        this.buyButtons.clear();
         const itemNodes: Node[] = [];
         for (const weapon of weaponData) {
             const itemNode = instantiate(itemPrefab);
@@ -69,6 +71,7 @@ export class weaponStorePage extends storePageBase {
                 priceLab.string = ccTools.formatMonetaryNum(weapon.value ?? 0);
             }
             if (buyBtn) {
+                this.buyButtons.set(weapon.itemId, buyBtn);
                 const button = buyBtn.getComponent(zoomButton) ?? buyBtn.addComponent(zoomButton);
                 button.onClick = this.clickBuy.bind(this, weapon);
             }
@@ -89,25 +92,48 @@ export class weaponStorePage extends storePageBase {
         }
     }
 
-    private async clickBuy(weapon: JsonWeaponsData) {
+    getGuideBuyButton(itemId: number): Node {
+        const button = this.buyButtons.get(itemId);
+        if (!button?.isValid) throw new Error(`未找到武器商品购买按钮: ${itemId}`);
+        this.content.getComponent(Layout)?.updateLayout();
+        const scrollView = this.node.getComponentInChildren(ScrollView);
+        if (scrollView?.content === this.content && scrollView.vertical) {
+            const transform = this.content.getComponent(UITransform);
+            const item = button.parent;
+            const itemTransform = item.getComponent(UITransform);
+            const offset = transform.height * (1 - transform.anchorY)
+                - item.position.y - itemTransform.height * (1 - itemTransform.anchorY);
+            scrollView.stopAutoScroll();
+            scrollView.scrollToOffset(new Vec2(0, Math.max(0, offset)), 0);
+        }
+        return button;
+    }
+
+    buyGuideWeapon(itemId: number, onClose: () => void): Promise<boolean> {
+        return this.clickBuy(weaponsConfig.getDataByItemId(itemId), { showGetBtn: true, onClose });
+    }
+
+    private async clickBuy(weapon: JsonWeaponsData, rewardOptions?: { showGetBtn: boolean; onClose: () => void }): Promise<boolean> {
         if (this.purchasing || !weapon || !Number.isInteger(weapon.itemId)) {
-            return;
+            return false;
         }
         const price = Number(weapon.value);
         if (!Number.isFinite(price) || price < 0) {
-            return;
+            return false;
         }
         if (pData.money < price) {
             uiMgr.showTips("银币不足");
-            return;
+            return false;
         }
 
         this.purchasing = true;
         try {
             pData.fixMoney(-price);
-            await uiMgr.openPage(UIPath.UIReward, { rewardData: [[weapon.itemId, 1]] });
+            await uiMgr.openPage(UIPath.UIReward, { rewardData: [[weapon.itemId, 1]], ...rewardOptions });
+            return true;
         } catch (error) {
             console.error("购买武器失败", error);
+            return false;
         } finally {
             this.purchasing = false;
         }

@@ -717,6 +717,7 @@ export class roleController extends Component {
 
     /** 以人物实际播放的移动动画为准。 */
     protected lateUpdate(dt: number): void {
+        this.syncEffectFacing();
         const animation = this.roleAnim?.skeletonData ? this.roleAnim.getCurrent(0)?.animation?.name : '';
         const isMoveAnimation = animation === roleAnimName.move || animation === roleAnimName.run;
         this.setMoveSmokeVisible(isMoveAnimation && !gm.isGamePause && this.hp > 0 && !this.isPlayingDeath);
@@ -789,7 +790,20 @@ export class roleController extends Component {
             this.effectNode.addChild(effect);
             this.syringeComp = effect.getComponent(syringeController) ?? effect.addComponent(syringeController);
         }
+        this.syncEffectFacing();
         this.syringeComp.play(duration);
+    }
+
+    /**特效以朝左为默认方向，统一镜像父节点，让子特效位置、旋转一起跟随人物。 */
+    private syncEffectFacing(): void {
+        if (!this.roleAnim?.node?.isValid) return;
+        const direction = this.roleAnim.node.scale.x < 0 ? -1 : 1;
+        for (const effectNode of [this.effectNode, this.bottomEffectNode]) {
+            if (!effectNode?.isValid) continue;
+            const scale = effectNode.scale;
+            const scaleX = Math.abs(scale.x) * direction;
+            if (scale.x !== scaleX) effectNode.setScale(scaleX, scale.y, scale.z);
+        }
     }
 
     /**更新打药倒计时；游戏暂停时冻结。 */

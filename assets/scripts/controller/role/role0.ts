@@ -118,10 +118,8 @@ export class role0 extends roleController {
         const smoke = instantiate(uiMgr.shovelSmokePrefab);
         this.shovelSmokeNode = smoke;
         this.bottomEffectNode.addChild(smoke);
-        // 默认朝左；朝右滑铲时，烟雾方向和水平偏移一起镜像。
-        const directionScale = this.roleAnim.node.scale.x < 0 ? -1 : 1;
-        smoke.setPosition(40 * directionScale, 4, 0);
-        smoke.setScale(smoke.scale.x * directionScale, smoke.scale.y, smoke.scale.z);
+        // 朝向由 bottomEffectNode 统一镜像，子特效保留默认朝左的位置。
+        smoke.setPosition(40, 4, 0);
         this.shovelSmokeAnim = smoke.getComponent(Animation);
         this.shovelSmokeAnim?.play();
         if (gm.isGamePause) this.shovelSmokeAnim?.pause();

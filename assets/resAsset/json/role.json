@@ -1,1 +1,1 @@
-[{"id":0,"roleId":0,"type":0,"name":"突击1","isDefault":1,"hp":1000,"infoDesc":"人物描述1"},{"id":1,"roleId":1,"type":1,"name":"治疗1","hp":1000,"infoDesc":"人物描述2"},{"id":2,"roleId":2,"type":2,"name":"肉盾1","hp":1000,"infoDesc":"人物描述3"}]
+[{"id":0,"roleId":0,"type":0,"name":"威廉鼠","isDefault":1,"hp":150,"infoDesc":"人物描述1"},{"id":1,"roleId":1,"type":1,"name":"喵小愈","hp":150,"infoDesc":"人物描述2"},{"id":2,"roleId":2,"type":2,"name":"光盾狗","hp":180,"infoDesc":"人物描述3"}]

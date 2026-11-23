@@ -185,6 +185,7 @@ export class UILoading extends Component {
         const map = mapConfig.getDataByMapIdx(0).slice()
             .sort((a, b) => a.difficultyType - b.difficultyType)[0];
         if (!map) throw new Error('第一张地图没有可用的难度配置');
+        pData.prepareGuideEquipment();
         pData.selectMapData = [map.mapIdx, map.difficultyType];
         playerMgr.prepareMatch(map.mapIdx, map.difficultyType, map.gameNumber);
         await Promise.all([

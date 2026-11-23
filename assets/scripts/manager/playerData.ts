@@ -65,6 +65,8 @@ export class playerData {
     private readonly defaultEquipmentIds: number[] = [-1, -1, 0, -1, -1, 100001];
     /**装备 itemId 数组[主武器（weapons），副武器（weapons），近战武器（weapons），头盔（equipment），护甲（equipment），背包（equipment）] */
     equipmentIds: number[] = this.defaultEquipmentIds.slice();
+    private guideEquipmentPrepared = false;
+    private isGuideLevel = false;
     /**背包内价值 */
     backpackValue = 0;
     /**背包内当前容量 */
@@ -83,6 +85,7 @@ export class playerData {
     levelInit() {
         pData.adNum = 0;
         this.gameStartTime = ccTimeTools.getTime();
+        this.isGuideLevel = ccStorageTools.getNumberData(SaveKey.gameGuide) !== 1;
 
         // 按本局地图和难度初始化 NPC 属性，表内百分数转换为倍率。
         const [mapIdx, difficultyType] = this.selectMapData;
@@ -405,6 +408,7 @@ export class playerData {
 
     /**失败时保存背包及非默认穿戴装备，合并同类物品，并将装备栏恢复为默认状态。 */
     saveLostItems() {
+        const retainedPrimaryWeapon = this.isGuideLevel && this.equipmentIds[0] === 2 ? 2 : -1;
         const items = new Map<number, number>();
         for (const [itemId, num] of this.backpackItems) {
             if (!Number.isInteger(itemId) || itemId < 0 || itemId > 300000
@@ -413,6 +417,7 @@ export class playerData {
         }
         for (let slotIndex = 0; slotIndex < this.equipmentIds.length; slotIndex++) {
             const equipmentId = this.equipmentIds[slotIndex];
+            if (slotIndex === 0 && retainedPrimaryWeapon >= 0) continue;
             // 默认装备会在结算后保留，不计入丢失清单。
             if (equipmentId < 0 || equipmentId === this.getDefaultEquipmentId(slotIndex)) continue;
             // 前三个槽位从武器表查 itemId，后三个槽位从装备表查 itemId。
@@ -428,6 +433,7 @@ export class playerData {
         }
         this.lostItems = Array.from(items.entries());
         this.equipmentIds = this.defaultEquipmentIds.slice();
+        this.equipmentIds[0] = retainedPrimaryWeapon;
         ccStorageTools.batch(() => {
             ccStorageTools.setData(SaveKey.lostItems, this.lostItems);
             this.saveEquipmentIds();
@@ -509,6 +515,24 @@ export class playerData {
         this.equipmentIds = normalizedEquipmentIds;
         this.saveEquipmentIds();
         return true;
+    }
+
+    prepareGuideEquipment() {
+        if (this.guideEquipmentPrepared) return;
+        const storehouseChanges: number[][] = [];
+        for (let slotIndex = 0; slotIndex < this.equipmentIds.length; slotIndex++) {
+            const itemId = this.equipmentIds[slotIndex];
+            if (itemId >= 0 && itemId !== this.getDefaultEquipmentId(slotIndex)) {
+                storehouseChanges.push([itemId, 1]);
+            }
+        }
+        ccStorageTools.batch(() => {
+            this.equipmentIds = this.defaultEquipmentIds.slice();
+            this.equipmentIds[0] = 2;
+            this.fixStorehouseDatas(storehouseChanges);
+            this.saveEquipmentIds();
+        });
+        this.guideEquipmentPrepared = true;
     }
 
     /**卸下指定槽位的装备，并恢复该槽位的默认装备。 */

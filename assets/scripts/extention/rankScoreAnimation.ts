@@ -8,16 +8,17 @@ export class RankScoreAnimation {
 
     play(label: Label, scoreChange: number): number {
         this.finish();
-        const startScore = pData.rankScore;
+        scoreChange = Number.isFinite(scoreChange) ? Math.trunc(scoreChange) : 0;
+        const startScore = Math.trunc(pData.rankScore);
         const result = pData.getRankScoreResult(scoreChange);
-        const actualChange = result.actualChange;
+        const actualChange = Math.trunc(result.actualChange);
         // 降段从下一段位满分开始扣，晋升仍先展示累加后的总分。
         const animationStartScore = result.rank < pData.rank
-            ? result.rankScore - actualChange : startScore;
+            ? Math.trunc(result.rankScore) - actualChange : startScore;
         const targetScore = animationStartScore + actualChange;
         this.settle = () => {
             pData.fixRankScore(scoreChange);
-            if (label?.isValid) label.string = String(pData.rankScore);
+            if (label?.isValid) label.string = String(Math.trunc(pData.rankScore));
         };
         if (!label?.isValid) {
             this.finish();

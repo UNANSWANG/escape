@@ -27,6 +27,7 @@ import type { EnemyTarget } from '../manager/enemyManager';
 import { soldiersData } from '../data/soldiersData';
 import { commonConfig } from '../json/jsonCommon';
 import { mapConfig } from '../json/jsonMap';
+import { ContainerType } from '../json/jsonContainer';
 import { bossConfig } from '../json/jsonBoss';
 const { ccclass, property } = _decorator;
 
@@ -199,6 +200,9 @@ export class UIGame extends UIBase {
     private gameToUICameraScale = 1;
     /**地图层容器列表，用于存储所有地图层容器节点 */
     private containerList: Node = null;
+    /** 只记录开局地图中摆放的容器，死亡掉落不会加入此名单。 */
+    private initialRankContainers: containerController[] = [];
+    private defeatedRankPoints = 0;
     /**地图层碰撞体列表，用于存储所有地图层碰撞体节点 */
     private colliderList: Node = null;
     /**玩家进入后需要半透明显示的区域列表 */
@@ -217,8 +221,10 @@ export class UIGame extends UIBase {
     private isPlayerInLeavePoint = false;
     /**本次撤离剩余时间（秒），离开撤离点后重置。 */
     private leaveRemaining = 0;
-    /**本局已经进行的时间（秒），用于结算界面的存活时间。 */
+    /**本局已经进行的完整秒数，每满一秒增加 1，用于结算界面的存活时间。 */
     private survivalTime = 0;
+    /**尚未计入存活时间的不足一秒部分。 */
+    private survivalTimeRemainder = 0;
     /**本局距离撤离截止的剩余时间（秒）。 */
     private gameTimeRemaining = 0;
     /**防止倒计时结束后重复打开成功界面。 */
@@ -575,12 +581,46 @@ export class UIGame extends UIBase {
     /**从地图节点获取容器和碰撞节点。 */
     private initMapChildNodes() {
         this.containerList = this.mapNode?.getChildByName('containerList') ?? null;
+        this.initialRankContainers = (this.containerList?.children ?? [])
+            .filter(node => node.activeInHierarchy)
+            .map(node => node.getComponent(containerController))
+            .filter(container => !!container && (container.containerType === ContainerType.SupplyBox
+                || container.containerType === ContainerType.SafeBox));
         this.colliderList = this.mapNode?.getChildByName('colliderList') ?? null;
         this.perspectiveList = this.mapNode?.getChildByName('perspectiveList') ?? null;
         this.shelterList = this.mapNode?.getChildByName('shelterList') ?? null;
         this.leaveList = this.mapNode?.getChildByName('leaveList') ?? null;
         const bossList = this.mapNode?.getChildByName('bossList');
         if (bossList) bossList.active = false;
+    }
+
+    /** 在敌人生命值首次归零时记录击杀积分，不依赖死亡动画和掉落是否成功。 */
+    recordRankDefeat(type: 'soldier' | 'ai' | 'boss'): void {
+        if (this.isFailTriggered || this.isLeaveSuccessTriggered) return;
+        this.defeatedRankPoints += type === 'soldier' ? 2 : type === 'ai' ? 5 : 10;
+    }
+
+    /** 按本局击杀/剩余敌人和初始容器计算段位积分，最后统一截断为整数。 */
+    private getBattleRankScore(isSuccess: boolean): number {
+        let points = isSuccess ? this.defeatedRankPoints : 0;
+        if (!isSuccess) {
+            const countAlive = (enemies: readonly EnemyTarget[]) => enemies.filter(enemy =>
+                enemy?.node?.isValid && enemy.node.activeInHierarchy && enemy.hp > 0).length;
+            points += countAlive(enemyMgr.soldiersArr) * 2
+                + countAlive(enemyMgr.aiRoles) * 5 + countAlive(enemyMgr.bossesArr) * 10;
+        }
+        for (const container of this.initialRankContainers) {
+            if (container.opened !== isSuccess) continue;
+            points += container.containerType === ContainerType.SafeBox ? 3 : 1;
+        }
+        const [mapIdx, difficultyType] = pData.selectMapData;
+        const difficultyCoefficient = Number(mapConfig.getMapData(mapIdx, difficultyType)?.difficultyCoefficient);
+        const difficulty = Number.isFinite(difficultyCoefficient) && difficultyCoefficient >= 0
+            ? difficultyCoefficient : 1;
+        if (isSuccess) return Math.trunc(points * difficulty);
+        const failCoefficient = Number(commonConfig.getValue("failCoefficient"));
+        const divisor = Number.isFinite(failCoefficient) && failCoefficient > 0 ? failCoefficient : 1;
+        return -Math.trunc(points * difficulty / divisor);
     }
 
     /** 在死亡位置生成对应盒子，统一归入地图容器列表。 */
@@ -628,10 +668,13 @@ export class UIGame extends UIBase {
         this.currentContainer = null;
         this.resetLeaveCountdown();
         this.survivalTime = 0;
+        this.survivalTimeRemainder = 0;
         this.gameTimeRemaining = 0;
         this.refreshGameTimeLab();
         this.isLeaveSuccessTriggered = false;
         this.isFailTriggered = false;
+        this.defeatedRankPoints = 0;
+        this.initialRankContainers = [];
         this.staticColliders.length = 0;
         this.collisionCells.clear();
         this.perspectiveAreas.length = 0;
@@ -1170,6 +1213,7 @@ export class UIGame extends UIBase {
             }
             uiMgr.openPage(UIPath.UISuccess, {
                 survivalTime: this.survivalTime,
+                rankScoreChange: this.getBattleRankScore(true),
                 skinId: pData.skinId,
                 backpackItems,
                 isGuideLevel: this.isGuideLevel,
@@ -1619,7 +1663,7 @@ export class UIGame extends UIBase {
         }
 
         this.shootCooldownRemaining = Math.max(0, this.shootCooldownRemaining - dt);
-        this.survivalTime += dt;
+        this.updateSurvivalTime(dt);
         this.gameTimeRemaining = Math.max(0, this.gameTimeRemaining - Math.max(0, dt));
         this.refreshGameTimeLab();
         if (this.gameTimeRemaining <= 0) {
@@ -1661,6 +1705,16 @@ export class UIGame extends UIBase {
             }
             this.shootEnemy(dt);
         }
+    }
+
+    /** 只在累计满一秒时更新整数存活时间，卡顿跨秒时补齐经过的秒数。 */
+    private updateSurvivalTime(dt: number): void {
+        if (!Number.isFinite(dt) || dt <= 0) return;
+        this.survivalTimeRemainder += dt;
+        const seconds = Math.floor(this.survivalTimeRemainder);
+        if (seconds <= 0) return;
+        this.survivalTime += seconds;
+        this.survivalTimeRemainder -= seconds;
     }
 
     onBossDefeated(boss: bossBaseController) {
@@ -1762,7 +1816,10 @@ export class UIGame extends UIBase {
         gm.gamePause();
         pData.saveLostItems();
         uiMgr.closePage(UIPath.UIBackpack);
-        uiMgr.openPage(UIPath.UIFail, { survivalTime: this.survivalTime });
+        uiMgr.openPage(UIPath.UIFail, {
+            survivalTime: this.survivalTime,
+            rankScoreChange: this.getBattleRankScore(false),
+        });
     }
 
     /**检测玩家是否站在任意撤离点中，并更新可中断的撤离倒计时。 */

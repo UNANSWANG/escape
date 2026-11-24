@@ -58,7 +58,7 @@ export class UISuccess extends UIBase {
         gm.gamePause();
         audioMgr.playEffect(audioPath.success);
         gm.Event.on(GameEvent.refreshRank, this.refreshRankBadge, this);
-        const scoreChange = this.rankScoreAnimation.play(this.curRankNumLab, 20);
+        const scoreChange = this.rankScoreAnimation.play(this.curRankNumLab, Number(data?.rankScoreChange) || 0);
         if (this.addRankNumLab) this.addRankNumLab.string = '+' + scoreChange;
         this.refreshRankBadge();
         this.initData(data);

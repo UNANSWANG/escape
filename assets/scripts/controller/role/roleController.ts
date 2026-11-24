@@ -1191,6 +1191,7 @@ export class roleController extends Component {
         if (actualDamage > 0) this.interruptDrugUse();
         this.gameComp?.showDamageFloat(this.node, actualDamage);
         if (this.hp <= 0) {
+            if (this.isAI) this.gameComp?.recordRankDefeat('ai');
             if (this.isPlayer && this.gameComp) this.gameComp.onPlayerDead();
             else this.playDeath();
         }

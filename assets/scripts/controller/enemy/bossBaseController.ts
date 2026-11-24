@@ -605,6 +605,7 @@ export class bossBaseController extends Component {
         this.refreshHp();
         this.gameComp?.showDamageFloat(this.node, actualDamage);
         if (this.hp <= 0) {
+            this.gameComp?.recordRankDefeat('boss');
             this.gameComp?.onBossDefeated(this);
             this.gameComp?.spawnDeathBox('boss', this.node.worldPosition);
             this.grantDefeatRewards();

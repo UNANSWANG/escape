@@ -25,6 +25,9 @@ export class containerController extends Component {
     private revealedItemStates: boolean[] = [];
     private isItemDataInitialized = false;
     private isOpened = false;
+
+    /** 是否已经首次打开，用于本局初始容器的积分结算。 */
+    get opened(): boolean { return this.isOpened; }
     private isSearchComplete = false;
     /** 记录初始物资的最高品质，避免搜索中拾取物资后丢失品质信息。 */
     private highestQuality = -1;

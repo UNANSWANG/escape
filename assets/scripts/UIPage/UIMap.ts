@@ -49,13 +49,22 @@ export class UIMap extends UIBase {
 
     protected onLoad(): void {
         this.bindBtn();
+        gm.Event.on(GameEvent.resetMapSelection, this.resetSelection, this);
         // 首次适配或后续尺寸变化后，使用最新的界面边界重新定位。
         this.bg.parent.on(Node.EventType.SIZE_CHANGED, this.refreshMapFocus, this);
     }
 
     protected onDestroy(): void {
+        gm.Event.off(GameEvent.resetMapSelection, this.resetSelection, this);
         this.mapFocusTween?.stop();
         this.bg.parent?.off(Node.EventType.SIZE_CHANGED, this.refreshMapFocus, this);
+    }
+
+    private resetSelection() {
+        this.selectedMapIdx = -1;
+        this.selectedDifficultyType = -1;
+        this.hasInitializedSelection = false;
+        if (this.node.activeInHierarchy) this.initData();
     }
 
     onUI_Close() {
@@ -244,6 +253,8 @@ export class UIMap extends UIBase {
         const rows = this.mapData[this.selectedMapIdx] ?? [];
         this.selectedDifficultyType = rows.some((row) => row.difficultyType === difficultyType) ? difficultyType : -1;
         this.sureBtn.active = pData.isMapUnlocked(this.selectedMapIdx, this.selectedDifficultyType);
+        pData.markMapSelected(this.selectedMapIdx, this.selectedDifficultyType);
+        this.refreshMapNew();
         const difficultyLab = this.detailsNode.getChildByPath('mapDifficulty/difficultyLab')?.getComponent(Label);
         if (difficultyLab) {
             difficultyLab.string = difficultyNames[this.selectedDifficultyType] ?? '';
@@ -265,6 +276,18 @@ export class UIMap extends UIBase {
             }
         }
         this.refreshItemLists(selectedData);
+    }
+
+    /**地图列表汇总各难度的 new，右侧页签只显示自身难度的 new。 */
+    private refreshMapNew() {
+        this.mapList.children.forEach((mapNode, mapIdx) => {
+            const newNode = mapNode.getChildByName('new');
+            if (newNode) newNode.active = pData.hasNewMaps(mapIdx);
+        });
+        this.detailsNode.getChildByName('tabLayout').children.forEach((tabNode, difficultyType) => {
+            const newNode = tabNode.getChildByName('new');
+            if (newNode) newNode.active = pData.isMapNew(this.selectedMapIdx, difficultyType);
+        });
     }
 
     private async refreshItemLists(data?: JsonMapData) {

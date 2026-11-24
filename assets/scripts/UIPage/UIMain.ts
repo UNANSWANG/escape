@@ -247,6 +247,7 @@ export class UIMain extends UIBase {
 
     /**显示当前段位名称、段内积分及晋升进度。 */
     private refreshRank() {
+        this.refreshMapNew();
         const rankData = rankConfig.getRankData(pData.rank);
         const targetScore = rankData?.rankScore ?? 0;
         if (this.rankBadge && rankData) {
@@ -342,10 +343,20 @@ export class UIMain extends UIBase {
 
     /**刷新红点 */
     refreshRed() {
+        this.refreshMapNew();
         const red = this.handbookBtn?.getChildByName("red");
         if (red) {
             red.active = pData.hasClaimableCollectionReward();
         }
+    }
+
+    /**入口汇总所有地图的 new；完成地图引导后永久隐藏手指。 */
+    private refreshMapNew() {
+        const hasNew = pData.hasNewMaps();
+        const newNode = this.mapBtn?.getChildByName('new');
+        if (newNode) newNode.active = hasNew;
+        const guideFinger = this.mapBtn?.getChildByName('guideFinger');
+        if (guideFinger) guideFinger.active = hasNew && ccStorageTools.getNumberData(SaveKey.mapGuide) !== 1;
     }
 
     /**检测复访按钮 */
@@ -483,8 +494,18 @@ export class UIMain extends UIBase {
     }
 
     /**点击地图 */
-    clickMapBtn() {
-        uiMgr.openPage(UIPath.UIMap);
+    async clickMapBtn() {
+        // 打开后可能自动选中难度，因此按点击入口时的 new 状态判断引导。
+        const shouldCompleteGuide = pData.hasNewMaps() && ccStorageTools.getNumberData(SaveKey.mapGuide) !== 1;
+        try {
+            await uiMgr.openPage(UIPath.UIMap);
+            if (shouldCompleteGuide && uiMgr.isPageOpen(UIPath.UIMap)) {
+                ccStorageTools.setData(SaveKey.mapGuide, 1);
+                if (this.isValid) this.refreshMapNew();
+            }
+        } catch (error) {
+            console.error('打开地图界面失败', error);
+        }
     }
 
     /**点击显示物品 */

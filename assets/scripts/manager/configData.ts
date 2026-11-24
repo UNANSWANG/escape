@@ -140,6 +140,7 @@ export enum GameEvent {
     refreshRoleSkin = "refreshRoleSkin",
     /**确认地图选择后通知主页刷新地图名称和难度 */
     refreshMapSelection = "refreshMapSelection",
+    resetMapSelection = "resetMapSelection",
     refreshShowContent = "refreshShowContent",
     /**刷新角色头盔和护甲的显示状态 */
     refreshEquipmentDisplay = "refreshEquipmentDisplay",
@@ -182,6 +183,10 @@ export enum SaveKey {
     rankScore = "rankScore",
     /**已确认的地图选择，格式为 [地图索引, 难度类型] */
     selectMapData = "selectMapData",
+    /**本地已选过的地图难度，键为 mapIdx_difficultyType，默认包含 0_0 */
+    selectedMaps = "selectedMaps",
+    /**本地地图入口引导：1 已完成，缺省未完成 */
+    mapGuide = "mapGuide",
     /**已永久解锁的地图难度，格式为 [[地图索引, 难度], ...] */
     unlockedMaps = "unlockedMaps",
     /**银币 */

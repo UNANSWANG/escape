@@ -11,7 +11,7 @@ export class storageTools {
     private batchDepth = 0;
     private hasPendingSave = false;
     private readonly localKeys = new Set<string>([
-        SaveKey.selectMapData, SaveKey.gameGuide, SaveKey.effect, SaveKey.effectVolume,
+        SaveKey.selectMapData, SaveKey.selectedMaps, SaveKey.mapGuide, SaveKey.gameGuide, SaveKey.effect, SaveKey.effectVolume,
         SaveKey.music, SaveKey.musicVolume, SaveKey.vibrat, SaveKey.isAutoAiming, SaveKey.isFreeAd,
     ]);
     private readonly cloudKeys = new Set<string>([

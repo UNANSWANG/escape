@@ -48,7 +48,14 @@ export class UIConsole extends UIBase {
     maxRankBtn: Node;
 
     @property(Node)
+    addRankBtn: Node;
+
+    @property(Node)
+    clearRankBtn: Node;
+
+    @property(Node)
     guideBtn: Node;
+
 
     protected onLoad(): void {
         this.bindBtn();
@@ -74,6 +81,8 @@ export class UIConsole extends UIBase {
         this.addAllEquipBtn.addComponent(zoomButton).onClick = this.clickAddEquipBtn.bind(this);
         this.addAllItemBtn.addComponent(zoomButton).onClick = this.clickAddItemBtn.bind(this);
         this.maxRankBtn.addComponent(zoomButton).onClick = this.clickMaxRankBtn.bind(this);
+        this.addRankBtn.addComponent(zoomButton).onClick = this.clickAddRankBtn.bind(this);
+        this.clearRankBtn.addComponent(zoomButton).onClick = this.clickClearRankBtn.bind(this);
         this.guideBtn.addComponent(zoomButton).onClick = this.clickGuideBtn.bind(this);
     }
 
@@ -155,6 +164,21 @@ export class UIConsole extends UIBase {
         pData.checkMapUnlocks();
         gm.Event.emit(GameEvent.refreshRank);
         uiMgr.showTips('段位提升完成');
+    }
+
+    clickAddRankBtn() {
+        ccStorageTools.batch(() => {
+            pData.rank++;
+            ccStorageTools.setData(SaveKey.rank, pData.rank);
+            pData.checkMapUnlocks();
+        });
+        gm.Event.emit(GameEvent.refreshRank);
+        uiMgr.showTips('段位已增加一级');
+    }
+
+    clickClearRankBtn() {
+        pData.resetRank();
+        uiMgr.showTips('段位和地图已重置');
     }
 
     clickGuideBtn() {

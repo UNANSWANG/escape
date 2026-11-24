@@ -39,6 +39,8 @@ export class playerData {
     hasConfirmedMapSelection = false;
     /**永久解锁记录，格式为 [[地图索引, 难度], ...]，降段不移除 */
     private unlockedMaps: [number, number][] = [];
+    /**已选中的地图难度，仅存本地；默认地图视为已选过 */
+    private selectedMaps = new Set<string>(['0_0']);
     /**银币 */
     money = 0;
     /**金币 */
@@ -664,6 +666,51 @@ export class playerData {
         return this.unlockedMaps.some(([index, difficulty]) => index === mapIdx && difficulty === difficultyType);
     }
 
+    /**只有配置存在、已解锁且未选过的地图难度才显示 new。 */
+    isMapNew(mapIdx: number, difficultyType: number): boolean {
+        return !!mapConfig.getMapData(mapIdx, difficultyType)
+            && this.isMapUnlocked(mapIdx, difficultyType)
+            && !this.selectedMaps.has(mapIdx + '_' + difficultyType);
+    }
+
+    /**查询指定地图或全部地图是否存在 new，不包含尚未配置的地图。 */
+    hasNewMaps(mapIdx?: number): boolean {
+        const rows = mapIdx === undefined ? mapConfig.tableData : mapConfig.getDataByMapIdx(mapIdx);
+        return (rows ?? []).some(row => this.isMapNew(row.mapIdx, row.difficultyType));
+    }
+
+    /**选中已解锁的难度即记录，不依赖确定按钮。 */
+    markMapSelected(mapIdx: number, difficultyType: number): void {
+        if (!this.isMapNew(mapIdx, difficultyType)) return;
+        this.selectedMaps.add(mapIdx + '_' + difficultyType);
+        ccStorageTools.setData(SaveKey.selectedMaps, Array.from(this.selectedMaps));
+        gm.Event.emit(GameEvent.refreshRed);
+    }
+
+    resetRank(): void {
+        this.rank = 0;
+        this.rankScore = 0;
+        this.unlockedMaps = [];
+        this.selectMapData = [0, 0];
+        this.hasConfirmedMapSelection = true;
+        this.selectedMaps = new Set<string>(['0_0']);
+        ccStorageTools.batch(() => {
+            ccStorageTools.setDatas([
+                [SaveKey.rank, this.rank],
+                [SaveKey.rankScore, this.rankScore],
+                [SaveKey.unlockedMaps, []],
+                [SaveKey.selectMapData, this.selectMapData.slice()],
+                [SaveKey.selectedMaps, Array.from(this.selectedMaps)],
+                [SaveKey.mapGuide, 0],
+            ]);
+            this.checkMapUnlocks();
+        });
+        gm.Event.emit(GameEvent.resetMapSelection);
+        gm.Event.emit(GameEvent.refreshMapSelection);
+        gm.Event.emit(GameEvent.refreshRank);
+        gm.Event.emit(GameEvent.refreshRed);
+    }
+
     /**修改段位积分并保存，结算后同步刷新段位显示。 */
     fixRankScore(score: number): number {
         if (!Number.isFinite(score)) return 0;
@@ -790,6 +837,14 @@ export class playerData {
                 }
             }
         }
+        const selectedMaps = ccStorageTools.getData(SaveKey.selectedMaps);
+        this.selectedMaps = new Set<string>(['0_0']);
+        if (Array.isArray(selectedMaps)) {
+            for (const key of selectedMaps) {
+                if (typeof key === 'string' && /^\d+_\d+$/.test(key)) this.selectedMaps.add(key);
+            }
+        }
+        ccStorageTools.setData(SaveKey.selectedMaps, Array.from(this.selectedMaps));
         const selectMapData = ccStorageTools.getData(SaveKey.selectMapData);
         const unlockedMaps = ccStorageTools.getData(SaveKey.unlockedMaps);
         this.unlockedMaps = [];

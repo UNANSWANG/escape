@@ -269,7 +269,7 @@ export class UIRoleStore extends UIBase {
         }
         const moneyLab = page.getChildByPath("moneyLayout/numLab")?.getComponent(Label);
         if (moneyLab) {
-            moneyLab.string = `${Number(levelData?.upgradeMoney) || 0}`;
+            moneyLab.string = ccTools.formatMonetaryNum(Number(levelData?.upgradeMoney) || 0);
         }
         const moneyLayout = page.getChildByName("moneyLayout");
         const rewardLayout = page.getChildByName("rewardLayout");

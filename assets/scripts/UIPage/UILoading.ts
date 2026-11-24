@@ -148,6 +148,7 @@ export class UILoading extends Component {
 
     /**表格加载完成 */
     tableLoadComplete() {
+        pData.clampRank();
         // 玩家存档已恢复、地图表已加载，补齐首次进入及遗漏的地图解锁。
         pData.checkMapUnlocks();
         this.tableComplete = true;

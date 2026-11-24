@@ -19,7 +19,7 @@ const { ccclass, property } = _decorator;
 export class playerData {
     /**当前地图的上报编号：(地图索引 + 1) * 10 + (难度 + 1)。 */
     level = 0;
-    /**当前段位；超过基础段位后继续递增，表示王者2、王者3等 */
+    /**当前段位，最高为段位表最后一项 */
     rank = 0;
     /**当前段位内的积分 */
     rankScore = 0;
@@ -610,7 +610,7 @@ export class playerData {
     /**获取带等级道具的存储键 */
     /**预览积分结算；最低段位不扣分，其余段位先保底到 0，0 分再次扣分才降段。 */
     getRankScoreResult(score: number): { rank: number; rankScore: number; actualChange: number } {
-        let rank = this.rank;
+        let rank = Math.min(this.rank, rankConfig.maxRank);
         let rankScore = this.rankScore;
         if (!Number.isFinite(score)) return { rank, rankScore, actualChange: 0 };
         const change = Math.trunc(score);
@@ -634,13 +634,20 @@ export class playerData {
             rankScore += change;
             actualChange = change;
             let targetScore = rankConfig.getRankData(rank)?.rankScore;
-            while (Number.isFinite(targetScore) && targetScore > 0 && rankScore >= targetScore) {
+            while (rank < rankConfig.maxRank && Number.isFinite(targetScore) && targetScore > 0 && rankScore >= targetScore) {
                 rankScore -= targetScore;
                 rank++;
                 targetScore = rankConfig.getRankData(rank)?.rankScore;
             }
         }
         return { rank, rankScore, actualChange };
+    }
+
+    /**兼容旧存档中超出段位表上限的记录，积分保持不变。 */
+    clampRank(): void {
+        if (!rankConfig.tableData?.length || this.rank <= rankConfig.maxRank) return;
+        this.rank = rankConfig.maxRank;
+        ccStorageTools.setData(SaveKey.rank, this.rank);
     }
 
     /**检查当前段位可解锁的地图难度，只追加记录，不因降段重新上锁。 */
@@ -823,6 +830,7 @@ export class playerData {
         const rankScore = ccStorageTools.getNumberData(SaveKey.rankScore);
         this.rank = Number.isSafeInteger(rank) && rank >= 0 ? rank : 0;
         this.rankScore = Number.isSafeInteger(rankScore) && rankScore >= 0 ? rankScore : 0;
+        this.clampRank();
         ccStorageTools.setDatas([
             [SaveKey.rank, this.rank],
             [SaveKey.rankScore, this.rankScore],

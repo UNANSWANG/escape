@@ -177,7 +177,7 @@ export const floatColorArr = ["#71F452", "#FF0635","#8809ff",];
 export enum SaveKey {
     /**游戏操作引导：0 未引导，1 已引导；缺省按 0 处理。 */
     gameGuide = "gameGuide",
-    /**当前段位，0 为青铜，8 为王者2，之后依次递增 */
+    /**当前段位，索引上限为段位表最后一项 */
     rank = "rank",
     /**当前段位内的积分 */
     rankScore = "rankScore",

@@ -167,6 +167,11 @@ export class UIConsole extends UIBase {
     }
 
     clickAddRankBtn() {
+        if (pData.rank >= rankConfig.maxRank) {
+            pData.fixRankScore(500);
+            uiMgr.showTips('段位积分已增加500');
+            return;
+        }
         ccStorageTools.batch(() => {
             pData.rank++;
             ccStorageTools.setData(SaveKey.rank, pData.rank);

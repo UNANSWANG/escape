@@ -10,7 +10,12 @@ export class jsonRank extends jsonBase {
     protected tableUrl1: string = "";
     protected tableUrl2: string = "";
 
-    /**超出基础段位后，沿用最后一个段位的积分配置。 */
+    /**最高段位固定为配置表的最后一项。 */
+    get maxRank(): number {
+        return Math.max(0, (this.tableData?.length ?? 0) - 1);
+    }
+
+    /**超出范围时按最高段位读取。 */
     getRankData(rank: number): JsonRankData | null {
         const ranks = this.tableData;
         if (!ranks?.length) return null;
@@ -20,8 +25,7 @@ export class jsonRank extends jsonBase {
     getRankName(rank: number): string {
         const rankData = this.getRankData(rank);
         if (!rankData) return '';
-        const lastRank = this.tableData.length - 1;
-        return rank > lastRank ? rankData.name + (rank - lastRank + 1) : rankData.name;
+        return rankData.name;
     }
 
     get tableData(): JsonRankData[] {
@@ -37,8 +41,8 @@ export interface JsonRankData {
     name: string;
     /**段位id */
     rankId: number;
-    /**段位积分 */
-    rankScore: number;
+    /**晋升所需积分，最高段位无需配置 */
+    rankScore?: number;
 }
 
 

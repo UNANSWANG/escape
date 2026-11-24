@@ -250,15 +250,16 @@ export class UIMain extends UIBase {
         this.refreshMapNew();
         const rankData = rankConfig.getRankData(pData.rank);
         const targetScore = rankData?.rankScore ?? 0;
+        const isMaxRank = !!rankData && pData.rank >= rankConfig.maxRank;
         if (this.rankBadge && rankData) {
-            // 超出配置的段位沿用最后一个段位的配置 id，徽章也保持为最后一枚。
+            // 徽章使用当前段位配置。
             ccTools.loadImg(this.rankBadge, imgPath.rankBadge + rankData.rankId);
         }
         if (this.rankNameLab) this.rankNameLab.string = rankConfig.getRankName(pData.rank);
-        if (this.rankLab) this.rankLab.string = pData.rankScore + '/' + targetScore;
+        if (this.rankLab) this.rankLab.string = isMaxRank ? String(pData.rankScore) : pData.rankScore + '/' + targetScore;
         if (this.rankBar) {
-            this.rankBar.fillRange = targetScore > 0
-                ? Math.max(0, Math.min(1, pData.rankScore / targetScore)) : 0;
+            this.rankBar.fillRange = isMaxRank ? 1 : (targetScore > 0
+                ? Math.max(0, Math.min(1, pData.rankScore / targetScore)) : 0);
         }
     }
 

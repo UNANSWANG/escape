@@ -115,10 +115,12 @@ export class UILoading extends Component {
 
         await this.preLoadBundle();
 
-        audioMgr.playBackgroundMusic();
+        if (ccStorageTools.getNumberData(SaveKey.gameGuide) === 1) {
+            audioMgr.playBackgroundMusic();
+        }
         this.loadTable();
 
-        // 先准备通用资源和大厅；未完成引导时，在全部配置就绪后补齐首局资源。
+        // 未完成引导时只准备局内通用资源；配置就绪后补齐首局，主页延后加载。
         await this.preLoadPage();
     }
 
@@ -129,7 +131,7 @@ export class UILoading extends Component {
 
     /**预加载界面 */
     async preLoadPage() {
-        await uiMgr.preLoadStartup();
+        await uiMgr.preLoadStartup(ccStorageTools.getNumberData(SaveKey.gameGuide) !== 1);
         this.uiComplete = true;
         this.checkLoadComplete();
     }

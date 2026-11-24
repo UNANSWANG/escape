@@ -235,14 +235,21 @@ export class UIManager {
         this.backgroundPreloadVersions.set(owner, (this.backgroundPreloadVersions.get(owner) || 0) + 1);
     }
 
-    /**加载页只等待大厅首屏和通用资源。 */
-    async preLoadStartup() {
-        await Promise.all([this.preLoadCommonPrefab(), this.preLoadPage(UIPath.UIMain)]);
+    /**引导启动只等待局内通用资源，普通启动准备主页首屏。 */
+    async preLoadStartup(enterGuideGame = false) {
+        await Promise.all([
+            this.preLoadCommonPrefab(!enterGuideGame),
+            ...(enterGuideGame ? [] : [this.preLoadPage(UIPath.UIMain)]),
+        ]);
     }
 
     /**大厅常用界面按使用优先级分帧准备。 */
     preLoadMainPages(owner: Component) {
         const isCurrent = this.beginBackgroundPreload(owner);
+        return this.loadMainPagesInFrames(isCurrent);
+    }
+
+    private loadMainPagesInFrames(isCurrent: () => boolean) {
         const paths = [UIPath.UIMap, UIPath.UIMatch, UIPath.UISetting, UIPath.UIReward,
             UIPath.UIRevisit, UIPath.UIStorehouse, UIPath.UIRoleStore, UIPath.UISign,
             UIPath.UIShowItem, UIPath.UIStore, UIPath.UIHandBook];
@@ -262,7 +269,7 @@ export class UIManager {
     }
 
     /**局内界面和对象池在后台分帧准备，关闭或重开后停止旧批次。 */
-    async preLoadInGamePages(owner: Component) {
+    async preLoadInGamePages(owner: Component, preloadMain = false) {
         const isCurrent = this.beginBackgroundPreload(owner);
         await this.preLoadInFrames([
             () => this.preLoadPage(UIPath.UIFail),
@@ -281,6 +288,15 @@ export class UIManager {
             }, () => this.nextPreloadFrame(), isCurrent);
         } catch (error) {
             console.warn('对象池分帧预热失败', error);
+        }
+        if (preloadMain && isCurrent()) {
+            // 首局已经完成地图和角色初始化，再准备返回主页及后续引导所需界面。
+            // 沿用本局批次，离开或重开游戏后停止后续任务。
+            await this.preLoadInFrames([
+                () => this.preLoadCommonPrefab(),
+                () => this.preLoadPage(UIPath.UIMain),
+            ], isCurrent);
+            await this.loadMainPagesInFrames(isCurrent);
         }
     }
 
@@ -403,23 +419,12 @@ export class UIManager {
     }
 
     /**加载启动后各页面都可能使用的预制体 */
-    async preLoadCommonPrefab() {
-        if (this.tipsPrefab && this.tips2Prefab && this.effectItemPrefab) {
-            return;
+    async preLoadCommonPrefab(includeMain = true) {
+        this.tipsPrefab = await this.preLoadPrefab(ItemPath.tips);
+        this.tips2Prefab = await this.preLoadPrefab(ItemPath.tips2);
+        if (includeMain) {
+            this.effectItemPrefab = await this.preLoadPrefab(ItemPath.effectItem);
         }
-        if (!this.resBundle) {
-            throw new Error("资源包尚未加载");
-        }
-
-        this.tipsPrefab = await ccResTools.loadPrefab(this.resBundle, ItemPath.tips, false);
-        if (!this.tipsPrefab) {
-            throw new Error(`加载预制体失败: ${ItemPath.tips}`);
-        }
-        this.tips2Prefab = await ccResTools.loadPrefab(this.resBundle, ItemPath.tips2, false);
-        if (!this.tips2Prefab) {
-            throw new Error(`加载预制体失败: ${ItemPath.tips2}`);
-        }
-        this.effectItemPrefab = await ccResTools.loadPrefab(this.resBundle, ItemPath.effectItem, false);
     }
 
     /**匹配期间准备开战必需资源；并发调用共享任务，失败后允许重试 */
@@ -650,6 +655,8 @@ export class UIManager {
             this.foregroundItemLoads++;
             let pageNode: Node;
             try {
+                // 首局可能在后台预加载完成前结束，显示主页前补齐奖励特效。
+                if (pagePath === UIPath.UIMain) await this.preLoadCommonPrefab();
                 // 只等待界面本身，物品节点自行异步填充图片，不阻塞文字和按钮显示。
                 pageNode = await this.getOrCreatePage(pagePath);
             } finally {

@@ -355,7 +355,7 @@ export class UIGame extends UIBase {
         }
 
         this.initData();
-        void uiMgr.preLoadInGamePages(this);
+        void uiMgr.preLoadInGamePages(this, this.isGuideLevel);
     }
 
     /** 根据所选地图索引加载地图，完成后再初始化本局角色和地图数据。 */

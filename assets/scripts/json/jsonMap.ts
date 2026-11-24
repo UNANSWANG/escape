@@ -71,6 +71,8 @@ export interface JsonMapData {
     npcFireRatePercent: number,
     /**奖励等级 */
     rewardLevel: number,
+    /**难度系数 */
+    difficultyCoefficient: number,
 }
 
 

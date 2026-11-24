@@ -54,6 +54,8 @@ export interface JsonRoleData {
     name: string;
     /**是否为初始皮肤 */
     isDefault: number;
+    /**解锁金币 */
+    unlockGold: number;
     /**类型 */
     type: number;
     /**生命值 */

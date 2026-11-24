@@ -47,6 +47,9 @@ export class UIRoleStore extends UIBase {
     useBtn: Node;
 
     @property(Node)
+    buyBtn: Node;
+
+    @property(Node)
     upgradeAnim: Node;
 
     @property(Node)

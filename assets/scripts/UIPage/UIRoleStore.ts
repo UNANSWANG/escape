@@ -49,6 +49,9 @@ export class UIRoleStore extends UIBase {
     @property(Node)
     upgradeAnim: Node;
 
+    @property(Node)
+    battleLab: Node;
+
     /**页签名称，与角色类型一一对应 */
     private tabNames: string[] = ["全部", "突击", "治疗", "肉盾"]//, "功能"];
     /**-1 表示全部，其余对应角色表的 type */
@@ -211,10 +214,15 @@ export class UIRoleStore extends UIBase {
         this.refreshUseButton();
     }
 
-    /**当前浏览角色已出战或尚未选中角色时，隐藏使用按钮 */
+    /**已出战标签与使用按钮互斥，尚未选中角色时都隐藏。 */
     private refreshUseButton() {
+        const hasSelectedRole = !!this.selectedRole;
+        const isInBattle = hasSelectedRole && this.selectedRole.roleId === pData.roleId;
         if (this.useBtn) {
-            this.useBtn.active = !!this.selectedRole && this.selectedRole.roleId !== pData.roleId;
+            this.useBtn.active = hasSelectedRole && !isInBattle;
+        }
+        if (this.battleLab) {
+            this.battleLab.active = isInBattle;
         }
     }
 

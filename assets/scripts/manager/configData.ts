@@ -215,6 +215,8 @@ export enum SaveKey {
     roleLevels = "roleLevels",
     /**当前出战角色 id */
     roleId = "roleId",
+    /**已解锁角色 id 列表，默认角色始终解锁 */
+    unlockedRoles = "unlockedRoles",
     /**音效开关 */
     effect = "effect",
     /**音效音量 */

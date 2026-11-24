@@ -169,6 +169,8 @@ export class UIRoleStore extends UIBase {
         if (useButton) {
             useButton.onClick = this.clickUseBtn.bind(this);
         }
+        const buyButton = this.buyBtn?.getComponent(zoomButton) ?? this.buyBtn?.addComponent(zoomButton);
+        if (buyButton) buyButton.onClick = this.clickBuyBtn.bind(this);
         this.tabList.forEach((tabNode, index) => {
             tabNode.on(Node.EventType.TOUCH_END, () => {
                 this.clickPageTab(index);
@@ -217,15 +219,40 @@ export class UIRoleStore extends UIBase {
         this.refreshUseButton();
     }
 
-    /**已出战标签与使用按钮互斥，尚未选中角色时都隐藏。 */
+    /**购买后保持当前预览，解锁角色可再点击使用出战。 */
+    private clickBuyBtn() {
+        const roleId = this.selectedRole?.roleId;
+        if (roleId === undefined) return;
+        const result = pData.buyRole(roleId);
+        if (result === 'insufficient') {
+            uiMgr.showTips('金币不足');
+            return;
+        }
+        if (result === 'invalid') {
+            uiMgr.showTips('角色解锁配置异常');
+            return;
+        }
+        if (result === 'success') uiMgr.showTips('角色解锁成功');
+        this.roleAvatarItems.forEach(item => item.refreshLock());
+        this.refreshUseButton();
+        void this.refreshRoleLevelInfo();
+    }
+
+    /**购买、使用、已出战三种状态互斥，尚未选中角色时都隐藏。 */
     private refreshUseButton() {
         const hasSelectedRole = !!this.selectedRole;
-        const isInBattle = hasSelectedRole && this.selectedRole.roleId === pData.roleId;
+        const isUnlocked = hasSelectedRole && pData.isRoleUnlocked(this.selectedRole.roleId);
+        const isInBattle = isUnlocked && this.selectedRole.roleId === pData.roleId;
         if (this.useBtn) {
-            this.useBtn.active = hasSelectedRole && !isInBattle;
+            this.useBtn.active = isUnlocked && !isInBattle;
         }
         if (this.battleLab) {
             this.battleLab.active = isInBattle;
+        }
+        if (this.buyBtn) {
+            this.buyBtn.active = hasSelectedRole && !isUnlocked;
+            const priceLab = this.buyBtn.getChildByPath('layout/Label')?.getComponent(Label);
+            if (priceLab) priceLab.string = String(this.selectedRole?.unlockGold ?? 0);
         }
     }
 
@@ -271,9 +298,12 @@ export class UIRoleStore extends UIBase {
         const page = this.pageList[0];
         const roleId = this.selectedRole?.roleId;
         if (!page || roleId === undefined) return;
-        const roleLevel = pData.getRoleLevel(roleId);
+        const isUnlocked = pData.isRoleUnlocked(roleId);
+        const roleLevel = isUnlocked ? pData.getRoleLevel(roleId)
+            : (roleLevelConfig.getRoleLevelsById(roleId)[0]?.level ?? 1);
         const levelData = roleLevelConfig.getRoleLevelData(roleId, roleLevel);
         const isMaxLevel = roleLevel >= roleLevelConfig.getMaxLevel(roleId);
+        const canUpgrade = isUnlocked && !isMaxLevel;
         const levelLab = page.getChildByName("levelLab")?.getComponent(Label);
         if (levelLab) {
             levelLab.string = `LV.${roleLevel}`;
@@ -286,22 +316,22 @@ export class UIRoleStore extends UIBase {
         const rewardLayout = page.getChildByName("rewardLayout");
         if (moneyLayout) moneyLayout.active = !isMaxLevel;
         if (rewardLayout) rewardLayout.active = !isMaxLevel;
-        if (this.upgradeBtn) this.upgradeBtn.active = !isMaxLevel;
+        if (this.upgradeBtn) this.upgradeBtn.active = canUpgrade;
         const setLabel = (name: string, value: string) => {
             const label = page.getChildByName(name)?.getComponent(Label);
             if (label) label.string = value ?? "";
         };
-        setLabel("passiveUpgradeLab", levelData?.passiveUpgradeDesc);
+        setLabel("passiveUpgradeLab", isUnlocked ? levelData?.passiveUpgradeDesc : "");
         setLabel("passiveDescLab", levelData?.passiveDesc);
-        setLabel("initiativeUpgradeLab", levelData?.initiativeUpgradeDesc);
+        setLabel("initiativeUpgradeLab", isUnlocked ? levelData?.initiativeUpgradeDesc : "");
         setLabel("initiativeDescLab", levelData?.initiativeDesc);
-        await this.refreshUpgradeItems(rewardLayout, levelData);
+        await this.refreshUpgradeItems(rewardLayout, !isMaxLevel ? levelData : null);
     }
 
     /**点击升级按钮，扣除升级材料和银币并保存新等级 */
     private clickUpgradeBtn() {
         const roleId = this.selectedRole?.roleId;
-        if (roleId === undefined) return;
+        if (roleId === undefined || !pData.isRoleUnlocked(roleId)) return;
         const currentLevel = pData.getRoleLevel(roleId);
         const maxLevel = roleLevelConfig.getMaxLevel(roleId);
         if (currentLevel >= maxLevel) return;

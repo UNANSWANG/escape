@@ -12,6 +12,7 @@ import { getItemDataByItemId } from '../json/jsonItemData';
 import { weaponsConfig } from '../json/jsonWeapons';
 import { rankConfig } from '../json/jsonRank';
 import { mapConfig } from '../json/jsonMap';
+import { roleConfig } from '../json/jsonRole';
 const { ccclass, property } = _decorator;
 
 //用户游戏内数据
@@ -49,6 +50,8 @@ export class playerData {
     adNum = 0;
     /**当前出战角色 id，保存到云端 */
     roleId = 0;
+    /**永久角色解锁记录，保存到云端。 */
+    private unlockedRoles = new Set<number>();
     /**角色等级，按角色 id 保存；未记录的角色默认为 1 级 */
     roleLevels: { [roleId: string]: number } = {};
     /**当前皮肤id */
@@ -776,6 +779,14 @@ export class playerData {
     /**初始化当前穿戴皮肤 */
     initRoleData(defaultRoleId: number) {
         this.defaultRoleId = defaultRoleId;
+        this.unlockedRoles = new Set(Array.from(this.unlockedRoles)
+            .filter(id => !!roleConfig.getRoleDataById(id)));
+        this.unlockedRoles.add(defaultRoleId);
+        if (!this.isRoleUnlocked(this.roleId)) this.roleId = defaultRoleId;
+        ccStorageTools.setDatas([
+            [SaveKey.unlockedRoles, Array.from(this.unlockedRoles)],
+            [SaveKey.roleId, this.roleId],
+        ]);
     }
 
     /**设置当前穿戴皮肤 */
@@ -789,11 +800,33 @@ export class playerData {
 
     /**设置当前出战角色并保存到云端 */
     setRoleId(roleId: number) {
-        if (!Number.isInteger(roleId) || roleId < 0) return;
+        if (!this.isRoleUnlocked(roleId)) return;
         const isChanged = this.roleId !== roleId;
         this.roleId = roleId;
         ccStorageTools.setData(SaveKey.roleId, this.roleId);
         if (isChanged) gm.Event.emit(GameEvent.refreshRoleSkin);
+    }
+
+    /**默认角色始终解锁，其他角色必须有云端解锁记录。 */
+    isRoleUnlocked(roleId: number): boolean {
+        if (!Number.isInteger(roleId) || !roleConfig.getRoleDataById(roleId)) return false;
+        return roleId === (this.defaultRoleId ?? roleConfig.defaultRoleId) || this.unlockedRoles.has(roleId);
+    }
+
+    /**按角色表价格购买，扣金币与解锁记录合并保存，重复购买不会扣款。 */
+    buyRole(roleId: number): 'success' | 'unlocked' | 'insufficient' | 'invalid' {
+        const role = roleConfig.getRoleDataById(roleId);
+        if (!role) return 'invalid';
+        if (this.isRoleUnlocked(roleId)) return 'unlocked';
+        const price = Number(role.unlockGold);
+        if (!Number.isSafeInteger(price) || price < 0) return 'invalid';
+        if (this.gold < price) return 'insufficient';
+        ccStorageTools.batch(() => {
+            this.unlockedRoles.add(roleId);
+            ccStorageTools.setData(SaveKey.unlockedRoles, Array.from(this.unlockedRoles));
+            this.fixGold(-price);
+        });
+        return 'success';
     }
 
     /**获取角色等级，未记录或无效时默认为 1 级 */
@@ -874,7 +907,12 @@ export class playerData {
             ? claimedCollectionRewards.filter((itemId) => Number.isInteger(itemId) && itemId >= 0)
             : []);
         const roleId = ccStorageTools.getNumberData(SaveKey.roleId);
+        const unlockedRoles = ccStorageTools.getData(SaveKey.unlockedRoles);
+        this.unlockedRoles = new Set<number>(Array.isArray(unlockedRoles)
+            ? unlockedRoles.filter(id => Number.isInteger(id) && id >= 0) : []);
         this.roleId = Number.isInteger(roleId) && roleId >= 0 ? roleId : 0;
+        // 首次启动时角色表尚未加载，由角色表的 initRoleData 完成校验与保存。
+        if (this.defaultRoleId !== null) this.initRoleData(this.defaultRoleId);
         const roleLevels = ccStorageTools.getData(SaveKey.roleLevels);
         this.roleLevels = {};
         if (roleLevels && typeof roleLevels === "object" && !Array.isArray(roleLevels)) {

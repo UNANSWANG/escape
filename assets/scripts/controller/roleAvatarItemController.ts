@@ -2,6 +2,7 @@ import { _decorator, Component, Label, Sprite } from 'cc';
 import { JsonRoleData } from '../json/jsonRole';
 import { ccTools } from '../extention/generalTools';
 import { imgPath } from '../manager/pathConfig';
+import { pData } from '../manager/playerData';
 const { ccclass } = _decorator;
 
 const roleTypeNames = ["突击", "治疗", "肉盾", "功能"];
@@ -25,6 +26,13 @@ export class roleAvatarItemController extends Component {
             ccTools.loadImg(icon, imgPath.roleType + roleData.type);
         }
         this.setSelected(false);
+        this.refreshLock();
+    }
+
+    /**同步头像锁标记，购买成功后可直接刷新。 */
+    refreshLock() {
+        const lock = this.node.getChildByName('lock');
+        if (lock) lock.active = !!this.roleData && !pData.isRoleUnlocked(this.roleData.roleId);
     }
 
     setSelected(selected: boolean) {

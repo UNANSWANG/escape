@@ -16,7 +16,7 @@ export class storageTools {
     ]);
     private readonly cloudKeys = new Set<string>([
         SaveKey.rank, SaveKey.rankScore, SaveKey.money, SaveKey.gold, SaveKey.storehouse,
-        SaveKey.equipmentIds, SaveKey.lostItems, SaveKey.roleId, SaveKey.roleLevels,
+        SaveKey.equipmentIds, SaveKey.lostItems, SaveKey.roleId, SaveKey.roleLevels, SaveKey.unlockedRoles,
         SaveKey.unlockedMaps, SaveKey.showItems, SaveKey.unlockedCollections,
         SaveKey.claimedCollectionRewards, SaveKey.bossBookStates, SaveKey.signDays,
         SaveKey.isGetSign, SaveKey.isGetRevisit, SaveKey.moneyAddShare, SaveKey.moneyAddShare2,

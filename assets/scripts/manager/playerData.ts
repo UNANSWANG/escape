@@ -15,6 +15,18 @@ import { mapConfig } from '../json/jsonMap';
 import { roleConfig } from '../json/jsonRole';
 const { ccclass, property } = _decorator;
 
+/**角色购买结果。 */
+export enum BuyRoleResult {
+    /**购买成功 */
+    success = 0,
+    /**已解锁，不重复扣款 */
+    unlocked = 1,
+    /**金币不足 */
+    insufficient = 2,
+    /**角色或价格配置无效 */
+    invalid = 3,
+}
+
 //用户游戏内数据
 @ccclass('playerData')
 export class playerData {
@@ -813,20 +825,20 @@ export class playerData {
         return roleId === (this.defaultRoleId ?? roleConfig.defaultRoleId) || this.unlockedRoles.has(roleId);
     }
 
-    /**按角色表价格购买，扣金币与解锁记录合并保存，重复购买不会扣款。 */
-    buyRole(roleId: number): 'success' | 'unlocked' | 'insufficient' | 'invalid' {
+    /**按角色表价格购买，返回购买结果枚举。 */
+    buyRole(roleId: number): BuyRoleResult {
         const role = roleConfig.getRoleDataById(roleId);
-        if (!role) return 'invalid';
-        if (this.isRoleUnlocked(roleId)) return 'unlocked';
+        if (!role) return BuyRoleResult.invalid;
+        if (this.isRoleUnlocked(roleId)) return BuyRoleResult.unlocked;
         const price = Number(role.unlockGold);
-        if (!Number.isSafeInteger(price) || price < 0) return 'invalid';
-        if (this.gold < price) return 'insufficient';
+        if (!Number.isSafeInteger(price) || price < 0) return BuyRoleResult.invalid;
+        if (this.gold < price) return BuyRoleResult.insufficient;
         ccStorageTools.batch(() => {
             this.unlockedRoles.add(roleId);
             ccStorageTools.setData(SaveKey.unlockedRoles, Array.from(this.unlockedRoles));
             this.fixGold(-price);
         });
-        return 'success';
+        return BuyRoleResult.success;
     }
 
     /**获取角色等级，未记录或无效时默认为 1 级 */

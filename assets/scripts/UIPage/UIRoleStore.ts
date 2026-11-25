@@ -7,7 +7,7 @@ import { ccTools } from '../extention/generalTools';
 import { JsonRoleData, roleConfig } from '../json/jsonRole';
 import { roleAvatarItemController } from '../controller/roleAvatarItemController';
 import { showItemController } from '../controller/showItemController';
-import { pData } from '../manager/playerData';
+import { BuyRoleResult, pData } from '../manager/playerData';
 import { ccStorageTools } from '../extention/storageTools';
 import { roleLevelConfig, JsonRoleLevelData } from '../json/jsonRoleLevel';
 import { getItemDataByItemId } from '../json/jsonItemData';
@@ -224,15 +224,15 @@ export class UIRoleStore extends UIBase {
         const roleId = this.selectedRole?.roleId;
         if (roleId === undefined) return;
         const result = pData.buyRole(roleId);
-        if (result === 'insufficient') {
+        if (result === BuyRoleResult.insufficient) {
             uiMgr.showTips('金币不足');
             return;
         }
-        if (result === 'invalid') {
+        if (result === BuyRoleResult.invalid) {
             uiMgr.showTips('角色解锁配置异常');
             return;
         }
-        if (result === 'success') uiMgr.showTips('角色解锁成功');
+        if (result === BuyRoleResult.success) uiMgr.showTips('角色解锁成功');
         this.roleAvatarItems.forEach(item => item.refreshLock());
         this.refreshUseButton();
         void this.refreshRoleLevelInfo();

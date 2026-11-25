@@ -1,9 +1,10 @@
+import { audioMgr } from '../../manager/audioManager';
 import { _decorator, instantiate, Node, sp } from 'cc';
 import { roleController, roleType } from './roleController';
 import { gm } from '../../manager/gm';
 import { uiMgr } from '../../manager/UIManager';
 import { ccTools } from '../../extention/generalTools';
-import { spinePath } from '../../manager/pathConfig';
+import { audioPath, spinePath } from '../../manager/pathConfig';
 const { ccclass } = _decorator;
 
 @ccclass('role2')
@@ -41,6 +42,7 @@ export class role2 extends roleController {
         this.invincibleRemainTime = duration;
         this.createShieldEffect();
         this.startSkillCooldown(2);
+        if (this.isPlayer) audioMgr.playSceneEffect(audioPath.role2Skill);
         return true;
     }
 

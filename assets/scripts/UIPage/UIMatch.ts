@@ -1,6 +1,7 @@
+import { audioMgr } from '../manager/audioManager';
 import { _decorator, Node, Animation, Label, Prefab, instantiate, UITransform, tween, Tween } from 'cc';
 import { UIBase } from './UIBase';
-import { UIPath } from '../manager/pathConfig';
+import { audioPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { configData } from '../manager/configData';
@@ -132,6 +133,7 @@ export class UIMatch extends UIBase {
         if (this.currentMatchIndex >= this.matchItems.length) {
             this.isMatching = false;
             this.titleLab.string = '匹配成功';
+            audioMgr.playEffect(audioPath.matchSuccess);
             const matchItems = this.matchItems;
             this.scheduleOnce(async () => {
                 try {

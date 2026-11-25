@@ -1,6 +1,7 @@
+import { audioMgr } from '../manager/audioManager';
 import { _decorator, Node, Prefab, Label, Sprite, instantiate, sp } from 'cc';
 import { UIBase } from './UIBase';
-import { imgPath, ItemPath, UIPath } from '../manager/pathConfig';
+import { audioPath, imgPath, ItemPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
@@ -368,6 +369,7 @@ export class UIRoleStore extends UIBase {
         });
         uiMgr.showTips("升级成功");
         this.playUpgradeAnim();
+        audioMgr.playEffect(audioPath.roleUpgrade);
         this.refreshRoleLevelInfo();
     }
 

@@ -1,3 +1,5 @@
+import { audioPath } from '../../manager/pathConfig';
+import { audioMgr } from '../../manager/audioManager';
 import { _decorator, Animation, AnimationClip, instantiate, Node, Sprite, Tween, UITransform, Vec3 } from 'cc';
 import { BossAnimName, bossBaseController } from './bossBaseController';
 import { bossConfig } from '../../json/jsonBoss';
@@ -13,8 +15,10 @@ const { ccclass } = _decorator;
 enum Boss2SkillAnimName {
     /** 技能起手：原地播放一次，完成后进入蓄力并显示范围预警。 */
     skill1 = 'skill1',
-    /** 蓄力及吐息：循环播放；吐息结束后再播放一次作为收招。 */
+    /** 蓄力及吐息：循环播放。 */
     skill2 = 'skill2',
+    /** 技能收招：吐息结束后播放一次，完成后恢复待机。 */
+    skill3 = 'skill3',
 }
 
 enum SkillStage { None, Start, Prepare, Active, Finish }
@@ -165,6 +169,7 @@ export class bossController2 extends bossBaseController {
 
     private startBreath(): void {
         this.skillStage = SkillStage.Active;
+        audioMgr.playSceneLoop(this.node, audioPath.boss2Skill);
         this.remaining = this.duration;
         this.tickRemaining = 0.2;
         if (this.rangeNode?.isValid) {
@@ -211,9 +216,10 @@ export class bossController2 extends bossBaseController {
     }
 
     private finishBreath(): void {
+        audioMgr.stopSceneLoop(this.node);
         this.clearEffects();
         this.skillStage = SkillStage.Finish;
-        this.playOnce(Boss2SkillAnimName.skill2, () => {
+        this.playOnce(Boss2SkillAnimName.skill3, () => {
             this.stopSkill();
             this.playAnimation(BossAnimName.idle, true, true);
         });
@@ -232,6 +238,7 @@ export class bossController2 extends bossBaseController {
     }
 
     protected stopSkill(): void {
+        super.stopSkill();
         this.resumeSkill();
         this.skillVersion++;
         this.skillStage = SkillStage.None;

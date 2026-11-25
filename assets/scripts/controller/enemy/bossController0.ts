@@ -1,3 +1,5 @@
+import { audioPath } from '../../manager/pathConfig';
+import { audioMgr } from '../../manager/audioManager';
 import { _decorator, Animation, AnimationClip, instantiate, Node, Vec3 } from 'cc';
 import { uiMgr } from '../../manager/UIManager';
 import { skillRangeCircleController } from '../indicator/skillRangeCircleController';
@@ -73,6 +75,7 @@ export class bossController0 extends bossBaseController {
             this.playSkillWindup(Boss0SkillAnimName.skill2, skill2Speed, version, () => {
                 this.clearSkillRange();
                 this.skillStage = SkillStage.Active;
+                audioMgr.playSceneLoop(this.node, audioPath.boss0Skill);
                 this.skillRemaining = this.skillDuration;
                 this.skillTickRemaining = this.skillInterval;
                 this.playAnimation(BossAnimName.idle, true, true);
@@ -111,6 +114,7 @@ export class bossController0 extends bossBaseController {
     }
 
     protected stopSkill(): void {
+        super.stopSkill();
         this.clearSkillRange();
         if (this.whirlwindNode?.isValid) {
             this.whirlwindNode.getComponent(Animation)?.stop();

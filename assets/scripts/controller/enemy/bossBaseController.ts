@@ -1,3 +1,5 @@
+import { audioPath } from '../../manager/pathConfig';
+import { audioMgr } from '../../manager/audioManager';
 import { _decorator, CCFloat, CCInteger, Color, Component, Graphics, Label, Node, sp, Sprite, Tween, tween, UITransform, Vec3 } from 'cc';
 import { EDITOR, PREVIEW } from 'cc/env';
 import { bossConfig } from '../../json/jsonBoss';
@@ -66,6 +68,7 @@ export class bossBaseController extends Component {
     }
 
     protected onDisable() {
+        audioMgr.stopSceneLoop(this.node);
         this.isFocusedInEditor = false;
         this.hideRangePreview();
         if (!EDITOR || PREVIEW) gm.Event?.emit(GameEvent.bossChaseChanged, this, false);
@@ -212,6 +215,7 @@ export class bossBaseController extends Component {
 
     /** 移除监听并停止缓动。 */
     protected onDestroy(): void {
+        audioMgr.stopSceneLoop(this.node);
         this.hideRangePreview();
         if (EDITOR && !PREVIEW) return;
         gm.Event?.emit(GameEvent.bossChaseChanged, this, false);
@@ -432,7 +436,7 @@ export class bossBaseController extends Component {
     }
 
     protected updateSkill(dt: number): void {}
-    protected stopSkill(): void {}
+    protected stopSkill(): void { audioMgr.stopSceneLoop(this.node); }
     get isUsingSkill(): boolean { return false; }
 
     /** 技能期间仍可追击，不进入普攻锁定。 */
@@ -636,6 +640,8 @@ export class bossBaseController extends Component {
 
     /** 播放死亡动画后隐藏。 */
     protected playDeath() {
+        const deathSound = [audioPath.boss0Death, audioPath.boss1Death, audioPath.boss2Death][this.id];
+        if (deathSound) audioMgr.playSceneEffect(deathSound);
         this.bossState = BossState.Patrol;
         if (pData.getBossBookState(this.id) !== BossBookState.Defeated) {
             pData.setBossBookState(this.id, BossBookState.Defeated);

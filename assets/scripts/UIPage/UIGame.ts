@@ -1702,6 +1702,7 @@ export class UIGame extends UIBase {
 
     /**响应全局游戏暂停 */
     private onGamePause() {
+        audioMgr.pauseSceneLoops();
         this.timeShowTween?.pause();
         for (const action of this.openingTweens) action.pause();
         if (this.openingSkeleton?.isValid) this.openingSkeleton.timeScale = 0;
@@ -1723,6 +1724,7 @@ export class UIGame extends UIBase {
         if (this.openingSkeleton?.isValid) this.openingSkeleton.timeScale = 1;
         if (this.isEvacuating) gm.isGamePause = true;
         this.isGamePause = this.isEvacuating;
+        if (!this.isGamePause) audioMgr.resumeSceneLoops();
     }
 
     /**摇杆归位 */

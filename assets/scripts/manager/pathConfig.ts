@@ -148,17 +148,17 @@ export enum audioPath {
     walkLeft = "audio/walkLeft",
     /**武器 */
     weapon = "audio/weapon/",
-    /**NPC死亡 */
-    npcDeath = "audio/npcDeath",
-    /**霸王猫技能 */
+    /**死亡音效 */
+    death = "audio/death",
+    /**霸王猫技能（循环） */
     boss0Skill = "audio/boss0Skill",
     /**霸王猫死亡 */
     boss0Death = "audio/boss0Death",
-    /**机甲技能 */
+    /**机甲技能（循环） */
     boss1Skill = "audio/boss1Skill",
     /**机甲死亡 */
     boss1Death = "audio/boss1Death",
-    /**冰龙技能 */
+    /**冰龙技能（循环） */
     boss2Skill = "audio/boss2Skill",
     /**冰龙死亡 */
     boss2Death = "audio/boss2Death",

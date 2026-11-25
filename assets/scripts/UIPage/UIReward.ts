@@ -1,6 +1,7 @@
+import { audioMgr } from '../manager/audioManager';
 import { _decorator, Node, Animation, Prefab, instantiate, Layout, ScrollView } from 'cc';
 import { UIBase } from './UIBase';
-import { UIPath } from '../manager/pathConfig';
+import { audioPath, UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { gm } from '../manager/gm';
@@ -35,6 +36,7 @@ export class UIReward extends UIBase {
     }
 
     onUI_Open(data?: { rewardData: number[][]; showGetBtn?: boolean; onClose?: () => void }) {
+        audioMgr.playEffect(audioPath.getReward);
         this.closing = false;
         this.closedCallback = data?.onClose;
         let anim = this.getComponent(Animation);

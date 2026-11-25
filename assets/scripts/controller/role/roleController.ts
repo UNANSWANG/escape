@@ -1266,6 +1266,7 @@ export class roleController extends Component {
     playDeath(onComplete?: () => void) {
         if (this.isPlayingDeath) return;
         this.isPlayingDeath = true;
+        if (this.isAI) audioMgr.playSceneEffect(audioPath.death);
         if (this.isPlayer && this.gameComp && playerMgr.playerComp === this) audioMgr.stopWalkEffect();
         this.setMoveSmokeVisible(false);
         if (this.isAI) this.gameComp?.spawnDeathBox('ai', this.node.worldPosition);

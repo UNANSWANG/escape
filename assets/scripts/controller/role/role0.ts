@@ -1,10 +1,11 @@
+import { audioMgr } from '../../manager/audioManager';
 import { _decorator, Animation, Color, instantiate, Node, sp, Sprite, SpriteFrame, tween, Tween, UIOpacity, UITransform, Vec3 } from 'cc';
 import { roleAnimName, roleController, roleType } from './roleController';
 import { enemyMgr } from '../../manager/enemyManager';
 import { gm } from '../../manager/gm';
 import { uiMgr } from '../../manager/UIManager';
 import { ccTools } from '../../extention/generalTools';
-import { imgPath, spinePath } from '../../manager/pathConfig';
+import { audioPath, imgPath, spinePath } from '../../manager/pathConfig';
 import { ccResTools } from '../../extention/resTools';
 import { GameEvent } from '../../manager/configData';
 import type { EnemyTarget } from '../../manager/enemyManager';
@@ -113,6 +114,7 @@ export class role0 extends roleController {
         this.curRoleAnimName = roleAnimName.useSkill1;
         this.roleAnim.setTrackCompleteListener(entry, () => this.finishSkill1());
         this.startSkillCooldown(1);
+        if (this.isPlayer) audioMgr.playSceneEffect(audioPath.role0Passive);
         return true;
     }
 
@@ -166,6 +168,7 @@ export class role0 extends roleController {
         this.effectNode.addChild(effect);
         effect.setPosition(0, 140, 0);
         this.startSkillCooldown(2);
+        if (this.isPlayer) audioMgr.playSceneEffect(audioPath.role0Skill);
         void this.playSkill2Animation(effect, skeleton);
         return true;
     }

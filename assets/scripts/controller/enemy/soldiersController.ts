@@ -1,3 +1,4 @@
+import { audioMgr } from '../../manager/audioManager';
 import { _decorator, Animation, Color, Component, Label, Node, sp, Sprite, tween, Tween, UITransform, UIOpacity, Vec2, Vec3 } from 'cc';
 import { ccTools } from '../../extention/generalTools';
 import { UIGame } from '../../UIPage/UIGame';
@@ -636,6 +637,7 @@ export class soldiersController extends Component {
         this.hp -= actualDamage;
         this.refreshHp();
         if (this.hp <= 0) {
+            audioMgr.playSceneEffect(audioPath.death);
             this.gameComp?.recordRankDefeat('soldier');
             this.gameComp?.spawnDeathBox('soldier', this.node.worldPosition);
             this.stopAttack();

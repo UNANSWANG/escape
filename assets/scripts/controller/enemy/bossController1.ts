@@ -1,3 +1,4 @@
+import { audioMgr } from '../../manager/audioManager';
 import { _decorator, instantiate, Node, sp, Tween, UITransform, Vec3 } from 'cc';
 import { BossAnimName, bossBaseController } from './bossBaseController';
 import { commonConfig } from '../../json/jsonCommon';
@@ -6,7 +7,7 @@ import { ccTools } from '../../extention/generalTools';
 import { GameEvent } from '../../manager/configData';
 import { gm } from '../../manager/gm';
 import { playerMgr } from '../../manager/playerManager';
-import { spinePath } from '../../manager/pathConfig';
+import { audioPath, spinePath } from '../../manager/pathConfig';
 import { uiMgr } from '../../manager/UIManager';
 import { skillRangeRectController } from '../indicator/skillRangeRectController';
 const { ccclass } = _decorator;
@@ -148,6 +149,7 @@ export class bossController1 extends bossBaseController {
     private startSwordRain(): void {
         this.clearRange();
         this.skillStage = SkillStage.Active;
+        audioMgr.playSceneLoop(this.node, audioPath.boss1Skill);
         this.skillRemaining = this.skillDuration;
         this.tickRemaining = 0.1;
         this.playAnimation(Boss1SkillAnimName.skill4, true, true);
@@ -181,6 +183,7 @@ export class bossController1 extends bossBaseController {
     }
 
     private finishSwordRain(): void {
+        audioMgr.stopSceneLoop(this.node);
         this.clearRain();
         this.skillStage = SkillStage.Finish;
         this.playSkillOnce(Boss1SkillAnimName.skill5, () => {
@@ -211,6 +214,7 @@ export class bossController1 extends bossBaseController {
     }
 
     protected stopSkill(): void {
+        super.stopSkill();
         this.resumeSkillEffects();
         this.skillVersion++;
         this.skillStage = SkillStage.None;

@@ -1,3 +1,5 @@
+import { audioPath } from '../../manager/pathConfig';
+import { audioMgr } from '../../manager/audioManager';
 import { _decorator, instantiate, Node, Rect, sp, UITransform, Vec3 } from 'cc';
 import { roleController, roleType } from './roleController';
 import { uiMgr } from '../../manager/UIManager';
@@ -62,6 +64,7 @@ export class role1 extends roleController {
         this.getDroneTargetPosition(uiTransform);
         this.droneNode.setPosition(this.droneTargetPos);
         this.startSkillCooldown(2);
+        if (this.isPlayer) audioMgr.playSceneEffect(audioPath.role1Skill);
         skeleton.timeScale = gm.isGamePause ? 0 : 1;
         skeleton.setAnimation(0, 'animation', true);
         return true;

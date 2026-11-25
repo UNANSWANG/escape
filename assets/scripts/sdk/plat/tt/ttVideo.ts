@@ -84,6 +84,10 @@ export class ttVideo {
                 await this._videoAd.show();
             }
         } catch (error) {
+            //加载失败
+            if (gm.hgSdk) {
+                gm.hgSdk.rewardedVideoCallback(false);
+            }
             console.error('激励广告播放失败', error);
             if (this._onVideoCloseCallback === callback) this.finishVideo(0);
         }

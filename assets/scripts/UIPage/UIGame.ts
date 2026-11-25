@@ -1210,6 +1210,9 @@ export class UIGame extends UIBase {
             // 引导关成功撤离并进入胜利结算后，才记录引导完成。
             if (this.isGuideLevel) {
                 ccStorageTools.setData(SaveKey.gameGuide, 1);
+                if (gm.hgSdk) {
+                    gm.hgSdk.track('TUTORIAL_FINISH', {});
+                }
             }
             uiMgr.openPage(UIPath.UISuccess, {
                 survivalTime: this.survivalTime,
@@ -1333,7 +1336,7 @@ export class UIGame extends UIBase {
         this.updateRolePerspectives();
         this.updateShelterVisibility();
         if (ccStorageTools.getNumberData(SaveKey.gameGuide) !== 1) {
-            this.clickGuideBtn();
+            this.clickGuideBtn(true);
         }
     }
 
@@ -2574,10 +2577,14 @@ export class UIGame extends UIBase {
         uiMgr.openPage(UIPath.UISmallMap);
     }
 
-    clickGuideBtn() {
+    clickGuideBtn(reportTutorialStart = false) {
         if (this.isOpening || pData.selectMapData[0] !== 0 || pData.selectMapData[1] !== 0) return;
         gm.gamePause();
-        void uiMgr.openPage(UIPath.UIGameGuide).catch(error => {
+        void uiMgr.openPage(UIPath.UIGameGuide).then(() => {
+            if (reportTutorialStart && gm.hgSdk) {
+                gm.hgSdk.track('TUTORIAL_START', {});
+            }
+        }).catch(error => {
             console.error('打开游戏引导失败', error);
             if (this.isValid && this.node.activeInHierarchy) gm.gameResume();
         });

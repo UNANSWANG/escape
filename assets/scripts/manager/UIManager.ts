@@ -5,6 +5,7 @@ import { animationItemPath, audioPath, gamePath, imgPath, ItemPath, spinePath, U
 import { ccResTools } from '../extention/resTools';
 import { tipsNotice } from '../UIPage/tips/tipsNotice';
 import { pData } from './playerData';
+import { gm } from './gm';
 import { ccTools } from '../extention/generalTools';
 import { audioMgr } from './audioManager';
 import { configData, MonetaryType, SaveKey } from './configData';
@@ -688,7 +689,11 @@ export class UIManager {
                 onClose: resolve,
             }).catch(reject);
         });
-        await this.waitGuideClick(main.storeBtn, () => this.openPage(UIPath.UIStore));
+        await this.waitGuideClick(main.storeBtn, () => this.openPage(UIPath.UIStore), () => {
+            if (gm.hgSdk) {
+                gm.hgSdk.track('TUTORIAL_START', {});
+            }
+        });
         const store = (await this.getOrCreatePage(UIPath.UIStore)).getComponent('UIStore') as UIStore;
         await this.waitGuideClick(store.getWeaponGuideTab(), () => store.openWeaponGuidePage().then(() => undefined));
         const pageNode = await store.openWeaponGuidePage();
@@ -699,10 +704,15 @@ export class UIManager {
             }).catch(reject);
         }));
         await this.waitGuideClick(store.closeBtn, () => store.clickCloseBtn());
-        await this.waitGuideClick(main.startBtn, () => main.clickStartBtn());
+        await this.waitGuideClick(main.startBtn, () => {
+            main.clickStartBtn();
+            if (gm.hgSdk) {
+                gm.hgSdk.track('TUTORIAL_FINISH', {});
+            }
+        });
     }
 
-    private async waitGuideClick(target: Node, action: () => void | Promise<void>): Promise<void> {
+    private async waitGuideClick(target: Node, action: () => void | Promise<void>, onShown?: () => void): Promise<void> {
         await this.nextPreloadFrame();
         if (!target?.isValid || !target.activeInHierarchy) {
             return Promise.reject(new Error('引导目标节点不可用'));
@@ -710,7 +720,7 @@ export class UIManager {
         return new Promise<void>((resolve, reject) => {
             this.showGuide(target, () => {
                 Promise.resolve().then(action).then(resolve, reject);
-            }).catch(reject);
+            }).then(() => onShown?.()).catch(reject);
         });
     }
 

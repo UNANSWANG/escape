@@ -763,6 +763,7 @@ export class roleController extends Component {
         this.drugRemainTime = this.drugDuration;
         this.drugHealPercent = Math.max(0, healPercent);
         this.drugCompleteCallback = complete ?? null;
+        if (this.isPlayer) audioMgr.playSceneLoop(this.node, audioPath.injectDrugs, false);
         this.refreshDrugRemainTime();
         if (this.drugDuration > 0) this.playDrugEffect(this.drugDuration);
         if (this.drugRemainTime <= 0) this.finishDrugUse();
@@ -838,12 +839,13 @@ export class roleController extends Component {
         const healAmount = this.maxHp * this.drugHealPercent;
         const complete = this.drugCompleteCallback;
         this.clearDrugUse();
-        this.heal(healAmount);
+        if (this.heal(healAmount) && this.isPlayer) audioMgr.playSceneEffect(audioPath.healSuccess);
         complete?.();
     }
 
     /**清理打药状态与头顶倒计时。 */
     private clearDrugUse() {
+        if (this.isPlayer) audioMgr.stopSceneLoop(this.node);
         if (this.syringeComp?.isValid) this.syringeComp.hide();
         this.isUsingDrug = false;
         this.drugRemainTime = 0;

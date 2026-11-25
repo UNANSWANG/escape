@@ -176,6 +176,16 @@ export enum audioPath {
     matchSuccess = "audio/matchSuccess",
     /**人物升级 */
     roleUpgrade = "audio/roleUpgrade",
+    /**注射药品 */
+    injectDrugs = "audio/injectDrugs",
+    /**成功回血 */
+    healSuccess = "audio/healSuccess",
+    /**获得高价值变卖物 */
+    getHighItem = "audio/getHighItem",
+    /**获得低价值变卖物 */
+    getLowItem = "audio/getLowItem",
+    /**直升机（循环） */
+    helicopter = "audio/helicopter",
 }
 
 /**图片路径 */

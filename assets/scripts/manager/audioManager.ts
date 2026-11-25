@@ -31,6 +31,7 @@ export class audioManager {
     /** 场景循环音效按拥有者隔离，避免不同 Boss 相互打断。 */
     private _sceneLoops = new Map<Node, AudioSource>();
     private _sceneLoopsPaused = false;
+    private _sceneResumedOwners = new Set<Node>();
     /**音效开关 */
     private _isEffect: boolean = true;
     /**背景音乐开关 */
@@ -190,16 +191,23 @@ export class audioManager {
     }
 
     /** 每个拥有者使用独立循环通道，受音效开关、音量和场景清理控制。 */
-    playSceneLoop(owner: Node, path: string) {
+    playSceneLoop(owner: Node, path: string, loop = true) {
         this.stopSceneLoop(owner);
         const sceneSource = this._sceneAudioSource;
         const bundle = uiMgr.resBundle;
         if (!owner?.isValid || !owner.activeInHierarchy || !bundle || !this.canEffectPlay(sceneSource)) return;
-        const source = sceneSource.node.addComponent(AudioSource);
+        const sourceNode = new Node('sceneOwnedAudio');
+        sceneSource.node.addChild(sourceNode);
+        const source = sourceNode.addComponent(AudioSource);
         source.playOnAwake = false;
-        source.loop = true;
+        source.loop = loop;
         source.volume = this._effectVolume;
         this._sceneLoops.set(owner, source);
+        if (!loop) {
+            sourceNode.once(AudioSource.EventType.ENDED, () => {
+                if (this._sceneLoops.get(owner) === source) this.stopSceneLoop(owner);
+            });
+        }
         const play = (clip: AudioClip) => {
             if (this._sceneLoops.get(owner) !== source) return;
             if (!clip || !owner.isValid || !owner.activeInHierarchy || !this.canEffectPlay(source)) {
@@ -207,7 +215,7 @@ export class audioManager {
                 return;
             }
             source.clip = clip;
-            if (!this._sceneLoopsPaused) source.play();
+            if (!this._sceneLoopsPaused || this._sceneResumedOwners.has(owner)) source.play();
         };
         const cached = this._dic.get(path);
         if (cached) {
@@ -226,17 +234,19 @@ export class audioManager {
     }
 
     stopSceneLoop(owner: Node) {
+        this._sceneResumedOwners.delete(owner);
         const source = this._sceneLoops.get(owner);
         this._sceneLoops.delete(owner);
         if (source?.isValid) {
             source.stop();
             source.clip = null;
-            source.destroy();
+            source.node.destroy();
         }
     }
 
     /** 暂停时保留循环通道，加载期间也不启动播放。 */
     pauseSceneLoops() {
+        this._sceneResumedOwners.clear();
         this._sceneLoopsPaused = true;
         for (const source of this._sceneLoops.values()) {
             if (source.isValid) source.pause();
@@ -244,6 +254,7 @@ export class audioManager {
     }
 
     resumeSceneLoops() {
+        this._sceneResumedOwners.clear();
         this._sceneLoopsPaused = false;
         for (const [owner, source] of this._sceneLoops) {
             if (!owner.isValid || !owner.activeInHierarchy || !this.canEffectPlay(source)) {
@@ -252,6 +263,13 @@ export class audioManager {
                 source.play();
             }
         }
+    }
+
+    resumeSceneLoop(owner: Node) {
+        const source = this._sceneLoops.get(owner);
+        if (!owner?.isValid || !owner.activeInHierarchy || !this.canEffectPlay(source)) return;
+        this._sceneResumedOwners.add(owner);
+        if (source.clip) source.play();
     }
 
     /** 按移动方向切换玩家脚步循环，相同方向持续移动时不重播。 */

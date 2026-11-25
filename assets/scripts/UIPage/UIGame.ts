@@ -2,7 +2,7 @@ import { _decorator, AnimationClip, Camera, Canvas, Color, EventKeyboard, EventT
 import { uiMgr } from '../manager/UIManager';
 import { pData } from '../manager/playerData';
 import { UIBase } from './UIBase';
-import { imgPath, ItemPath, UIPath } from '../manager/pathConfig';
+import { audioPath, imgPath, ItemPath, UIPath } from '../manager/pathConfig';
 import { BossBookState, configData, floatColorArr, GameEvent, QualityColorArr, SaveKey } from '../manager/configData';
 import { ccStorageTools } from '../extention/storageTools';
 import { gm } from '../manager/gm';
@@ -1170,7 +1170,10 @@ export class UIGame extends UIBase {
         for (const action of this.openingTweens) action.stop();
         this.openingTweens.length = 0;
         this.openingSkeleton = null;
-        if (this.openingHelicopter?.isValid) this.openingHelicopter.destroy();
+        if (this.openingHelicopter?.isValid) {
+            audioMgr.stopSceneLoop(this.openingHelicopter);
+            this.openingHelicopter.destroy();
+        }
         this.openingHelicopter = null;
         this.isOpening = false;
         this.isEvacuating = false;
@@ -1193,6 +1196,7 @@ export class UIGame extends UIBase {
         const helicopter = instantiate(uiMgr.helicopterPrefab);
         this.openingHelicopter = helicopter;
         this.roleNode.addChild(helicopter);
+        audioMgr.playSceneLoop(helicopter, audioPath.helicopter);
         // 同一角色层中，人物排在直升机之后渲染，避免下机时被机身遮住。
         helicopter.setSiblingIndex(player.getSiblingIndex());
         const skeleton = helicopter.getComponentInChildren(sp.Skeleton);
@@ -1285,6 +1289,8 @@ export class UIGame extends UIBase {
         const helicopter = instantiate(uiMgr.helicopterPrefab);
         this.openingHelicopter = helicopter;
         this.roleNode.addChild(helicopter);
+        audioMgr.playSceneLoop(helicopter, audioPath.helicopter);
+        audioMgr.resumeSceneLoop(helicopter);
         helicopter.setSiblingIndex(player.getSiblingIndex());
         const skeleton = helicopter.getComponentInChildren(sp.Skeleton);
         const showPos = helicopter.getChildByName('showPos');
@@ -1725,6 +1731,7 @@ export class UIGame extends UIBase {
         if (this.isEvacuating) gm.isGamePause = true;
         this.isGamePause = this.isEvacuating;
         if (!this.isGamePause) audioMgr.resumeSceneLoops();
+        else if (this.isEvacuating) audioMgr.resumeSceneLoop(this.openingHelicopter);
     }
 
     /**摇杆归位 */

@@ -1,6 +1,7 @@
 import { _decorator, Node, Prefab, instantiate, Label, Sprite, EventTouch, Layout, Color } from 'cc';
 import { UIBase } from './UIBase';
-import { imgPath, ItemPath, UIPath } from '../manager/pathConfig';
+import { audioPath, imgPath, ItemPath, UIPath } from '../manager/pathConfig';
+import { audioMgr } from '../manager/audioManager';
 import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
@@ -427,6 +428,10 @@ export class UIBackpack extends UIBase {
                 }
 
                 this.revealedItemStates[index] = true;
+                if (itemId >= 200001 && itemId <= 300000) {
+                    audioMgr.playSceneEffect(itemData.quality === 3 || itemData.quality === 4
+                        ? audioPath.getHighItem : audioPath.getLowItem);
+                }
                 this.loadingItem = null;
                 this.revealNextContainerItem(index + 1);
             });

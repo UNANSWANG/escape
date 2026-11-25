@@ -5,6 +5,7 @@ import { EDITOR, PREVIEW } from 'cc/env';
 import { bossConfig } from '../../json/jsonBoss';
 import { bossLevelConfig, JsonBossLevelData } from '../../json/jsonBossLevel';
 import { getItemDataByItemId } from '../../json/jsonItemData';
+import { weaponsConfig } from '../../json/jsonWeapons';
 import { uiMgr } from '../../manager/UIManager';
 import { BossBookState, enemyCommonConfig, GameEvent, gmConfig } from '../../manager/configData';
 import { gm } from '../../manager/gm';
@@ -470,6 +471,9 @@ export class bossBaseController extends Component {
     private applyAttackDamage(): void {
         if (gm.isGamePause || !this.isValid || !this.enabledInHierarchy
             || !this.attackAnimationPlaying || this.hp <= 0) return;
+        // 三个 Boss 在普攻 damage 帧分别复用 itemId 20、21、22 的武器攻击音效。
+        const effectName = weaponsConfig.getDataByItemId([20, 21, 22][this.id])?.effectName;
+        if (effectName) audioMgr.playSceneEffect(audioPath.weapon + effectName);
         const player = playerMgr.playerComp;
         if (!player?.node?.isValid || !player.node.activeInHierarchy || player.hp <= 0) return;
         if (this.intersectsPlayerHitArea(this.attackDistance, this.facingX)) {

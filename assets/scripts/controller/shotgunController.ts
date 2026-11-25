@@ -18,6 +18,7 @@ export class shotgunController extends gunController {
     bulletSpreadAngle = 40;
 
     private tempShotgunSpawnWorldPos = new Vec3();
+    private tempShotgunBulletSpawnWorldPos = new Vec3();
     private tempShotgunWorldDirection = new Vec3();
     private tempShotgunSpreadDirection = new Vec3();
 
@@ -36,9 +37,15 @@ export class shotgunController extends gunController {
         const spreadRadians = this.bulletSpreadAngle * Math.PI / 180;
         let hasFired = false;
         for (let index = 0; index < bulletCount; index++) {
+            const spawnOffset = (Math.random() - 0.5) * 15;
+            this.tempShotgunBulletSpawnWorldPos.set(
+                this.tempShotgunSpawnWorldPos.x - this.tempShotgunWorldDirection.y * spawnOffset,
+                this.tempShotgunSpawnWorldPos.y + this.tempShotgunWorldDirection.x * spawnOffset,
+                this.tempShotgunSpawnWorldPos.z,
+            );
             const angle = baseAngle + (Math.random() - 0.5) * spreadRadians;
             this.tempShotgunSpreadDirection.set(Math.cos(angle), Math.sin(angle), 0);
-            hasFired = this.spawnBullet(bulletParent, this.tempShotgunSpawnWorldPos, this.tempShotgunSpreadDirection) || hasFired;
+            hasFired = this.spawnBullet(bulletParent, this.tempShotgunBulletSpawnWorldPos, this.tempShotgunSpreadDirection) || hasFired;
         }
         if (!hasFired) return false;
 

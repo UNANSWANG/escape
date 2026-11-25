@@ -31,6 +31,7 @@ export class containerController extends Component {
     private isSearchComplete = false;
     /** 记录初始物资的最高品质，避免搜索中拾取物资后丢失品质信息。 */
     private highestQuality = -1;
+    private interactionTransform: UITransform = null;
 
     protected onLoad(): void {
         this.refreshOpenState();
@@ -44,10 +45,12 @@ export class containerController extends Component {
     }
 
     /** 仅使用脚本所在节点的尺寸，不包含图片、光效等子节点。 */
-    getInteractionBounds(): Rect | null {
-        const transform = this.getComponent(UITransform);
+    getInteractionBounds(out?: Rect): Rect | null {
+        if (!this.interactionTransform?.isValid) this.interactionTransform = this.getComponent(UITransform);
+        const transform = this.interactionTransform;
         if (!transform) return null;
-        const bounds = new Rect(-transform.anchorX * transform.width,
+        const bounds = out || new Rect();
+        bounds.set(-transform.anchorX * transform.width,
             -transform.anchorY * transform.height, transform.width, transform.height);
         bounds.transformMat4(this.node.worldMatrix);
         return bounds;

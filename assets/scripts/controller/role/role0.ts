@@ -36,6 +36,8 @@ export class role0 extends roleController {
     private isUsingSkill2 = false;
     /**技能2剩余生效时间（秒）。 */
     private skill2RemainTime = 0;
+    private displayedSkill2Seconds = -1;
+    private displayedSkill2Visible = false;
     /**技能2原始持续时间上限（秒）。 */
     private skill2Duration = 0;
     /**技能2提供的移速加成百分比。 */
@@ -429,6 +431,10 @@ export class role0 extends roleController {
 
     /**派发技能2的实时剩余时间，由游戏界面负责显示或隐藏倒计时。 */
     private emitSkill2Remain() {
+        const seconds = Math.ceil(Math.max(0, this.skill2RemainTime));
+        if (seconds === this.displayedSkill2Seconds && this.isUsingSkill2 === this.displayedSkill2Visible) return;
+        this.displayedSkill2Seconds = seconds;
+        this.displayedSkill2Visible = this.isUsingSkill2;
         this.node.emit(role0Skill2RemainEvent, this.skill2RemainTime, this.isUsingSkill2);
     }
 

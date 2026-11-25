@@ -49,13 +49,14 @@ interface PerspectiveArea {
     maxX: number;
     maxY: number;
     points: ReadonlyArray<{ x: number; y: number }>;
+    queryStamp: number;
 }
 
 /** 遮挡物的碰撞检测区域及显示节点。 */
-interface ShelterArea {
+interface ShelterArea extends PerspectiveArea {
     colliderTransform: UITransform;
-    polygon: PolygonCollider2D | null;
     imgNode: Node;
+    playerInside: boolean;
 }
 
 @ccclass('UIGame')
@@ -287,9 +288,16 @@ export class UIGame extends UIBase {
     private lineCollisionCandidates: StaticCollisionShape[] = [];
     /**地图透视区域的世界坐标缓存。 */
     private perspectiveAreas: PerspectiveArea[] = [];
+    private perspectiveCells: Map<string, PerspectiveArea[]> = new Map();
     private tempPerspectiveWorldPos = new Vec3();
     /**地图遮挡物及其检测区域缓存。 */
     private shelterAreas: ShelterArea[] = [];
+    private shelterCells: Map<string, ShelterArea[]> = new Map();
+    private shelterCandidates: ShelterArea[] = [];
+    private hiddenShelters: ShelterArea[] = [];
+    private areaQueryStamp = 0;
+    private containerComponents = new WeakMap<Node, containerController>();
+    private tempContainerBounds = new Rect();
     /** 正在追击的 Boss；多个 Boss 同时追击时显示最后进入追击的一个。 */
     private chasingBosses: Set<bossBaseController> = new Set();
     private currentHpBoss: bossBaseController = null;
@@ -677,8 +685,12 @@ export class UIGame extends UIBase {
         this.staticColliders.length = 0;
         this.collisionCells.clear();
         this.perspectiveAreas.length = 0;
+        this.perspectiveCells.clear();
         this.resetShelterVisibility();
         this.shelterAreas.length = 0;
+        this.shelterCells.clear();
+        this.shelterCandidates.length = 0;
+        this.containerComponents = new WeakMap<Node, containerController>();
         this.isDrugAdWatching = false;
 
         enemyMgr.clearSpatialIndex();
@@ -777,6 +789,7 @@ export class UIGame extends UIBase {
     /**缓存 perspectiveList 直属子节点的矩形或多边形范围。 */
     private rebuildPerspectiveAreas() {
         this.perspectiveAreas.length = 0;
+        this.perspectiveCells.clear();
         if (!this.perspectiveList) return;
 
         for (const node of this.perspectiveList.children) {
@@ -809,13 +822,16 @@ export class UIGame extends UIBase {
                 maxY = Math.max(maxY, point.y);
             }
             if (minX < maxX && minY < maxY) {
-                this.perspectiveAreas.push({ minX, minY, maxX, maxY, points });
+                const area = { minX, minY, maxX, maxY, points, queryStamp: 0 };
+                this.perspectiveAreas.push(area);
+                this.addAreaCells(this.perspectiveCells, area);
             }
         }
     }
 
     /**玩家和 NPC 分别根据自身所在的透视区域更新透明度。 */
     private updateRolePerspectives() {
+        this.updateShelterVisibility();
         this.updateRolePerspective(playerMgr.player);
         for (const ai of this.aiRoles) {
             this.updateRolePerspective(ai.node, this.isRoleHiddenByShelter(ai.node));
@@ -843,9 +859,17 @@ export class UIGame extends UIBase {
         roleNode.getWorldPosition(this.tempPerspectiveWorldPos);
         const x = this.tempPerspectiveWorldPos.x;
         const y = this.tempPerspectiveWorldPos.y;
-        const isInside = this.perspectiveAreas.some((area) =>
-            x >= area.minX && x <= area.maxX && y >= area.minY && y <= area.maxY
-            && this.pointInsideStaticPolygon(x, y, area.points));
+        const cell = this.perspectiveCells.get(`${Math.floor(x / this.collisionCellSize)},${Math.floor(y / this.collisionCellSize)}`);
+        let isInside = false;
+        if (cell) {
+            for (const area of cell) {
+                if (x < area.minX || x > area.maxX || y < area.minY || y > area.maxY) continue;
+                if (this.pointInsideStaticPolygon(x, y, area.points)) {
+                    isInside = true;
+                    break;
+                }
+            }
+        }
         const targetOpacity = isInside ? 120 : 255;
         if (opacity.opacity !== targetOpacity) opacity.opacity = targetOpacity;
     }
@@ -855,22 +879,22 @@ export class UIGame extends UIBase {
         const roleTransform = roleNode.getChildByName('colliderBox')?.getComponent(UITransform)
             ?? roleNode.getComponent(UITransform);
         if (!roleTransform) return false;
-        const playerNode = playerMgr.player;
-        const playerTransform = playerNode?.getChildByName('colliderBox')?.getComponent(UITransform)
-            ?? playerNode?.getComponent(UITransform);
         const roleBounds = roleTransform.getBoundingBoxToWorld();
-        const playerBounds = playerTransform?.getBoundingBoxToWorld();
-        for (const shelter of this.shelterAreas) {
+        this.queryShelterAreas(roleBounds);
+        for (const shelter of this.shelterCandidates) {
             if (!shelter.imgNode?.isValid || !shelter.colliderTransform?.isValid) continue;
+            if (shelter.playerInside) continue;
             if (!this.intersectsShelterArea(roleBounds, shelter)) continue;
-            if (!playerBounds || !this.intersectsShelterArea(playerBounds, shelter)) return true;
+            return true;
         }
         return false;
     }
 
     /**缓存 shelterList 直属子节点中的 collider 和 img。 */
     private rebuildShelterAreas() {
+        this.resetShelterVisibility();
         this.shelterAreas.length = 0;
+        this.shelterCells.clear();
         if (!this.shelterList) return;
 
         for (const shelterNode of this.shelterList.children) {
@@ -880,22 +904,75 @@ export class UIGame extends UIBase {
 
             imgNode.active = true;
             const polygon = colliderTransform.node.getComponent(PolygonCollider2D);
-            this.shelterAreas.push({ colliderTransform, polygon, imgNode });
+            const points: Array<{ x: number; y: number }> = [];
+            let bounds: Rect;
+            if (polygon && polygon.points.length >= 3) {
+                for (const point of polygon.points) {
+                    this.pushColliderWorldPoint(polygon.node, point.x + polygon.offset.x, point.y + polygon.offset.y, points);
+                }
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                for (const point of points) {
+                    minX = Math.min(minX, point.x);
+                    minY = Math.min(minY, point.y);
+                    maxX = Math.max(maxX, point.x);
+                    maxY = Math.max(maxY, point.y);
+                }
+                bounds = new Rect(minX, minY, maxX - minX, maxY - minY);
+            } else {
+                bounds = colliderTransform.getBoundingBoxToWorld();
+            }
+            const area: ShelterArea = {
+                colliderTransform, imgNode, points, playerInside: false, queryStamp: 0,
+                minX: bounds.x, minY: bounds.y, maxX: bounds.xMax, maxY: bounds.yMax,
+            };
+            this.shelterAreas.push(area);
+            this.addAreaCells(this.shelterCells, area);
+        }
+    }
+
+    private addAreaCells<T extends PerspectiveArea>(cells: Map<string, T[]>, area: T) {
+        const startX = Math.floor(area.minX / this.collisionCellSize);
+        const endX = Math.floor(area.maxX / this.collisionCellSize);
+        const startY = Math.floor(area.minY / this.collisionCellSize);
+        const endY = Math.floor(area.maxY / this.collisionCellSize);
+        for (let cellX = startX; cellX <= endX; cellX++) {
+            for (let cellY = startY; cellY <= endY; cellY++) {
+                const key = `${cellX},${cellY}`;
+                let cell = cells.get(key);
+                if (!cell) cells.set(key, cell = []);
+                cell.push(area);
+            }
+        }
+    }
+
+    private queryShelterAreas(bounds: Rect) {
+        this.shelterCandidates.length = 0;
+        const stamp = ++this.areaQueryStamp;
+        const startX = Math.floor(bounds.x / this.collisionCellSize);
+        const endX = Math.floor(bounds.xMax / this.collisionCellSize);
+        const startY = Math.floor(bounds.y / this.collisionCellSize);
+        const endY = Math.floor(bounds.yMax / this.collisionCellSize);
+        for (let cellX = startX; cellX <= endX; cellX++) {
+            for (let cellY = startY; cellY <= endY; cellY++) {
+                const cell = this.shelterCells.get(`${cellX},${cellY}`);
+                if (!cell) continue;
+                for (const area of cell) {
+                    if (area.queryStamp === stamp) continue;
+                    area.queryStamp = stamp;
+                    if (bounds.x > area.maxX || bounds.xMax < area.minX
+                        || bounds.y > area.maxY || bounds.yMax < area.minY) continue;
+                    this.shelterCandidates.push(area);
+                }
+            }
         }
     }
 
     /**与 colliderList 一样优先读取多边形组件，否则使用节点范围。 */
     private intersectsShelterArea(bounds: Rect, shelter: ShelterArea) {
-        const polygon = shelter.polygon;
-        if (!polygon?.isValid || polygon.points.length < 3) {
-            return bounds.intersects(shelter.colliderTransform.getBoundingBoxToWorld());
-        }
-
-        // 读取世界坐标顶点，包含组件偏移和节点的缩放、旋转。
-        const points: Array<{ x: number; y: number }> = [];
-        for (const point of polygon.points) {
-            this.pushColliderWorldPoint(polygon.node, point.x + polygon.offset.x, point.y + polygon.offset.y, points);
-        }
+        if (bounds.x > shelter.maxX || bounds.xMax < shelter.minX
+            || bounds.y > shelter.maxY || bounds.yMax < shelter.minY) return false;
+        const points = shelter.points;
+        if (points.length === 0) return true;
         const left = bounds.x, bottom = bounds.y;
         const right = left + bounds.width, top = bottom + bounds.height;
         // 多边形顶点在矩形内，或矩形角点在多边形内，都算相交。
@@ -926,19 +1003,30 @@ export class UIGame extends UIBase {
         }
 
         const playerBounds = playerTransform.getBoundingBoxToWorld();
-        for (const shelter of this.shelterAreas) {
+        this.queryShelterAreas(playerBounds);
+        for (const shelter of this.hiddenShelters) shelter.playerInside = false;
+        for (const shelter of this.shelterCandidates) {
             if (!shelter.imgNode?.isValid || !shelter.colliderTransform?.isValid) continue;
-            const isIntersecting = this.intersectsShelterArea(playerBounds, shelter);
-            const shouldShow = !isIntersecting;
-            if (shelter.imgNode.active !== shouldShow) shelter.imgNode.active = shouldShow;
+            shelter.playerInside = this.intersectsShelterArea(playerBounds, shelter);
+        }
+        for (const shelter of this.hiddenShelters) {
+            if (!shelter.playerInside && shelter.imgNode?.isValid) shelter.imgNode.active = true;
+        }
+        this.hiddenShelters.length = 0;
+        for (const shelter of this.shelterCandidates) {
+            if (!shelter.playerInside) continue;
+            if (shelter.imgNode.active) shelter.imgNode.active = false;
+            this.hiddenShelters.push(shelter);
         }
     }
 
     /**恢复全部遮挡物的显示状态。 */
     private resetShelterVisibility() {
         for (const shelter of this.shelterAreas) {
+            shelter.playerInside = false;
             if (shelter.imgNode?.isValid) shelter.imgNode.active = true;
         }
+        this.hiddenShelters.length = 0;
     }
 
     /** 按移动路径范围取候选；精确碰撞由 roleController 计算。 */
@@ -980,11 +1068,15 @@ export class UIGame extends UIBase {
         const playerBounds = playerTransform.getBoundingBoxToWorld();
         this.currentContainer = null;
         for (const containerNode of this.containerList.children) {
-            const container = containerNode.getComponent(containerController);
+            let container = this.containerComponents.get(containerNode);
+            if (!container?.isValid) {
+                container = containerNode.getComponent(containerController);
+                if (container) this.containerComponents.set(containerNode, container);
+            }
             if (!containerNode.activeInHierarchy || !container) {
                 continue;
             }
-            const containerBounds = container.getInteractionBounds();
+            const containerBounds = container.getInteractionBounds(this.tempContainerBounds);
             if (containerBounds && playerBounds.intersects(containerBounds)) {
                 this.currentContainer = container;
                 break;
@@ -1308,7 +1400,8 @@ export class UIGame extends UIBase {
         if (!this.timeShowLab?.active) return;
         const label = this.timeShowLab.getComponent(Label);
         if (!label) return;
-        label.string = `撤离倒计时:${this.gameTimeLab.string}`;
+        const text = `撤离倒计时:${this.gameTimeLab.string}`;
+        if (label.string !== text) label.string = text;
         if (!label.color.equals(this.gameTimeLab.color)) {
             label.color = this.gameTimeLab.color;
         }
@@ -1333,7 +1426,6 @@ export class UIGame extends UIBase {
         // 敌人创建完成后，将玩家放到父节点的最后一层。
         playerMgr.player.setSiblingIndex(this.roleNode.children.length - 1);
         this.updateRolePerspectives();
-        this.updateShelterVisibility();
         if (ccStorageTools.getNumberData(SaveKey.gameGuide) !== 1) {
             this.clickGuideBtn(true);
         }
@@ -1697,7 +1789,6 @@ export class UIGame extends UIBase {
 
         this.updateContainerOpenButton();
         this.updateRolePerspectives();
-        this.updateShelterVisibility();
         this.updateLeaveCountdown(dt);
         if (this.isLeaveSuccessTriggered) return;
 
@@ -1705,7 +1796,7 @@ export class UIGame extends UIBase {
             if (pData.isAutoAiming) {
                 this.refreshAutoAim();
             }
-            this.shootEnemy(dt);
+            this.shootEnemy(dt, true);
         }
     }
 
@@ -1860,7 +1951,8 @@ export class UIGame extends UIBase {
         }
 
         this.leaveRemaining = Math.max(0, this.leaveRemaining - Math.max(0, dt));
-        this.leaveRemainLab.string = `撤离时间：${Math.ceil(this.leaveRemaining)}`;
+        const text = `撤离时间：${Math.ceil(this.leaveRemaining)}`;
+        if (this.leaveRemainLab.string !== text) this.leaveRemainLab.string = text;
         if (this.leaveRemaining > 0) return;
 
         this.isLeaveSuccessTriggered = true;
@@ -1872,7 +1964,8 @@ export class UIGame extends UIBase {
         this.isPlayerInLeavePoint = false;
         this.leaveRemaining = Math.max(0, Number(configData.leaveTime) || 0);
         this.leaveRemainLab.node.active = false;
-        this.leaveRemainLab.string = `撤离时间：${Math.ceil(this.leaveRemaining)}`;
+        const text = `撤离时间：${Math.ceil(this.leaveRemaining)}`;
+        if (this.leaveRemainLab.string !== text) this.leaveRemainLab.string = text;
     }
 
     /**摇杆区域点击开始 */
@@ -2009,15 +2102,13 @@ export class UIGame extends UIBase {
     }
 
     /**射击敌人  */
-    shootEnemy(deltaTime = 0) {
+    shootEnemy(deltaTime = 0, aimUpdated = false) {
         if (this.isOpening) return;
         if (this.shootCooldownRemaining > 0) {
             return;
         }
 
-        if (pData.isAutoAiming) {
-            this.refreshAutoAim();
-        }
+        if (pData.isAutoAiming && !aimUpdated) this.refreshAutoAim();
         const roleComp = playerMgr.playerComp;
         // 手动瞄准的狙击枪只蓄力，松手时由 setAttackHeld 完成开火；自动模式维持蓄满即开火。
         if (!roleComp?.attack(deltaTime, pData.isAutoAiming)) {
@@ -2049,8 +2140,11 @@ export class UIGame extends UIBase {
     /**根据角色技能2事件实时刷新倒计时；非 role0 或技能未生效时保持隐藏。 */
     private updateSkill2RemainLab(remainTime: number, isVisible: boolean) {
         if (!this.skill2RemainLab) return;
-        this.skill2RemainLab.node.active = isVisible;
-        if (isVisible) this.skill2RemainLab.string = `${Math.ceil(Math.max(0, remainTime))}`;
+        if (this.skill2RemainLab.node.active !== isVisible) this.skill2RemainLab.node.active = isVisible;
+        if (isVisible) {
+            const text = `${Math.ceil(Math.max(0, remainTime))}`;
+            if (this.skill2RemainLab.string !== text) this.skill2RemainLab.string = text;
+        }
     }
 
     /**按角色技能配置的冷却时间播放对应按钮遮罩。 */
@@ -2168,14 +2262,15 @@ export class UIGame extends UIBase {
             const numLab = weaponBox?.getChildByName('numLab')?.getComponent(Label);
             if (!numLab) return;
             if (pData.equipmentIds[slotIndex] < 0) {
-                numLab.string = '';
+                if (numLab.string !== '') numLab.string = '';
                 return;
             }
             const weapon = playerMgr.playerComp?.getWeaponController(slotIndex);
             const gun = weapon?.node.getComponent(gunController);
             const weaponData = weaponsConfig.getDataByItemId(pData.equipmentIds[slotIndex]);
             const hasInfiniteAmmo = weaponData?.capacity === -1;
-            numLab.string = hasInfiniteAmmo ? '∞/∞' : `${gun?.ammo ?? 0}/∞`;
+            const text = hasInfiniteAmmo ? '∞/∞' : `${gun?.ammo ?? 0}/∞`;
+            if (numLab.string !== text) numLab.string = text;
         });
     }
 
@@ -2496,10 +2591,11 @@ export class UIGame extends UIBase {
         const availableCount = Math.max(0, Math.floor(count));
         const numNode = button?.getChildByName('numNode');
         const adNode = button?.getChildByName('ad');
-        if (numNode) numNode.active = availableCount > 0;
-        if (adNode) adNode.active = availableCount <= 0;
+        if (numNode && numNode.active !== (availableCount > 0)) numNode.active = availableCount > 0;
+        if (adNode && adNode.active !== (availableCount <= 0)) adNode.active = availableCount <= 0;
         const numLab = numNode?.getChildByName('numLab')?.getComponent(Label);
-        if (numLab) numLab.string = `${availableCount}`;
+        const text = `${availableCount}`;
+        if (numLab && numLab.string !== text) numLab.string = text;
     }
 
     private getDrugCount(isBig: boolean) {

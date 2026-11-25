@@ -25,6 +25,7 @@ export interface WeaponStats {
     speed?: number;
     /** 单次攻击生成的子弹数；仅霰弹枪等多弹丸武器使用。 */
     bulletNum?: number;
+    spreadAngle?: number;
     /** 蓄力时间（秒）；仅狙击枪等蓄力武器使用。 */
     chargeTime?: number;
     /** 换弹时间（秒）；未配置时为 0。 */

@@ -13,6 +13,7 @@ export enum gunAnimName { idle = 'idle', attack = 'attack', reload = 'reload' }
 /** 远程武器控制器：处理弹匣、换弹和子弹生成。 */
 @ccclass('gunController')
 export class gunController extends weaponsController {
+    private spreadAngle = 0;
     /** 武器类型 1/5/6 使用 0，4 使用 1，2/3 使用 2。 */
     private bulletType = 0;
     /**当前弹匣内的剩余子弹数量。 */
@@ -30,6 +31,7 @@ export class gunController extends weaponsController {
     private tempShootRootWorldPos = new Vec3();
     private tempBulletSpawnWorldPos = new Vec3();
     private tempBulletWorldDirection = new Vec3();
+    private tempBulletSpreadDirection = new Vec3();
     private tempBulletLocalPos = new Vec3();
     private tempBulletLocalDirection = new Vec3();
     private tempBulletDirectionEndWorldPos = new Vec3();
@@ -79,6 +81,8 @@ export class gunController extends weaponsController {
     /** 枪械在应用配置后，以新的弹匣容量重新装填。 */
     applyStats(stats: WeaponStats) {
         super.applyStats(stats);
+        this.spreadAngle = stats.type === 0 || stats.type === 5 || !Number.isFinite(stats.spreadAngle)
+            ? 0 : Math.max(0, stats.spreadAngle);
         this.bulletType = stats.type === 4 ? 1 : (stats.type === 2 || stats.type === 3 ? 2 : 0);
         this.isReloading = false;
         this.currentAmmo = this.capacity;
@@ -128,14 +132,21 @@ export class gunController extends weaponsController {
     protected spawnBullet(bulletParent: Node, spawnWorldPos: Vec3, worldDirection: Vec3) {
         if (!bulletParent || !uiMgr.bulletPrefab) return false;
 
+        this.tempBulletSpreadDirection.set(worldDirection);
+        if (this.spreadAngle > 0) {
+            const baseAngle = Math.atan2(worldDirection.y, worldDirection.x);
+            const angle = baseAngle + (Math.random() - 0.5) * this.spreadAngle * Math.PI / 180;
+            this.tempBulletSpreadDirection.set(Math.cos(angle), Math.sin(angle), 0);
+        }
+
         const bulletNode = poolMgr.getBulletNode(uiMgr.bulletPrefab);
         bulletParent.addChild(bulletNode);
         const parentTransform = bulletParent.getComponent(UITransform);
         if (parentTransform) {
             parentTransform.convertToNodeSpaceAR(spawnWorldPos, this.tempBulletLocalPos);
             this.tempBulletDirectionEndWorldPos.set(
-                spawnWorldPos.x + worldDirection.x,
-                spawnWorldPos.y + worldDirection.y,
+                spawnWorldPos.x + this.tempBulletSpreadDirection.x,
+                spawnWorldPos.y + this.tempBulletSpreadDirection.y,
                 spawnWorldPos.z,
             );
             parentTransform.convertToNodeSpaceAR(this.tempBulletDirectionEndWorldPos, this.tempBulletDirectionEndLocalPos);
@@ -147,7 +158,7 @@ export class gunController extends weaponsController {
             bulletNode.setPosition(this.tempBulletLocalPos);
         } else {
             bulletNode.setWorldPosition(spawnWorldPos);
-            this.tempBulletLocalDirection.set(worldDirection);
+            this.tempBulletLocalDirection.set(this.tempBulletSpreadDirection);
         }
 
         const bulletComp = bulletNode.getComponent(bulletController);

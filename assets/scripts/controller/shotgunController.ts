@@ -14,13 +14,9 @@ export class shotgunController extends gunController {
     /** 单次攻击的弹丸数，由 weapons 表 bulletNum 配置。 */
     bulletNum = 1;
 
-    /** 所有弹丸可随机分布的总扇形角度（度） */
-    bulletSpreadAngle = 40;
-
     private tempShotgunSpawnWorldPos = new Vec3();
     private tempShotgunBulletSpawnWorldPos = new Vec3();
     private tempShotgunWorldDirection = new Vec3();
-    private tempShotgunSpreadDirection = new Vec3();
 
     applyStats(stats: WeaponStats) {
         super.applyStats(stats);
@@ -33,8 +29,6 @@ export class shotgunController extends gunController {
         if (!this.getShootData(this.tempShotgunSpawnWorldPos, this.tempShotgunWorldDirection)) return false;
 
         const bulletCount = Math.max(1, this.bulletNum);
-        const baseAngle = Math.atan2(this.tempShotgunWorldDirection.y, this.tempShotgunWorldDirection.x);
-        const spreadRadians = this.bulletSpreadAngle * Math.PI / 180;
         let hasFired = false;
         for (let index = 0; index < bulletCount; index++) {
             const spawnOffset = (Math.random() - 0.5) * 15;
@@ -43,9 +37,7 @@ export class shotgunController extends gunController {
                 this.tempShotgunSpawnWorldPos.y + this.tempShotgunWorldDirection.x * spawnOffset,
                 this.tempShotgunSpawnWorldPos.z,
             );
-            const angle = baseAngle + (Math.random() - 0.5) * spreadRadians;
-            this.tempShotgunSpreadDirection.set(Math.cos(angle), Math.sin(angle), 0);
-            hasFired = this.spawnBullet(bulletParent, this.tempShotgunBulletSpawnWorldPos, this.tempShotgunSpreadDirection) || hasFired;
+            hasFired = this.spawnBullet(bulletParent, this.tempShotgunBulletSpawnWorldPos, this.tempShotgunWorldDirection) || hasFired;
         }
         if (!hasFired) return false;
 

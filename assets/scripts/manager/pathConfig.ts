@@ -247,3 +247,22 @@ export enum spinePath {
     /**无人机回血（文件夹） */
     droneHeal = "spine/roleSkill/droneHeal",
 }
+
+/**地图数组 */
+export const mapList = [
+    {
+        bundleName: "map_0",
+        mapPath: "map_0",
+        smallMapPath: "smallMap_0",
+    },
+    {
+        bundleName: "map_1",
+        mapPath: "map_1",
+        smallMapPath: "smallMap_1",
+    },
+    {
+        bundleName: "map_2",
+        mapPath: "map_2",
+        smallMapPath: "smallMap_2",
+    },
+]

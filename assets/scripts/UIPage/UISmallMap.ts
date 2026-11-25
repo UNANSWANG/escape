@@ -1,9 +1,8 @@
 import { _decorator, Node, Animation, instantiate, UITransform, Prefab } from 'cc';
 import { UIBase } from './UIBase';
-import { ItemPath, UIPath } from '../manager/pathConfig';
+import { UIPath } from '../manager/pathConfig';
 import { uiMgr } from '../manager/UIManager';
 import { pData } from '../manager/playerData';
-import { ccResTools } from '../extention/resTools';
 import { ccTools } from '../extention/generalTools';
 const { ccclass, property } = _decorator;
 
@@ -38,22 +37,28 @@ export class UISmallMap extends UIBase {
         ccTools.destroyAllChild(this.mapParent);
         this.mapNode = null;
         this.loadedMapIdx = -1;
-        const path = ItemPath.smallMap + mapIdx;
         if (this.mapPrefabLoad?.mapIdx !== mapIdx) {
-            this.mapPrefabLoad = { mapIdx, promise: ccResTools.loadPrefab(uiMgr.resBundle, path) };
+            this.mapPrefabLoad = { mapIdx, promise: uiMgr.preLoadSmallMap(mapIdx) };
         }
-        const prefab = await this.mapPrefabLoad.promise;
+        let prefab: Prefab;
+        try {
+            prefab = await this.mapPrefabLoad.promise;
+        } catch (error) {
+            if (version === this.mapLoadVersion) this.mapPrefabLoad = null;
+            console.warn('加载小地图预制体失败', mapIdx, error);
+            return;
+        }
         if (!this.node.isValid || version !== this.mapLoadVersion || !this.node.activeInHierarchy) return;
         if (!prefab) {
             this.mapPrefabLoad = null;
-            console.warn('加载小地图预制体失败', path);
+            console.warn('加载小地图预制体失败', mapIdx);
             return;
         }
         const map = instantiate(prefab);
         const mapTransform = map.getComponent(UITransform);
         if (!mapTransform) {
             map.destroy();
-            console.warn('小地图预制体缺少 UITransform', path);
+            console.warn('小地图预制体缺少 UITransform', mapIdx);
             return;
         }
         this.mapParent.addChild(map);

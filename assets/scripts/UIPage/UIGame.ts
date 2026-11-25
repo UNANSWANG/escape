@@ -371,18 +371,17 @@ export class UIGame extends UIBase {
             console.error('初始化地图失败：地图容器或所选地图索引无效', mapIndex);
             return false;
         }
-        const path = ItemPath.map + mapIndex;
         const prefab = await uiMgr.preLoadMap(mapIndex);
         if (version != this.openVersion || !this.node.activeInHierarchy || !this.mapContainer?.isValid) return false;
         if (!prefab) {
-            console.error('加载地图预制体失败', path);
+            console.error('加载地图预制体失败', mapIndex);
             return false;
         }
         const map = instantiate(prefab);
         const bg = map.getChildByName('bg')?.getComponent(UITransform);
         if (!bg || bg.width <= 0 || bg.height <= 0) {
             map.destroy();
-            console.error('地图 bg 缺少有效的 UITransform 宽高', path);
+            console.error('地图 bg 缺少有效的 UITransform 宽高', mapIndex);
             return false;
         }
         this.mapContainer.addChild(map);

@@ -106,10 +106,6 @@ export enum ItemPath {
     syringe = "prefabs/game/syringe",
     /**直升机 */
     helicopter = "prefabs/game/helicopter",
-    /**地图 */
-    map = "prefabs/map/map_",
-    /**小地图 */
-    smallMap = "prefabs/smallMap/smallMap",
 }
 
 /**animation动画预制体 */
@@ -253,16 +249,16 @@ export const mapList = [
     {
         bundleName: "map_0",
         mapPath: "map_0",
-        smallMapPath: "smallMap_0",
+        smallMapPath: "smallMap0",
     },
     {
         bundleName: "map_1",
         mapPath: "map_1",
-        smallMapPath: "smallMap_1",
+        smallMapPath: "smallMap1",
     },
     {
         bundleName: "map_2",
         mapPath: "map_2",
-        smallMapPath: "smallMap_2",
+        smallMapPath: "smallMap2",
     },
 ]

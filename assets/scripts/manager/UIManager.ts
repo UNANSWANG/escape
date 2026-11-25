@@ -1,7 +1,7 @@
 import { _decorator, AssetManager, Component, director, Director, instantiate, Node, Prefab, Sprite, tween, UITransform, Vec3 } from 'cc';
 import { UIBase } from '../UIPage/UIBase';
 import { UIBackpack } from '../UIPage/UIBackpack';
-import { animationItemPath, audioPath, gamePath, imgPath, ItemPath, spinePath, UIPath } from './pathConfig';
+import { animationItemPath, audioPath, gamePath, imgPath, ItemPath, mapList, spinePath, UIPath } from './pathConfig';
 import { ccResTools } from '../extention/resTools';
 import { tipsNotice } from '../UIPage/tips/tipsNotice';
 import { pData } from './playerData';
@@ -99,7 +99,8 @@ export class UIManager {
     /**游戏资源是否已全部预加载 */
     private gamePreloadComplete = false;
     /** 按地图索引缓存加载任务，匹配期间提前加载地图及其依赖。 */
-    private mapPreloadTasks = new Map<number, Promise<Prefab>>();
+    private mapBundleTasks = new Map<string, Promise<AssetManager.Bundle>>();
+    private mapPrefabTasks = new Map<string, Promise<Prefab>>();
 
     /**资源请求共享缓存，失败后允许重试。 */
     private prefabTasks = new Map<string, Promise<Prefab>>();
@@ -306,10 +307,7 @@ export class UIManager {
     }
 
     preLoadSmallMap(mapIndex = pData.selectMapData[0]) {
-        if (!Number.isInteger(mapIndex) || mapIndex < 0) {
-            return Promise.reject(new Error('小地图索引无效: ' + mapIndex));
-        }
-        return this.preLoadPrefab(ItemPath.smallMap + mapIndex);
+        return this.preLoadMapPrefab(mapIndex, 'smallMapPath');
     }
 
     /**匹配确定阵容后准备动态外观，不能只等待角色 Prefab。 */
@@ -389,20 +387,34 @@ export class UIManager {
     }
 
     preLoadMap(mapIndex = pData.selectMapData[0]): Promise<Prefab> {
-        if (!this.resBundle || !Number.isInteger(mapIndex) || mapIndex < 0) {
-            return Promise.reject(new Error(`无法预加载地图，索引无效或资源包未加载: ${mapIndex}`));
+        return this.preLoadMapPrefab(mapIndex, 'mapPath');
+    }
+
+    private preLoadMapPrefab(mapIndex: number, pathKey: 'mapPath' | 'smallMapPath'): Promise<Prefab> {
+        const config = mapList[mapIndex];
+        if (!Number.isInteger(mapIndex) || mapIndex < 0 || !config) {
+            return Promise.reject(new Error(`无法预加载地图，索引无效或缺少配置: ${mapIndex}`));
         }
-        const cached = this.mapPreloadTasks.get(mapIndex);
+        const path = config[pathKey];
+        const key = `${config.bundleName}:${path}`;
+        const cached = this.mapPrefabTasks.get(key);
         if (cached) return cached;
-        const path = ItemPath.map + mapIndex;
-        const task = ccResTools.loadPrefab(this.resBundle, path, false).then((prefab) => {
-            if (!prefab) throw new Error(`加载地图预制体失败: ${path}`);
+        let bundleTask = this.mapBundleTasks.get(config.bundleName);
+        if (!bundleTask) {
+            bundleTask = ccResTools.loadBundle(config.bundleName).catch(error => {
+                this.mapBundleTasks.delete(config.bundleName);
+                throw error;
+            });
+            this.mapBundleTasks.set(config.bundleName, bundleTask);
+        }
+        const task = bundleTask.then(bundle => ccResTools.loadPrefab(bundle, path, false)).then(prefab => {
+            if (!prefab) throw new Error(`加载地图预制体失败: ${key}`);
             return prefab;
-        }).catch((error) => {
-            this.mapPreloadTasks.delete(mapIndex);
+        }).catch(error => {
+            this.mapPrefabTasks.delete(key);
             throw error;
         });
-        this.mapPreloadTasks.set(mapIndex, task);
+        this.mapPrefabTasks.set(key, task);
         return task;
     }
 

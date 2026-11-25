@@ -131,11 +131,11 @@ export enum audioPath {
     /**游戏内点击音效 */
     click = "audio/dianji",
     /**单局胜利音效 */
-    success = "audio/shengli",
+    success = "audio/success",
     /**游戏内失败音效 */
-    fail = "audio/shibai",
+    fail = "audio/fail",
     /**获得金币音效 */
-    getMoney = "audio/jinbihuode",
+    getMoney = "audio/getMoney",
     /**换弹音效 */
     reload = "audio/reload",
     /**击中敌人反馈 */
@@ -148,6 +148,34 @@ export enum audioPath {
     walkLeft = "audio/walkLeft",
     /**武器 */
     weapon = "audio/weapon/",
+    /**NPC死亡 */
+    npcDeath = "audio/npcDeath",
+    /**霸王猫技能 */
+    boss0Skill = "audio/boss0Skill",
+    /**霸王猫死亡 */
+    boss0Death = "audio/boss0Death",
+    /**机甲技能 */
+    boss1Skill = "audio/boss1Skill",
+    /**机甲死亡 */
+    boss1Death = "audio/boss1Death",
+    /**冰龙技能 */
+    boss2Skill = "audio/boss2Skill",
+    /**冰龙死亡 */
+    boss2Death = "audio/boss2Death",
+    /**角色0技能 */
+    role0Skill = "audio/role0Skill",
+    /**角色0被动(滑铲) */
+    role0Passive = "audio/role0Passive",
+    /**角色1技能 */
+    role1Skill = "audio/role1Skill",
+    /**角色2技能 */
+    role2Skill = "audio/role2Skill",
+    /**获得奖励（恭喜获得） */
+    getReward = "audio/getReward",
+    /**匹配成功 */
+    matchSuccess = "audio/matchSuccess",
+    /**人物升级 */
+    roleUpgrade = "audio/roleUpgrade",
 }
 
 /**图片路径 */

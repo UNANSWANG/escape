@@ -131,7 +131,7 @@
     "hasAlpha": true,
     "redirect": "483ffb51-6132-4eba-9601-5df4c1f1ff91@6c48a",
     "compressSettings": {
-      "useCompressTexture": true,
+      "useCompressTexture": false,
       "presetId": "60ZiqfUpZLWYVoaiuYJMD0"
     }
   }

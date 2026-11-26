@@ -179,9 +179,9 @@ export class UIMain extends UIBase {
             background?.children.forEach((stateNode) => {
                 stateNode.active = stateNode.name === (itemData ? 'show' : 'normal');
             });
-            const setLab = showNode.getChildByName('setLab');
-            if (setLab) {
-                setLab.active = !itemData;
+            const addNode = showNode.getChildByName('add');
+            if (addNode) {
+                addNode.active = !itemData;
             }
             const image = showNode.getChildByName('img');
             if (image) {

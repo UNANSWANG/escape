@@ -49,7 +49,7 @@ export interface JsonMapData {
     mapIdx: number;
     /**难度类型 */
     difficultyType: number;
-    /**解锁段位，直接与 pData.rank 比较，可超过段位表最大 id */
+    /**解锁段位编号，直接与 pData.rank（段位 id）比较，可超过段位表最大 id */
     unlockRank: number;
     /**奖励列表 */
     rewardList: string;

@@ -10,16 +10,20 @@ export class jsonRank extends jsonBase {
     protected tableUrl1: string = "";
     protected tableUrl2: string = "";
 
-    /**最高段位固定为配置表的最后一项。 */
+    /**最高段位使用配置中的最大编号，而不是段位组编号或数组下标。 */
     get maxRank(): number {
-        return Math.max(0, (this.tableData?.length ?? 0) - 1);
+        return (this.tableData ?? []).reduce((maxId, rankData) =>
+            Number.isInteger(rankData?.id) ? Math.max(maxId, rankData.id) : maxId, 0);
     }
 
-    /**超出范围时按最高段位读取。 */
+    /**按段位编号读取；存档编号超出配置时按最高编号读取。 */
     getRankData(rank: number): JsonRankData | null {
         const ranks = this.tableData;
         if (!ranks?.length) return null;
-        return ranks[Math.min(rank, ranks.length - 1)];
+        const rankId = Number.isFinite(rank) ? Math.max(0, Math.floor(rank)) : 0;
+        return ranks.find((rankData) => rankData.id === rankId)
+            ?? ranks.find((rankData) => rankData.id === this.maxRank)
+            ?? null;
     }
 
     getRankName(rank: number): string {

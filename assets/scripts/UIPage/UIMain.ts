@@ -16,6 +16,7 @@ import { roleShowController } from '../controller/role/roleShowController';
 import { mapConfig } from '../json/jsonMap';
 import { itemConfig } from '../json/jsonItem';
 import { rankConfig } from '../json/jsonRank';
+import { signConfig } from '../json/jsonSign';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIMain')
@@ -348,6 +349,14 @@ export class UIMain extends UIBase {
         const red = this.handbookBtn?.getChildByName("red");
         if (red) {
             red.active = pData.hasClaimableCollectionReward();
+        }
+        const signRed = this.signBtn?.getChildByName("red");
+        if (signRed) {
+            const signDays = Math.max(0, ccStorageTools.getNumberData(SaveKey.signDays));
+            const types = signConfig.getTypes();
+            const type = types[Math.min(Math.floor(signDays / 7), types.length - 1)];
+            signRed.active = ccStorageTools.getLimitTimeData(SaveKey.isGetSign) !== 1
+                && !!signConfig.getDataByType(type)[signDays % 7];
         }
     }
 

@@ -5,7 +5,8 @@ import { uiMgr } from '../manager/UIManager';
 import { zoomButton } from '../extention/zoomButton';
 import { ccTools } from '../extention/generalTools';
 import { ccStorageTools } from '../extention/storageTools';
-import { SaveKey } from '../manager/configData';
+import { GameEvent, SaveKey } from '../manager/configData';
+import { gm } from '../manager/gm';
 import { JsonSignData, signConfig } from '../json/jsonSign';
 import { getItemDataByItemId } from '../json/jsonItemData';
 import { videoMgr } from '../manager/videoManager';
@@ -175,6 +176,7 @@ export class UISign extends UIBase {
             ccStorageTools.setData(SaveKey.signDays, this.signDays + 1);
             ccStorageTools.setLimitTimeData(SaveKey.isGetSign, 1);
         });
+        gm.Event.emit(GameEvent.refreshRed);
         this.getBtn.active = false;
         this.adBtn.active = false;
         this.onClose();

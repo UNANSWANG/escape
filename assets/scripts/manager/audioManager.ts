@@ -15,6 +15,8 @@ export class audioManager {
     private _curAudioSource: number = 0;
     /**已加载完的音频 */
     private _dic: Map<string, AudioClip> = new Map();
+    /** 同一资源包的音频预加载共享任务，避免启动流程重复发起。 */
+    private _preloadTasks = new WeakMap<AssetManager.Bundle, Promise<void>>();
     /**正在加载的音频 */
     private dic_loading: Map<string, number> = new Map();
     /**默认音效使用的音频组件 */
@@ -45,6 +47,36 @@ export class audioManager {
     /**正在播放的背景音乐 */
     private _curMusicPath: string = audioPath.background;
     private _backgroundMusicRequested = false;
+
+    /** 提前加载完整 AudioClip，供首次播放直接使用；失败资源仍可在播放时重试。 */
+    preloadAudio(bundle: AssetManager.Bundle = uiMgr.resBundle): Promise<void> {
+        if (!bundle) return Promise.resolve();
+        const existing = this._preloadTasks.get(bundle);
+        if (existing) return existing;
+        const paths = Array.from(new Set(bundle.getDirWithPath('audio', AudioClip).map(info => info.path)));
+        let nextIndex = 0;
+        const worker = async () => {
+            while (nextIndex < paths.length) {
+                const path = paths[nextIndex++];
+                if (this._dic.has(path)) continue;
+                try {
+                    const clip = await new Promise<AudioClip>((resolve, reject) => {
+                        bundle.load(path, AudioClip, (err, clip) => {
+                            if (err || !clip) reject(err || new Error(`音频资源为空: ${path}`));
+                            else resolve(clip);
+                        });
+                    });
+                    this._dic.set(path, clip);
+                } catch (error) {
+                    console.warn('音频预加载失败，播放时重试:', path, error);
+                }
+            }
+        };
+        const task = Promise.all(Array.from({ length: Math.min(4, paths.length) }, () => worker()))
+            .then(() => { this._preloadTasks.delete(bundle); });
+        this._preloadTasks.set(bundle, task);
+        return task;
+    }
 
     /**初始化音频管理 */
     initAudio(node) {

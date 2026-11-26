@@ -131,7 +131,10 @@ export class UILoading extends Component {
 
     /**预加载界面 */
     async preLoadPage() {
-        await uiMgr.preLoadStartup(ccStorageTools.getNumberData(SaveKey.gameGuide) !== 1);
+        await Promise.all([
+            uiMgr.preLoadStartup(ccStorageTools.getNumberData(SaveKey.gameGuide) !== 1),
+            audioMgr.preloadAudio(),
+        ]);
         this.uiComplete = true;
         this.checkLoadComplete();
     }

@@ -7,7 +7,7 @@ export class jsonRank extends jsonBase {
     /** 表格名称 */
     tableName: string = "rank";
     protected jsonPath: string = "json/rank";
-    protected tableUrl1: string = "";
+    protected tableUrl1: string = "https://cdn.taozigame.com/lt/config/15/rank.json";
     protected tableUrl2: string = "";
 
     /**最高段位使用配置中的最大编号，而不是段位组编号或数组下标。 */

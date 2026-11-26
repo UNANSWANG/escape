@@ -7,7 +7,7 @@ export class jsonRoleLevel extends jsonBase {
     /** 表格名称 */
     tableName: string = "roleLevel";
     protected jsonPath: string = "json/roleLevel";
-    protected tableUrl1: string = "";
+    protected tableUrl1: string = "https://cdn.taozigame.com/lt/config/15/roleLevel.json";
     protected tableUrl2: string = "";
 
     /**按角色 id 分组的等级配置，每组按等级升序排列 */

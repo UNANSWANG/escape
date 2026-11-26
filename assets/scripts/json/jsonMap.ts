@@ -6,7 +6,7 @@ export class jsonMap extends jsonBase {
     /** 表格名称 */
     tableName: string = "map";
     protected jsonPath: string = "json/map";
-    protected tableUrl1: string = "";
+    protected tableUrl1: string = "https://cdn.taozigame.com/lt/config/15/map.json";
     protected tableUrl2: string = "";
 
     private mapDataByMapIdx: Map<number, JsonMapData[]> = new Map();

@@ -8,7 +8,7 @@ export class jsonRole extends jsonBase {
     /** 表格名称 */
     tableName: string = "role";
     protected jsonPath: string = "json/role";
-    protected tableUrl1: string = "";
+    protected tableUrl1: string = "https://cdn.taozigame.com/lt/config/15/role.json";
     protected tableUrl2: string = "";
 
     isInit = false;

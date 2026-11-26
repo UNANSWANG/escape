@@ -8,7 +8,7 @@ export class jsonEquipment extends jsonBase {
     /** 表格名称 */
     tableName: string = "equipment";
     protected jsonPath: string = "json/equipment";
-    protected tableUrl1: string = "";
+    protected tableUrl1: string = "https://cdn.taozigame.com/lt/config/15/equipment.json";
     protected tableUrl2: string = "";
 
     protected processTableData(): void {

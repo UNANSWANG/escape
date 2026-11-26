@@ -7,7 +7,7 @@ export class jsonItem extends jsonBase {
     /** 表格名称 */
     tableName: string = "item";
     protected jsonPath: string = "json/item";
-    protected tableUrl1: string = "";
+    protected tableUrl1: string = "https://cdn.taozigame.com/lt/config/15/item.json";
     protected tableUrl2: string = "";
     /** 按品质分组的物品数据；无品质的物品不会加入 */
     private itemDataByQuality: Map<number, JsonItemData[]> = new Map();

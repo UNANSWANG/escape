@@ -7,7 +7,7 @@ export class jsonArms extends jsonBase {
     /** 表格名称 */
     tableName: string = "arms";
     protected jsonPath: string = "json/arms";
-    protected tableUrl1: string = "";
+    protected tableUrl1: string = "https://cdn.taozigame.com/lt/config/15/arms.json";
     protected tableUrl2: string = "";
 
     get tableData(): JsonArmsData[] {

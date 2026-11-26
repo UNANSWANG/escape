@@ -2,7 +2,6 @@ import { _decorator, Component, Node } from 'cc';
 import { gm } from './gm';
 import { GameEvent } from './configData';
 import { commonConfig } from '../json/jsonCommon';
-import { levelConfig } from '../json/jsonLevel';
 import { roleConfig } from '../json/jsonRole';
 import { roleLevelConfig } from '../json/jsonRoleLevel';
 import { itemConfig } from '../json/jsonItem';
@@ -34,7 +33,6 @@ export class jsonManager  {
             gm.Event.emit(GameEvent.tableLoadComplete);
         }
         commonConfig.initTable();
-        // levelConfig.initTable();
         roleConfig.initTable();
         roleLevelConfig.initTable();
         itemConfig.initTable();

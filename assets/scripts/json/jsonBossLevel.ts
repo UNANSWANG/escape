@@ -7,7 +7,7 @@ export class jsonBossLevel extends jsonBase {
     /** 表格名称 */
     tableName: string = "bossLevel";
     protected jsonPath: string = "json/bossLevel";
-    protected tableUrl1: string = "";
+    protected tableUrl1: string = "https://cdn.taozigame.com/lt/config/15/bossLevel.json";
     protected tableUrl2: string = "";
 
     protected processTableData(): void {

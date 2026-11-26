@@ -6,7 +6,7 @@ export class jsonAgentRole extends jsonBase {
     /** 表格名称 */
     tableName: string = "agentRole";
     protected jsonPath: string = "json/agentRole";
-    protected tableUrl1: string = "";
+    protected tableUrl1: string = "https://cdn.taozigame.com/lt/config/15/agentRole.json";
     protected tableUrl2: string = "";
 
     /** 从指定类型的全部配置中等概率抽取，可重复抽取同一配置。 */

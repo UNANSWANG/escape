@@ -12,7 +12,6 @@ import { httpMgr } from '../sdk/network/httpManager';
 import { urlConfig } from '../sdk/network/netConfig';
 import { ccStorageTools } from '../extention/storageTools';
 import { SaveKey } from '../manager/configData';
-import { levelConfig } from '../json/jsonLevel';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIRank')

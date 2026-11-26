@@ -19,7 +19,7 @@ export class jsonContainer extends jsonBase {
     /** 表格名称 */
     tableName: string = "container";
     protected jsonPath: string = "json/container";
-    protected tableUrl1: string = "";
+    protected tableUrl1: string = "https://cdn.taozigame.com/lt/config/15/container.json";
     protected tableUrl2: string = "";
 
     protected processTableData(): void {

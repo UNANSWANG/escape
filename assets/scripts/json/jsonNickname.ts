@@ -8,7 +8,7 @@ export class jsonNickname extends jsonBase {
     /** 表格名称 */
     tableName: string = "nickname";
     protected jsonPath: string = "json/nickname";
-    protected tableUrl1: string = "";
+    protected tableUrl1: string = "https://cdn.taozigame.com/lt/config/15/nickname.json";
     protected tableUrl2: string = "";
 
     /**获取角色昵称数据 */

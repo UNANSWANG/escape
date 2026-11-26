@@ -9,7 +9,7 @@ export class jsonCommon extends jsonBase {
     /** 表格名称 */
     tableName: string = "common";
     protected jsonPath: string = "json/common";
-    protected tableUrl1: string = "";
+    protected tableUrl1: string = "https://cdn.taozigame.com/lt/config/15/common.json";
     protected tableUrl2: string = "";
 
     private commonData = {};

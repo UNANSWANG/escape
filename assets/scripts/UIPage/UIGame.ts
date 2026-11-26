@@ -184,7 +184,7 @@ export class UIGame extends UIBase {
     /**技能2按钮遮罩。 */
     private skill2Mask: Sprite = null;
     /**摇杆初始位置 */
-    private rockerInitPos: Vec3 = new Vec3(270, -15, 0);
+    private rockerInitPos: Vec3 = new Vec3(290, 30, 0);
     /**当前是否正在攻击瞄准 */
     private isAttackAiming = false;
     /**本轮持续攻击锁定的目标；离开检测范围后仍保留至松开攻击键 */

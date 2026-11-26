@@ -10,7 +10,7 @@ import { commonConfig } from '../json/jsonCommon';
 import { platformManager } from '../manager/platformManager';
 import { ccStorageTools } from '../extention/storageTools';
 import { SaveKey } from '../manager/configData';
-import { UIPath } from '../manager/pathConfig';
+import { audioPath, UIPath } from '../manager/pathConfig';
 import { mapConfig } from '../json/jsonMap';
 import { playerMgr } from '../manager/playerManager';
 const { ccclass, property } = _decorator;
@@ -131,9 +131,12 @@ export class UILoading extends Component {
 
     /**预加载界面 */
     async preLoadPage() {
+        const enterGuideGame = ccStorageTools.getNumberData(SaveKey.gameGuide) !== 1;
         await Promise.all([
-            uiMgr.preLoadStartup(ccStorageTools.getNumberData(SaveKey.gameGuide) !== 1),
-            audioMgr.preloadAudio(),
+            uiMgr.preLoadStartup(enterGuideGame),
+            audioMgr.preloadAudio(uiMgr.resBundle, enterGuideGame
+                ? [audioPath.helicopter]
+                : [audioPath.background, audioPath.click]),
         ]);
         this.uiComplete = true;
         this.checkLoadComplete();
@@ -196,7 +199,7 @@ export class UILoading extends Component {
         playerMgr.prepareMatch(map.mapIdx, map.difficultyType, map.gameNumber);
         await Promise.all([
             uiMgr.preLoadPage(UIPath.UIGameGuide),
-            uiMgr.preLoadMatch(map.mapIdx, playerMgr.matchedAIRoles),
+            uiMgr.preLoadMatch(map.mapIdx, playerMgr.matchedAIRoles, true),
         ]);
     }
 

@@ -295,6 +295,7 @@ export class UIManager {
             // 首局已经完成地图和角色初始化，再准备返回主页及后续引导所需界面。
             // 沿用本局批次，离开或重开游戏后停止后续任务。
             await this.preLoadInFrames([
+                () => audioMgr.preloadAudio(this.resBundle, [audioPath.background]),
                 () => this.preLoadCommonPrefab(),
                 () => this.preLoadPage(UIPath.UIMain),
             ], isCurrent);
@@ -334,6 +335,27 @@ export class UIManager {
         if (roles.has(0)) spines.add(spinePath.gem);
         if (roles.has(2)) spines.add(spinePath.shield);
         const map = await this.preLoadMap(mapIndex);
+        const bossNodes = map.data.getChildByName('bossList')?.children || [];
+        const roundPrefabs: Promise<unknown>[] = [];
+        if (roles.has(0)) {
+            roundPrefabs.push(this.preLoadPrefab(animationItemPath.shovelSmoke).then(prefab => { this.shovelSmokePrefab = prefab; }));
+        }
+        if (roles.has(1)) {
+            roundPrefabs.push(this.preLoadPrefab(ItemPath.drone).then(prefab => { this.dronePrefab = prefab; }));
+        }
+        if (bossNodes.some(node => node.getComponent('bossController0'))) {
+            roundPrefabs.push(this.preLoadPrefab(animationItemPath.whirlwind).then(prefab => { this.whirlwindPrefab = prefab; }));
+        }
+        if (bossNodes.some(node => node.getComponent('bossController1'))) {
+            roundPrefabs.push(this.preLoadPrefab(ItemPath.skillRangeRect).then(prefab => { this.skillRangeRectPrefab = prefab; }));
+        }
+        if (bossNodes.some(node => node.getComponent('bossController2'))) {
+            roundPrefabs.push(
+                this.preLoadPrefab(ItemPath.skillRangeRectLeft).then(prefab => { this.skillRangeRectLeftPrefab = prefab; }),
+                this.preLoadPrefab(animationItemPath.dragonBreath).then(prefab => { this.dragonBreathPrefab = prefab; }),
+            );
+        }
+        await Promise.all(roundPrefabs);
         const soldiers = map.data.getChildByName('soldiersList');
         for (const spawn of soldiers?.children || []) {
             const data = spawn.getComponent(soldiersData);
@@ -347,7 +369,7 @@ export class UIManager {
                 pictures.add(imgPath.soldierRightHand + id);
             }
         }
-        if (map.data.getChildByName('bossList')?.children.some(node => node.getComponent('bossController1'))) {
+        if (bossNodes.some(node => node.getComponent('bossController1'))) {
             spines.add(spinePath.swordRain);
         }
         for (const id of weapons) {
@@ -377,12 +399,13 @@ export class UIManager {
     /**匹配确定阵容后统一准备本局资源，全部完成才可开始游戏。 */
     async preLoadMatch(mapIndex: number, agents: Array<{
         roleId: number; weaponId: number; helmetId: number; armorId: number;
-    }>) {
+    }>, enterGuideGame = false) {
         await Promise.all([
             this.preLoadGame(),
             this.preLoadMap(mapIndex),
             this.preLoadSmallMap(mapIndex),
             this.preLoadRoundAppearance(mapIndex, agents),
+            ...(enterGuideGame ? [] : [audioMgr.preloadAudio(this.resBundle)]),
         ]);
     }
 
@@ -482,21 +505,14 @@ export class UIManager {
             ccResTools.loadPrefab(this.resBundle, ItemPath.gameSpineItem, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.role, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.soldier, false),
-            this.preLoadPrefab(ItemPath.roleShow),
             ccResTools.loadPrefab(this.resBundle, ItemPath.supplyBox, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.eliminationBox, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.bossBox, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.skillRangeCircle, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.syringe, false),
             ccResTools.loadPrefab(this.resBundle, animationItemPath.bulletShell, false),
-            ccResTools.loadPrefab(this.resBundle, animationItemPath.whirlwind, false),
-            ccResTools.loadPrefab(this.resBundle, animationItemPath.shovelSmoke, false),
             ccResTools.loadPrefab(this.resBundle, ItemPath.helicopter, false),
             ccResTools.loadPrefab(this.resBundle, animationItemPath.bomb, false),
-            ccResTools.loadPrefab(this.resBundle, ItemPath.skillRangeRect, false),
-            ccResTools.loadPrefab(this.resBundle, ItemPath.skillRangeRectLeft, false),
-            ccResTools.loadPrefab(this.resBundle, animationItemPath.dragonBreath, false),
-            ccResTools.loadPrefab(this.resBundle, ItemPath.drone, false),
         ]);
 
         if (prefabs.some((prefab) => !prefab)) {
@@ -510,21 +526,14 @@ export class UIManager {
         this.gameSpineItemPrefab = prefabs[4];
         this.rolePrefab = prefabs[5];
         this.soldierPrefab = prefabs[6];
-        this.roleShowPrefab = prefabs[7];
-        this.supplyBoxPrefab = prefabs[8];
-        this.eliminationBoxPrefab = prefabs[9];
-        this.bossBoxPrefab = prefabs[10];
-        this.skillRangeCirclePrefab = prefabs[11];
-        this.syringePrefab = prefabs[12];
-        this.bulletShellPrefab = prefabs[13];
-        this.whirlwindPrefab = prefabs[14];
-        this.shovelSmokePrefab = prefabs[15];
-        this.helicopterPrefab = prefabs[16];
-        this.bulletExplosionPrefab = prefabs[17];
-        this.skillRangeRectPrefab = prefabs[18];
-        this.skillRangeRectLeftPrefab = prefabs[19];
-        this.dragonBreathPrefab = prefabs[20];
-        this.dronePrefab = prefabs[21];
+        this.supplyBoxPrefab = prefabs[7];
+        this.eliminationBoxPrefab = prefabs[8];
+        this.bossBoxPrefab = prefabs[9];
+        this.skillRangeCirclePrefab = prefabs[10];
+        this.syringePrefab = prefabs[11];
+        this.bulletShellPrefab = prefabs[12];
+        this.helicopterPrefab = prefabs[13];
+        this.bulletExplosionPrefab = prefabs[14];
     }
 
     /**等待按顺序播放的奖励提示。 */

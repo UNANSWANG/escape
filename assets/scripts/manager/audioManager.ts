@@ -16,7 +16,7 @@ export class audioManager {
     /**已加载完的音频 */
     private _dic: Map<string, AudioClip> = new Map();
     /** 同一资源包的音频预加载共享任务，避免启动流程重复发起。 */
-    private _preloadTasks = new WeakMap<AssetManager.Bundle, Promise<void>>();
+    private _preloadTasks = new WeakMap<AssetManager.Bundle, Map<string, Promise<void>>>();
     /**正在加载的音频 */
     private dic_loading: Map<string, number> = new Map();
     /**默认音效使用的音频组件 */
@@ -49,11 +49,18 @@ export class audioManager {
     private _backgroundMusicRequested = false;
 
     /** 提前加载完整 AudioClip，供首次播放直接使用；失败资源仍可在播放时重试。 */
-    preloadAudio(bundle: AssetManager.Bundle = uiMgr.resBundle): Promise<void> {
+    preloadAudio(bundle: AssetManager.Bundle = uiMgr.resBundle, selectedPaths?: string[]): Promise<void> {
         if (!bundle) return Promise.resolve();
-        const existing = this._preloadTasks.get(bundle);
+        const paths = Array.from(new Set(selectedPaths ?? bundle.getDirWithPath('audio', AudioClip).map(info => info.path)))
+            .filter(Boolean).sort();
+        let tasks = this._preloadTasks.get(bundle);
+        if (!tasks) {
+            tasks = new Map();
+            this._preloadTasks.set(bundle, tasks);
+        }
+        const key = JSON.stringify(paths);
+        const existing = tasks.get(key);
         if (existing) return existing;
-        const paths = Array.from(new Set(bundle.getDirWithPath('audio', AudioClip).map(info => info.path)));
         let nextIndex = 0;
         const worker = async () => {
             while (nextIndex < paths.length) {
@@ -73,8 +80,8 @@ export class audioManager {
             }
         };
         const task = Promise.all(Array.from({ length: Math.min(4, paths.length) }, () => worker()))
-            .then(() => { this._preloadTasks.delete(bundle); });
-        this._preloadTasks.set(bundle, task);
+            .then(() => { tasks.delete(key); });
+        tasks.set(key, task);
         return task;
     }
 

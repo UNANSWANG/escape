@@ -213,7 +213,7 @@ export class UIStorehouse extends UIBase {
         }
 
         itemComp.initData(listItem.itemId, listItem.num);
-        const capacityNode = itemNode.getChildByName("normal")?.getChildByName("capacityLab");
+        const capacityNode = itemNode.getChildByName("normal")?.getChildByName("capacityLayout");
         if (capacityNode) {
             capacityNode.active = false;
         }

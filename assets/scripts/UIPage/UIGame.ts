@@ -213,6 +213,8 @@ export class UIGame extends UIBase {
     /**地图中的全部撤离点。 */
     private leaveList: Node = null;
     private isGuideLevel = false;
+    /**本局是否为新手引导关，供敌人初始化属性时查询。 */
+    get isInGuideLevel() { return this.isGuideLevel; }
     private leaveGuide: Node = null;
     private leaveGuideArrow: Node = null;
     private leaveGuideTarget: Node = null;

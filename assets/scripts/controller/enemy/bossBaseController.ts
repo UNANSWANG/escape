@@ -3,6 +3,7 @@ import { audioMgr } from '../../manager/audioManager';
 import { _decorator, CCFloat, CCInteger, Color, Component, Graphics, Label, Node, sp, Sprite, Tween, tween, UITransform, Vec3 } from 'cc';
 import { EDITOR, PREVIEW } from 'cc/env';
 import { bossConfig } from '../../json/jsonBoss';
+import { commonConfig } from '../../json/jsonCommon';
 import { bossLevelConfig, JsonBossLevelData } from '../../json/jsonBossLevel';
 import { getItemDataByItemId } from '../../json/jsonItemData';
 import { weaponsConfig } from '../../json/jsonWeapons';
@@ -269,9 +270,13 @@ export class bossBaseController extends Component {
             return false;
         }
         this.bossLevelData = levelData;
-        this.maxHp = Math.max(1, Number(levelData.hp) || 1);
+        // 每次从等级表原始值计算，避免配置刷新时重复叠乘。
+        const guidePercent = commonConfig.getValueNumber('guideBossPercent');
+        const statScale = this.gameComp?.isInGuideLevel && Number.isFinite(guidePercent)
+            ? Math.max(0, guidePercent) / 100 : 1;
+        this.maxHp = Math.max(1, (Number(levelData.hp) || 1) * statScale);
         this.hp = resetHp ? this.maxHp : Math.min(this.hp, this.maxHp);
-        this.attackDamage = Math.max(0, Number(levelData.attack) || 0);
+        this.attackDamage = Math.max(0, (Number(levelData.attack) || 0) * statScale);
         this.moveSpeed = Math.max(0, Number(data.speed) || 0);
         this.attackDistance = Math.max(0, Number(data.attackDistance) || 0);
         const interval = Number(data.attackInterval);
@@ -291,6 +296,7 @@ export class bossBaseController extends Component {
     private onTableLoad(tableName: string) {
         if (tableName === 'common' && this.gameComp) {
             this.initData();
+            this.initialized = this.applyBossData(!this.initialized);
             return;
         }
         if ((tableName !== 'boss' && tableName !== 'bossLevel') || !this.gameComp) return;

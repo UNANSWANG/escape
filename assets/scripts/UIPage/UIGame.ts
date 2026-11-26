@@ -1059,16 +1059,16 @@ export class UIGame extends UIBase {
         if (!this.openBtn) return;
 
         const playerNode = playerMgr.player;
-        // 角色根节点没有 UITransform，使用脚下阴影的包围盒作为交互范围。
-        const playerTransform = playerNode?.getChildByName('shadow')?.getComponent(UITransform)
-            ?? playerNode?.getComponent(UITransform);
-        if (!playerTransform || !this.containerList) {
+        const playerTransform = playerMgr.playerComp?.interactArea;
+        this.currentContainer = null;
+        if (!playerNode?.activeInHierarchy || !playerTransform?.node.activeInHierarchy || !this.containerList?.isValid) {
             this.openBtn.active = false;
             return;
         }
 
         const playerBounds = playerTransform.getBoundingBoxToWorld();
-        this.currentContainer = null;
+        const playerPosition = playerNode.worldPosition;
+        let nearestDistanceSquared = Infinity;
         for (const containerNode of this.containerList.children) {
             let container = this.containerComponents.get(containerNode);
             if (!container?.isValid) {
@@ -1080,8 +1080,15 @@ export class UIGame extends UIBase {
             }
             const containerBounds = container.getInteractionBounds(this.tempContainerBounds);
             if (containerBounds && playerBounds.intersects(containerBounds)) {
-                this.currentContainer = container;
-                break;
+                const deltaX = containerBounds.x + containerBounds.width / 2 - playerPosition.x;
+                const deltaY = containerBounds.y + containerBounds.height / 2 - playerPosition.y;
+                const distanceSquared = deltaX * deltaX + deltaY * deltaY;
+                if (!this.currentContainer
+                    || (this.currentContainer.opened && !container.opened)
+                    || (this.currentContainer.opened === container.opened && distanceSquared < nearestDistanceSquared)) {
+                    this.currentContainer = container;
+                    nearestDistanceSquared = distanceSquared;
+                }
             }
         }
 

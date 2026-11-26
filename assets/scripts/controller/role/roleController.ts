@@ -111,6 +111,7 @@ export class roleController extends Component {
     roleAnim: sp.Skeleton = null;
     /** Dedicated damage bounds, cached from hitArea. */
     hitArea: UITransform = null;
+    interactArea: UITransform = null;
     private loadedAppearanceRoleId: number = null;
     private appearanceLoad: { roleId: number; promise: Promise<void> } = null;
     private appearanceOpacity: UIOpacity = null;
@@ -214,6 +215,7 @@ export class roleController extends Component {
         if (!this.moveCollider) console.warn('角色预制体缺少 colliderBox 或 UITransform，无法进行移动碰撞检测');
         this.roleAnim = this.node.getChildByName('roleAnim')?.getComponent(sp.Skeleton);
         this.hitArea = this.node.getChildByName('hitArea')?.getComponent(UITransform);
+        this.interactArea = this.node.getChildByName('interactArea')?.getComponent(UITransform);
         this.moveSmokeNode = this.node.getChildByPath('roleAnim/moveSmoke');
         this.moveSmokeAnim = this.moveSmokeNode?.getComponent(Animation);
         this.setMoveSmokeVisible(false);

@@ -1,5 +1,6 @@
 import { ccResTools } from "../extention/resTools";
-import { GameEvent } from "../manager/configData";
+import { GameEvent, SaveKey } from "../manager/configData";
+import { ccStorageTools } from "../extention/storageTools";
 import { gm } from "../manager/gm";
 import { uiMgr } from "../manager/UIManager";
 
@@ -18,7 +19,7 @@ export class jsonBase {
     protected isTableLoadComplete = false;
 
     async initTable() {
-        if (this.tableUrl1) {
+        if (this.tableUrl1 && ccStorageTools.getNumberData(SaveKey.useLocalTable) !== 1) {
             //线上表格
             let tempData = await ccResTools.loadJsonByUrl(this.tableUrl1);
             //还需要转化成数组

@@ -12,7 +12,7 @@ export class storageTools {
     private hasPendingSave = false;
     private readonly localKeys = new Set<string>([
         SaveKey.selectMapData, SaveKey.selectedMaps, SaveKey.mapGuide, SaveKey.gameGuide, SaveKey.effect, SaveKey.effectVolume,
-        SaveKey.music, SaveKey.musicVolume, SaveKey.vibrat, SaveKey.isAutoAiming, SaveKey.isFreeAd,
+        SaveKey.music, SaveKey.musicVolume, SaveKey.vibrat, SaveKey.isAutoAiming, SaveKey.isFreeAd, SaveKey.useLocalTable,
     ]);
     private readonly cloudKeys = new Set<string>([
         SaveKey.rank, SaveKey.rankScore, SaveKey.money, SaveKey.gold, SaveKey.storehouse,

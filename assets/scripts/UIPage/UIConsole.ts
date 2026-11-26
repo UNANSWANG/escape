@@ -56,6 +56,9 @@ export class UIConsole extends UIBase {
     @property(Node)
     guideBtn: Node;
 
+    @property(Toggle)
+    excelToggle: Toggle;
+
 
     protected onLoad(): void {
         this.bindBtn();
@@ -77,6 +80,7 @@ export class UIConsole extends UIBase {
         this.fullSkinBtn.addComponent(zoomButton).onClick = this.clickFullSkinBtn.bind(this);
         this.addPlayerMonetaryBtn.addComponent(zoomButton).onClick = this.clickAddPlayerMonetaryBtn.bind(this);
         this.adToggle.node.on(Toggle.EventType.TOGGLE, this.clickAdToggle, this);
+        this.excelToggle.node.on(Toggle.EventType.TOGGLE, this.clickExcelToggle, this);
         this.addAllWeaponBtn.addComponent(zoomButton).onClick = this.clickAddWeaponBtn.bind(this);
         this.addAllEquipBtn.addComponent(zoomButton).onClick = this.clickAddEquipBtn.bind(this);
         this.addAllItemBtn.addComponent(zoomButton).onClick = this.clickAddItemBtn.bind(this);
@@ -88,7 +92,10 @@ export class UIConsole extends UIBase {
 
     /**刷新只攻击玩家自身开关 */
     refreshToggle() {
-        this.adToggle.isChecked = gmConfig.isFreeAd;
+        this.adToggle.setIsCheckedWithoutNotify(gmConfig.isFreeAd);
+        this.refreshTogglePosition(this.adToggle);
+        this.excelToggle.setIsCheckedWithoutNotify(ccStorageTools.getNumberData(SaveKey.useLocalTable) === 1);
+        this.refreshTogglePosition(this.excelToggle);
     }
 
     /**刷新开关滑块位置 */
@@ -200,6 +207,12 @@ export class UIConsole extends UIBase {
     clickAddPlayerMonetaryBtn() {
         pData.fixMoney(10000000);
         uiMgr.showTips('增加完成');
+    }
+
+    clickExcelToggle() {
+        ccStorageTools.setData(SaveKey.useLocalTable, this.excelToggle.isChecked ? 1 : 0);
+        this.refreshTogglePosition(this.excelToggle);
+        uiMgr.showTips('表格读取设置已保存，重启游戏后生效');
     }
 
     /**点击广告开关 */

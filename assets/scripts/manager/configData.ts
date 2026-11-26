@@ -237,6 +237,7 @@ export enum SaveKey {
     avatarUrl = "avatarUrl",
     /**是否免广告（gm配置） */
     isFreeAd = "isFreeAd",
+    useLocalTable = "useLocalTable",
     /**是否开启自动瞄准 */
     isAutoAiming = "isAutoAiming",
     /**是否显示装备 */

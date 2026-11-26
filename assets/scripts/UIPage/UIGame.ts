@@ -641,7 +641,129 @@ export class UIGame extends UIBase {
         const boxNode = instantiate(prefab);
         this.containerList.addChild(boxNode);
         boxNode.setWorldPosition(worldPosition);
+        if (!this.placeDeathBox(boxNode, worldPosition)) {
+            boxNode.destroy();
+            console.warn('地图内未找到可用的容器掉落位置');
+            return null;
+        }
         return boxNode;
+    }
+
+    private placeDeathBox(boxNode: Node, origin: Vec3): boolean {
+        const bounds = boxNode.getComponent(containerController)?.getInteractionBounds();
+        if (!bounds || bounds.width <= 0 || bounds.height <= 0) return false;
+        const offsetX = bounds.x - origin.x;
+        const offsetY = bounds.y - origin.y;
+        const occupied: Rect[] = [];
+        for (const node of this.containerList.children) {
+            if (node === boxNode || !node.activeInHierarchy) continue;
+            const otherBounds = node.getComponent(containerController)?.getInteractionBounds();
+            if (otherBounds) occupied.push(otherBounds);
+        }
+
+        const mapCenter = this.mapNode?.worldPosition ?? origin;
+        const mapScale = this.mapNode?.worldScale ?? Vec3.ONE;
+        const halfWidth = pData.mapHalfSize.x * Math.abs(mapScale.x);
+        const halfHeight = pData.mapHalfSize.y * Math.abs(mapScale.y);
+        const minX = halfWidth > 0 ? mapCenter.x - halfWidth - offsetX : origin.x - 1024;
+        const maxX = halfWidth > 0 ? mapCenter.x + halfWidth - offsetX - bounds.width : origin.x + 1024;
+        const minY = halfHeight > 0 ? mapCenter.y - halfHeight - offsetY : origin.y - 1024;
+        const maxY = halfHeight > 0 ? mapCenter.y + halfHeight - offsetY - bounds.height : origin.y + 1024;
+        if (minX > maxX || minY > maxY) return false;
+
+        const candidates: StaticCollisionShape[] = [];
+        const position = new Vec3(origin.x, origin.y, origin.z);
+        const tryPosition = (worldX: number, worldY: number) => {
+            position.x = Math.max(minX, Math.min(maxX, worldX));
+            position.y = Math.max(minY, Math.min(maxY, worldY));
+            bounds.x = position.x + offsetX;
+            bounds.y = position.y + offsetY;
+            for (const other of occupied) {
+                if (bounds.x < other.xMax && bounds.xMax > other.x
+                    && bounds.y < other.yMax && bounds.yMax > other.y) return false;
+            }
+            this.queryStaticColliders(bounds.x, bounds.y, bounds.xMax, bounds.yMax, candidates);
+            let overlapArea = 0;
+            const maxOverlapArea = bounds.width * bounds.height / 3;
+            for (const shape of candidates) {
+                overlapArea += this.getDeathBoxOverlapArea(bounds, shape);
+                if (overlapArea > maxOverlapArea + 0.000001) return false;
+            }
+            boxNode.setWorldPosition(position);
+            return true;
+        };
+        if (tryPosition(origin.x, origin.y)) return true;
+
+        const nearbyPositions: Array<{ x: number; y: number; distance: number }> = [];
+        for (const other of occupied) {
+            const left = other.x - offsetX - bounds.width - 1;
+            const right = other.xMax - offsetX + 1;
+            const bottom = other.y - offsetY - bounds.height - 1;
+            const top = other.yMax - offsetY + 1;
+            for (const point of [
+                { x: left, y: origin.y }, { x: right, y: origin.y },
+                { x: origin.x, y: bottom }, { x: origin.x, y: top },
+            ]) {
+                nearbyPositions.push({ ...point, distance: Math.hypot(point.x - origin.x, point.y - origin.y) });
+            }
+        }
+        nearbyPositions.sort((first, second) => first.distance - second.distance);
+
+        const step = Math.max(4, Math.min(16, Math.min(bounds.width, bounds.height) / 4));
+        const maxRadius = Math.max(
+            Math.hypot(minX - origin.x, minY - origin.y), Math.hypot(maxX - origin.x, minY - origin.y),
+            Math.hypot(minX - origin.x, maxY - origin.y), Math.hypot(maxX - origin.x, maxY - origin.y));
+        let nearbyIndex = 0;
+        for (let radius = step; radius <= maxRadius + step; radius += step) {
+            while (nearbyIndex < nearbyPositions.length && nearbyPositions[nearbyIndex].distance <= radius) {
+                const point = nearbyPositions[nearbyIndex++];
+                if (tryPosition(point.x, point.y)) return true;
+            }
+            const sampleCount = Math.ceil(2 * Math.PI * radius / step);
+            for (let sample = 0; sample < sampleCount; sample++) {
+                const angle = 2 * Math.PI * sample / sampleCount;
+                if (tryPosition(origin.x + Math.cos(angle) * radius, origin.y + Math.sin(angle) * radius)) return true;
+            }
+        }
+        return false;
+    }
+
+    private getDeathBoxOverlapArea(bounds: Rect, shape: StaticCollisionShape): number {
+        if (!shape.points) {
+            const width = Math.max(0, Math.min(bounds.xMax, shape.maxX) - Math.max(bounds.x, shape.minX));
+            const height = Math.max(0, Math.min(bounds.yMax, shape.maxY) - Math.max(bounds.y, shape.minY));
+            return width * height;
+        }
+        let points = Array.from(shape.points);
+        for (const edge of [
+            { axis: 'x', value: bounds.x, direction: 1 },
+            { axis: 'x', value: bounds.xMax, direction: -1 },
+            { axis: 'y', value: bounds.y, direction: 1 },
+            { axis: 'y', value: bounds.yMax, direction: -1 },
+        ]) {
+            const clipped: Array<{ x: number; y: number }> = [];
+            for (let index = 0; index < points.length; index++) {
+                const start = points[index];
+                const end = points[(index + 1) % points.length];
+                const startDistance = (start[edge.axis] - edge.value) * edge.direction;
+                const endDistance = (end[edge.axis] - edge.value) * edge.direction;
+                if (startDistance >= 0) clipped.push(start);
+                if ((startDistance >= 0) !== (endDistance >= 0)) {
+                    const fraction = startDistance / (startDistance - endDistance);
+                    clipped.push({ x: start.x + (end.x - start.x) * fraction, y: start.y + (end.y - start.y) * fraction });
+                }
+            }
+            points = clipped;
+            if (points.length < 3) return 0;
+        }
+        let twiceArea = 0;
+        const anchor = points[0];
+        for (let index = 1; index < points.length - 1; index++) {
+            const start = points[index];
+            const end = points[index + 1];
+            twiceArea += (start.x - anchor.x) * (end.y - anchor.y) - (end.x - anchor.x) * (start.y - anchor.y);
+        }
+        return Math.abs(twiceArea) / 2;
     }
 
     clearData() {

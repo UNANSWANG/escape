@@ -16,8 +16,10 @@ export class itemController extends Component {
     private bgSp: Sprite = null;
     /** 物品图片。 */
     private itemImgSp: Sprite = null;
-    /** 遮罩中的加载圆环节点。 */
-    private circleNode: Node = null;
+    /** 遮罩中的搜索图标，沿圆周移动时保持朝向。 */
+    private searchNode: Node = null;
+    private readonly searchRadius = 8;
+    private readonly searchProgress = { turns: 0 };
 
     protected onLoad(): void {
         this.initNodes();
@@ -65,7 +67,7 @@ export class itemController extends Component {
         this.maskNode = this.node.getChildByName("mask");
         this.bgSp = this.normalNode.getChildByName("bg").getComponent(Sprite);
         this.itemImgSp = this.normalNode.getChildByName("itemImg")?.getComponent(Sprite) ?? null;
-        this.circleNode = this.maskNode.getChildByName("circle");
+        this.searchNode = this.maskNode.getChildByName("search");
     }
 
     /** 显示物品的正常信息。 */
@@ -73,24 +75,37 @@ export class itemController extends Component {
         this.stopMaskLoading();
         this.normalNode.active = true;
         this.maskNode.active = false;
-        this.circleNode.active = false;
+        this.searchNode.active = false;
     }
 
-    /** 显示物品遮罩，并将加载圆环复位。 */
+    /** 显示物品遮罩，并将搜索图标复位到圆周起点。 */
     showMask() {
         this.stopMaskLoading();
         this.normalNode.active = false;
         this.maskNode.active = true;
-        this.circleNode.active = false;
-        this.circleNode.angle = 0;
+        this.searchNode.active = false;
+        this.searchProgress.turns = 0;
+        this.updateSearchPosition();
+    }
+
+    private updateSearchPosition() {
+        const radians = -Math.PI * 2 * this.searchProgress.turns;
+        this.searchNode.setPosition(
+            Math.cos(radians) * this.searchRadius,
+            Math.sin(radians) * this.searchRadius,
+            this.searchNode.position.z,
+        );
     }
 
     /** 播放遮罩加载动画，完成后显示物品信息。 */
     playMaskLoading(duration: number, circleCount: number, onComplete: () => void) {
         this.showMask();
-        this.circleNode.active = true;
-        tween(this.circleNode)
-            .by(duration, { angle: -360 * circleCount })
+        this.searchNode.active = true;
+        tween(this.searchProgress)
+            .to(duration, { turns: circleCount }, {
+                easing: 'linear',
+                onUpdate: () => this.updateSearchPosition(),
+            })
             .call(() => {
                 this.showNormal();
                 onComplete?.();
@@ -100,8 +115,10 @@ export class itemController extends Component {
 
     /** 停止遮罩加载动画。 */
     stopMaskLoading() {
-        if (this.circleNode) {
-            Tween.stopAllByTarget(this.circleNode);
-        }
+        Tween.stopAllByTarget(this.searchProgress);
+    }
+
+    protected onDisable(): void {
+        this.stopMaskLoading();
     }
 }

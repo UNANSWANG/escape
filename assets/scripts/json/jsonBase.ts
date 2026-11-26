@@ -4,6 +4,23 @@ import { ccStorageTools } from "../extention/storageTools";
 import { gm } from "../manager/gm";
 import { uiMgr } from "../manager/UIManager";
 
+const stringTableFields: { [tableName: string]: string[] } = {
+    arms: ['name', 'chaseTime'],
+    boss: ['name', 'desc'],
+    common: ['key', 'value'],
+    container: ['name', 'fontColor', 'probabilityWeight', 'itemNumWeight'],
+    equipment: ['name'],
+    item: ['name'],
+    map: ['name', 'rewardList', 'equipList', 'agentList'],
+    nickname: ['nickname'],
+    rank: ['name'],
+    role: ['name', 'infoDesc'],
+    roleLevel: ['passiveValue', 'initiativeValue', 'passiveDesc', 'initiativeDesc', 'passiveUpgradeDesc', 'initiativeUpgradeDesc', 'upgradeItem'],
+    roleSkin: ['name'],
+    sign: ['reward'],
+    weapons: ['name', 'effectName'],
+};
+
 export class jsonBase {
     /** 表格名称 */
     tableName: string = "";
@@ -23,7 +40,7 @@ export class jsonBase {
             //线上表格
             let tempData = await ccResTools.loadJsonByUrl(this.tableUrl1);
             //还需要转化成数组
-            this.data = tempData;
+            this.data = this.normalizeRemoteData(tempData);
             if (!this.tableUrl2) {
                 //没有表格2直接加载完成
                 this.tableLoadComplete();
@@ -32,7 +49,7 @@ export class jsonBase {
                     //线上表格2
                     let tempData2 : any = await ccResTools.loadJsonByUrl(this.tableUrl2);
                     //合并表格2数据
-                    this.data = [...this.data, ...tempData2];
+                    this.data = [...this.data, ...this.normalizeRemoteData(tempData2)];
                     this.tableLoadComplete();
                 }
             }
@@ -46,6 +63,22 @@ export class jsonBase {
         if(gm.isDebug){
             console.warn(this.tableName, 'JSON 数据:', this.data);
         }
+    }
+
+    private normalizeRemoteData(tableData: any): any[] {
+        const rows = Array.isArray(tableData) ? tableData : Object.values(tableData);
+        const stringFields = new Set(stringTableFields[this.tableName] ?? []);
+        return rows.map(row => {
+            const normalizedRow = { ...row };
+            for (const field of Object.keys(normalizedRow)) {
+                if (stringFields.has(field)) continue;
+                const value = normalizedRow[field];
+                if (typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value))) {
+                    normalizedRow[field] = Number(value);
+                }
+            }
+            return normalizedRow;
+        });
     }
 
     /**表格处理 */

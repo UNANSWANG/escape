@@ -163,6 +163,7 @@ export class roleController extends Component {
     maxHp = 100;
     /**角色当前血量 */
     hp = 0;
+    private hasLowHpVibrated = false;
     /** 角色护甲值上限。 */
     maxDefenseValue = 0;
     /** 角色当前护甲值。 */
@@ -929,6 +930,7 @@ export class roleController extends Component {
     /** 初始化角色所属界面、身份数据和初始动画。 */
     init(comp: UIGame, id: number, skinId: number, nickname = '') {
         this.isPlayingDeath = false;
+        this.hasLowHpVibrated = false;
         this.node.active = true;
         if (this.hpNode) this.hpNode.active = true;
         const hpBarPath = imgPath.hpBar + (this.isAI ? 2 : 1);
@@ -1187,6 +1189,12 @@ export class roleController extends Component {
         const hpDamage = Math.min(this.hp, damageAfterImmunity - defenseDamage);
         this.hp -= hpDamage;
 
+        if (this.isPlayer && this.gameComp && hpDamage > 0 && this.hp > 0
+            && this.hpPercent < 0.3 && !this.hasLowHpVibrated) {
+            this.hasLowHpVibrated = true;
+            ccTools.vibrate(0);
+        }
+
         if (defenseDamage > 0) this.refreshDefense();
         if (hpDamage > 0) this.refreshHp();
         const actualDamage = defenseDamage + hpDamage;
@@ -1268,6 +1276,7 @@ export class roleController extends Component {
     playDeath(onComplete?: () => void) {
         if (this.isPlayingDeath) return;
         this.isPlayingDeath = true;
+        if (this.isPlayer && this.gameComp) ccTools.vibrate(2);
         if (this.isAI) audioMgr.playSceneEffect(audioPath.death);
         if (this.isPlayer && this.gameComp && playerMgr.playerComp === this) audioMgr.stopWalkEffect();
         this.setMoveSmokeVisible(false);

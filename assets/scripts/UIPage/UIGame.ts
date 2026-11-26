@@ -2384,12 +2384,9 @@ export class UIGame extends UIBase {
         roleComp.onCurrentWeaponEquipped();
     }
 
-    /**供角色技能查询：当前是否正通过摇杆或方向键提供有效移动方向。 */
+    /**供角色技能查询：使用与每帧移动相同的状态，避免输入来源标记不同步时误判。 */
     hasMoveDirectionInput() {
-        if (this.isRockerControlling) {
-            return this.inputMoveDirection.x !== 0 || this.inputMoveDirection.y !== 0;
-        }
-        return this.pressedMoveKeys.size > 0 && (this.currentMoveDirection.x !== 0 || this.currentMoveDirection.y !== 0);
+        return this.isMoving && (this.currentMoveDirection.x !== 0 || this.currentMoveDirection.y !== 0);
     }
 
     /**技能方向锁定结束后，立即按当前仍按住的输入恢复可控移动。 */

@@ -108,6 +108,7 @@ export class UIManager {
     private pageCreationTail: Promise<void> = Promise.resolve();
     private backgroundPreloadVersions = new WeakMap<Component, number>();
     private foregroundItemLoads = 0;
+    private roundAudioPaths: string[] = [];
 
     private parseItemIds(value: string, pairs = false): number[] {
         try {
@@ -273,14 +274,26 @@ export class UIManager {
     /**局内界面和对象池在后台分帧准备，关闭或重开后停止旧批次。 */
     async preLoadInGamePages(owner: Component, preloadMain = false) {
         const isCurrent = this.beginBackgroundPreload(owner);
-        await this.preLoadInFrames([
+        const tasks = preloadMain ? [
+            () => this.preLoadCommonPrefab(false),
+            () => audioMgr.preloadAudio(this.resBundle, this.roundAudioPaths),
+            () => this.preLoadPrefab(ItemPath.item),
+            () => this.preLoadPage(UIPath.UIBackpack),
+            () => this.preLoadPage(UIPath.UISmallMap),
+            () => this.preLoadPage(UIPath.UISetting),
+            () => this.preLoadPrefab(ItemPath.showItem),
+            () => this.preLoadPage(UIPath.UISuccess),
+            () => this.preLoadPage(UIPath.UIFail),
+        ] : [
             () => this.preLoadPage(UIPath.UIFail),
             () => this.preLoadPage(UIPath.UIBackpack),
             () => this.preLoadPrefab(ItemPath.item),
             () => this.preLoadPage(UIPath.UISmallMap),
             () => this.preLoadPage(UIPath.UISuccess),
             () => this.preLoadPrefab(ItemPath.showItem),
-        ], isCurrent);
+        ];
+        await this.preLoadInFrames(tasks, isCurrent);
+        if (!isCurrent()) return;
         try {
             await poolMgr.preWarmCombat({
                 bullet: this.bulletPrefab,
@@ -320,6 +333,15 @@ export class UIManager {
         const equipment = new Set(pData.equipmentIds.slice(3, 5));
         const spines = new Set<string>();
         const pictures = new Set<string>();
+        const sounds = new Set<string>([
+            audioPath.click, audioPath.reload, audioPath.hitEnemyFeedback, audioPath.hitBuildingFeedback,
+            audioPath.walkRight, audioPath.walkLeft, audioPath.death, audioPath.injectDrugs,
+            audioPath.healSuccess, audioPath.getHighItem, audioPath.getLowItem,
+            audioPath.helicopter, audioPath.success, audioPath.fail,
+        ]);
+        const roleSkill = [audioPath.role0Skill, audioPath.role1Skill, audioPath.role2Skill][pData.roleId];
+        if (roleSkill) sounds.add(roleSkill);
+        if (pData.roleId === 0) sounds.add(audioPath.role0Passive);
         for (const agent of agents) {
             weapons.add(agent.weaponId);
             equipment.add(agent.helmetId);
@@ -336,6 +358,13 @@ export class UIManager {
         if (roles.has(2)) spines.add(spinePath.shield);
         const map = await this.preLoadMap(mapIndex);
         const bossNodes = map.data.getChildByName('bossList')?.children || [];
+        for (let bossId = 0; bossId < 3; bossId++) {
+            if (!bossNodes.some(node => node.getComponent(`bossController${bossId}`))) continue;
+            sounds.add([audioPath.boss0Skill, audioPath.boss1Skill, audioPath.boss2Skill][bossId]);
+            sounds.add([audioPath.boss0Death, audioPath.boss1Death, audioPath.boss2Death][bossId]);
+            const effectName = weaponsConfig.getDataByItemId([20, 21, 22][bossId])?.effectName;
+            if (effectName) sounds.add(audioPath.weapon + effectName);
+        }
         const roundPrefabs: Promise<unknown>[] = [];
         if (roles.has(0)) {
             roundPrefabs.push(this.preLoadPrefab(animationItemPath.shovelSmoke).then(prefab => { this.shovelSmokePrefab = prefab; }));
@@ -377,6 +406,7 @@ export class UIManager {
             if (data) {
                 spines.add(spinePath.weapon + data.itemId);
                 pictures.add(imgPath.weaponIcon + data.itemId);
+                if (data.effectName) sounds.add(audioPath.weapon + data.effectName);
             }
         }
         for (const id of equipment) {
@@ -394,6 +424,7 @@ export class UIManager {
             if (assets.some(asset => !asset)) throw new Error('本局角色或武器资源加载失败');
             await this.nextPreloadFrame();
         }
+        this.roundAudioPaths = Array.from(sounds);
     }
 
     /**匹配确定阵容后统一准备本局资源，全部完成才可开始游戏。 */

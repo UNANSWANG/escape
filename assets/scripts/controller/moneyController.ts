@@ -29,6 +29,7 @@ export class moneyController extends Component {
     }
 
     protected onEnable(): void {
+        this.refreshMoney();
         this.node.on(Node.EventType.TOUCH_END, this.clickMoney, this);
         gm.Event.on(GameEvent.refreshPlayerMonetary, this.refreshMoney, this);
         //延后一帧等待widget刷新后再刷坐标

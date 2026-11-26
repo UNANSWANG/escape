@@ -108,12 +108,15 @@ export class UILoading extends Component {
     }
 
     async initData() {
-        await platformManager.ready;
-        audioMgr.initStorageData();
-        this.initStorageData();
-        this.initSDK();
-
-        await this.preLoadBundle();
+        await Promise.all([
+            this.preLoadBundle(),
+            (async () => {
+                await platformManager.ready;
+                audioMgr.initStorageData();
+                this.initStorageData();
+                this.initSDK();
+            })(),
+        ]);
 
         if (ccStorageTools.getNumberData(SaveKey.gameGuide) === 1) {
             audioMgr.playBackgroundMusic();
@@ -160,7 +163,25 @@ export class UILoading extends Component {
         // 玩家存档已恢复、地图表已加载，补齐首次进入及遗漏的地图解锁。
         pData.checkMapUnlocks();
         this.tableComplete = true;
+        this.startGuidePreload();
         this.checkLoadComplete();
+    }
+
+    /**配置表和登录完成后立即准备首局资源，与启动界面资源并行。 */
+    private startGuidePreload() {
+        if (ccStorageTools.getNumberData(SaveKey.gameGuide) === 1
+            || !this.tableComplete || !gm.isLogin || this.guidePreload) {
+            return;
+        }
+
+        this.guidePreload = this.prepareGuideGame();
+        void this.guidePreload.then(() => {
+            this.guideReady = true;
+            this.checkLoadComplete();
+        }).catch(error => {
+            console.error('引导开局资源加载失败', error);
+            this.guidePreload = null;
+        });
     }
 
     /**加载完成判断 */
@@ -170,16 +191,7 @@ export class UILoading extends Component {
         }
 
         if (ccStorageTools.getNumberData(SaveKey.gameGuide) !== 1 && !this.guideReady) {
-            if (!this.guidePreload) {
-                this.guidePreload = this.prepareGuideGame();
-                void this.guidePreload.then(() => {
-                    this.guideReady = true;
-                    this.checkLoadComplete();
-                }).catch(error => {
-                    console.error('引导开局资源加载失败', error);
-                    this.guidePreload = null;
-                });
-            }
+            this.startGuidePreload();
             return;
         }
 

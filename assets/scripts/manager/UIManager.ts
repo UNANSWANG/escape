@@ -419,11 +419,16 @@ export class UIManager {
                 path === spinePath.gem ? path : path + '/animation')),
             ...Array.from(pictures, path => () => ccResTools.loadPic(this.resBundle, path)),
         ];
-        for (let index = 0; index < tasks.length; index += 4) {
-            const assets = await Promise.all(tasks.slice(index, index + 4).map(task => task()));
-            if (assets.some(asset => !asset)) throw new Error('本局角色或武器资源加载失败');
-            await this.nextPreloadFrame();
-        }
+        let nextTaskIndex = 0;
+        const loadWorker = async () => {
+            while (nextTaskIndex < tasks.length) {
+                const task = tasks[nextTaskIndex++];
+                const asset = await task();
+                if (!asset) throw new Error('本局角色或武器资源加载失败');
+                await this.nextPreloadFrame();
+            }
+        };
+        await Promise.all(Array.from({ length: Math.min(4, tasks.length) }, () => loadWorker()));
         this.roundAudioPaths = Array.from(sounds);
     }
 

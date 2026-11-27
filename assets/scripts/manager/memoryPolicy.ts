@@ -6,6 +6,7 @@ export const memoryPolicy = {
         return sys.os === sys.OS.IOS;
     },
     get loadConcurrency(): number {
-        return this.lowMemory ? 2 : 4;
+        // 加载并发与常驻内存策略分开，避免 iOS 的前台资源请求长期排队。
+        return 4;
     },
 };

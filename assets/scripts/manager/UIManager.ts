@@ -254,8 +254,15 @@ export class UIManager {
     }
 
     private loadMainPagesInFrames(isCurrent: () => boolean) {
-        // iOS 不在大厅创建整套界面和战斗页，打开时仍会走共享加载任务。
-        if (memoryPolicy.lowMemory) return Promise.resolve();
+        // iOS 只准备高频页面模板，不实例化整套界面和战斗页。
+        if (memoryPolicy.lowMemory) {
+            return this.preLoadInFrames([
+                () => this.preLoadPrefab(ItemPath.showItem),
+                ...[UIPath.UIMap, UIPath.UIMatch, UIPath.UIReward, UIPath.UIStore,
+                    UIPath.storePage + 1, UIPath.storePage + 2, ItemPath.storeItem]
+                    .map(path => () => this.preLoadPrefab(path)),
+            ], isCurrent);
+        }
         const paths = [UIPath.UIMap, UIPath.UIMatch, UIPath.UISetting, UIPath.UIReward,
             UIPath.UIRevisit, UIPath.UIStorehouse, UIPath.UIRoleStore, UIPath.UISign,
             UIPath.UIShowItem, UIPath.UIStore, UIPath.UIHandBook];
@@ -278,9 +285,18 @@ export class UIManager {
     async preLoadInGamePages(owner: Component, preloadMain = false) {
         const isCurrent = this.beginBackgroundPreload(owner);
         if (memoryPolicy.lowMemory) {
-            // 首局只补齐通用提示，不在战斗中加载大厅、结算页和整套音效。
+            // 只预热结算及首局返回大厅必需的模板，避免结算时才开始下载。
             await this.preLoadInFrames([
                 () => this.preLoadCommonPrefab(false),
+                () => this.preLoadPrefab(ItemPath.showItem),
+                () => this.preLoadPrefab(UIPath.UISuccess),
+                () => this.preLoadPrefab(UIPath.UIFail),
+                ...(preloadMain ? [
+                    () => this.preLoadPrefab(UIPath.UIMain),
+                    () => this.preLoadPrefab(UIPath.UIReward),
+                    () => this.preLoadCommonPrefab(),
+                    () => audioMgr.preloadAudio(this.resBundle, [audioPath.background]),
+                ] : []),
             ], isCurrent);
             return;
         }
@@ -431,11 +447,16 @@ export class UIManager {
         ];
         let nextTaskIndex = 0;
         const loadWorker = async () => {
+            let lastYieldTime = Date.now();
             while (nextTaskIndex < tasks.length) {
                 const task = tasks[nextTaskIndex++];
                 const asset = await task();
                 if (!asset) throw new Error('本局角色或武器资源加载失败');
-                await this.nextPreloadFrame();
+                // 缓存命中无需逐项等帧；连续处理超过预算时再让出渲染帧。
+                if (Date.now() - lastYieldTime >= 8) {
+                    await this.nextPreloadFrame();
+                    lastYieldTime = Date.now();
+                }
             }
         };
         await Promise.all(Array.from({ length: Math.min(memoryPolicy.loadConcurrency, tasks.length) }, () => loadWorker()));

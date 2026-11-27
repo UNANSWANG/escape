@@ -1,7 +1,7 @@
 import { audioPath } from '../../manager/pathConfig';
 import { audioMgr } from '../../manager/audioManager';
 import { _decorator, instantiate, Node, Rect, sp, UITransform, Vec3 } from 'cc';
-import { roleController, roleType } from './roleController';
+import { roleController, roleType, skill2RemainEvent } from './roleController';
 import { uiMgr } from '../../manager/UIManager';
 import { enemyMgr, EnemyTarget } from '../../manager/enemyManager';
 import { playerMgr } from '../../manager/playerManager';
@@ -19,6 +19,7 @@ export class role1 extends roleController {
     private droneSkeleton: sp.Skeleton = null;
     private droneArea: UITransform = null;
     private droneRemainTime = 0;
+    private droneDuration = 0;
     private droneTickTime = 0;
     private droneHealPercent = 0;
     private droneDamagePercent = 0;
@@ -55,6 +56,7 @@ export class role1 extends roleController {
         this.droneHealPercent = Math.max(0, values[0] ?? 0) / 100;
         this.droneDamagePercent = Math.max(0, values[1] ?? 0) / 100;
         this.droneRemainTime = duration;
+        this.droneDuration = duration;
         this.droneTickTime = 0;
         this.droneNode = drone;
         this.droneSkeleton = skeleton;
@@ -67,6 +69,7 @@ export class role1 extends roleController {
         if (this.isPlayer) audioMgr.playSceneEffect(audioPath.role1Skill);
         skeleton.timeScale = gm.isGamePause ? 0 : 1;
         skeleton.setAnimation(0, 'animation', true);
+        this.node.emit(skill2RemainEvent, this.droneRemainTime, true, this.droneDuration);
         return true;
     }
 
@@ -100,6 +103,7 @@ export class role1 extends roleController {
             this.applyDroneEffect();
         }
         if (this.droneRemainTime <= 1e-6) this.finishDrone();
+        else this.node.emit(skill2RemainEvent, this.droneRemainTime, true, this.droneDuration);
     }
 
     protected onDisable(): void {
@@ -163,11 +167,13 @@ export class role1 extends roleController {
     }
 
     private finishDrone() {
+        const wasActive = !!this.droneNode || this.droneRemainTime > 0;
         if (this.droneNode?.isValid) this.droneNode.destroy();
         this.droneNode = null;
         this.droneSkeleton = null;
         this.droneArea = null;
         this.droneRemainTime = 0;
         this.droneTickTime = 0;
+        if (wasActive) this.node.emit(skill2RemainEvent, 0, false, this.droneDuration);
     }
 }

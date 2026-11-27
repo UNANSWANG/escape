@@ -1,6 +1,6 @@
 import { audioMgr } from '../../manager/audioManager';
 import { _decorator, Animation, Color, instantiate, Node, sp, Sprite, SpriteFrame, tween, Tween, UIOpacity, UITransform, Vec3 } from 'cc';
-import { roleAnimName, roleController, roleType } from './roleController';
+import { roleAnimName, roleController, roleType, skill2RemainEvent } from './roleController';
 import { enemyMgr } from '../../manager/enemyManager';
 import { gm } from '../../manager/gm';
 import { uiMgr } from '../../manager/UIManager';
@@ -11,8 +11,6 @@ import { GameEvent } from '../../manager/configData';
 import type { EnemyTarget } from '../../manager/enemyManager';
 const { ccclass, property } = _decorator;
 
-/**技能2倒计时变更事件，参数依次为剩余秒数和是否显示。 */
-export const role0Skill2RemainEvent = 'role0-skill2-remain-update';
 
 @ccclass('role0')
 export class role0 extends roleController {
@@ -37,7 +35,7 @@ export class role0 extends roleController {
     private isUsingSkill2 = false;
     /**技能2剩余生效时间（秒）。 */
     private skill2RemainTime = 0;
-    private displayedSkill2Seconds = -1;
+    private displayedSkill2RemainTime = -1;
     private displayedSkill2Visible = false;
     /**技能2原始持续时间上限（秒）。 */
     private skill2Duration = 0;
@@ -431,13 +429,14 @@ export class role0 extends roleController {
         }
     }
 
-    /**派发技能2的实时剩余时间，由游戏界面负责显示或隐藏倒计时。 */
+    /**派发技能2的实时剩余时间及最大时长，由游戏界面刷新进度条。 */
     private emitSkill2Remain() {
-        const seconds = Math.ceil(Math.max(0, this.skill2RemainTime));
-        if (seconds === this.displayedSkill2Seconds && this.isUsingSkill2 === this.displayedSkill2Visible) return;
-        this.displayedSkill2Seconds = seconds;
+        // 按实际时间刷新，避免整秒事件导致进度条跳动。
+        if (this.skill2RemainTime === this.displayedSkill2RemainTime
+            && this.isUsingSkill2 === this.displayedSkill2Visible) return;
+        this.displayedSkill2RemainTime = this.skill2RemainTime;
         this.displayedSkill2Visible = this.isUsingSkill2;
-        this.node.emit(role0Skill2RemainEvent, this.skill2RemainTime, this.isUsingSkill2);
+        this.node.emit(skill2RemainEvent, this.skill2RemainTime, this.isUsingSkill2, this.skill2Duration);
     }
 
     /**技能1动画结束，恢复普通动画控制权。 */

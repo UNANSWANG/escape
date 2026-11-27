@@ -1,6 +1,6 @@
 import { audioMgr } from '../../manager/audioManager';
 import { _decorator, instantiate, Node, sp } from 'cc';
-import { roleController, roleType } from './roleController';
+import { roleController, roleType, skill2RemainEvent } from './roleController';
 import { gm } from '../../manager/gm';
 import { uiMgr } from '../../manager/UIManager';
 import { ccTools } from '../../extention/generalTools';
@@ -14,6 +14,7 @@ export class role2 extends roleController {
 
     /**主动技能剩余无敌时间（秒）。 */
     private invincibleRemainTime = 0;
+    private invincibleDuration = 0;
     private shieldNode: Node = null;
     private shieldSkeleton: sp.Skeleton = null;
 
@@ -40,8 +41,10 @@ export class role2 extends roleController {
         if (!Number.isFinite(duration) || duration <= 0) return false;
 
         this.invincibleRemainTime = duration;
+        this.invincibleDuration = duration;
         this.createShieldEffect();
         this.startSkillCooldown(2);
+        this.node.emit(skill2RemainEvent, this.invincibleRemainTime, true, this.invincibleDuration);
         if (this.isPlayer) audioMgr.playSceneEffect(audioPath.role2Skill);
         return true;
     }
@@ -97,26 +100,34 @@ export class role2 extends roleController {
 
     protected update(dt: number): void {
         if (this.hp <= 0) {
-            this.invincibleRemainTime = 0;
-            this.clearShieldEffect();
+            this.finishInvincibility();
             return;
         }
         if (this.shieldSkeleton?.isValid) this.shieldSkeleton.timeScale = gm.isGamePause ? 0 : 1;
         if (gm.isGamePause || dt <= 0) return;
         super.update(dt);
-        this.invincibleRemainTime = Math.max(0, this.invincibleRemainTime - dt);
+        if (this.invincibleRemainTime > 0) {
+            this.invincibleRemainTime = Math.max(0, this.invincibleRemainTime - dt);
+            this.node.emit(skill2RemainEvent, this.invincibleRemainTime,
+                this.invincibleRemainTime > 0, this.invincibleDuration);
+        }
         if (this.invincibleRemainTime <= 0 && this.shieldNode) this.clearShieldEffect();
     }
 
-    playDeath(onComplete?: () => void) {
+    private finishInvincibility() {
+        const wasActive = this.invincibleRemainTime > 0;
         this.invincibleRemainTime = 0;
         this.clearShieldEffect();
+        if (wasActive) this.node.emit(skill2RemainEvent, 0, false, this.invincibleDuration);
+    }
+
+    playDeath(onComplete?: () => void) {
+        this.finishInvincibility();
         super.playDeath(onComplete);
     }
 
     protected onDisable(): void {
         super.onDisable();
-        this.invincibleRemainTime = 0;
-        this.clearShieldEffect();
+        this.finishInvincibility();
     }
 }

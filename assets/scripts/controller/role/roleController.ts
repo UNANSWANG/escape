@@ -25,6 +25,9 @@ import { playerMgr } from '../../manager/playerManager';
 import type { EnemyTarget } from '../../manager/enemyManager';
 const { ccclass } = _decorator;
 
+/**主动技能持续进度：剩余秒数、是否生效、本次最大持续秒数。 */
+export const skill2RemainEvent = 'skill2-remain-update';
+
 export enum roleAnimName {
     idle = 'idle',
     move = 'move',

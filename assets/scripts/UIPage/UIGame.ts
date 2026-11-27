@@ -12,8 +12,7 @@ import { playerMgr } from '../manager/playerManager';
 import { CameraController } from '../controller/CameraController';
 import { enemyMgr } from '../manager/enemyManager';
 import { audioMgr } from '../manager/audioManager';
-import { roleAnimName, roleController } from '../controller/role/roleController';
-import { role0Skill2RemainEvent } from '../controller/role/role0';
+import { roleAnimName, roleController, skill2RemainEvent } from '../controller/role/roleController';
 import { addAIRoleScript, addRoleScript } from '../controller/role/roleScriptFactory';
 import { poolMgr } from '../manager/poolManager';
 import { containerController } from '../controller/containerController';
@@ -114,8 +113,9 @@ export class UIGame extends UIBase {
     @property(Node)
     mapContainer: Node;
 
-    @property(Label)
-    skill2RemainLab: Label;
+    @property(Node)
+    skill2Progress: Node;
+    private skill2ProgressBar: Sprite = null;
 
     @property(Label)
     leaveRemainLab: Label;
@@ -319,7 +319,7 @@ export class UIGame extends UIBase {
         this.clearBossHpBar();
         this.bindBtn();
         this.initButtonMasks();
-        this.updateSkill2RemainLab(0, false);
+        this.updateSkill2Progress(0, false);
         this.leaveRemainLab.node.active = false;
         this.initCamera();
         audioMgr.initSceneAudio(this.node);
@@ -793,7 +793,7 @@ export class UIGame extends UIBase {
         this.clearCurrentGunReloadEvent();
         this.stopReloadMaskCooldown();
         this.stopSkillMaskCooldown();
-        this.updateSkill2RemainLab(0, false);
+        this.updateSkill2Progress(0, false);
         this.stopAutoAim();
         this.clearDamageFloats();
         if (this.openBtn) this.openBtn.active = false;
@@ -1600,7 +1600,7 @@ export class UIGame extends UIBase {
         const roleComp = addRoleScript(playerMgr.player, pData.roleId);
         playerMgr.setPlayerComp(roleComp);
         roleComp.node.on('skill-cooldown-start', this.playSkillMaskCooldown, this);
-        roleComp.node.on(role0Skill2RemainEvent, this.updateSkill2RemainLab, this);
+        roleComp.node.on(skill2RemainEvent, this.updateSkill2Progress, this);
         roleComp.init(this, pData.roleId, 0);
         this.refreshWeaponNames();
         this.refreshWeaponNums();
@@ -2284,13 +2284,21 @@ export class UIGame extends UIBase {
         }
     }
 
-    /**根据角色技能2事件实时刷新倒计时；非 role0 或技能未生效时保持隐藏。 */
-    private updateSkill2RemainLab(remainTime: number, isVisible: boolean) {
-        if (!this.skill2RemainLab) return;
-        if (this.skill2RemainLab.node.active !== isVisible) this.skill2RemainLab.node.active = isVisible;
-        if (isVisible) {
-            const text = `${Math.ceil(Math.max(0, remainTime))}`;
-            if (this.skill2RemainLab.string !== text) this.skill2RemainLab.string = text;
+    /**技能生效时显示剩余进度，本次技能最大持续时间对应满条。 */
+    private updateSkill2Progress(remainTime: number, isVisible: boolean, duration = 0) {
+        if (!this.skill2Progress?.isValid) return;
+        if (this.skill2Progress.active !== isVisible) this.skill2Progress.active = isVisible;
+        if (!this.skill2ProgressBar?.isValid) {
+            this.skill2ProgressBar = this.skill2Progress.getChildByName('bar')?.getComponent(Sprite) ?? null;
+            if (this.skill2ProgressBar) {
+                this.skill2ProgressBar.type = Sprite.Type.FILLED;
+                this.skill2ProgressBar.fillType = Sprite.FillType.HORIZONTAL;
+                this.skill2ProgressBar.fillStart = 0;
+            }
+        }
+        if (this.skill2ProgressBar) {
+            this.skill2ProgressBar.fillRange = isVisible && duration > 0
+                ? Math.max(0, Math.min(1, remainTime / duration)) : 0;
         }
     }
 

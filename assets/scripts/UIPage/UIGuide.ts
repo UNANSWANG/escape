@@ -10,10 +10,13 @@ export class UIGuide extends UIBase {
     private maskTransform: UITransform = null;
     private graphics: Graphics = null;
     private finger: Node = null;
-    private targets: Node[] = [];
+    private targetRects: Rect[] = [];
+    private screenRect: Rect = null;
     private clickTarget: Node = null;
     private onClick: (() => void) = null;
     private passingTouches = new Set<number>();
+    private readonly shrinkDuration = 0.2;
+    private shrinkElapsed = 0;
 
     protected onLoad(): void {
         const maskNode = this.node.getChildByName('mask');
@@ -41,7 +44,6 @@ export class UIGuide extends UIBase {
     showGuide(targets: Node | Node[], onClick?: () => void) {
         this.clearGuide();
         const nodes = Array.isArray(targets) ? targets : [targets];
-        this.targets = nodes.filter(node => node?.isValid && !!node.getComponent(UITransform));
         if (!nodes[0]?.isValid || !nodes[0].getComponent(UITransform)) {
             this.onClose();
             return;
@@ -50,32 +52,42 @@ export class UIGuide extends UIBase {
         this.onClick = onClick;
         if (!onClick) this.clickTarget.on(Node.EventType.TOUCH_END, this.clickGuideTarget, this);
         this.node.setSiblingIndex(this.node.parent.children.length - 1);
+        // 目标位置固定，只在显示引导时计算一次区域和手指位置。
+        this.screenRect = this.getTargetRect(this.node);
+        this.targetRects = nodes
+            .filter(node => node?.isValid && node.activeInHierarchy && !!node.getComponent(UITransform))
+            .map(node => this.getTargetRect(node));
+        const rect = this.getTargetRect(this.clickTarget);
+        this.finger.setWorldPosition(this.maskTransform.convertToWorldSpaceAR(
+            new Vec3(rect.x + rect.width / 2, rect.y + rect.height / 2)));
         this.refreshGuide();
     }
 
-    protected lateUpdate(): void {
+    protected lateUpdate(dt: number): void {
         if (!this.clickTarget) return;
         if (!this.clickTarget.isValid || !this.clickTarget.activeInHierarchy) {
             this.onClose();
             return;
         }
-        // 跟随布局、缩放及目标移动，保持挖空区域和手指对齐。
+        if (this.shrinkElapsed >= this.shrinkDuration) return;
+        this.shrinkElapsed = Math.min(this.shrinkElapsed + dt, this.shrinkDuration);
         this.refreshGuide();
     }
 
     private refreshGuide() {
+        const progress = this.shrinkElapsed / this.shrinkDuration;
+        const screenRect = progress < 1 ? this.screenRect : null;
         this.graphics.clear();
-        for (const target of this.targets) {
-            if (!target.isValid || !target.activeInHierarchy) continue;
-            const rect = this.getTargetRect(target);
-            this.graphics.rect(rect.x, rect.y, rect.width, rect.height);
-            if (target === this.clickTarget) {
-                this.finger.setWorldPosition(this.maskTransform.convertToWorldSpaceAR(
-                    new Vec3(rect.x + rect.width / 2, rect.y + rect.height / 2)));
-            }
+        for (const rect of this.targetRects) {
+            // 从全屏挖空线性收缩到各目标的实际位置和大小。
+            this.graphics.rect(
+                screenRect ? screenRect.x + (rect.x - screenRect.x) * progress : rect.x,
+                screenRect ? screenRect.y + (rect.y - screenRect.y) * progress : rect.y,
+                screenRect ? screenRect.width + (rect.width - screenRect.width) * progress : rect.width,
+                screenRect ? screenRect.height + (rect.height - screenRect.height) * progress : rect.height);
         }
         this.graphics.fill();
-        this.finger.active = !!this.clickTarget?.activeInHierarchy;
+        this.finger.active = progress >= 1 && !!this.clickTarget?.activeInHierarchy;
     }
 
     private getTargetRect(target: Node): Rect {
@@ -94,7 +106,8 @@ export class UIGuide extends UIBase {
 
     private handleTouch(event: EventTouch) {
         const id = event.getID();
-        if (event.type === Node.EventType.TOUCH_START && this.clickTarget?.isValid) {
+        if (this.shrinkElapsed >= this.shrinkDuration
+            && event.type === Node.EventType.TOUCH_START && this.clickTarget?.isValid) {
             if (this.clickTarget.getComponent(UITransform).hitTest(event.getLocation())) {
                 this.passingTouches.add(id);
             }
@@ -110,7 +123,7 @@ export class UIGuide extends UIBase {
     }
 
     private clickGuideTarget(event: EventTouch) {
-        if (!this.clickTarget?.isValid
+        if (this.shrinkElapsed < this.shrinkDuration || !this.clickTarget?.isValid
             || !this.clickTarget.getComponent(UITransform).hitTest(event.getLocation())) return;
         const callback = this.onClick;
         this.onClose();
@@ -121,10 +134,12 @@ export class UIGuide extends UIBase {
         if (this.clickTarget?.isValid) {
             this.clickTarget.off(Node.EventType.TOUCH_END, this.clickGuideTarget, this);
         }
-        this.targets = [];
+        this.targetRects = [];
+        this.screenRect = null;
         this.clickTarget = null;
         this.onClick = null;
         this.passingTouches.clear();
+        this.shrinkElapsed = 0;
         this.graphics?.clear();
         if (this.finger) this.finger.active = false;
     }

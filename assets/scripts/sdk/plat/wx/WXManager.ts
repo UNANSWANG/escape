@@ -7,6 +7,8 @@ import { httpMgr } from "../../network/httpManager";
 import { urlConfig } from "../../network/netConfig";
 import { BasePlat } from "../BasePlat";
 import { WxVideo } from "./WxVideo";
+import { poolMgr } from '../../../manager/poolManager';
+import { ccResTools } from '../../../extention/resTools';
 
 class Model_wx {
     /**免看广告次数 */
@@ -61,6 +63,11 @@ export class WXManager extends BasePlat {
 
         this.initConf();
         this.initVideo();
+        this.PLAT.onMemoryWarning?.((res) => {
+            console.warn('微信内存告警，清理闲置对象池和头像缓存', res);
+            poolMgr.clearIdlePools();
+            ccResTools.trimRemoteImages(0);
+        });
     }
 
     /**检查版本更新 */

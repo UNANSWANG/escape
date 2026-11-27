@@ -1,5 +1,6 @@
 import { _decorator, Animation, Component, instantiate, Label, Node, NodePool, Prefab, sp, Sprite, Tween, UIOpacity, UITransform, Vec3 } from 'cc';
 import { bulletController } from '../controller/bulletController';
+import { memoryPolicy } from './memoryPolicy';
 const { ccclass, property } = _decorator;
 const PRODUCE_TIPS_POOL_LIMIT = 48;
 const BULLET_POOL_LIMIT = 128;
@@ -262,12 +263,24 @@ export class poolManager extends Component {
         if (!node || !node.isValid) {
             return;
         }
-        if (pool.size() >= limit) {
+        const capacity = memoryPolicy.lowMemory ? Math.max(4, Math.floor(limit / 2)) : limit;
+        if (pool.size() >= capacity) {
             node.destroy();
             return;
         }
 
         pool.put(node);
+    }
+
+    /**仅销毁闲置节点，正在场景中使用的节点不受影响。 */
+    clearIdlePools() {
+        for (const pool of [this.produceTipsPool, this.bulletPool, this.gameLinePool,
+            this.gameNodePool, this.gameSpriteNodePool, this.gameLabelNodePool,
+            this.gameSpineNodePool, this.tileItemPool, this.bulletShellNodePool,
+            this.bulletExplosionNodePool, ...this.propsNodePoolMap.values()]) {
+            pool.clear();
+        }
+        this.propsNodePoolMap.clear();
     }
 
     /**通用节点复原 */

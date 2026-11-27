@@ -3,6 +3,7 @@ import { audioPath } from './pathConfig';
 import { uiMgr } from './UIManager';
 import { ccStorageTools } from '../extention/storageTools';
 import { SaveKey } from './configData';
+import { memoryPolicy } from './memoryPolicy';
 const { ccclass, property } = _decorator;
 
 @ccclass('audioManager')
@@ -79,7 +80,7 @@ export class audioManager {
                 }
             }
         };
-        const task = Promise.all(Array.from({ length: Math.min(4, paths.length) }, () => worker()))
+        const task = Promise.all(Array.from({ length: Math.min(memoryPolicy.loadConcurrency, paths.length) }, () => worker()))
             .then(() => { tasks.delete(key); });
         tasks.set(key, task);
         return task;

@@ -7,6 +7,7 @@ const firstScreen = require('./first-screen');
 
 // Adapt for IOS, swap if opposite
 const info = wx.getSystemInfoSync();
+const isIOS = String(info.platform).toLowerCase() === 'ios';
 if (canvas){
     var _w = canvas.width;
     var _h = canvas.height;
@@ -25,7 +26,13 @@ if (canvas){
     canvas.height = _h;
 }
 // Adjust initial canvas size
-if (canvas && window.devicePixelRatio >= 2) {canvas.width *= info.devicePixelRatio; canvas.height *= info.devicePixelRatio;}
+// 仅限制启动画布，后续分辨率仍由引擎适配；避免首屏先分配过大的缓冲区。
+if (canvas && window.devicePixelRatio >= 2) {
+    const pixelRatio = Number(info.pixelRatio || info.devicePixelRatio || window.devicePixelRatio) || 1;
+    const startupPixelRatio = isIOS ? Math.min(2, pixelRatio) : pixelRatio;
+    canvas.width = Math.round(canvas.width * startupPixelRatio);
+    canvas.height = Math.round(canvas.height * startupPixelRatio);
+}
 
 const importMap = require("<%= importMapFile%>").default;
 System.warmup({
@@ -44,7 +51,8 @@ System.warmup({
     },
 });
 
-firstScreen.start('<%= alpha %>', '<%= antialias %>', '<%= useWebgl2 %>').then(() => {
+// WebGL 上下文首次创建时关闭 iOS MSAA，降低多重采样缓冲区占用。
+firstScreen.start('<%= alpha %>', isIOS ? 'false' : '<%= antialias %>', '<%= useWebgl2 %>').then(() => {
     return System.import('<%= applicationJs %>');
 }).then((module) => {
     return firstScreen.setProgress(0.2).then(() => Promise.resolve(module));

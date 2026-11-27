@@ -1,6 +1,7 @@
 import { _decorator, AnimationClip, AssetManager, assetManager, Component, ImageAsset, JsonAsset, Node, Prefab, sp, Sprite, SpriteFrame, Texture2D, TiledMapAsset } from 'cc';
 import { gm, PlatType } from '../manager/gm';
 import { GameEvent } from '../manager/configData';
+import { memoryPolicy } from '../manager/memoryPolicy';
 const { ccclass, property } = _decorator;
 
 @ccclass('RemoteImageLease')
@@ -150,9 +151,9 @@ export class resTools {
         this.trimRemoteImages();
     }
 
-    trimRemoteImages() {
+    trimRemoteImages(limit = memoryPolicy.lowMemory ? 12 : this.remoteImageLimit) {
         for (const [key, frame] of this.remoteImages) {
-            if (this.remoteImages.size <= this.remoteImageLimit) break;
+            if (this.remoteImages.size <= limit) break;
             if (frame.refCount > 0) continue;
             this.remoteImages.delete(key);
             const texture = frame.texture as Texture2D;
@@ -226,7 +227,7 @@ export class resTools {
 
     /**前台最多并发四项，后台仅占一个名额，为当前界面保留加载容量。 */
     private pumpPictures() {
-        while (this.activePictures < 4) {
+        while (this.activePictures < memoryPolicy.loadConcurrency) {
             let index = this.pictureQueue.findIndex(task => !task.background);
             if (index < 0) {
                 if (this.activeBackgroundPictures >= 1) return;

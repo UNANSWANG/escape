@@ -22,6 +22,7 @@ import { roleLevelConfig } from '../json/jsonRoleLevel';
 import type { UIMain } from '../UIPage/UIMain';
 import type { UIStore } from '../UIPage/UIStore';
 import type { weaponStorePage } from '../UIPage/store/weaponStorePage';
+import { memoryPolicy } from './memoryPolicy';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIManager')
@@ -253,6 +254,8 @@ export class UIManager {
     }
 
     private loadMainPagesInFrames(isCurrent: () => boolean) {
+        // iOS 不在大厅创建整套界面和战斗页，打开时仍会走共享加载任务。
+        if (memoryPolicy.lowMemory) return Promise.resolve();
         const paths = [UIPath.UIMap, UIPath.UIMatch, UIPath.UISetting, UIPath.UIReward,
             UIPath.UIRevisit, UIPath.UIStorehouse, UIPath.UIRoleStore, UIPath.UISign,
             UIPath.UIShowItem, UIPath.UIStore, UIPath.UIHandBook];
@@ -274,6 +277,13 @@ export class UIManager {
     /**局内界面和对象池在后台分帧准备，关闭或重开后停止旧批次。 */
     async preLoadInGamePages(owner: Component, preloadMain = false) {
         const isCurrent = this.beginBackgroundPreload(owner);
+        if (memoryPolicy.lowMemory) {
+            // 首局只补齐通用提示，不在战斗中加载大厅、结算页和整套音效。
+            await this.preLoadInFrames([
+                () => this.preLoadCommonPrefab(false),
+            ], isCurrent);
+            return;
+        }
         const tasks = preloadMain ? [
             () => this.preLoadCommonPrefab(false),
             () => audioMgr.preloadAudio(this.resBundle, this.roundAudioPaths),
@@ -428,7 +438,7 @@ export class UIManager {
                 await this.nextPreloadFrame();
             }
         };
-        await Promise.all(Array.from({ length: Math.min(4, tasks.length) }, () => loadWorker()));
+        await Promise.all(Array.from({ length: Math.min(memoryPolicy.loadConcurrency, tasks.length) }, () => loadWorker()));
         this.roundAudioPaths = Array.from(sounds);
     }
 
@@ -441,8 +451,12 @@ export class UIManager {
             this.preLoadMap(mapIndex),
             this.preLoadSmallMap(mapIndex),
             this.preLoadRoundAppearance(mapIndex, agents),
-            ...(enterGuideGame ? [] : [audioMgr.preloadAudio(this.resBundle)]),
+            ...(enterGuideGame || memoryPolicy.lowMemory ? [] : [audioMgr.preloadAudio(this.resBundle)]),
         ]);
+        if (memoryPolicy.lowMemory) {
+            // 外观准备完成后才有本局音效清单，避免解码整个 audio 目录。
+            await audioMgr.preloadAudio(this.resBundle, [audioPath.gameBackground, ...this.roundAudioPaths]);
+        }
     }
 
     preLoadMap(mapIndex = pData.selectMapData[0]): Promise<Prefab> {
@@ -653,6 +667,7 @@ export class UIManager {
         }
         audioMgr.closeBackgroundMusic();
         audioMgr.playBackgroundMusic(audioPath.background);
+        if (memoryPolicy.lowMemory) poolMgr.clearIdlePools();
         await uiMgr.openPage(UIPath.UIMain);
     }
 

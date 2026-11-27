@@ -300,6 +300,7 @@ export class UIGame extends UIBase {
     private areaQueryStamp = 0;
     private containerComponents = new WeakMap<Node, containerController>();
     private tempContainerBounds = new Rect();
+    private tempLeaveBounds = new Rect();
     /** 正在追击的 Boss；多个 Boss 同时追击时显示最后进入追击的一个。 */
     private chasingBosses: Set<bossBaseController> = new Set();
     private currentHpBoss: bossBaseController = null;
@@ -1176,19 +1177,27 @@ export class UIGame extends UIBase {
         return out;
     }
 
-    /**根据玩家与容器的包围盒重合状态显示或隐藏开启按钮 */
+    /**容器、撤离点等场景交互统一使用玩家预制体的 interactArea。 */
+    private getPlayerInteractionBounds(): Rect | null {
+        const player = playerMgr.player;
+        const area = playerMgr.playerComp?.interactArea;
+        if (!player?.isValid || !player.activeInHierarchy
+            || !area?.isValid || !area.node.activeInHierarchy) return null;
+        return area.getBoundingBoxToWorld();
+    }
+
+    /**根据玩家交互区域与容器的重合状态显示或隐藏开启按钮 */
     private updateContainerOpenButton() {
         if (!this.openBtn) return;
 
         const playerNode = playerMgr.player;
-        const playerTransform = playerMgr.playerComp?.interactArea;
+        const playerBounds = this.getPlayerInteractionBounds();
         this.currentContainer = null;
-        if (!playerNode?.activeInHierarchy || !playerTransform?.node.activeInHierarchy || !this.containerList?.isValid) {
+        if (!playerBounds || !this.containerList?.isValid) {
             this.openBtn.active = false;
             return;
         }
 
-        const playerBounds = playerTransform.getBoundingBoxToWorld();
         const playerPosition = playerNode.worldPosition;
         let nearestDistanceSquared = Infinity;
         for (const containerNode of this.containerList.children) {
@@ -2055,21 +2064,19 @@ export class UIGame extends UIBase {
         });
     }
 
-    /**检测玩家是否站在任意撤离点中，并更新可中断的撤离倒计时。 */
+    /**玩家 interactArea 与任意撤离点相交时，推进可中断的撤离倒计时。 */
     private updateLeaveCountdown(dt: number) {
         if (this.isLeaveSuccessTriggered) return;
-        const playerNode = playerMgr.player;
-        const playerTransform = playerNode?.getChildByName('colliderBox')?.getComponent(UITransform)
-            ?? playerNode?.getComponent(UITransform);
+        const playerBounds = this.getPlayerInteractionBounds();
         let isInside = false;
-        if (playerTransform && this.leaveList) {
-            const playerBounds = playerTransform.getBoundingBoxToWorld();
+        if (playerBounds && this.leaveList?.isValid) {
             for (const leaveNode of this.leaveList.children) {
                 if (!leaveNode.activeInHierarchy) continue;
                 const leaveTransform = leaveNode.getComponent(UITransform);
                 if (!leaveTransform) continue;
                 // 仅使用撤离点自身尺寸，子节点的图片、文字和特效不参与区域判断。
-                const leaveBounds = new Rect(-leaveTransform.anchorX * leaveTransform.width,
+                const leaveBounds = this.tempLeaveBounds;
+                leaveBounds.set(-leaveTransform.anchorX * leaveTransform.width,
                     -leaveTransform.anchorY * leaveTransform.height, leaveTransform.width, leaveTransform.height);
                 leaveBounds.transformMat4(leaveNode.worldMatrix);
                 if (playerBounds.intersects(leaveBounds)) {

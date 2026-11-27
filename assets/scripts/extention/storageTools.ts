@@ -11,11 +11,11 @@ export class storageTools {
     private batchDepth = 0;
     private hasPendingSave = false;
     private readonly localKeys = new Set<string>([
-        SaveKey.selectMapData, SaveKey.selectedMaps, SaveKey.mapGuide, SaveKey.gameGuide, SaveKey.effect, SaveKey.effectVolume,
+        SaveKey.selectMapData, SaveKey.selectedMaps, SaveKey.mapGuide, SaveKey.effect, SaveKey.effectVolume,
         SaveKey.music, SaveKey.musicVolume, SaveKey.vibrat, SaveKey.isAutoAiming, SaveKey.isFreeAd, SaveKey.useLocalTable,
     ]);
     private readonly cloudKeys = new Set<string>([
-        SaveKey.rank, SaveKey.rankScore, SaveKey.money, SaveKey.gold, SaveKey.storehouse,
+        SaveKey.gameGuide, SaveKey.rank, SaveKey.rankScore, SaveKey.money, SaveKey.gold, SaveKey.storehouse,
         SaveKey.equipmentIds, SaveKey.lostItems, SaveKey.roleId, SaveKey.roleLevels, SaveKey.unlockedRoles,
         SaveKey.unlockedMaps, SaveKey.showItems, SaveKey.unlockedCollections,
         SaveKey.claimedCollectionRewards, SaveKey.bossBookStates, SaveKey.signDays,

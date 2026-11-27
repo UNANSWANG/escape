@@ -1259,7 +1259,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 743,
-      "height": 143
+      "height": 200
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -1356,8 +1356,8 @@
     "_target": null,
     "_left": 0,
     "_right": 0,
-    "_top": 0,
-    "_bottom": 0,
+    "_top": -28.5,
+    "_bottom": -28.5,
     "_horizontalCenter": 0,
     "_verticalCenter": 0,
     "_isAbsLeft": true,
@@ -4794,7 +4794,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 310,
-      "height": 58.75999999999999
+      "height": 32.76
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -4829,7 +4829,7 @@
       "b": 92,
       "a": 255
     },
-    "_string": "人物介绍描述人物介绍描述人物介绍描述人物介绍描述",
+    "_string": "人物介绍",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
     "_actualFontSize": 18,
@@ -5842,7 +5842,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 260,
-      "height": 58.67999999999999
+      "height": 22.68
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -5877,7 +5877,7 @@
       "b": 87,
       "a": 255
     },
-    "_string": "描述大苏打大大大大大大大大大苏打大苏打的打发发发大大大大大大大大大大飞洒发",
+    "_string": "描述",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
     "_actualFontSize": 15,
@@ -6455,7 +6455,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 260,
-      "height": 58.67999999999999
+      "height": 22.68
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -6490,7 +6490,7 @@
       "b": 87,
       "a": 255
     },
-    "_string": "描述大苏打大大大大大大大大大苏打大苏打的打发发发大撒大撒大大大大大大大",
+    "_string": "描述",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
     "_actualFontSize": 15,

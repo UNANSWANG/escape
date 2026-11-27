@@ -534,12 +534,13 @@ export class playerData {
         return true;
     }
 
-    /**重置引导进度，下一次开局重新准备新手装备。 */
+    /**重置云端引导进度，下一次开局重新准备新手角色和装备。 */
     resetGameGuide() {
         ccStorageTools.setData(SaveKey.gameGuide, 0);
         this.guideEquipmentPrepared = false;
     }
 
+    /**新手关固定使用 roleId 0 和新手装备，原有非默认装备退回仓库。 */
     prepareGuideEquipment() {
         if (this.guideEquipmentPrepared) return;
         const storehouseChanges: number[][] = [];
@@ -550,10 +551,14 @@ export class playerData {
             }
         }
         ccStorageTools.batch(() => {
+            const roleChanged = this.roleId !== 0;
+            this.roleId = 0;
+            ccStorageTools.setData(SaveKey.roleId, this.roleId);
             this.equipmentIds = this.defaultEquipmentIds.slice();
             this.equipmentIds[0] = 2;
             this.fixStorehouseDatas(storehouseChanges);
             this.saveEquipmentIds();
+            if (roleChanged) gm.Event.emit(GameEvent.refreshRoleSkin);
         });
         this.guideEquipmentPrepared = true;
     }

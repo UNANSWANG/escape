@@ -175,7 +175,7 @@ export const floatColorArr = ["#71F452", "#FF0635","#8809ff",];
 
 /**本地与云端存储的键值，由 storageTools 统一分流。 */
 export enum SaveKey {
-    /**游戏操作引导：0 未引导，1 已引导；缺省按 0 处理。 */
+    /**云端游戏操作引导：0 未引导，1 已引导；缺省按 0 处理。 */
     gameGuide = "gameGuide",
     /**当前段位，索引上限为段位表最后一项 */
     rank = "rank",

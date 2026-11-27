@@ -13,6 +13,10 @@ export class roleAvatarItemController extends Component {
 
     initData(roleData: JsonRoleData) {
         this.roleData = roleData;
+        const roleNameLab = this.node.getChildByName("nameLab")?.getComponent(Label);
+        if (roleNameLab) {
+            roleNameLab.string = roleData.name ?? "";
+        }
         const avatar = this.node.getChildByName("img")?.getComponent(Sprite);
         if (avatar) {
             ccTools.loadImg(avatar, imgPath.roleAvatar + roleData.roleId);

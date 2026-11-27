@@ -47,6 +47,13 @@ export class UIMoneyAdd extends UIBase {
         const anim = this.getComponent(Animation);
         anim?.play();
         this.initData();
+        this.SDKAdReport();
+    }
+
+    /**广告点上报 */
+    SDKAdReport() {
+        videoMgr.SDKAdShow(4);
+        videoMgr.SDKAdShow(6);
     }
 
     initData() {

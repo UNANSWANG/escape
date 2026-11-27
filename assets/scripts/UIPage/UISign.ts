@@ -47,6 +47,12 @@ export class UISign extends UIBase {
         let anim = this.getComponent(Animation);
         anim.play();
         this.initData();
+        this.SDKAdReport();
+    }
+
+    /**广告点上报 */
+    SDKAdReport() {
+        videoMgr.SDKAdShow(10);
     }
 
     initData() {

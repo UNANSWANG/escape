@@ -331,6 +331,12 @@ export class UIGame extends UIBase {
         this.addListener();
         this.refreshAimingBtnDisplay();
         this.restartGame();
+        this.SDKAdReport();
+    }
+
+    /**广告点上报 */
+    SDKAdReport() {
+        videoMgr.SDKAdShow(65);
     }
 
     onUI_Close(): void {

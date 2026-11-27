@@ -69,6 +69,12 @@ export class UIFail extends UIBase {
         if (this.addRankNumLab) this.addRankNumLab.string = String(scoreChange);
         this.refreshRankBadge();
         this.initData(data);
+        this.SDKAdReport();
+    }
+
+    /**广告点上报 */
+    SDKAdReport() {
+        videoMgr.SDKAdShow(17);
     }
 
     initData(data?) {

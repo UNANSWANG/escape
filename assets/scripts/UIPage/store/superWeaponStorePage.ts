@@ -17,6 +17,15 @@ export class superWeaponStorePage extends storePageBase {
 
     private purchasing = false;
 
+    protected onEnable(): void {
+        this.SDKAdReport();
+    }
+
+    /**广告点上报 */
+    SDKAdReport() {
+        videoMgr.SDKAdShow(61);
+    }
+
     async initData() {
         const weaponData = weaponsConfig.getAllData().filter((weapon) => weapon.kinds === 1 && weapon.isStore === 1);
         const itemPrefab = await uiMgr.preLoadPrefab(ItemPath.superWeaponItem);

@@ -277,7 +277,7 @@ export class poolManager extends Component {
         for (const pool of [this.produceTipsPool, this.bulletPool, this.gameLinePool,
             this.gameNodePool, this.gameSpriteNodePool, this.gameLabelNodePool,
             this.gameSpineNodePool, this.tileItemPool, this.bulletShellNodePool,
-            this.bulletExplosionNodePool, ...this.propsNodePoolMap.values()]) {
+            this.bulletExplosionNodePool, ...Array.from(this.propsNodePoolMap.values())]) {
             pool.clear();
         }
         this.propsNodePoolMap.clear();
